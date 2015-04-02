@@ -92,7 +92,7 @@ namespace Step32
   {
     const double eta                   = 1e21;    /* Pa s       */
     const double kappa                 = 1e-6;    /* m^2 / s    */
-    const double reference_density     = 3300;    /* kg / m^3   */
+    const double density     = 3300;    /* kg / m^3   */
     const double reference_temperature = 293;     /* K          */
     const double expansion_coefficient = 2e-5;    /* 1/K        */
     const double specific_heat         = 1250;    /* J / K / kg */
@@ -106,12 +106,12 @@ namespace Step32
     const double T1      =  700+273;              /* K          */
 
 
-    double density (const double temperature)
-    {
-      return (reference_density *
-              (1 - expansion_coefficient * (temperature -
-                                            reference_temperature)));
-    }
+    // double density (const double temperature)
+    // {
+    //   return (reference_density *
+    //           (1 - expansion_coefficient * (temperature -
+    //                                         reference_temperature)));
+    // }
 
 
     template <int dim>
@@ -1242,10 +1242,10 @@ namespace Step32
                                      * (old_temperature_laplacians[q] +
                                         old_old_temperature_laplacians[q]) / 2;
         const double gamma
-          = ((EquationData::radiogenic_heating * EquationData::density(T)
+          = ((EquationData::radiogenic_heating * EquationData::density
               +
               2 * EquationData::eta * strain_rate * strain_rate) /
-             (EquationData::density(T) * EquationData::specific_heat));
+             (EquationData::density * EquationData::specific_heat));
 
         double residual
           = std::abs(dT_dt + u_grad_T - kappa_Delta_T - gamma);
@@ -1773,7 +1773,7 @@ namespace Step32
                                                 .quadrature_point(q));
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
-          data.local_rhs(i) += (EquationData::density(old_temperature) *
+          data.local_rhs(i) += (EquationData::density *
                                 gravity  *
                                 scratch.phi_u[i]) *
                                scratch.stokes_fe_values.JxW(q);
@@ -2093,10 +2093,10 @@ namespace Step32
              scratch.old_strain_rates[q]);
 
         const double gamma
-          = ((EquationData::radiogenic_heating * EquationData::density(ext_T)
+          = ((EquationData::radiogenic_heating * EquationData::density
               +
               2 * EquationData::eta * extrapolated_strain_rate * extrapolated_strain_rate) /
-             (EquationData::density(ext_T) * EquationData::specific_heat));
+             (EquationData::density * EquationData::specific_heat));
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
           {
