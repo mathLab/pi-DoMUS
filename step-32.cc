@@ -93,12 +93,13 @@ namespace Step32
     const double eta                   = 1e21;    /* Pa s       */
     const double kappa                 = 1e-6;    /* m^2 / s    */
     const double density     = 3300;    /* kg / m^3   */
+    const double nu  = 1; // Added in review
     const double reference_temperature = 293;     /* K          */
     const double expansion_coefficient = 2e-5;    /* 1/K        */
     const double specific_heat         = 1250;    /* J / K / kg */
     const double radiogenic_heating    = 7.4e-12; /* W / kg     */
 
-
+  
     const double R0      = 6371000.-2890000.;     /* m          */
     const double R1      = 6371000.-  35000.;     /* m          */
 
@@ -640,22 +641,22 @@ namespace Step32
     void output_results ();
     void refine_mesh (const unsigned int max_grid_level);
 
-    double
-    compute_viscosity(const std::vector<double>          &old_temperature,
-                      const std::vector<double>          &old_old_temperature,
-                      const std::vector<Tensor<1,dim> >  &old_temperature_grads,
-                      const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
-                      const std::vector<double>          &old_temperature_laplacians,
-                      const std::vector<double>          &old_old_temperature_laplacians,
-                      const std::vector<Tensor<1,dim> >  &old_velocity_values,
-                      const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
-                      const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
-                      const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
-                      const double                        global_u_infty,
-                      const double                        global_T_variation,
-                      const double                        average_temperature,
-                      const double                        global_entropy_variation,
-                      const double                        cell_diameter) const;
+    // double
+    // compute_viscosity(const std::vector<double>          &old_temperature,
+    //                   const std::vector<double>          &old_old_temperature,
+    //                   const std::vector<Tensor<1,dim> >  &old_temperature_grads,
+    //                   const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
+    //                   const std::vector<double>          &old_temperature_laplacians,
+    //                   const std::vector<double>          &old_old_temperature_laplacians,
+    //                   const std::vector<Tensor<1,dim> >  &old_velocity_values,
+    //                   const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
+    //                   const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
+    //                   const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
+    //                   const double                        global_u_infty,
+    //                   const double                        global_T_variation,
+    //                   const double                        average_temperature,
+    //                   const double                        global_entropy_variation,
+    //                   const double                        cell_diameter) const;
 
   public:
 
@@ -1198,90 +1199,90 @@ namespace Step32
 
 
 
-  template <int dim>
-  double
-  BoussinesqFlowProblem<dim>::
-  compute_viscosity (const std::vector<double>          &old_temperature,
-                     const std::vector<double>          &old_old_temperature,
-                     const std::vector<Tensor<1,dim> >  &old_temperature_grads,
-                     const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
-                     const std::vector<double>          &old_temperature_laplacians,
-                     const std::vector<double>          &old_old_temperature_laplacians,
-                     const std::vector<Tensor<1,dim> >  &old_velocity_values,
-                     const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
-                     const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
-                     const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
-                     const double                        global_u_infty,
-                     const double                        global_T_variation,
-                     const double                        average_temperature,
-                     const double                        global_entropy_variation,
-                     const double                        cell_diameter) const
-  {
-    if (global_u_infty == 0)
-      return 5e-3 * cell_diameter;
-
-    const unsigned int n_q_points = old_temperature.size();
-
-    double max_residual = 0;
-    double max_velocity = 0;
-
-    for (unsigned int q=0; q < n_q_points; ++q)
-      {
-        const Tensor<1,dim> u = (old_velocity_values[q] +
-                                 old_old_velocity_values[q]) / 2;
-
-        const SymmetricTensor<2,dim> strain_rate = (old_strain_rates[q] +
-                                                    old_old_strain_rates[q]) / 2;
-
-        const double T = (old_temperature[q] + old_old_temperature[q]) / 2;
-        const double dT_dt = (old_temperature[q] - old_old_temperature[q])
-                             / old_time_step;
-        const double u_grad_T = u * (old_temperature_grads[q] +
-                                     old_old_temperature_grads[q]) / 2;
-
-        const double kappa_Delta_T = EquationData::kappa
-                                     * (old_temperature_laplacians[q] +
-                                        old_old_temperature_laplacians[q]) / 2;
-        const double gamma
-          = ((EquationData::radiogenic_heating * EquationData::density
-              +
-              2 * EquationData::eta * strain_rate * strain_rate) /
-             (EquationData::density * EquationData::specific_heat));
-
-        double residual
-          = std::abs(dT_dt + u_grad_T - kappa_Delta_T - gamma);
-        if (parameters.stabilization_alpha == 2)
-          residual *= std::abs(T - average_temperature);
-
-        max_residual = std::max (residual,        max_residual);
-        max_velocity = std::max (std::sqrt (u*u), max_velocity);
-      }
-
-    const double max_viscosity = (parameters.stabilization_beta *
-                                  max_velocity * cell_diameter);
-    if (timestep_number == 0)
-      return max_viscosity;
-    else
-      {
-        Assert (old_time_step > 0, ExcInternalError());
-
-        double entropy_viscosity;
-        if (parameters.stabilization_alpha == 2)
-          entropy_viscosity = (parameters.stabilization_c_R *
-                               cell_diameter * cell_diameter *
-                               max_residual /
-                               global_entropy_variation);
-        else
-          entropy_viscosity = (parameters.stabilization_c_R *
-                               cell_diameter * global_Omega_diameter *
-                               max_velocity * max_residual /
-                               (global_u_infty * global_T_variation));
-
-        return std::min (max_viscosity, entropy_viscosity);
-      }
-  }
-
-
+  // template <int dim>
+  // double
+  // BoussinesqFlowProblem<dim>::
+  // compute_viscosity (const std::vector<double>          &old_temperature,
+  //                    const std::vector<double>          &old_old_temperature,
+  //                    const std::vector<Tensor<1,dim> >  &old_temperature_grads,
+  //                    const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
+  //                    const std::vector<double>          &old_temperature_laplacians,
+  //                    const std::vector<double>          &old_old_temperature_laplacians,
+  //                    const std::vector<Tensor<1,dim> >  &old_velocity_values,
+  //                    const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
+  //                    const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
+  //                    const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
+  //                    const double                        global_u_infty,
+  //                    const double                        global_T_variation,
+  //                    const double                        average_temperature,
+  //                    const double                        global_entropy_variation,
+  //                    const double                        cell_diameter) const
+  // {
+  //   if (global_u_infty == 0)
+  //     return 5e-3 * cell_diameter;
+  // 
+  //   const unsigned int n_q_points = old_temperature.size();
+  // 
+  //   double max_residual = 0;
+  //   double max_velocity = 0;
+  // 
+  //   for (unsigned int q=0; q < n_q_points; ++q)
+  //     {
+  //       const Tensor<1,dim> u = (old_velocity_values[q] +
+  //                                old_old_velocity_values[q]) / 2;
+  // 
+  //       const SymmetricTensor<2,dim> strain_rate = (old_strain_rates[q] +
+  //                                                   old_old_strain_rates[q]) / 2;
+  // 
+  //       const double T = (old_temperature[q] + old_old_temperature[q]) / 2;
+  //       const double dT_dt = (old_temperature[q] - old_old_temperature[q])
+  //                            / old_time_step;
+  //       const double u_grad_T = u * (old_temperature_grads[q] +
+  //                                    old_old_temperature_grads[q]) / 2;
+  // 
+  //       const double kappa_Delta_T = EquationData::kappa
+  //                                    * (old_temperature_laplacians[q] +
+  //                                       old_old_temperature_laplacians[q]) / 2;
+  //       const double gamma
+  //         = ((EquationData::radiogenic_heating * EquationData::density
+  //             +
+  //             2 * EquationData::eta * strain_rate * strain_rate) /
+  //            (EquationData::density * EquationData::specific_heat));
+  // 
+  //       double residual
+  //         = std::abs(dT_dt + u_grad_T - kappa_Delta_T - gamma);
+  //       if (parameters.stabilization_alpha == 2)
+  //         residual *= std::abs(T - average_temperature);
+  // 
+  //       max_residual = std::max (residual,        max_residual);
+  //       max_velocity = std::max (std::sqrt (u*u), max_velocity);
+  //     }
+  // 
+  //   const double max_viscosity = (parameters.stabilization_beta *
+  //                                 max_velocity * cell_diameter);
+  //   if (timestep_number == 0)
+  //     return max_viscosity;
+  //   else
+  //     {
+  //       Assert (old_time_step > 0, ExcInternalError());
+  // 
+  //       double entropy_viscosity;
+  //       if (parameters.stabilization_alpha == 2)
+  //         entropy_viscosity = (parameters.stabilization_c_R *
+  //                              cell_diameter * cell_diameter *
+  //                              max_residual /
+  //                              global_entropy_variation);
+  //       else
+  //         entropy_viscosity = (parameters.stabilization_c_R *
+  //                              cell_diameter * global_Omega_diameter *
+  //                              max_velocity * max_residual /
+  //                              (global_u_infty * global_T_variation));
+  // 
+  //       return std::min (max_viscosity, entropy_viscosity);
+  //     }
+  // }
+  // 
+  // 
 
 
   template <int dim>
@@ -2016,22 +2017,22 @@ namespace Step32
     scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (old_stokes_solution,
         scratch.old_old_strain_rates);
 
-    const double nu
-      = compute_viscosity (scratch.old_temperature_values,
-                           scratch.old_old_temperature_values,
-                           scratch.old_temperature_grads,
-                           scratch.old_old_temperature_grads,
-                           scratch.old_temperature_laplacians,
-                           scratch.old_old_temperature_laplacians,
-                           scratch.old_velocity_values,
-                           scratch.old_old_velocity_values,
-                           scratch.old_strain_rates,
-                           scratch.old_old_strain_rates,
-                           global_max_velocity,
-                           global_T_range.second - global_T_range.first,
-                           0.5 * (global_T_range.second + global_T_range.first),
-                           global_entropy_variation,
-                           cell->diameter());
+    // const double nu
+    //   = compute_viscosity (scratch.old_temperature_values,
+    //                        scratch.old_old_temperature_values,
+    //                        scratch.old_temperature_grads,
+    //                        scratch.old_old_temperature_grads,
+    //                        scratch.old_temperature_laplacians,
+    //                        scratch.old_old_temperature_laplacians,
+    //                        scratch.old_velocity_values,
+    //                        scratch.old_old_velocity_values,
+    //                        scratch.old_strain_rates,
+    //                        scratch.old_old_strain_rates,
+    //                        global_max_velocity,
+    //                        global_T_range.second - global_T_range.first,
+    //                        0.5 * (global_T_range.second + global_T_range.first),
+    //                        global_entropy_variation,
+    //                        cell->diameter());
 
     for (unsigned int q=0; q<n_q_points; ++q)
       {
@@ -2107,7 +2108,7 @@ namespace Step32
                                   extrapolated_u * ext_grad_T * scratch.phi_T[i]
                                   -
                                   time_step *
-                                  nu * ext_grad_T * scratch.grad_phi_T[i]
+                                  EquationData::nu * ext_grad_T * scratch.grad_phi_T[i]
                                   +
                                   time_step *
                                   gamma * scratch.phi_T[i])
