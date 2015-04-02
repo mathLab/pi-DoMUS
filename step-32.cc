@@ -1001,8 +1001,6 @@ namespace Step32
 
     // double max_local_velocity = 0;
 
-    double max_local_velocity = 1;
-
     // typename DoFHandler<dim>::active_cell_iterator
     // cell = stokes_dof_handler.begin_active(),
     // endc = stokes_dof_handler.end();
@@ -1018,7 +1016,8 @@ namespace Step32
     //                                        velocity_values[q].norm());
         // }
 
-    return Utilities::MPI::max (max_local_velocity, MPI_COMM_WORLD);
+    // return Utilities::MPI::max (max_local_velocity, MPI_COMM_WORLD);
+    return 1.;
   }
 
 
