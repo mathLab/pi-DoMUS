@@ -118,8 +118,10 @@ namespace Step32
     template <int dim>
     Tensor<1,dim> gravity_vector (const Point<dim> &p)
     {
+      // const double r = p.norm();
+      // return -(1.245e-6 * r + 7.714e13/r/r) * p / r;
       const double r = p.norm();
-      return -(1.245e-6 * r + 7.714e13/r/r) * p / r;
+      return 0*(1.245e-6 * r + 7.714e13/r/r) * p / r;
     }
 
 
@@ -2750,14 +2752,14 @@ start_time_iteration:
           refine_mesh (parameters.initial_global_refinement +
                        parameters.initial_adaptive_refinement);
 
-        if ((parameters.generate_graphical_output == true)
-            &&
+        if (//(parameters.generate_graphical_output == true)
+            //&&
             (timestep_number % parameters.graphical_output_interval == 0))
           output_results ();
 
         // if (time > parameters.end_time * EquationData::year_in_seconds)
         //   break;
-        if (time > 3 * EquationData::year_in_seconds)
+        if (time > 5 * EquationData::year_in_seconds)
           break;
 
         TrilinosWrappers::MPI::BlockVector old_old_stokes_solution;
