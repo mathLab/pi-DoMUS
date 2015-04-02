@@ -990,31 +990,33 @@ namespace Step32
   template <int dim>
   double BoussinesqFlowProblem<dim>::get_maximal_velocity () const
   {
-    const QIterated<dim> quadrature_formula (QTrapez<1>(),
-                                             parameters.stokes_velocity_degree);
-    const unsigned int n_q_points = quadrature_formula.size();
+    // const QIterated<dim> quadrature_formula (QTrapez<1>(),
+                                            //  parameters.stokes_velocity_degree);
+    // const unsigned int n_q_points = quadrature_formula.size();
 
-    FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
-    std::vector<Tensor<1,dim> > velocity_values(n_q_points);
+    // FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
+    // std::vector<Tensor<1,dim> > velocity_values(n_q_points);
 
-    const FEValuesExtractors::Vector velocities (0);
+    // const FEValuesExtractors::Vector velocities (0);
 
-    double max_local_velocity = 0;
+    // double max_local_velocity = 0;
 
-    typename DoFHandler<dim>::active_cell_iterator
-    cell = stokes_dof_handler.begin_active(),
-    endc = stokes_dof_handler.end();
-    for (; cell!=endc; ++cell)
-      if (cell->is_locally_owned())
-        {
-          fe_values.reinit (cell);
-          fe_values[velocities].get_function_values (stokes_solution,
-                                                     velocity_values);
+    double max_local_velocity = 1;
 
-          for (unsigned int q=0; q<n_q_points; ++q)
-            max_local_velocity = std::max (max_local_velocity,
-                                           velocity_values[q].norm());
-        }
+    // typename DoFHandler<dim>::active_cell_iterator
+    // cell = stokes_dof_handler.begin_active(),
+    // endc = stokes_dof_handler.end();
+    // for (; cell!=endc; ++cell)
+    //   if (cell->is_locally_owned())
+    //     {
+    //       fe_values.reinit (cell);
+    //       fe_values[velocities].get_function_values (stokes_solution,
+    //                                                  velocity_values);
+    // 
+    //       for (unsigned int q=0; q<n_q_points; ++q)
+    //         max_local_velocity = std::max (max_local_velocity,
+    //                                        velocity_values[q].norm());
+        // }
 
     return Utilities::MPI::max (max_local_velocity, MPI_COMM_WORLD);
   }
