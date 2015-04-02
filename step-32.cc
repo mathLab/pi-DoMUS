@@ -92,7 +92,7 @@ namespace Step32
   {
     const double eta                   = 1e21;    /* Pa s       */
     const double kappa                 = 1e-6;    /* m^2 / s    */
-    const double density     = 3300;    /* kg / m^3   */
+    const double density               = 3300;    /* kg / m^3   */
     const double nu  = 1; // Added in review
     const double reference_temperature = 293;     /* K          */
     const double expansion_coefficient = 2e-5;    /* 1/K        */

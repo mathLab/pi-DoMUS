@@ -1,9 +1,12 @@
 #!/bin/bash
 
-cd $PBS_O_WORKDIR
+cd "$PBS_O_WORKDIR/../build/"
 
-module load intel/14.0
-module load openmpi/1.8.3/intel/14.0
+. /home/mathlab/gnu.conf /home/mathlab/gnu/
+
+make distclean
+cmake ..
 make
-mpirun -np 20 ./step-32 > output.sh
+
+mpirun -np 20 ./step-32 > output.dat
 
