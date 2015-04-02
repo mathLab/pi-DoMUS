@@ -2755,7 +2755,9 @@ start_time_iteration:
             (timestep_number % parameters.graphical_output_interval == 0))
           output_results ();
 
-        if (time > parameters.end_time * EquationData::year_in_seconds)
+        // if (time > parameters.end_time * EquationData::year_in_seconds)
+        //   break;
+        if (time > 3 * EquationData::year_in_seconds)
           break;
 
         TrilinosWrappers::MPI::BlockVector old_old_stokes_solution;
