@@ -1,26 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Copyright (C) 2008 - 2014 by the deal.II authors
- *
- * This file is part of the deal.II library.
- *
- * The deal.II library is free software; you can use it, redistribute
- * it, and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * The full text of the license can be found in the file LICENSE at
- * the top level of the deal.II distribution.
- *
- * ---------------------------------------------------------------------
-
- *
- * Authors: Martin Kronbichler, Uppsala University,
- *          Wolfgang Bangerth, Texas A&M University,
- *          Timo Heister, University of Goettingen, 2008-2011
- */
-
-
-
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function.h>
@@ -111,12 +88,6 @@ namespace Step32
     // 
     const double temperature_initial_values = 1 ;
     const double nu  = 1; 
-    // double density (const double temperature) 
-    // {
-    //   return (reference_density *
-    //           (1 - expansion_coefficient * (temperature -
-    //                                         reference_temperature)));
-    // }
 
 
     template <int dim>
@@ -127,57 +98,8 @@ namespace Step32
       const double r = p.norm();
       return 0*(1.245e-6 * r + 7.714e13/r/r) * p / r;
     }
-
-
-
-    // template <int dim>
-    // class TemperatureInitialValues : public Function<dim>
-    // {
-    // public:
-    //   TemperatureInitialValues () : Function<dim>(1) {}
-    // 
-    //   virtual double value (const Point<dim>   &p,
-    //                         const unsigned int  component = 0) const;
-    // 
-    //   // virtual void vector_value (const Point<dim> &p,
-    //   //                            Vector<double>   &value) const;
-    // };
-    // 
-    // 
-    // 
-    // template <int dim>
-    // double
-    // TemperatureInitialValues<dim>::value (const Point<dim>  &p,
-    //                                       const unsigned int) const
-    // {
-    //   // const double r = p.norm();
-    //   // const double h = R1-R0;
-    //   // 
-    //   // const double s = (r-R0)/h;
-    //   // const double q = (dim==3)?std::max(0.0,cos(numbers::PI*abs(p(2)/R1))):1.0;
-    //   // const double phi   = std::atan2(p(0),p(1));
-    //   // const double tau = s
-    //   //                    +
-    //   //                    0.2 * s * (1-s) * std::sin(6*phi) * q;
-    // 
-    //   // return T0*(1.0-tau) + T1*tau;
-    //   return 1.;
-    // }
-
-
-    // template <int dim>
-    // void
-    // TemperatureInitialValues<dim>::vector_value (const Point<dim> &p,
-    //                                              Vector<double>   &values) const
-    // {
-    //   for (unsigned int c=0; c<this->n_components; ++c)
-    //   values(c) = 1. ;
-    //     // values(c) = TemperatureInitialValues<dim>::value (p, c);
-    // }
-
-
+    
     const double pressure_scaling = eta / 10000;
-
     const double year_in_seconds  = 60*60*24*365.2425;
 
   }
