@@ -93,7 +93,7 @@ namespace Step32
     const double eta                   = 1e21;    /* Pa s       */
     const double kappa                 = 1e-6;    /* m^2 / s    */
     const double density               = 3300;    /* kg / m^3   */
-    const double nu  = 1; // Added in review
+    
     const double reference_temperature = 293;     /* K          */
     const double expansion_coefficient = 2e-5;    /* 1/K        */
     const double specific_heat         = 1250;    /* J / K / kg */
@@ -107,7 +107,11 @@ namespace Step32
     const double T1      =  700+273;              /* K          */
 
 
-    // double density (const double temperature)
+    // Added in review
+    // 
+    const double temperature_initial_values = 1 ;
+    const double nu  = 1; 
+    // double density (const double temperature) 
     // {
     //   return (reference_density *
     //           (1 - expansion_coefficient * (temperature -
@@ -126,48 +130,50 @@ namespace Step32
 
 
 
-    template <int dim>
-    class TemperatureInitialValues : public Function<dim>
-    {
-    public:
-      TemperatureInitialValues () : Function<dim>(1) {}
+    // template <int dim>
+    // class TemperatureInitialValues : public Function<dim>
+    // {
+    // public:
+    //   TemperatureInitialValues () : Function<dim>(1) {}
+    // 
+    //   virtual double value (const Point<dim>   &p,
+    //                         const unsigned int  component = 0) const;
+    // 
+    //   // virtual void vector_value (const Point<dim> &p,
+    //   //                            Vector<double>   &value) const;
+    // };
+    // 
+    // 
+    // 
+    // template <int dim>
+    // double
+    // TemperatureInitialValues<dim>::value (const Point<dim>  &p,
+    //                                       const unsigned int) const
+    // {
+    //   // const double r = p.norm();
+    //   // const double h = R1-R0;
+    //   // 
+    //   // const double s = (r-R0)/h;
+    //   // const double q = (dim==3)?std::max(0.0,cos(numbers::PI*abs(p(2)/R1))):1.0;
+    //   // const double phi   = std::atan2(p(0),p(1));
+    //   // const double tau = s
+    //   //                    +
+    //   //                    0.2 * s * (1-s) * std::sin(6*phi) * q;
+    // 
+    //   // return T0*(1.0-tau) + T1*tau;
+    //   return 1.;
+    // }
 
-      virtual double value (const Point<dim>   &p,
-                            const unsigned int  component = 0) const;
 
-      virtual void vector_value (const Point<dim> &p,
-                                 Vector<double>   &value) const;
-    };
-
-
-
-    template <int dim>
-    double
-    TemperatureInitialValues<dim>::value (const Point<dim>  &p,
-                                          const unsigned int) const
-    {
-      const double r = p.norm();
-      const double h = R1-R0;
-
-      const double s = (r-R0)/h;
-      const double q = (dim==3)?std::max(0.0,cos(numbers::PI*abs(p(2)/R1))):1.0;
-      const double phi   = std::atan2(p(0),p(1));
-      const double tau = s
-                         +
-                         0.2 * s * (1-s) * std::sin(6*phi) * q;
-
-      return T0*(1.0-tau) + T1*tau;
-    }
-
-
-    template <int dim>
-    void
-    TemperatureInitialValues<dim>::vector_value (const Point<dim> &p,
-                                                 Vector<double>   &values) const
-    {
-      for (unsigned int c=0; c<this->n_components; ++c)
-        values(c) = TemperatureInitialValues<dim>::value (p, c);
-    }
+    // template <int dim>
+    // void
+    // TemperatureInitialValues<dim>::vector_value (const Point<dim> &p,
+    //                                              Vector<double>   &values) const
+    // {
+    //   for (unsigned int c=0; c<this->n_components; ++c)
+    //   values(c) = 1. ;
+    //     // values(c) = TemperatureInitialValues<dim>::value (p, c);
+    // }
 
 
     const double pressure_scaling = eta / 10000;
@@ -1311,7 +1317,7 @@ namespace Step32
     rhs (temperature_mass_matrix.row_partitioner()),
         solution (temperature_mass_matrix.row_partitioner());
 
-    const EquationData::TemperatureInitialValues<dim> initial_temperature;
+    // const EquationData::TemperatureInitialValues<dim> initial_temperature;
 
     typename DoFHandler<dim>::active_cell_iterator
     cell = temperature_dof_handler.begin_active(),
@@ -1323,8 +1329,8 @@ namespace Step32
           cell->get_dof_indices (local_dof_indices);
           fe_values.reinit (cell);
 
-          initial_temperature.value_list (fe_values.get_quadrature_points(),
-                                          rhs_values);
+          // initial_temperature.value_list (fe_values.get_quadrature_points(),
+                                          // rhs_values);
 
           cell_vector = 0;
           matrix_for_bc = 0;
@@ -1543,14 +1549,14 @@ namespace Step32
 
       DoFTools::make_hanging_node_constraints (temperature_dof_handler,
                                                temperature_constraints);
-      VectorTools::interpolate_boundary_values (temperature_dof_handler,
-                                                0,
-                                                EquationData::TemperatureInitialValues<dim>(),
-                                                temperature_constraints);
-      VectorTools::interpolate_boundary_values (temperature_dof_handler,
-                                                1,
-                                                EquationData::TemperatureInitialValues<dim>(),
-                                                temperature_constraints);
+      // VectorTools::interpolate_boundary_values (temperature_dof_handler,
+      //                                           0,
+      //                                           EquationData::TemperatureInitialValues<dim>(),
+      //                                           temperature_constraints);
+      // VectorTools::interpolate_boundary_values (temperature_dof_handler,
+      //                                           1,
+      //                                           EquationData::TemperatureInitialValues<dim>(),
+      //                                           temperature_constraints);
       temperature_constraints.close ();
     }
 
@@ -2732,7 +2738,7 @@ start_time_iteration:
 
         assemble_stokes_system ();
         build_stokes_preconditioner ();
-        assemble_temperature_matrix ();
+        // assemble_temperature_matrix ();
 
         solve ();
 
