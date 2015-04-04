@@ -564,7 +564,7 @@ namespace Step32
     // void assemble_temperature_system (const double maximal_velocity);
     void project_temperature_field ();
     double get_maximal_velocity () const;
-    double get_cfl_number () const;
+    // double get_cfl_number () const;
     double get_entropy_variation (const double average_temperature) const;
     std::pair<double,double> get_extrapolated_temperature_range () const;
     void solve ();
@@ -953,40 +953,40 @@ namespace Step32
 
 
 
-  template <int dim>
-  double BoussinesqFlowProblem<dim>::get_cfl_number () const
-  {
-    const QIterated<dim> quadrature_formula (QTrapez<1>(),
-                                             parameters.stokes_velocity_degree);
-    const unsigned int n_q_points = quadrature_formula.size();
-
-    FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
-    std::vector<Tensor<1,dim> > velocity_values(n_q_points);
-
-    const FEValuesExtractors::Vector velocities (0);
-
-    double max_local_cfl = 0;
-
-    typename DoFHandler<dim>::active_cell_iterator
-    cell = stokes_dof_handler.begin_active(),
-    endc = stokes_dof_handler.end();
-    for (; cell!=endc; ++cell)
-      if (cell->is_locally_owned())
-        {
-          fe_values.reinit (cell);
-          fe_values[velocities].get_function_values (stokes_solution,
-                                                     velocity_values);
-
-          double max_local_velocity = 1e-10;
-          for (unsigned int q=0; q<n_q_points; ++q)
-            max_local_velocity = std::max (max_local_velocity,
-                                           velocity_values[q].norm());
-          max_local_cfl = std::max(max_local_cfl,
-                                   max_local_velocity / cell->diameter());
-        }
-
-    return Utilities::MPI::max (max_local_cfl, MPI_COMM_WORLD);
-  }
+  // template <int dim>
+  // double BoussinesqFlowProblem<dim>::get_cfl_number () const
+  // {
+  //   const QIterated<dim> quadrature_formula (QTrapez<1>(),
+  //                                            parameters.stokes_velocity_degree);
+  //   const unsigned int n_q_points = quadrature_formula.size();
+  // 
+  //   FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
+  //   std::vector<Tensor<1,dim> > velocity_values(n_q_points);
+  // 
+  //   const FEValuesExtractors::Vector velocities (0);
+  // 
+  //   double max_local_cfl = 0;
+  // 
+  //   typename DoFHandler<dim>::active_cell_iterator
+  //   cell = stokes_dof_handler.begin_active(),
+  //   endc = stokes_dof_handler.end();
+  //   for (; cell!=endc; ++cell)
+  //     if (cell->is_locally_owned())
+  //       {
+  //         fe_values.reinit (cell);
+  //         fe_values[velocities].get_function_values (stokes_solution,
+  //                                                    velocity_values);
+  // 
+  //         double max_local_velocity = 1e-10;
+  //         for (unsigned int q=0; q<n_q_points; ++q)
+  //           max_local_velocity = std::max (max_local_velocity,
+  //                                          velocity_values[q].norm());
+  //         max_local_cfl = std::max(max_local_cfl,
+  //                                  max_local_velocity / cell->diameter());
+  //       }
+  // 
+  //   return Utilities::MPI::max (max_local_cfl, MPI_COMM_WORLD);
+  // }
 
 
 
@@ -2236,10 +2236,13 @@ namespace Step32
       old_time_step = time_step;
     
       const double scaling = (dim==3 ? 0.25 : 1.0);
+      // time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
+      //              (parameters.temperature_degree *
+      //               get_cfl_number()));
+      const double cfl_number = 0.0;
       time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
-                   (parameters.temperature_degree *
-                    get_cfl_number()));
-    
+                     (parameters.temperature_degree *
+                      cfl_number));
       const double maximal_velocity = get_maximal_velocity();
       pcout << "   Maximal velocity: "
             << maximal_velocity *EquationData::year_in_seconds * 100
