@@ -704,13 +704,13 @@ namespace Step32
 
 
 
-    void
-    local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
-                                    const double                   global_max_velocity,
-                                    const double                   global_entropy_variation,
-                                    const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                    Assembly::Scratch::TemperatureRHS<dim> &scratch,
-                                    Assembly::CopyData::TemperatureRHS<dim> &data);
+    // void
+    // local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
+    //                                 const double                   global_max_velocity,
+    //                                 const double                   global_entropy_variation,
+    //                                 const typename DoFHandler<dim>::active_cell_iterator &cell,
+    //                                 Assembly::Scratch::TemperatureRHS<dim> &scratch,
+    //                                 Assembly::CopyData::TemperatureRHS<dim> &data);
 
     void
     copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data);
@@ -1894,175 +1894,175 @@ namespace Step32
 
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::
-  local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
-                                  const double                   global_max_velocity,
-                                  const double                   global_entropy_variation,
-                                  const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                  Assembly::Scratch::TemperatureRHS<dim> &scratch,
-                                  Assembly::CopyData::TemperatureRHS<dim> &data)
-  {
-    const bool use_bdf2_scheme = (timestep_number != 0);
-
-    const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
-    const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
-
-    const FEValuesExtractors::Vector velocities (0);
-
-    data.local_rhs = 0;
-    data.matrix_for_bc = 0;
-    cell->get_dof_indices (data.local_dof_indices);
-
-    scratch.temperature_fe_values.reinit (cell);
-
-    typename DoFHandler<dim>::active_cell_iterator
-    stokes_cell (&triangulation,
-                 cell->level(),
-                 cell->index(),
-                 &stokes_dof_handler);
-    scratch.stokes_fe_values.reinit (stokes_cell);
-
-    scratch.temperature_fe_values.get_function_values (old_temperature_solution,
-                                                       scratch.old_temperature_values);
-    scratch.temperature_fe_values.get_function_values (old_old_temperature_solution,
-                                                       scratch.old_old_temperature_values);
-
-    scratch.temperature_fe_values.get_function_gradients (old_temperature_solution,
-                                                          scratch.old_temperature_grads);
-    scratch.temperature_fe_values.get_function_gradients (old_old_temperature_solution,
-                                                          scratch.old_old_temperature_grads);
-
-    scratch.temperature_fe_values.get_function_laplacians (old_temperature_solution,
-                                                           scratch.old_temperature_laplacians);
-    scratch.temperature_fe_values.get_function_laplacians (old_old_temperature_solution,
-                                                           scratch.old_old_temperature_laplacians);
-
-    scratch.stokes_fe_values[velocities].get_function_values (stokes_solution,
-                                                              scratch.old_velocity_values);
-    scratch.stokes_fe_values[velocities].get_function_values (old_stokes_solution,
-                                                              scratch.old_old_velocity_values);
-    scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (stokes_solution,
-        scratch.old_strain_rates);
-    scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (old_stokes_solution,
-        scratch.old_old_strain_rates);
-
-    // const double nu
-    //   = compute_viscosity (scratch.old_temperature_values,
-    //                        scratch.old_old_temperature_values,
-    //                        scratch.old_temperature_grads,
-    //                        scratch.old_old_temperature_grads,
-    //                        scratch.old_temperature_laplacians,
-    //                        scratch.old_old_temperature_laplacians,
-    //                        scratch.old_velocity_values,
-    //                        scratch.old_old_velocity_values,
-    //                        scratch.old_strain_rates,
-    //                        scratch.old_old_strain_rates,
-    //                        global_max_velocity,
-    //                        global_T_range.second - global_T_range.first,
-    //                        0.5 * (global_T_range.second + global_T_range.first),
-    //                        global_entropy_variation,
-    //                        cell->diameter());
-
-    for (unsigned int q=0; q<n_q_points; ++q)
-      {
-        for (unsigned int k=0; k<dofs_per_cell; ++k)
-          {
-            scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
-            scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
-          }
-
-
-        const double T_term_for_rhs
-          = (use_bdf2_scheme ?
-             (scratch.old_temperature_values[q] *
-              (1 + time_step/old_time_step)
-              -
-              scratch.old_old_temperature_values[q] *
-              (time_step * time_step) /
-              (old_time_step * (time_step + old_time_step)))
-             :
-             scratch.old_temperature_values[q]);
-
-        const double ext_T
-          = (use_bdf2_scheme ?
-             (scratch.old_temperature_values[q] *
-              (1 + time_step/old_time_step)
-              -
-              scratch.old_old_temperature_values[q] *
-              time_step/old_time_step)
-             :
-             scratch.old_temperature_values[q]);
-
-        const Tensor<1,dim> ext_grad_T
-          = (use_bdf2_scheme ?
-             (scratch.old_temperature_grads[q] *
-              (1 + time_step/old_time_step)
-              -
-              scratch.old_old_temperature_grads[q] *
-              time_step/old_time_step)
-             :
-             scratch.old_temperature_grads[q]);
-
-        const Tensor<1,dim> extrapolated_u
-          = (use_bdf2_scheme ?
-             (scratch.old_velocity_values[q] *
-              (1 + time_step/old_time_step)
-              -
-              scratch.old_old_velocity_values[q] *
-              time_step/old_time_step)
-             :
-             scratch.old_velocity_values[q]);
-
-        const SymmetricTensor<2,dim> extrapolated_strain_rate
-          = (use_bdf2_scheme ?
-             (scratch.old_strain_rates[q] *
-              (1 + time_step/old_time_step)
-              -
-              scratch.old_old_strain_rates[q] *
-              time_step/old_time_step)
-             :
-             scratch.old_strain_rates[q]);
-
-        const double gamma
-          = ((EquationData::radiogenic_heating * EquationData::density
-              +
-              2 * EquationData::eta * extrapolated_strain_rate * extrapolated_strain_rate) /
-             (EquationData::density * EquationData::specific_heat));
-
-        for (unsigned int i=0; i<dofs_per_cell; ++i)
-          {
-            data.local_rhs(i) += (T_term_for_rhs * scratch.phi_T[i]
-                                  -
-                                  time_step *
-                                  extrapolated_u * ext_grad_T * scratch.phi_T[i]
-                                  -
-                                  time_step *
-                                  EquationData::nu * ext_grad_T * scratch.grad_phi_T[i]
-                                  +
-                                  time_step *
-                                  gamma * scratch.phi_T[i])
-                                 *
-                                 scratch.temperature_fe_values.JxW(q);
-
-            if (temperature_constraints.is_inhomogeneously_constrained(data.local_dof_indices[i]))
-              {
-                for (unsigned int j=0; j<dofs_per_cell; ++j)
-                  data.matrix_for_bc(j,i) += (scratch.phi_T[i] * scratch.phi_T[j] *
-                                              (use_bdf2_scheme ?
-                                               ((2*time_step + old_time_step) /
-                                                (time_step + old_time_step)) : 1.)
-                                              +
-                                              scratch.grad_phi_T[i] *
-                                              scratch.grad_phi_T[j] *
-                                              EquationData::kappa *
-                                              time_step)
-                                             *
-                                             scratch.temperature_fe_values.JxW(q);
-              }
-          }
-      }
-  }
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::
+  // local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
+  //                                 const double                   global_max_velocity,
+  //                                 const double                   global_entropy_variation,
+  //                                 const typename DoFHandler<dim>::active_cell_iterator &cell,
+  //                                 Assembly::Scratch::TemperatureRHS<dim> &scratch,
+  //                                 Assembly::CopyData::TemperatureRHS<dim> &data)
+  // {
+  //   const bool use_bdf2_scheme = (timestep_number != 0);
+  // 
+  //   const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
+  //   const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
+  // 
+  //   const FEValuesExtractors::Vector velocities (0);
+  // 
+  //   data.local_rhs = 0;
+  //   data.matrix_for_bc = 0;
+  //   cell->get_dof_indices (data.local_dof_indices);
+  // 
+  //   scratch.temperature_fe_values.reinit (cell);
+  // 
+  //   typename DoFHandler<dim>::active_cell_iterator
+  //   stokes_cell (&triangulation,
+  //                cell->level(),
+  //                cell->index(),
+  //                &stokes_dof_handler);
+  //   scratch.stokes_fe_values.reinit (stokes_cell);
+  // 
+  //   scratch.temperature_fe_values.get_function_values (old_temperature_solution,
+  //                                                      scratch.old_temperature_values);
+  //   scratch.temperature_fe_values.get_function_values (old_old_temperature_solution,
+  //                                                      scratch.old_old_temperature_values);
+  // 
+  //   scratch.temperature_fe_values.get_function_gradients (old_temperature_solution,
+  //                                                         scratch.old_temperature_grads);
+  //   scratch.temperature_fe_values.get_function_gradients (old_old_temperature_solution,
+  //                                                         scratch.old_old_temperature_grads);
+  // 
+  //   scratch.temperature_fe_values.get_function_laplacians (old_temperature_solution,
+  //                                                          scratch.old_temperature_laplacians);
+  //   scratch.temperature_fe_values.get_function_laplacians (old_old_temperature_solution,
+  //                                                          scratch.old_old_temperature_laplacians);
+  // 
+  //   scratch.stokes_fe_values[velocities].get_function_values (stokes_solution,
+  //                                                             scratch.old_velocity_values);
+  //   scratch.stokes_fe_values[velocities].get_function_values (old_stokes_solution,
+  //                                                             scratch.old_old_velocity_values);
+  //   scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (stokes_solution,
+  //       scratch.old_strain_rates);
+  //   scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (old_stokes_solution,
+  //       scratch.old_old_strain_rates);
+  // 
+  //   // const double nu
+  //   //   = compute_viscosity (scratch.old_temperature_values,
+  //   //                        scratch.old_old_temperature_values,
+  //   //                        scratch.old_temperature_grads,
+  //   //                        scratch.old_old_temperature_grads,
+  //   //                        scratch.old_temperature_laplacians,
+  //   //                        scratch.old_old_temperature_laplacians,
+  //   //                        scratch.old_velocity_values,
+  //   //                        scratch.old_old_velocity_values,
+  //   //                        scratch.old_strain_rates,
+  //   //                        scratch.old_old_strain_rates,
+  //   //                        global_max_velocity,
+  //   //                        global_T_range.second - global_T_range.first,
+  //   //                        0.5 * (global_T_range.second + global_T_range.first),
+  //   //                        global_entropy_variation,
+  //   //                        cell->diameter());
+  // 
+  //   for (unsigned int q=0; q<n_q_points; ++q)
+  //     {
+  //       for (unsigned int k=0; k<dofs_per_cell; ++k)
+  //         {
+  //           scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
+  //           scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
+  //         }
+  // 
+  // 
+  //       const double T_term_for_rhs
+  //         = (use_bdf2_scheme ?
+  //            (scratch.old_temperature_values[q] *
+  //             (1 + time_step/old_time_step)
+  //             -
+  //             scratch.old_old_temperature_values[q] *
+  //             (time_step * time_step) /
+  //             (old_time_step * (time_step + old_time_step)))
+  //            :
+  //            scratch.old_temperature_values[q]);
+  // 
+  //       const double ext_T
+  //         = (use_bdf2_scheme ?
+  //            (scratch.old_temperature_values[q] *
+  //             (1 + time_step/old_time_step)
+  //             -
+  //             scratch.old_old_temperature_values[q] *
+  //             time_step/old_time_step)
+  //            :
+  //            scratch.old_temperature_values[q]);
+  // 
+  //       const Tensor<1,dim> ext_grad_T
+  //         = (use_bdf2_scheme ?
+  //            (scratch.old_temperature_grads[q] *
+  //             (1 + time_step/old_time_step)
+  //             -
+  //             scratch.old_old_temperature_grads[q] *
+  //             time_step/old_time_step)
+  //            :
+  //            scratch.old_temperature_grads[q]);
+  // 
+  //       const Tensor<1,dim> extrapolated_u
+  //         = (use_bdf2_scheme ?
+  //            (scratch.old_velocity_values[q] *
+  //             (1 + time_step/old_time_step)
+  //             -
+  //             scratch.old_old_velocity_values[q] *
+  //             time_step/old_time_step)
+  //            :
+  //            scratch.old_velocity_values[q]);
+  // 
+  //       const SymmetricTensor<2,dim> extrapolated_strain_rate
+  //         = (use_bdf2_scheme ?
+  //            (scratch.old_strain_rates[q] *
+  //             (1 + time_step/old_time_step)
+  //             -
+  //             scratch.old_old_strain_rates[q] *
+  //             time_step/old_time_step)
+  //            :
+  //            scratch.old_strain_rates[q]);
+  // 
+  //       const double gamma
+  //         = ((EquationData::radiogenic_heating * EquationData::density
+  //             +
+  //             2 * EquationData::eta * extrapolated_strain_rate * extrapolated_strain_rate) /
+  //            (EquationData::density * EquationData::specific_heat));
+  // 
+  //       for (unsigned int i=0; i<dofs_per_cell; ++i)
+  //         {
+  //           data.local_rhs(i) += (T_term_for_rhs * scratch.phi_T[i]
+  //                                 -
+  //                                 time_step *
+  //                                 extrapolated_u * ext_grad_T * scratch.phi_T[i]
+  //                                 -
+  //                                 time_step *
+  //                                 EquationData::nu * ext_grad_T * scratch.grad_phi_T[i]
+  //                                 +
+  //                                 time_step *
+  //                                 gamma * scratch.phi_T[i])
+  //                                *
+  //                                scratch.temperature_fe_values.JxW(q);
+  // 
+  //           if (temperature_constraints.is_inhomogeneously_constrained(data.local_dof_indices[i]))
+  //             {
+  //               for (unsigned int j=0; j<dofs_per_cell; ++j)
+  //                 data.matrix_for_bc(j,i) += (scratch.phi_T[i] * scratch.phi_T[j] *
+  //                                             (use_bdf2_scheme ?
+  //                                              ((2*time_step + old_time_step) /
+  //                                               (time_step + old_time_step)) : 1.)
+  //                                             +
+  //                                             scratch.grad_phi_T[i] *
+  //                                             scratch.grad_phi_T[j] *
+  //                                             EquationData::kappa *
+  //                                             time_step)
+  //                                            *
+  //                                            scratch.temperature_fe_values.JxW(q);
+  //             }
+  //         }
+  //     }
+  // }
 
 
   template <int dim>
