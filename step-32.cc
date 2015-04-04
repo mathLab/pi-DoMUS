@@ -400,10 +400,10 @@ namespace Step32
     TrilinosWrappers::SparseMatrix            temperature_stiffness_matrix;
     TrilinosWrappers::SparseMatrix            temperature_matrix;
 
-    TrilinosWrappers::MPI::Vector             temperature_solution;
-    TrilinosWrappers::MPI::Vector             old_temperature_solution;
-    TrilinosWrappers::MPI::Vector             old_old_temperature_solution;
-    TrilinosWrappers::MPI::Vector             temperature_rhs;
+    // TrilinosWrappers::MPI::Vector             temperature_solution;
+    // TrilinosWrappers::MPI::Vector             old_temperature_solution;
+    // TrilinosWrappers::MPI::Vector             old_old_temperature_solution;
+    // TrilinosWrappers::MPI::Vector             temperature_rhs;
 
 
     double                                    time_step;
@@ -800,12 +800,12 @@ namespace Step32
     stokes_solution.reinit (stokes_relevant_partitioning, MPI_COMM_WORLD);
     old_stokes_solution.reinit (stokes_solution);
 
-    temperature_rhs.reinit (temperature_partitioning,
-                            temperature_relevant_partitioning,
-                            MPI_COMM_WORLD, true);
-    temperature_solution.reinit (temperature_relevant_partitioning, MPI_COMM_WORLD);
-    old_temperature_solution.reinit (temperature_solution);
-    old_old_temperature_solution.reinit (temperature_solution);
+    // temperature_rhs.reinit (temperature_partitioning,
+    //                         temperature_relevant_partitioning,
+    //                         MPI_COMM_WORLD, true);
+    // temperature_solution.reinit (temperature_relevant_partitioning, MPI_COMM_WORLD);
+    // old_temperature_solution.reinit (temperature_solution);
+    // old_old_temperature_solution.reinit (temperature_solution);
 
     rebuild_stokes_matrix              = true;
     rebuild_stokes_preconditioner      = true;
@@ -975,8 +975,8 @@ namespace Step32
       data.local_matrix = 0;
     data.local_rhs = 0;
 
-    scratch.temperature_fe_values.get_function_values (old_temperature_solution,
-                                                       scratch.old_temperature_values);
+    // scratch.temperature_fe_values.get_function_values (old_temperature_solution,
+                                                      //  scratch.old_temperature_values);
 
     for (unsigned int q=0; q<n_q_points; ++q)
       {
@@ -1379,9 +1379,9 @@ namespace Step32
                           <
                           local_temperature_dof_indices.size(),
                           ExcInternalError());
-                  joint_solution(local_joint_dof_indices[i])
-                    = temperature_solution(local_temperature_dof_indices
-                                           [joint_fe.system_to_base_index(i).second]);
+                  // joint_solution(local_joint_dof_indices[i])
+                  //   = temperature_solution(local_temperature_dof_indices
+                  //                          [joint_fe.system_to_base_index(i).second]);
                 }
           }
     }
@@ -1442,90 +1442,88 @@ namespace Step32
   }
 
 
-
-
   template <int dim>
   void BoussinesqFlowProblem<dim>::refine_mesh (const unsigned int max_grid_level)
   {
-    computing_timer.enter_section ("Refine mesh structure, part 1");
-    Vector<float> estimated_error_per_cell (triangulation.n_active_cells());
-
-    KellyErrorEstimator<dim>::estimate (temperature_dof_handler,
-                                        QGauss<dim-1>(parameters.temperature_degree+1),
-                                        typename FunctionMap<dim>::type(),
-                                        temperature_solution,
-                                        estimated_error_per_cell,
-                                        ComponentMask(),
-                                        0,
-                                        0,
-                                        triangulation.locally_owned_subdomain());
-
-    parallel::distributed::GridRefinement::
-    refine_and_coarsen_fixed_fraction (triangulation,
-                                       estimated_error_per_cell,
-                                       0.3, 0.1);
-
-    if (triangulation.n_levels() > max_grid_level)
-      for (typename Triangulation<dim>::active_cell_iterator
-           cell = triangulation.begin_active(max_grid_level);
-           cell != triangulation.end(); ++cell)
-        cell->clear_refine_flag ();
-
-    std::vector<const TrilinosWrappers::MPI::Vector *> x_temperature (2);
-    x_temperature[0] = &temperature_solution;
-    x_temperature[1] = &old_temperature_solution;
-    std::vector<const TrilinosWrappers::MPI::BlockVector *> x_stokes (2);
-    x_stokes[0] = &stokes_solution;
-    x_stokes[1] = &old_stokes_solution;
-
-    parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::Vector>
-    temperature_trans(temperature_dof_handler);
-    parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector>
-    stokes_trans(stokes_dof_handler);
-
-    triangulation.prepare_coarsening_and_refinement();
-    temperature_trans.prepare_for_coarsening_and_refinement(x_temperature);
-    stokes_trans.prepare_for_coarsening_and_refinement(x_stokes);
-
-    triangulation.execute_coarsening_and_refinement ();
-    computing_timer.exit_section();
-
-    setup_dofs ();
-
-    computing_timer.enter_section ("Refine mesh structure, part 2");
-
-    {
-      TrilinosWrappers::MPI::Vector distributed_temp1 (temperature_rhs);
-      TrilinosWrappers::MPI::Vector distributed_temp2 (temperature_rhs);
-    
-      std::vector<TrilinosWrappers::MPI::Vector *> tmp (2);
-      tmp[0] = &(distributed_temp1);
-      tmp[1] = &(distributed_temp2);
-      temperature_trans.interpolate(tmp);
-    
-      temperature_solution     = distributed_temp1;
-      old_temperature_solution = distributed_temp2;
-    }
-
-    {
-      // This part has to be removed:
-      //  Removing this function causes a lot of errors!!!
-      TrilinosWrappers::MPI::BlockVector distributed_stokes (stokes_rhs);
-      TrilinosWrappers::MPI::BlockVector old_distributed_stokes (stokes_rhs);
-
-      std::vector<TrilinosWrappers::MPI::BlockVector *> stokes_tmp (2);
-      stokes_tmp[0] = &(distributed_stokes);
-      stokes_tmp[1] = &(old_distributed_stokes);
-
-      stokes_trans.interpolate (stokes_tmp);
-      stokes_solution     = distributed_stokes;
-      old_stokes_solution = old_distributed_stokes;
-    }
-
-    computing_timer.exit_section();
+    // Rewrite this function using a refinement on stoke's equation!
+  
+    // computing_timer.enter_section ("Refine mesh structure, part 1");
+    // Vector<float> estimated_error_per_cell (triangulation.n_active_cells());
+    // 
+    // KellyErrorEstimator<dim>::estimate (temperature_dof_handler,
+    //                                     QGauss<dim-1>(parameters.temperature_degree+1),
+    //                                     typename FunctionMap<dim>::type(),
+    //                                     // temperature_solution,
+    //                                     estimated_error_per_cell,
+    //                                     ComponentMask(),
+    //                                     0,
+    //                                     0,
+    //                                     triangulation.locally_owned_subdomain());
+    // 
+    // parallel::distributed::GridRefinement::
+    // refine_and_coarsen_fixed_fraction (triangulation,
+    //                                    estimated_error_per_cell,
+    //                                    0.3, 0.1);
+    // 
+    // if (triangulation.n_levels() > max_grid_level)
+    //   for (typename Triangulation<dim>::active_cell_iterator
+    //        cell = triangulation.begin_active(max_grid_level);
+    //        cell != triangulation.end(); ++cell)
+    //     cell->clear_refine_flag ();
+    // 
+    // std::vector<const TrilinosWrappers::MPI::Vector *> x_temperature (2);
+    // // x_temperature[0] = &temperature_solution;
+    // // x_temperature[1] = &old_temperature_solution;
+    // std::vector<const TrilinosWrappers::MPI::BlockVector *> x_stokes (2);
+    // x_stokes[0] = &stokes_solution;
+    // x_stokes[1] = &old_stokes_solution;
+    // 
+    // parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::Vector>
+    // temperature_trans(temperature_dof_handler);
+    // parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector>
+    // stokes_trans(stokes_dof_handler);
+    // 
+    // triangulation.prepare_coarsening_and_refinement();
+    // temperature_trans.prepare_for_coarsening_and_refinement(x_temperature);
+    // stokes_trans.prepare_for_coarsening_and_refinement(x_stokes);
+    // 
+    // triangulation.execute_coarsening_and_refinement ();
+    // computing_timer.exit_section();
+    // 
+    // setup_dofs ();
+    // 
+    // computing_timer.enter_section ("Refine mesh structure, part 2");
+    // 
+    // // {
+    // // //   // TrilinosWrappers::MPI::Vector distributed_temp1 (temperature_rhs);
+    // // //   // TrilinosWrappers::MPI::Vector distributed_temp2 (temperature_rhs);
+    // // // 
+    // // //   std::vector<TrilinosWrappers::MPI::Vector *> tmp (2);
+    // // //   tmp[0] = &(distributed_temp1);
+    // // //   tmp[1] = &(distributed_temp2);
+    // // //   temperature_trans.interpolate(tmp);
+    // // // 
+    // //     temperature_solution     = 1.0;
+    // //     old_temperature_solution = 0.0;
+    // // }
+    // 
+    // {
+    //   // This part has to be removed:
+    //   //  Removing this function causes a lot of errors!!!
+    //   TrilinosWrappers::MPI::BlockVector distributed_stokes (stokes_rhs);
+    //   TrilinosWrappers::MPI::BlockVector old_distributed_stokes (stokes_rhs);
+    // 
+    //   std::vector<TrilinosWrappers::MPI::BlockVector *> stokes_tmp (2);
+    //   stokes_tmp[0] = &(distributed_stokes);
+    //   stokes_tmp[1] = &(old_distributed_stokes);
+    // 
+    //   stokes_trans.interpolate (stokes_tmp);
+    //   stokes_solution     = distributed_stokes;
+    //   old_stokes_solution = old_distributed_stokes;
+    // }
+    // 
+    // computing_timer.exit_section();
   }
-
-
 
 
   template <int dim>
