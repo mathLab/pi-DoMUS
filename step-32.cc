@@ -2239,10 +2239,11 @@ namespace Step32
       // time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
       //              (parameters.temperature_degree *
       //               get_cfl_number()));
-      const double cfl_number = 0.0;
+      const double cfl_number = 1e-20;
       time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
                      (parameters.temperature_degree *
                       cfl_number));
+                      
       const double maximal_velocity = get_maximal_velocity();
       pcout << "   Maximal velocity: "
             << maximal_velocity *EquationData::year_in_seconds * 100
