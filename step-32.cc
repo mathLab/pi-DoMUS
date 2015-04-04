@@ -561,7 +561,7 @@ namespace Step32
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
     void assemble_temperature_matrix ();
-    void assemble_temperature_system (const double maximal_velocity);
+    // void assemble_temperature_system (const double maximal_velocity);
     void project_temperature_field ();
     double get_maximal_velocity () const;
     double get_cfl_number () const;
@@ -2078,72 +2078,72 @@ namespace Step32
 
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::assemble_temperature_system (const double maximal_velocity)
-  {
-    const bool use_bdf2_scheme = (timestep_number != 0);
-
-    if (use_bdf2_scheme == true)
-      {
-        temperature_matrix.copy_from (temperature_mass_matrix);
-        temperature_matrix *= (2*time_step + old_time_step) /
-                              (time_step + old_time_step);
-        temperature_matrix.add (time_step, temperature_stiffness_matrix);
-      }
-    else
-      {
-        temperature_matrix.copy_from (temperature_mass_matrix);
-        temperature_matrix.add (time_step, temperature_stiffness_matrix);
-      }
-
-    if (rebuild_temperature_preconditioner == true)
-      {
-        T_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-        T_preconditioner->initialize (temperature_matrix);
-        rebuild_temperature_preconditioner = false;
-      }
-
-    temperature_rhs = 0;
-
-    const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
-    const std::pair<double,double>
-    global_T_range = get_extrapolated_temperature_range();
-
-    const double average_temperature = 0.5 * (global_T_range.first +
-                                              global_T_range.second);
-    const double global_entropy_variation =
-      get_entropy_variation (average_temperature);
-
-    typedef
-    FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
-    CellFilter;
-
-    WorkStream::
-    run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     temperature_dof_handler.begin_active()),
-         CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     temperature_dof_handler.end()),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          local_assemble_temperature_rhs,
-                          this,
-                          global_T_range,
-                          maximal_velocity,
-                          global_entropy_variation,
-                          std_cxx11::_1,
-                          std_cxx11::_2,
-                          std_cxx11::_3),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          copy_local_to_global_temperature_rhs,
-                          this,
-                          std_cxx11::_1),
-         Assembly::Scratch::
-         TemperatureRHS<dim> (temperature_fe, stokes_fe, mapping,
-                              quadrature_formula),
-         Assembly::CopyData::
-         TemperatureRHS<dim> (temperature_fe));
-
-    temperature_rhs.compress(VectorOperation::add);
-  }
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::assemble_temperature_system (const double maximal_velocity)
+  // {
+  //   const bool use_bdf2_scheme = (timestep_number != 0);
+  // 
+  //   if (use_bdf2_scheme == true)
+  //     {
+  //       temperature_matrix.copy_from (temperature_mass_matrix);
+  //       temperature_matrix *= (2*time_step + old_time_step) /
+  //                             (time_step + old_time_step);
+  //       temperature_matrix.add (time_step, temperature_stiffness_matrix);
+  //     }
+  //   else
+  //     {
+  //       temperature_matrix.copy_from (temperature_mass_matrix);
+  //       temperature_matrix.add (time_step, temperature_stiffness_matrix);
+  //     }
+  // 
+  //   if (rebuild_temperature_preconditioner == true)
+  //     {
+  //       T_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
+  //       T_preconditioner->initialize (temperature_matrix);
+  //       rebuild_temperature_preconditioner = false;
+  //     }
+  // 
+  //   temperature_rhs = 0;
+  // 
+  //   const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
+  //   const std::pair<double,double>
+  //   global_T_range = get_extrapolated_temperature_range();
+  // 
+  //   const double average_temperature = 0.5 * (global_T_range.first +
+  //                                             global_T_range.second);
+  //   const double global_entropy_variation =
+  //     get_entropy_variation (average_temperature);
+  // 
+  //   typedef
+  //   FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
+  //   CellFilter;
+  // 
+  //   WorkStream::
+  //   run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+  //                    temperature_dof_handler.begin_active()),
+  //        CellFilter (IteratorFilters::LocallyOwnedCell(),
+  //                    temperature_dof_handler.end()),
+  //        std_cxx11::bind (&BoussinesqFlowProblem<dim>::
+  //                         local_assemble_temperature_rhs,
+  //                         this,
+  //                         global_T_range,
+  //                         maximal_velocity,
+  //                         global_entropy_variation,
+  //                         std_cxx11::_1,
+  //                         std_cxx11::_2,
+  //                         std_cxx11::_3),
+  //        std_cxx11::bind (&BoussinesqFlowProblem<dim>::
+  //                         copy_local_to_global_temperature_rhs,
+  //                         this,
+  //                         std_cxx11::_1),
+  //        Assembly::Scratch::
+  //        TemperatureRHS<dim> (temperature_fe, stokes_fe, mapping,
+  //                             quadrature_formula),
+  //        Assembly::CopyData::
+  //        TemperatureRHS<dim> (temperature_fe));
+  // 
+  //   temperature_rhs.compress(VectorOperation::add);
+  // }
 
 
 
@@ -2251,7 +2251,7 @@ namespace Step32
             << std::endl;
     
       temperature_solution = old_temperature_solution;
-      assemble_temperature_system (maximal_velocity);
+      // assemble_temperature_system (maximal_velocity);
     }
     computing_timer.exit_section ();
 
