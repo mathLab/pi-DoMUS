@@ -336,7 +336,7 @@ namespace Step32
     void assemble_stokes_preconditioner ();
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
-    double get_entropy_variation (const double average_temperature) const;
+    // double get_entropy_variation (const double average_temperature) const;
     void solve ();
     void output_results ();
     void refine_mesh (const unsigned int max_grid_level);
@@ -495,7 +495,6 @@ namespace Step32
   }
 
 
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::Parameters::
@@ -565,7 +564,6 @@ namespace Step32
   }
 
 
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::Parameters::
@@ -597,8 +595,6 @@ namespace Step32
     }
     prm.leave_subsection ();
   }
-
-
 
 
   template <int dim>
@@ -647,63 +643,63 @@ namespace Step32
   {}
 
 
-  template <int dim>
-  double
-  BoussinesqFlowProblem<dim>::get_entropy_variation (const double average_temperature) const
-  {
-    if (parameters.stabilization_alpha != 2)
-      return 1.;
-
-    const QGauss<dim> quadrature_formula (parameters.temperature_degree+1);
-    const unsigned int n_q_points = quadrature_formula.size();
-
-    FEValues<dim> fe_values (temperature_fe, quadrature_formula,
-                             update_values | update_JxW_values);
-    std::vector<double> old_temperature_values(n_q_points);
-    std::vector<double> old_old_temperature_values(n_q_points);
-
-    double min_entropy = std::numeric_limits<double>::max(),
-           max_entropy = -std::numeric_limits<double>::max(),
-           area = 0,
-           entropy_integrated = 0;
-
-    typename DoFHandler<dim>::active_cell_iterator
-    cell = temperature_dof_handler.begin_active(),
-    endc = temperature_dof_handler.end();
-    for (; cell!=endc; ++cell)
-      if (cell->is_locally_owned())
-        {
-          fe_values.reinit (cell);
-          fe_values.get_function_values (old_temperature_solution,
-                                         old_temperature_values);
-          fe_values.get_function_values (old_old_temperature_solution,
-                                         old_old_temperature_values);
-          for (unsigned int q=0; q<n_q_points; ++q)
-            {
-              const double T = (old_temperature_values[q] +
-                                old_old_temperature_values[q]) / 2;
-              const double entropy = ((T-average_temperature) *
-                                      (T-average_temperature));
-
-              min_entropy = std::min (min_entropy, entropy);
-              max_entropy = std::max (max_entropy, entropy);
-              area += fe_values.JxW(q);
-              entropy_integrated += fe_values.JxW(q) * entropy;
-            }
-        }
-
-    const double local_sums[2]   = { entropy_integrated, area },
-                                   local_maxima[2] = { -min_entropy, max_entropy };
-    double global_sums[2], global_maxima[2];
-
-    Utilities::MPI::sum (local_sums,   MPI_COMM_WORLD, global_sums);
-    Utilities::MPI::max (local_maxima, MPI_COMM_WORLD, global_maxima);
-
-    const double average_entropy = global_sums[0] / global_sums[1];
-    const double entropy_diff = std::max(global_maxima[1] - average_entropy,
-                                         average_entropy - (-global_maxima[0]));
-    return entropy_diff;
-  }
+  // template <int dim>
+  // double
+  // BoussinesqFlowProblem<dim>::get_entropy_variation (const double average_temperature) const
+  // {
+  //   if (parameters.stabilization_alpha != 2)
+  //     return 1.;
+  // 
+  //   const QGauss<dim> quadrature_formula (parameters.temperature_degree+1);
+  //   const unsigned int n_q_points = quadrature_formula.size();
+  // 
+  //   FEValues<dim> fe_values (temperature_fe, quadrature_formula,
+  //                            update_values | update_JxW_values);
+  //   std::vector<double> old_temperature_values(n_q_points);
+  //   std::vector<double> old_old_temperature_values(n_q_points);
+  // 
+  //   double min_entropy = std::numeric_limits<double>::max(),
+  //          max_entropy = -std::numeric_limits<double>::max(),
+  //          area = 0,
+  //          entropy_integrated = 0;
+  // 
+  //   typename DoFHandler<dim>::active_cell_iterator
+  //   cell = temperature_dof_handler.begin_active(),
+  //   endc = temperature_dof_handler.end();
+  //   for (; cell!=endc; ++cell)
+  //     if (cell->is_locally_owned())
+  //       {
+  //         fe_values.reinit (cell);
+  //         fe_values.get_function_values (old_temperature_solution,
+  //                                        old_temperature_values);
+  //         fe_values.get_function_values (old_old_temperature_solution,
+  //                                        old_old_temperature_values);
+  //         for (unsigned int q=0; q<n_q_points; ++q)
+  //           {
+  //             const double T = (old_temperature_values[q] +
+  //                               old_old_temperature_values[q]) / 2;
+  //             const double entropy = ((T-average_temperature) *
+  //                                     (T-average_temperature));
+  // 
+  //             min_entropy = std::min (min_entropy, entropy);
+  //             max_entropy = std::max (max_entropy, entropy);
+  //             area += fe_values.JxW(q);
+  //             entropy_integrated += fe_values.JxW(q) * entropy;
+  //           }
+  //       }
+  // 
+  //   const double local_sums[2]   = { entropy_integrated, area },
+  //                                  local_maxima[2] = { -min_entropy, max_entropy };
+  //   double global_sums[2], global_maxima[2];
+  // 
+  //   Utilities::MPI::sum (local_sums,   MPI_COMM_WORLD, global_sums);
+  //   Utilities::MPI::max (local_maxima, MPI_COMM_WORLD, global_maxima);
+  // 
+  //   const double average_entropy = global_sums[0] / global_sums[1];
+  //   const double entropy_diff = std::max(global_maxima[1] - average_entropy,
+  //                                        average_entropy - (-global_maxima[0]));
+  //   return entropy_diff;
+  // }
 
 
   template <int dim>
