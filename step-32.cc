@@ -544,7 +544,7 @@ namespace Step32
     void assemble_stokes_preconditioner ();
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
-    void assemble_temperature_matrix ();
+    // void assemble_temperature_matrix ();
     void project_temperature_field ();
     double get_entropy_variation (const double average_temperature) const;
     // std::pair<double,double> get_extrapolated_temperature_range () const;
@@ -1011,7 +1011,7 @@ namespace Step32
   template <int dim>
   void BoussinesqFlowProblem<dim>::project_temperature_field ()
   {
-    assemble_temperature_matrix ();
+    // assemble_temperature_matrix ();
 
     QGauss<dim> quadrature(parameters.temperature_degree+2);
     UpdateFlags update_flags = UpdateFlags(update_values   |
@@ -1627,21 +1627,22 @@ namespace Step32
   // }
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::assemble_temperature_matrix ()
-  {
-    if (rebuild_temperature_matrices == false)
-      return;
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::assemble_temperature_matrix ()
+  // {
+  //   return;
+    // if (rebuild_temperature_matrices == false)
+      // return;
 
-    computing_timer.enter_section ("   Assemble temperature matrices");
-    temperature_mass_matrix = 0;
-    temperature_stiffness_matrix = 0;
+    // computing_timer.enter_section ("   Assemble temperature matrices");
+    // temperature_mass_matrix = 0;
+    // temperature_stiffness_matrix = 0;
 
-    const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
+    // const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
 
-    typedef
-    FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
-    CellFilter;
+    // typedef
+    // FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
+    // CellFilter;
 
     // WorkStream::
     // run (CellFilter (IteratorFilters::LocallyOwnedCell(),
@@ -1663,14 +1664,14 @@ namespace Step32
     //      Assembly::CopyData::
     //      TemperatureMatrix<dim> (temperature_fe));
 
-    temperature_mass_matrix.compress(VectorOperation::add);
-    temperature_stiffness_matrix.compress(VectorOperation::add);
-
-    rebuild_temperature_matrices = false;
-    rebuild_temperature_preconditioner = true;
-
-    computing_timer.exit_section();
-  }
+    // temperature_mass_matrix.compress(VectorOperation::add);
+    // temperature_stiffness_matrix.compress(VectorOperation::add);
+    // 
+    // rebuild_temperature_matrices = false;
+    // rebuild_temperature_preconditioner = true;
+    // 
+    // computing_timer.exit_section();
+  // }
 
 
   // template <int dim>
