@@ -547,7 +547,7 @@ namespace Step32
     void assemble_temperature_matrix ();
     void project_temperature_field ();
     double get_entropy_variation (const double average_temperature) const;
-    std::pair<double,double> get_extrapolated_temperature_range () const;
+    // std::pair<double,double> get_extrapolated_temperature_range () const;
     void solve ();
     void output_results ();
     void refine_mesh (const unsigned int max_grid_level);
@@ -931,81 +931,81 @@ namespace Step32
 
 
 
-  template <int dim>
-  std::pair<double,double>
-  BoussinesqFlowProblem<dim>::get_extrapolated_temperature_range () const
-  {
-    const QIterated<dim> quadrature_formula (QTrapez<1>(),
-                                             parameters.temperature_degree);
-    const unsigned int n_q_points = quadrature_formula.size();
-
-    FEValues<dim> fe_values (mapping, temperature_fe, quadrature_formula,
-                             update_values);
-    std::vector<double> old_temperature_values(n_q_points);
-    std::vector<double> old_old_temperature_values(n_q_points);
-
-    double min_local_temperature = std::numeric_limits<double>::max(),
-           max_local_temperature = -std::numeric_limits<double>::max();
-
-    if (timestep_number != 0)
-      {
-        typename DoFHandler<dim>::active_cell_iterator
-        cell = temperature_dof_handler.begin_active(),
-        endc = temperature_dof_handler.end();
-        for (; cell!=endc; ++cell)
-          if (cell->is_locally_owned())
-            {
-              fe_values.reinit (cell);
-              fe_values.get_function_values (old_temperature_solution,
-                                             old_temperature_values);
-              fe_values.get_function_values (old_old_temperature_solution,
-                                             old_old_temperature_values);
-
-              for (unsigned int q=0; q<n_q_points; ++q)
-                {
-                  const double temperature =
-                    (1. + time_step/old_time_step) * old_temperature_values[q]-
-                    time_step/old_time_step * old_old_temperature_values[q];
-
-                  min_local_temperature = std::min (min_local_temperature,
-                                                    temperature);
-                  max_local_temperature = std::max (max_local_temperature,
-                                                    temperature);
-                }
-            }
-      }
-    else
-      {
-        typename DoFHandler<dim>::active_cell_iterator
-        cell = temperature_dof_handler.begin_active(),
-        endc = temperature_dof_handler.end();
-        for (; cell!=endc; ++cell)
-          if (cell->is_locally_owned())
-            {
-              fe_values.reinit (cell);
-              fe_values.get_function_values (old_temperature_solution,
-                                             old_temperature_values);
-
-              for (unsigned int q=0; q<n_q_points; ++q)
-                {
-                  const double temperature = old_temperature_values[q];
-
-                  min_local_temperature = std::min (min_local_temperature,
-                                                    temperature);
-                  max_local_temperature = std::max (max_local_temperature,
-                                                    temperature);
-                }
-            }
-      }
-
-    double local_extrema[2] = { -min_local_temperature,
-                                max_local_temperature
-                              };
-    double global_extrema[2];
-    Utilities::MPI::max (local_extrema, MPI_COMM_WORLD, global_extrema);
-
-    return std::make_pair(-global_extrema[0], global_extrema[1]);
-  }
+  // template <int dim>
+  // std::pair<double,double>
+  // BoussinesqFlowProblem<dim>::get_extrapolated_temperature_range () const
+  // {
+  //   const QIterated<dim> quadrature_formula (QTrapez<1>(),
+  //                                            parameters.temperature_degree);
+  //   const unsigned int n_q_points = quadrature_formula.size();
+  // 
+  //   FEValues<dim> fe_values (mapping, temperature_fe, quadrature_formula,
+  //                            update_values);
+  //   std::vector<double> old_temperature_values(n_q_points);
+  //   std::vector<double> old_old_temperature_values(n_q_points);
+  // 
+  //   double min_local_temperature = std::numeric_limits<double>::max(),
+  //          max_local_temperature = -std::numeric_limits<double>::max();
+  // 
+  //   if (timestep_number != 0)
+  //     {
+  //       typename DoFHandler<dim>::active_cell_iterator
+  //       cell = temperature_dof_handler.begin_active(),
+  //       endc = temperature_dof_handler.end();
+  //       for (; cell!=endc; ++cell)
+  //         if (cell->is_locally_owned())
+  //           {
+  //             fe_values.reinit (cell);
+  //             fe_values.get_function_values (old_temperature_solution,
+  //                                            old_temperature_values);
+  //             fe_values.get_function_values (old_old_temperature_solution,
+  //                                            old_old_temperature_values);
+  // 
+  //             for (unsigned int q=0; q<n_q_points; ++q)
+  //               {
+  //                 const double temperature =
+  //                   (1. + time_step/old_time_step) * old_temperature_values[q]-
+  //                   time_step/old_time_step * old_old_temperature_values[q];
+  // 
+  //                 min_local_temperature = std::min (min_local_temperature,
+  //                                                   temperature);
+  //                 max_local_temperature = std::max (max_local_temperature,
+  //                                                   temperature);
+  //               }
+  //           }
+  //     }
+  //   else
+  //     {
+  //       typename DoFHandler<dim>::active_cell_iterator
+  //       cell = temperature_dof_handler.begin_active(),
+  //       endc = temperature_dof_handler.end();
+  //       for (; cell!=endc; ++cell)
+  //         if (cell->is_locally_owned())
+  //           {
+  //             fe_values.reinit (cell);
+  //             fe_values.get_function_values (old_temperature_solution,
+  //                                            old_temperature_values);
+  // 
+  //             for (unsigned int q=0; q<n_q_points; ++q)
+  //               {
+  //                 const double temperature = old_temperature_values[q];
+  // 
+  //                 min_local_temperature = std::min (min_local_temperature,
+  //                                                   temperature);
+  //                 max_local_temperature = std::max (max_local_temperature,
+  //                                                   temperature);
+  //               }
+  //           }
+  //     }
+  // 
+  //   double local_extrema[2] = { -min_local_temperature,
+  //                               max_local_temperature
+  //                             };
+  //   double global_extrema[2];
+  //   Utilities::MPI::max (local_extrema, MPI_COMM_WORLD, global_extrema);
+  // 
+  //   return std::make_pair(-global_extrema[0], global_extrema[1]);
+  // }
 
 
   template <int dim>
