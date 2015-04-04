@@ -262,144 +262,6 @@ namespace Step32
         old_temperature_values (scratch.old_temperature_values)
       {}
 
-      // template <int dim>
-      // struct TemperatureMatrix
-      // {
-      //   TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
-      //                      const Mapping<dim>       &mapping,
-      //                      const Quadrature<dim>    &temperature_quadrature);
-      // 
-      //   TemperatureMatrix (const TemperatureMatrix &data);
-      // 
-      // 
-      //   FEValues<dim>               temperature_fe_values;
-      // 
-      //   std::vector<double>         phi_T;
-      //   std::vector<Tensor<1,dim> > grad_phi_T;
-      // };
-
-
-      // template <int dim>
-      // TemperatureMatrix<dim>::
-      // TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
-      //                    const Mapping<dim>       &mapping,
-      //                    const Quadrature<dim>    &temperature_quadrature)
-      //   :
-      //   temperature_fe_values (mapping,
-      //                          temperature_fe, temperature_quadrature,
-      //                          update_values    | update_gradients |
-      //                          update_JxW_values),
-      //   phi_T (temperature_fe.dofs_per_cell),
-      //   grad_phi_T (temperature_fe.dofs_per_cell)
-      // {}
-
-
-      // template <int dim>
-      // TemperatureMatrix<dim>::
-      // TemperatureMatrix (const TemperatureMatrix &scratch)
-      //   :
-      //   temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
-      //                          scratch.temperature_fe_values.get_fe(),
-      //                          scratch.temperature_fe_values.get_quadrature(),
-      //                          scratch.temperature_fe_values.get_update_flags()),
-      //   phi_T (scratch.phi_T),
-      //   grad_phi_T (scratch.grad_phi_T)
-      // {}
-
-
-      // template <int dim>
-      // struct TemperatureRHS
-      // {
-      //   TemperatureRHS (const FiniteElement<dim> &temperature_fe,
-      //                   const FiniteElement<dim> &stokes_fe,
-      //                   const Mapping<dim>       &mapping,
-      //                   const Quadrature<dim>    &quadrature);
-      // 
-      //   TemperatureRHS (const TemperatureRHS &data);
-      // 
-      // 
-      //   FEValues<dim>                        temperature_fe_values;
-      //   FEValues<dim>                        stokes_fe_values;
-      // 
-      //   std::vector<double>                  phi_T;
-      //   std::vector<Tensor<1,dim> >          grad_phi_T;
-      // 
-      //   std::vector<Tensor<1,dim> >          old_velocity_values;
-      //   std::vector<Tensor<1,dim> >          old_old_velocity_values;
-      // 
-      //   std::vector<SymmetricTensor<2,dim> > old_strain_rates;
-      //   std::vector<SymmetricTensor<2,dim> > old_old_strain_rates;
-      // 
-      //   std::vector<double>                  old_temperature_values;
-      //   std::vector<double>                  old_old_temperature_values;
-      //   std::vector<Tensor<1,dim> >          old_temperature_grads;
-      //   std::vector<Tensor<1,dim> >          old_old_temperature_grads;
-      //   std::vector<double>                  old_temperature_laplacians;
-      //   std::vector<double>                  old_old_temperature_laplacians;
-      // };
-
-
-      // template <int dim>
-      // TemperatureRHS<dim>::
-      // TemperatureRHS (const FiniteElement<dim> &temperature_fe,
-      //                 const FiniteElement<dim> &stokes_fe,
-      //                 const Mapping<dim>       &mapping,
-      //                 const Quadrature<dim>    &quadrature)
-      //   :
-      //   temperature_fe_values (mapping,
-      //                          temperature_fe, quadrature,
-      //                          update_values    |
-      //                          update_gradients |
-      //                          update_hessians  |
-      //                          update_quadrature_points |
-      //                          update_JxW_values),
-      //   stokes_fe_values (mapping,
-      //                     stokes_fe, quadrature,
-      //                     update_values | update_gradients),
-      //   phi_T (temperature_fe.dofs_per_cell),
-      //   grad_phi_T (temperature_fe.dofs_per_cell),
-      // 
-      //   old_velocity_values (quadrature.size()),
-      //   old_old_velocity_values (quadrature.size()),
-      //   old_strain_rates (quadrature.size()),
-      //   old_old_strain_rates (quadrature.size()),
-      // 
-      //   old_temperature_values (quadrature.size()),
-      //   old_old_temperature_values(quadrature.size()),
-      //   old_temperature_grads(quadrature.size()),
-      //   old_old_temperature_grads(quadrature.size()),
-      //   old_temperature_laplacians(quadrature.size()),
-      //   old_old_temperature_laplacians(quadrature.size())
-      // {}
-
-
-      // template <int dim>
-      // TemperatureRHS<dim>::
-      // TemperatureRHS (const TemperatureRHS &scratch)
-      //   :
-      //   temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
-      //                          scratch.temperature_fe_values.get_fe(),
-      //                          scratch.temperature_fe_values.get_quadrature(),
-      //                          scratch.temperature_fe_values.get_update_flags()),
-      //   stokes_fe_values (scratch.stokes_fe_values.get_mapping(),
-      //                     scratch.stokes_fe_values.get_fe(),
-      //                     scratch.stokes_fe_values.get_quadrature(),
-      //                     scratch.stokes_fe_values.get_update_flags()),
-      //   phi_T (scratch.phi_T),
-      //   grad_phi_T (scratch.grad_phi_T),
-      // 
-      //   old_velocity_values (scratch.old_velocity_values),
-      //   old_old_velocity_values (scratch.old_old_velocity_values),
-      //   old_strain_rates (scratch.old_strain_rates),
-      //   old_old_strain_rates (scratch.old_old_strain_rates),
-      // 
-      //   old_temperature_values (scratch.old_temperature_values),
-      //   old_old_temperature_values (scratch.old_old_temperature_values),
-      //   old_temperature_grads (scratch.old_temperature_grads),
-      //   old_old_temperature_grads (scratch.old_old_temperature_grads),
-      //   old_temperature_laplacians (scratch.old_temperature_laplacians),
-      //   old_old_temperature_laplacians (scratch.old_old_temperature_laplacians)
-      // {}
     }
 
 
@@ -432,8 +294,6 @@ namespace Step32
         local_dof_indices (data.local_dof_indices)
       {}
 
-
-
       template <int dim>
       struct StokesSystem : public StokesPreconditioner<dim>
       {
@@ -459,73 +319,8 @@ namespace Step32
         local_rhs (data.local_rhs)
       {}
 
-
-
-      // template <int dim>
-      // struct TemperatureMatrix
-      // {
-      //   TemperatureMatrix (const FiniteElement<dim> &temperature_fe);
-      //   TemperatureMatrix (const TemperatureMatrix &data);
-      // 
-      //   FullMatrix<double>          local_mass_matrix;
-      //   FullMatrix<double>          local_stiffness_matrix;
-      //   std::vector<types::global_dof_index>   local_dof_indices;
-      // };
-      // 
-      // template <int dim>
-      // TemperatureMatrix<dim>::
-      // TemperatureMatrix (const FiniteElement<dim> &temperature_fe)
-      //   :
-      //   local_mass_matrix (temperature_fe.dofs_per_cell,
-      //                      temperature_fe.dofs_per_cell),
-      //   local_stiffness_matrix (temperature_fe.dofs_per_cell,
-      //                           temperature_fe.dofs_per_cell),
-      //   local_dof_indices (temperature_fe.dofs_per_cell)
-      // {}
-      // 
-      // template <int dim>
-      // TemperatureMatrix<dim>::
-      // TemperatureMatrix (const TemperatureMatrix &data)
-      //   :
-      //   local_mass_matrix (data.local_mass_matrix),
-      //   local_stiffness_matrix (data.local_stiffness_matrix),
-      //   local_dof_indices (data.local_dof_indices)
-      // {}
-
-
-
-      // template <int dim>
-      // struct TemperatureRHS
-      // {
-      //   TemperatureRHS (const FiniteElement<dim> &temperature_fe);
-      //   TemperatureRHS (const TemperatureRHS &data);
-      // 
-      //   Vector<double>              local_rhs;
-      //   std::vector<types::global_dof_index> local_dof_indices;
-      //   FullMatrix<double>          matrix_for_bc;
-      // };
-
-      // template <int dim>
-      // TemperatureRHS<dim>::
-      // TemperatureRHS (const FiniteElement<dim> &temperature_fe)
-      //   :
-      //   local_rhs (temperature_fe.dofs_per_cell),
-      //   local_dof_indices (temperature_fe.dofs_per_cell),
-      //   matrix_for_bc (temperature_fe.dofs_per_cell,
-      //                  temperature_fe.dofs_per_cell)
-      // {}
-      // 
-      // template <int dim>
-      // TemperatureRHS<dim>::
-      // TemperatureRHS (const TemperatureRHS &data)
-      //   :
-      //   local_rhs (data.local_rhs),
-      //   local_dof_indices (data.local_dof_indices),
-      //   matrix_for_bc (data.matrix_for_bc)
-      // {}
     }
   }
-
 
 
   template <int dim>
@@ -541,7 +336,6 @@ namespace Step32
     void assemble_stokes_preconditioner ();
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
-    // void project_temperature_field ();
     double get_entropy_variation (const double average_temperature) const;
     void solve ();
     void output_results ();
