@@ -544,10 +544,8 @@ namespace Step32
     void assemble_stokes_preconditioner ();
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
-    // void assemble_temperature_matrix ();
     void project_temperature_field ();
     double get_entropy_variation (const double average_temperature) const;
-    // std::pair<double,double> get_extrapolated_temperature_range () const;
     void solve ();
     void output_results ();
     void refine_mesh (const unsigned int max_grid_level);
@@ -656,18 +654,6 @@ namespace Step32
 
     void
     copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
-
-
-    // void
-    // local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
-    //                                    Assembly::Scratch::TemperatureMatrix<dim>  &scratch,
-    //                                    Assembly::CopyData::TemperatureMatrix<dim> &data);
-
-    // void
-    // copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data);
-
-    // void
-    // copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data);
 
     class Postprocessor;
   };
@@ -929,89 +915,9 @@ namespace Step32
   }
 
 
-
-
-  // template <int dim>
-  // std::pair<double,double>
-  // BoussinesqFlowProblem<dim>::get_extrapolated_temperature_range () const
-  // {
-  //   const QIterated<dim> quadrature_formula (QTrapez<1>(),
-  //                                            parameters.temperature_degree);
-  //   const unsigned int n_q_points = quadrature_formula.size();
-  // 
-  //   FEValues<dim> fe_values (mapping, temperature_fe, quadrature_formula,
-  //                            update_values);
-  //   std::vector<double> old_temperature_values(n_q_points);
-  //   std::vector<double> old_old_temperature_values(n_q_points);
-  // 
-  //   double min_local_temperature = std::numeric_limits<double>::max(),
-  //          max_local_temperature = -std::numeric_limits<double>::max();
-  // 
-  //   if (timestep_number != 0)
-  //     {
-  //       typename DoFHandler<dim>::active_cell_iterator
-  //       cell = temperature_dof_handler.begin_active(),
-  //       endc = temperature_dof_handler.end();
-  //       for (; cell!=endc; ++cell)
-  //         if (cell->is_locally_owned())
-  //           {
-  //             fe_values.reinit (cell);
-  //             fe_values.get_function_values (old_temperature_solution,
-  //                                            old_temperature_values);
-  //             fe_values.get_function_values (old_old_temperature_solution,
-  //                                            old_old_temperature_values);
-  // 
-  //             for (unsigned int q=0; q<n_q_points; ++q)
-  //               {
-  //                 const double temperature =
-  //                   (1. + time_step/old_time_step) * old_temperature_values[q]-
-  //                   time_step/old_time_step * old_old_temperature_values[q];
-  // 
-  //                 min_local_temperature = std::min (min_local_temperature,
-  //                                                   temperature);
-  //                 max_local_temperature = std::max (max_local_temperature,
-  //                                                   temperature);
-  //               }
-  //           }
-  //     }
-  //   else
-  //     {
-  //       typename DoFHandler<dim>::active_cell_iterator
-  //       cell = temperature_dof_handler.begin_active(),
-  //       endc = temperature_dof_handler.end();
-  //       for (; cell!=endc; ++cell)
-  //         if (cell->is_locally_owned())
-  //           {
-  //             fe_values.reinit (cell);
-  //             fe_values.get_function_values (old_temperature_solution,
-  //                                            old_temperature_values);
-  // 
-  //             for (unsigned int q=0; q<n_q_points; ++q)
-  //               {
-  //                 const double temperature = old_temperature_values[q];
-  // 
-  //                 min_local_temperature = std::min (min_local_temperature,
-  //                                                   temperature);
-  //                 max_local_temperature = std::max (max_local_temperature,
-  //                                                   temperature);
-  //               }
-  //           }
-  //     }
-  // 
-  //   double local_extrema[2] = { -min_local_temperature,
-  //                               max_local_temperature
-  //                             };
-  //   double global_extrema[2];
-  //   Utilities::MPI::max (local_extrema, MPI_COMM_WORLD, global_extrema);
-  // 
-  //   return std::make_pair(-global_extrema[0], global_extrema[1]);
-  // }
-
-
   template <int dim>
   void BoussinesqFlowProblem<dim>::project_temperature_field ()
   {
-    // assemble_temperature_matrix ();
 
     QGauss<dim> quadrature(parameters.temperature_degree+2);
     UpdateFlags update_flags = UpdateFlags(update_values   |
@@ -1287,9 +1193,6 @@ namespace Step32
 
     computing_timer.exit_section();
   }
-
-
-
 
   template <int dim>
   void
@@ -1570,122 +1473,6 @@ namespace Step32
     pcout << std::endl;
     computing_timer.exit_section();
   }
-
-
-
-  // template <int dim>
-  // void BoussinesqFlowProblem<dim>::
-  // local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
-  //                                    Assembly::Scratch::TemperatureMatrix<dim> &scratch,
-  //                                    Assembly::CopyData::TemperatureMatrix<dim> &data)
-  // {
-  //   const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
-  //   const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
-  // 
-  //   scratch.temperature_fe_values.reinit (cell);
-  //   cell->get_dof_indices (data.local_dof_indices);
-  // 
-  //   data.local_mass_matrix = 0;
-  //   data.local_stiffness_matrix = 0;
-  // 
-  //   for (unsigned int q=0; q<n_q_points; ++q)
-  //     {
-  //       for (unsigned int k=0; k<dofs_per_cell; ++k)
-  //         {
-  //           scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
-  //           scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
-  //         }
-  // 
-  //       for (unsigned int i=0; i<dofs_per_cell; ++i)
-  //         for (unsigned int j=0; j<dofs_per_cell; ++j)
-  //           {
-  //             data.local_mass_matrix(i,j)
-  //             += (scratch.phi_T[i] * scratch.phi_T[j]
-  //                 *
-  //                 scratch.temperature_fe_values.JxW(q));
-  //             data.local_stiffness_matrix(i,j)
-  //             += (EquationData::kappa * scratch.grad_phi_T[i] * scratch.grad_phi_T[j]
-  //                 *
-  //                 scratch.temperature_fe_values.JxW(q));
-  //           }
-  //     }
-  // }
-
-
-
-  // template <int dim>
-  // void
-  // BoussinesqFlowProblem<dim>::
-  // copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data)
-  // {
-  //   temperature_constraints.distribute_local_to_global (data.local_mass_matrix,
-  //                                                       data.local_dof_indices,
-  //                                                       temperature_mass_matrix);
-  //   temperature_constraints.distribute_local_to_global (data.local_stiffness_matrix,
-  //                                                       data.local_dof_indices,
-  //                                                       temperature_stiffness_matrix);
-  // }
-
-
-  // template <int dim>
-  // void BoussinesqFlowProblem<dim>::assemble_temperature_matrix ()
-  // {
-  //   return;
-    // if (rebuild_temperature_matrices == false)
-      // return;
-
-    // computing_timer.enter_section ("   Assemble temperature matrices");
-    // temperature_mass_matrix = 0;
-    // temperature_stiffness_matrix = 0;
-
-    // const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
-
-    // typedef
-    // FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
-    // CellFilter;
-
-    // WorkStream::
-    // run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-    //                  temperature_dof_handler.begin_active()),
-    //      CellFilter (IteratorFilters::LocallyOwnedCell(),
-    //                  temperature_dof_handler.end()),
-    //     //  std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-    //     //                   local_assemble_temperature_matrix,
-    //     //                   this,
-    //     //                   std_cxx11::_1,
-    //     //                   std_cxx11::_2,
-    //     //                   std_cxx11::_3),
-    //      std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-    //                       copy_local_to_global_temperature_matrix,
-    //                       this,
-    //                       std_cxx11::_1),
-    //      Assembly::Scratch::
-    //      TemperatureMatrix<dim> (temperature_fe, mapping, quadrature_formula),
-    //      Assembly::CopyData::
-    //      TemperatureMatrix<dim> (temperature_fe));
-
-    // temperature_mass_matrix.compress(VectorOperation::add);
-    // temperature_stiffness_matrix.compress(VectorOperation::add);
-    // 
-    // rebuild_temperature_matrices = false;
-    // rebuild_temperature_preconditioner = true;
-    // 
-    // computing_timer.exit_section();
-  // }
-
-
-  // template <int dim>
-  // void
-  // BoussinesqFlowProblem<dim>::
-  // copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data)
-  // {
-  //   temperature_constraints.distribute_local_to_global (data.local_rhs,
-  //                                                       data.local_dof_indices,
-  //                                                       temperature_rhs,
-  //                                                       data.matrix_for_bc);
-  // }
-
-
 
   template <int dim>
   void BoussinesqFlowProblem<dim>::solve ()
