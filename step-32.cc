@@ -262,49 +262,49 @@ namespace Step32
         old_temperature_values (scratch.old_temperature_values)
       {}
 
-      template <int dim>
-      struct TemperatureMatrix
-      {
-        TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
-                           const Mapping<dim>       &mapping,
-                           const Quadrature<dim>    &temperature_quadrature);
-
-        TemperatureMatrix (const TemperatureMatrix &data);
-
-
-        FEValues<dim>               temperature_fe_values;
-
-        std::vector<double>         phi_T;
-        std::vector<Tensor<1,dim> > grad_phi_T;
-      };
-
-
-      template <int dim>
-      TemperatureMatrix<dim>::
-      TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
-                         const Mapping<dim>       &mapping,
-                         const Quadrature<dim>    &temperature_quadrature)
-        :
-        temperature_fe_values (mapping,
-                               temperature_fe, temperature_quadrature,
-                               update_values    | update_gradients |
-                               update_JxW_values),
-        phi_T (temperature_fe.dofs_per_cell),
-        grad_phi_T (temperature_fe.dofs_per_cell)
-      {}
+      // template <int dim>
+      // struct TemperatureMatrix
+      // {
+      //   TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
+      //                      const Mapping<dim>       &mapping,
+      //                      const Quadrature<dim>    &temperature_quadrature);
+      // 
+      //   TemperatureMatrix (const TemperatureMatrix &data);
+      // 
+      // 
+      //   FEValues<dim>               temperature_fe_values;
+      // 
+      //   std::vector<double>         phi_T;
+      //   std::vector<Tensor<1,dim> > grad_phi_T;
+      // };
 
 
-      template <int dim>
-      TemperatureMatrix<dim>::
-      TemperatureMatrix (const TemperatureMatrix &scratch)
-        :
-        temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
-                               scratch.temperature_fe_values.get_fe(),
-                               scratch.temperature_fe_values.get_quadrature(),
-                               scratch.temperature_fe_values.get_update_flags()),
-        phi_T (scratch.phi_T),
-        grad_phi_T (scratch.grad_phi_T)
-      {}
+      // template <int dim>
+      // TemperatureMatrix<dim>::
+      // TemperatureMatrix (const FiniteElement<dim> &temperature_fe,
+      //                    const Mapping<dim>       &mapping,
+      //                    const Quadrature<dim>    &temperature_quadrature)
+      //   :
+      //   temperature_fe_values (mapping,
+      //                          temperature_fe, temperature_quadrature,
+      //                          update_values    | update_gradients |
+      //                          update_JxW_values),
+      //   phi_T (temperature_fe.dofs_per_cell),
+      //   grad_phi_T (temperature_fe.dofs_per_cell)
+      // {}
+
+
+      // template <int dim>
+      // TemperatureMatrix<dim>::
+      // TemperatureMatrix (const TemperatureMatrix &scratch)
+      //   :
+      //   temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
+      //                          scratch.temperature_fe_values.get_fe(),
+      //                          scratch.temperature_fe_values.get_quadrature(),
+      //                          scratch.temperature_fe_values.get_update_flags()),
+      //   phi_T (scratch.phi_T),
+      //   grad_phi_T (scratch.grad_phi_T)
+      // {}
 
 
       template <int dim>
@@ -461,36 +461,36 @@ namespace Step32
 
 
 
-      template <int dim>
-      struct TemperatureMatrix
-      {
-        TemperatureMatrix (const FiniteElement<dim> &temperature_fe);
-        TemperatureMatrix (const TemperatureMatrix &data);
-
-        FullMatrix<double>          local_mass_matrix;
-        FullMatrix<double>          local_stiffness_matrix;
-        std::vector<types::global_dof_index>   local_dof_indices;
-      };
-
-      template <int dim>
-      TemperatureMatrix<dim>::
-      TemperatureMatrix (const FiniteElement<dim> &temperature_fe)
-        :
-        local_mass_matrix (temperature_fe.dofs_per_cell,
-                           temperature_fe.dofs_per_cell),
-        local_stiffness_matrix (temperature_fe.dofs_per_cell,
-                                temperature_fe.dofs_per_cell),
-        local_dof_indices (temperature_fe.dofs_per_cell)
-      {}
-
-      template <int dim>
-      TemperatureMatrix<dim>::
-      TemperatureMatrix (const TemperatureMatrix &data)
-        :
-        local_mass_matrix (data.local_mass_matrix),
-        local_stiffness_matrix (data.local_stiffness_matrix),
-        local_dof_indices (data.local_dof_indices)
-      {}
+      // template <int dim>
+      // struct TemperatureMatrix
+      // {
+      //   TemperatureMatrix (const FiniteElement<dim> &temperature_fe);
+      //   TemperatureMatrix (const TemperatureMatrix &data);
+      // 
+      //   FullMatrix<double>          local_mass_matrix;
+      //   FullMatrix<double>          local_stiffness_matrix;
+      //   std::vector<types::global_dof_index>   local_dof_indices;
+      // };
+      // 
+      // template <int dim>
+      // TemperatureMatrix<dim>::
+      // TemperatureMatrix (const FiniteElement<dim> &temperature_fe)
+      //   :
+      //   local_mass_matrix (temperature_fe.dofs_per_cell,
+      //                      temperature_fe.dofs_per_cell),
+      //   local_stiffness_matrix (temperature_fe.dofs_per_cell,
+      //                           temperature_fe.dofs_per_cell),
+      //   local_dof_indices (temperature_fe.dofs_per_cell)
+      // {}
+      // 
+      // template <int dim>
+      // TemperatureMatrix<dim>::
+      // TemperatureMatrix (const TemperatureMatrix &data)
+      //   :
+      //   local_mass_matrix (data.local_mass_matrix),
+      //   local_stiffness_matrix (data.local_stiffness_matrix),
+      //   local_dof_indices (data.local_dof_indices)
+      // {}
 
 
 
