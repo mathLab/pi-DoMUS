@@ -1187,17 +1187,17 @@ namespace Step32
                      (parameters.temperature_degree *
                       cfl_number));
                       
-      const double maximal_velocity = 1.0;
-      pcout << "   Maximal velocity: "
-            << maximal_velocity *EquationData::year_in_seconds * 100
-            << " cm/year"
-            << std::endl;
-      pcout << "   " << "Time step: "
-            << time_step/EquationData::year_in_seconds
-            << " years"
-            << std::endl;
-    
-      temperature_solution = old_temperature_solution;
+      // const double maximal_velocity = 1.0;
+      // pcout << "   Maximal velocity: "
+      //       << maximal_velocity *EquationData::year_in_seconds * 100
+      //       << " cm/year"
+      //       << std::endl;
+      // pcout << "   " << "Time step: "
+      //       << time_step/EquationData::year_in_seconds
+      //       << " years"
+      //       << std::endl;
+      // 
+      // temperature_solution = old_temperature_solution;
     }
     computing_timer.exit_section ();
 
