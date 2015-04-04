@@ -2231,13 +2231,15 @@ namespace Step32
 
     computing_timer.enter_section ("   Assemble temperature rhs");
     {
+      // This part has to be removed:
+      //  If removed an infinite loop starts
       old_time_step = time_step;
-
+    
       const double scaling = (dim==3 ? 0.25 : 1.0);
       time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
                    (parameters.temperature_degree *
                     get_cfl_number()));
-
+    
       const double maximal_velocity = get_maximal_velocity();
       pcout << "   Maximal velocity: "
             << maximal_velocity *EquationData::year_in_seconds * 100
@@ -2247,55 +2249,55 @@ namespace Step32
             << time_step/EquationData::year_in_seconds
             << " years"
             << std::endl;
-
+    
       temperature_solution = old_temperature_solution;
       assemble_temperature_system (maximal_velocity);
     }
     computing_timer.exit_section ();
 
-    computing_timer.enter_section ("   Solve temperature system");
-    {
-      SolverControl solver_control (temperature_matrix.m(),
-                                    1e-12*temperature_rhs.l2_norm());
-      SolverCG<TrilinosWrappers::MPI::Vector>   cg (solver_control);
-
-      TrilinosWrappers::MPI::Vector
-      distributed_temperature_solution (temperature_rhs);
-      distributed_temperature_solution = temperature_solution;
-
-      cg.solve (temperature_matrix, distributed_temperature_solution,
-                temperature_rhs, *T_preconditioner);
-
-      temperature_constraints.distribute (distributed_temperature_solution);
-      temperature_solution = distributed_temperature_solution;
-
-      pcout << "   "
-            << solver_control.last_step()
-            << " CG iterations for temperature" << std::endl;
-      computing_timer.exit_section();
-
-      double temperature[2] = { std::numeric_limits<double>::max(),
-                                -std::numeric_limits<double>::max()
-                              };
-      double global_temperature[2];
-
-      for (unsigned int i=distributed_temperature_solution.local_range().first;
-           i < distributed_temperature_solution.local_range().second; ++i)
-        {
-          temperature[0] = std::min<double> (temperature[0],
-                                             distributed_temperature_solution(i));
-          temperature[1] = std::max<double> (temperature[1],
-                                             distributed_temperature_solution(i));
-        }
-
-      temperature[0] *= -1.0;
-      Utilities::MPI::max (temperature, MPI_COMM_WORLD, global_temperature);
-      global_temperature[0] *= -1.0;
-
-      pcout << "   Temperature range: "
-            << global_temperature[0] << ' ' << global_temperature[1]
-            << std::endl;
-    }
+    // computing_timer.enter_section ("   Solve temperature system");
+    // {
+    //   SolverControl solver_control (temperature_matrix.m(),
+    //                                 1e-12*temperature_rhs.l2_norm());
+    //   SolverCG<TrilinosWrappers::MPI::Vector>   cg (solver_control);
+    // 
+    //   TrilinosWrappers::MPI::Vector
+    //   distributed_temperature_solution (temperature_rhs);
+    //   distributed_temperature_solution = temperature_solution;
+    // 
+    //   cg.solve (temperature_matrix, distributed_temperature_solution,
+    //             temperature_rhs, *T_preconditioner);
+    // 
+    //   temperature_constraints.distribute (distributed_temperature_solution);
+    //   temperature_solution = distributed_temperature_solution;
+    // 
+    //   pcout << "   "
+    //         << solver_control.last_step()
+    //         << " CG iterations for temperature" << std::endl;
+    //   computing_timer.exit_section();
+    // 
+    //   double temperature[2] = { std::numeric_limits<double>::max(),
+    //                             -std::numeric_limits<double>::max()
+    //                           };
+    //   double global_temperature[2];
+    // 
+    //   for (unsigned int i=distributed_temperature_solution.local_range().first;
+    //        i < distributed_temperature_solution.local_range().second; ++i)
+    //     {
+    //       temperature[0] = std::min<double> (temperature[0],
+    //                                          distributed_temperature_solution(i));
+    //       temperature[1] = std::max<double> (temperature[1],
+    //                                          distributed_temperature_solution(i));
+    //     }
+    // 
+    //   temperature[0] *= -1.0;
+    //   Utilities::MPI::max (temperature, MPI_COMM_WORLD, global_temperature);
+    //   global_temperature[0] *= -1.0;
+    // 
+    //   pcout << "   Temperature range: "
+    //         << global_temperature[0] << ' ' << global_temperature[1]
+    //         << std::endl;
+    // }
   }
 
 
