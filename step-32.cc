@@ -663,11 +663,11 @@ namespace Step32
     //                                    Assembly::Scratch::TemperatureMatrix<dim>  &scratch,
     //                                    Assembly::CopyData::TemperatureMatrix<dim> &data);
 
-    void
-    copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data);
+    // void
+    // copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data);
 
-    void
-    copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data);
+    // void
+    // copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data);
 
     class Postprocessor;
   };
@@ -1613,18 +1613,18 @@ namespace Step32
 
 
 
-  template <int dim>
-  void
-  BoussinesqFlowProblem<dim>::
-  copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data)
-  {
-    temperature_constraints.distribute_local_to_global (data.local_mass_matrix,
-                                                        data.local_dof_indices,
-                                                        temperature_mass_matrix);
-    temperature_constraints.distribute_local_to_global (data.local_stiffness_matrix,
-                                                        data.local_dof_indices,
-                                                        temperature_stiffness_matrix);
-  }
+  // template <int dim>
+  // void
+  // BoussinesqFlowProblem<dim>::
+  // copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data)
+  // {
+  //   temperature_constraints.distribute_local_to_global (data.local_mass_matrix,
+  //                                                       data.local_dof_indices,
+  //                                                       temperature_mass_matrix);
+  //   temperature_constraints.distribute_local_to_global (data.local_stiffness_matrix,
+  //                                                       data.local_dof_indices,
+  //                                                       temperature_stiffness_matrix);
+  // }
 
 
   template <int dim>
@@ -1673,16 +1673,16 @@ namespace Step32
   }
 
 
-  template <int dim>
-  void
-  BoussinesqFlowProblem<dim>::
-  copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data)
-  {
-    temperature_constraints.distribute_local_to_global (data.local_rhs,
-                                                        data.local_dof_indices,
-                                                        temperature_rhs,
-                                                        data.matrix_for_bc);
-  }
+  // template <int dim>
+  // void
+  // BoussinesqFlowProblem<dim>::
+  // copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data)
+  // {
+  //   temperature_constraints.distribute_local_to_global (data.local_rhs,
+  //                                                       data.local_dof_indices,
+  //                                                       temperature_rhs,
+  //                                                       data.matrix_for_bc);
+  // }
 
 
 
