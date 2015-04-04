@@ -2592,17 +2592,19 @@ namespace Step32
     {
       TrilinosWrappers::MPI::Vector distributed_temp1 (temperature_rhs);
       TrilinosWrappers::MPI::Vector distributed_temp2 (temperature_rhs);
-
+    
       std::vector<TrilinosWrappers::MPI::Vector *> tmp (2);
       tmp[0] = &(distributed_temp1);
       tmp[1] = &(distributed_temp2);
       temperature_trans.interpolate(tmp);
-
+    
       temperature_solution     = distributed_temp1;
       old_temperature_solution = distributed_temp2;
     }
 
     {
+      // This part has to be removed:
+      //  Removing this function causes a lot of errors!!!
       TrilinosWrappers::MPI::BlockVector distributed_stokes (stokes_rhs);
       TrilinosWrappers::MPI::BlockVector old_distributed_stokes (stokes_rhs);
 
@@ -2644,6 +2646,9 @@ namespace Step32
 
 start_time_iteration:
 
+    // This function has to be removed:
+    //  Removing this function causes a lot of errors!!!
+    //  Probably division by zero... somewhere
     project_temperature_field ();
 
     timestep_number           = 0;
@@ -2693,8 +2698,8 @@ start_time_iteration:
         TrilinosWrappers::MPI::BlockVector old_old_stokes_solution;
         old_old_stokes_solution      = old_stokes_solution;
         old_stokes_solution          = stokes_solution;
-        old_old_temperature_solution = old_temperature_solution;
-        old_temperature_solution     = temperature_solution;
+        // old_old_temperature_solution = old_temperature_solution;
+        // old_temperature_solution     = temperature_solution;
         if (old_time_step > 0)
           {
             {
@@ -2706,15 +2711,15 @@ start_time_iteration:
                                     distr_old_solution);
               stokes_solution = distr_solution;
             }
-            {
-              TrilinosWrappers::MPI::Vector distr_solution (temperature_rhs);
-              distr_solution = temperature_solution;
-              TrilinosWrappers::MPI::Vector distr_old_solution (temperature_rhs);
-              distr_old_solution = old_old_temperature_solution;
-              distr_solution .sadd (1.+time_step/old_time_step, -time_step/old_time_step,
-                                    distr_old_solution);
-              temperature_solution = distr_solution;
-            }
+            // {
+              // TrilinosWrappers::MPI::Vector distr_solution (temperature_rhs);
+              // distr_solution = temperature_solution;
+              // TrilinosWrappers::MPI::Vector distr_old_solution (temperature_rhs);
+              // distr_old_solution = old_old_temperature_solution;
+              // distr_solution .sadd (1.+time_step/old_time_step, -time_step/old_time_step,
+                                    // distr_old_solution);
+              // temperature_solution = distr_solution;
+            // }
           }
 
         if ((timestep_number > 0) && (timestep_number % 100 == 0))
