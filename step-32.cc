@@ -561,32 +561,12 @@ namespace Step32
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
     void assemble_temperature_matrix ();
-    // void assemble_temperature_system (const double maximal_velocity);
     void project_temperature_field ();
-    // double get_maximal_velocity () const;
-    // double get_cfl_number () const;
     double get_entropy_variation (const double average_temperature) const;
     std::pair<double,double> get_extrapolated_temperature_range () const;
     void solve ();
     void output_results ();
     void refine_mesh (const unsigned int max_grid_level);
-
-    // double
-    // compute_viscosity(const std::vector<double>          &old_temperature,
-    //                   const std::vector<double>          &old_old_temperature,
-    //                   const std::vector<Tensor<1,dim> >  &old_temperature_grads,
-    //                   const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
-    //                   const std::vector<double>          &old_temperature_laplacians,
-    //                   const std::vector<double>          &old_old_temperature_laplacians,
-    //                   const std::vector<Tensor<1,dim> >  &old_velocity_values,
-    //                   const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
-    //                   const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
-    //                   const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
-    //                   const double                        global_u_infty,
-    //                   const double                        global_T_variation,
-    //                   const double                        average_temperature,
-    //                   const double                        global_entropy_variation,
-    //                   const double                        cell_diameter) const;
 
   public:
 
@@ -701,16 +681,6 @@ namespace Step32
 
     void
     copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data);
-
-
-
-    // void
-    // local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
-    //                                 const double                   global_max_velocity,
-    //                                 const double                   global_entropy_variation,
-    //                                 const typename DoFHandler<dim>::active_cell_iterator &cell,
-    //                                 Assembly::Scratch::TemperatureRHS<dim> &scratch,
-    //                                 Assembly::CopyData::TemperatureRHS<dim> &data);
 
     void
     copy_local_to_global_temperature_rhs (const Assembly::CopyData::TemperatureRHS<dim> &data);
@@ -916,80 +886,6 @@ namespace Step32
   {}
 
 
-  // 
-  // 
-  // template <int dim>
-  // double BoussinesqFlowProblem<dim>::get_maximal_velocity () const
-  // {
-  //   // const QIterated<dim> quadrature_formula (QTrapez<1>(),
-  //                                           //  parameters.stokes_velocity_degree);
-  //   // const unsigned int n_q_points = quadrature_formula.size();
-  // 
-  //   // FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
-  //   // std::vector<Tensor<1,dim> > velocity_values(n_q_points);
-  // 
-  //   // const FEValuesExtractors::Vector velocities (0);
-  // 
-  //   // double max_local_velocity = 0;
-  // 
-  //   // typename DoFHandler<dim>::active_cell_iterator
-  //   // cell = stokes_dof_handler.begin_active(),
-  //   // endc = stokes_dof_handler.end();
-  //   // for (; cell!=endc; ++cell)
-  //   //   if (cell->is_locally_owned())
-  //   //     {
-  //   //       fe_values.reinit (cell);
-  //   //       fe_values[velocities].get_function_values (stokes_solution,
-  //   //                                                  velocity_values);
-  //   // 
-  //   //       for (unsigned int q=0; q<n_q_points; ++q)
-  //   //         max_local_velocity = std::max (max_local_velocity,
-  //   //                                        velocity_values[q].norm());
-  //       // }
-  // 
-  //   // return Utilities::MPI::max (max_local_velocity, MPI_COMM_WORLD);
-  //   return 1.;
-  // }
-
-
-
-  // template <int dim>
-  // double BoussinesqFlowProblem<dim>::get_cfl_number () const
-  // {
-  //   const QIterated<dim> quadrature_formula (QTrapez<1>(),
-  //                                            parameters.stokes_velocity_degree);
-  //   const unsigned int n_q_points = quadrature_formula.size();
-  // 
-  //   FEValues<dim> fe_values (mapping, stokes_fe, quadrature_formula, update_values);
-  //   std::vector<Tensor<1,dim> > velocity_values(n_q_points);
-  // 
-  //   const FEValuesExtractors::Vector velocities (0);
-  // 
-  //   double max_local_cfl = 0;
-  // 
-  //   typename DoFHandler<dim>::active_cell_iterator
-  //   cell = stokes_dof_handler.begin_active(),
-  //   endc = stokes_dof_handler.end();
-  //   for (; cell!=endc; ++cell)
-  //     if (cell->is_locally_owned())
-  //       {
-  //         fe_values.reinit (cell);
-  //         fe_values[velocities].get_function_values (stokes_solution,
-  //                                                    velocity_values);
-  // 
-  //         double max_local_velocity = 1e-10;
-  //         for (unsigned int q=0; q<n_q_points; ++q)
-  //           max_local_velocity = std::max (max_local_velocity,
-  //                                          velocity_values[q].norm());
-  //         max_local_cfl = std::max(max_local_cfl,
-  //                                  max_local_velocity / cell->diameter());
-  //       }
-  // 
-  //   return Utilities::MPI::max (max_local_cfl, MPI_COMM_WORLD);
-  // }
-
-
-
   template <int dim>
   double
   BoussinesqFlowProblem<dim>::get_entropy_variation (const double average_temperature) const
@@ -1128,93 +1024,6 @@ namespace Step32
   }
 
 
-
-  // template <int dim>
-  // double
-  // BoussinesqFlowProblem<dim>::
-  // compute_viscosity (const std::vector<double>          &old_temperature,
-  //                    const std::vector<double>          &old_old_temperature,
-  //                    const std::vector<Tensor<1,dim> >  &old_temperature_grads,
-  //                    const std::vector<Tensor<1,dim> >  &old_old_temperature_grads,
-  //                    const std::vector<double>          &old_temperature_laplacians,
-  //                    const std::vector<double>          &old_old_temperature_laplacians,
-  //                    const std::vector<Tensor<1,dim> >  &old_velocity_values,
-  //                    const std::vector<Tensor<1,dim> >  &old_old_velocity_values,
-  //                    const std::vector<SymmetricTensor<2,dim> >  &old_strain_rates,
-  //                    const std::vector<SymmetricTensor<2,dim> >  &old_old_strain_rates,
-  //                    const double                        global_u_infty,
-  //                    const double                        global_T_variation,
-  //                    const double                        average_temperature,
-  //                    const double                        global_entropy_variation,
-  //                    const double                        cell_diameter) const
-  // {
-  //   if (global_u_infty == 0)
-  //     return 5e-3 * cell_diameter;
-  // 
-  //   const unsigned int n_q_points = old_temperature.size();
-  // 
-  //   double max_residual = 0;
-  //   double max_velocity = 0;
-  // 
-  //   for (unsigned int q=0; q < n_q_points; ++q)
-  //     {
-  //       const Tensor<1,dim> u = (old_velocity_values[q] +
-  //                                old_old_velocity_values[q]) / 2;
-  // 
-  //       const SymmetricTensor<2,dim> strain_rate = (old_strain_rates[q] +
-  //                                                   old_old_strain_rates[q]) / 2;
-  // 
-  //       const double T = (old_temperature[q] + old_old_temperature[q]) / 2;
-  //       const double dT_dt = (old_temperature[q] - old_old_temperature[q])
-  //                            / old_time_step;
-  //       const double u_grad_T = u * (old_temperature_grads[q] +
-  //                                    old_old_temperature_grads[q]) / 2;
-  // 
-  //       const double kappa_Delta_T = EquationData::kappa
-  //                                    * (old_temperature_laplacians[q] +
-  //                                       old_old_temperature_laplacians[q]) / 2;
-  //       const double gamma
-  //         = ((EquationData::radiogenic_heating * EquationData::density
-  //             +
-  //             2 * EquationData::eta * strain_rate * strain_rate) /
-  //            (EquationData::density * EquationData::specific_heat));
-  // 
-  //       double residual
-  //         = std::abs(dT_dt + u_grad_T - kappa_Delta_T - gamma);
-  //       if (parameters.stabilization_alpha == 2)
-  //         residual *= std::abs(T - average_temperature);
-  // 
-  //       max_residual = std::max (residual,        max_residual);
-  //       max_velocity = std::max (std::sqrt (u*u), max_velocity);
-  //     }
-  // 
-  //   const double max_viscosity = (parameters.stabilization_beta *
-  //                                 max_velocity * cell_diameter);
-  //   if (timestep_number == 0)
-  //     return max_viscosity;
-  //   else
-  //     {
-  //       Assert (old_time_step > 0, ExcInternalError());
-  // 
-  //       double entropy_viscosity;
-  //       if (parameters.stabilization_alpha == 2)
-  //         entropy_viscosity = (parameters.stabilization_c_R *
-  //                              cell_diameter * cell_diameter *
-  //                              max_residual /
-  //                              global_entropy_variation);
-  //       else
-  //         entropy_viscosity = (parameters.stabilization_c_R *
-  //                              cell_diameter * global_Omega_diameter *
-  //                              max_velocity * max_residual /
-  //                              (global_u_infty * global_T_variation));
-  // 
-  //       return std::min (max_viscosity, entropy_viscosity);
-  //     }
-  // }
-  // 
-  // 
-
-
   template <int dim>
   void BoussinesqFlowProblem<dim>::project_temperature_field ()
   {
@@ -1239,8 +1048,6 @@ namespace Step32
     rhs (temperature_mass_matrix.row_partitioner()),
         solution (temperature_mass_matrix.row_partitioner());
 
-    // const EquationData::TemperatureInitialValues<dim> initial_temperature;
-
     typename DoFHandler<dim>::active_cell_iterator
     cell = temperature_dof_handler.begin_active(),
     endc = temperature_dof_handler.end();
@@ -1250,9 +1057,6 @@ namespace Step32
         {
           cell->get_dof_indices (local_dof_indices);
           fe_values.reinit (cell);
-
-          // initial_temperature.value_list (fe_values.get_quadrature_points(),
-                                          // rhs_values);
 
           cell_vector = 0;
           matrix_for_bc = 0;
@@ -1471,14 +1275,6 @@ namespace Step32
 
       DoFTools::make_hanging_node_constraints (temperature_dof_handler,
                                                temperature_constraints);
-      // VectorTools::interpolate_boundary_values (temperature_dof_handler,
-      //                                           0,
-      //                                           EquationData::TemperatureInitialValues<dim>(),
-      //                                           temperature_constraints);
-      // VectorTools::interpolate_boundary_values (temperature_dof_handler,
-      //                                           1,
-      //                                           EquationData::TemperatureInitialValues<dim>(),
-      //                                           temperature_constraints);
       temperature_constraints.close ();
     }
 
@@ -1893,178 +1689,6 @@ namespace Step32
   }
 
 
-
-  // template <int dim>
-  // void BoussinesqFlowProblem<dim>::
-  // local_assemble_temperature_rhs (const std::pair<double,double> global_T_range,
-  //                                 const double                   global_max_velocity,
-  //                                 const double                   global_entropy_variation,
-  //                                 const typename DoFHandler<dim>::active_cell_iterator &cell,
-  //                                 Assembly::Scratch::TemperatureRHS<dim> &scratch,
-  //                                 Assembly::CopyData::TemperatureRHS<dim> &data)
-  // {
-  //   const bool use_bdf2_scheme = (timestep_number != 0);
-  // 
-  //   const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
-  //   const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
-  // 
-  //   const FEValuesExtractors::Vector velocities (0);
-  // 
-  //   data.local_rhs = 0;
-  //   data.matrix_for_bc = 0;
-  //   cell->get_dof_indices (data.local_dof_indices);
-  // 
-  //   scratch.temperature_fe_values.reinit (cell);
-  // 
-  //   typename DoFHandler<dim>::active_cell_iterator
-  //   stokes_cell (&triangulation,
-  //                cell->level(),
-  //                cell->index(),
-  //                &stokes_dof_handler);
-  //   scratch.stokes_fe_values.reinit (stokes_cell);
-  // 
-  //   scratch.temperature_fe_values.get_function_values (old_temperature_solution,
-  //                                                      scratch.old_temperature_values);
-  //   scratch.temperature_fe_values.get_function_values (old_old_temperature_solution,
-  //                                                      scratch.old_old_temperature_values);
-  // 
-  //   scratch.temperature_fe_values.get_function_gradients (old_temperature_solution,
-  //                                                         scratch.old_temperature_grads);
-  //   scratch.temperature_fe_values.get_function_gradients (old_old_temperature_solution,
-  //                                                         scratch.old_old_temperature_grads);
-  // 
-  //   scratch.temperature_fe_values.get_function_laplacians (old_temperature_solution,
-  //                                                          scratch.old_temperature_laplacians);
-  //   scratch.temperature_fe_values.get_function_laplacians (old_old_temperature_solution,
-  //                                                          scratch.old_old_temperature_laplacians);
-  // 
-  //   scratch.stokes_fe_values[velocities].get_function_values (stokes_solution,
-  //                                                             scratch.old_velocity_values);
-  //   scratch.stokes_fe_values[velocities].get_function_values (old_stokes_solution,
-  //                                                             scratch.old_old_velocity_values);
-  //   scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (stokes_solution,
-  //       scratch.old_strain_rates);
-  //   scratch.stokes_fe_values[velocities].get_function_symmetric_gradients (old_stokes_solution,
-  //       scratch.old_old_strain_rates);
-  // 
-  //   // const double nu
-  //   //   = compute_viscosity (scratch.old_temperature_values,
-  //   //                        scratch.old_old_temperature_values,
-  //   //                        scratch.old_temperature_grads,
-  //   //                        scratch.old_old_temperature_grads,
-  //   //                        scratch.old_temperature_laplacians,
-  //   //                        scratch.old_old_temperature_laplacians,
-  //   //                        scratch.old_velocity_values,
-  //   //                        scratch.old_old_velocity_values,
-  //   //                        scratch.old_strain_rates,
-  //   //                        scratch.old_old_strain_rates,
-  //   //                        global_max_velocity,
-  //   //                        global_T_range.second - global_T_range.first,
-  //   //                        0.5 * (global_T_range.second + global_T_range.first),
-  //   //                        global_entropy_variation,
-  //   //                        cell->diameter());
-  // 
-  //   for (unsigned int q=0; q<n_q_points; ++q)
-  //     {
-  //       for (unsigned int k=0; k<dofs_per_cell; ++k)
-  //         {
-  //           scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
-  //           scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
-  //         }
-  // 
-  // 
-  //       const double T_term_for_rhs
-  //         = (use_bdf2_scheme ?
-  //            (scratch.old_temperature_values[q] *
-  //             (1 + time_step/old_time_step)
-  //             -
-  //             scratch.old_old_temperature_values[q] *
-  //             (time_step * time_step) /
-  //             (old_time_step * (time_step + old_time_step)))
-  //            :
-  //            scratch.old_temperature_values[q]);
-  // 
-  //       const double ext_T
-  //         = (use_bdf2_scheme ?
-  //            (scratch.old_temperature_values[q] *
-  //             (1 + time_step/old_time_step)
-  //             -
-  //             scratch.old_old_temperature_values[q] *
-  //             time_step/old_time_step)
-  //            :
-  //            scratch.old_temperature_values[q]);
-  // 
-  //       const Tensor<1,dim> ext_grad_T
-  //         = (use_bdf2_scheme ?
-  //            (scratch.old_temperature_grads[q] *
-  //             (1 + time_step/old_time_step)
-  //             -
-  //             scratch.old_old_temperature_grads[q] *
-  //             time_step/old_time_step)
-  //            :
-  //            scratch.old_temperature_grads[q]);
-  // 
-  //       const Tensor<1,dim> extrapolated_u
-  //         = (use_bdf2_scheme ?
-  //            (scratch.old_velocity_values[q] *
-  //             (1 + time_step/old_time_step)
-  //             -
-  //             scratch.old_old_velocity_values[q] *
-  //             time_step/old_time_step)
-  //            :
-  //            scratch.old_velocity_values[q]);
-  // 
-  //       const SymmetricTensor<2,dim> extrapolated_strain_rate
-  //         = (use_bdf2_scheme ?
-  //            (scratch.old_strain_rates[q] *
-  //             (1 + time_step/old_time_step)
-  //             -
-  //             scratch.old_old_strain_rates[q] *
-  //             time_step/old_time_step)
-  //            :
-  //            scratch.old_strain_rates[q]);
-  // 
-  //       const double gamma
-  //         = ((EquationData::radiogenic_heating * EquationData::density
-  //             +
-  //             2 * EquationData::eta * extrapolated_strain_rate * extrapolated_strain_rate) /
-  //            (EquationData::density * EquationData::specific_heat));
-  // 
-  //       for (unsigned int i=0; i<dofs_per_cell; ++i)
-  //         {
-  //           data.local_rhs(i) += (T_term_for_rhs * scratch.phi_T[i]
-  //                                 -
-  //                                 time_step *
-  //                                 extrapolated_u * ext_grad_T * scratch.phi_T[i]
-  //                                 -
-  //                                 time_step *
-  //                                 EquationData::nu * ext_grad_T * scratch.grad_phi_T[i]
-  //                                 +
-  //                                 time_step *
-  //                                 gamma * scratch.phi_T[i])
-  //                                *
-  //                                scratch.temperature_fe_values.JxW(q);
-  // 
-  //           if (temperature_constraints.is_inhomogeneously_constrained(data.local_dof_indices[i]))
-  //             {
-  //               for (unsigned int j=0; j<dofs_per_cell; ++j)
-  //                 data.matrix_for_bc(j,i) += (scratch.phi_T[i] * scratch.phi_T[j] *
-  //                                             (use_bdf2_scheme ?
-  //                                              ((2*time_step + old_time_step) /
-  //                                               (time_step + old_time_step)) : 1.)
-  //                                             +
-  //                                             scratch.grad_phi_T[i] *
-  //                                             scratch.grad_phi_T[j] *
-  //                                             EquationData::kappa *
-  //                                             time_step)
-  //                                            *
-  //                                            scratch.temperature_fe_values.JxW(q);
-  //             }
-  //         }
-  //     }
-  // }
-
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::
@@ -2075,77 +1699,6 @@ namespace Step32
                                                         temperature_rhs,
                                                         data.matrix_for_bc);
   }
-
-
-
-  // template <int dim>
-  // void BoussinesqFlowProblem<dim>::assemble_temperature_system (const double maximal_velocity)
-  // {
-  //   const bool use_bdf2_scheme = (timestep_number != 0);
-  // 
-  //   if (use_bdf2_scheme == true)
-  //     {
-  //       temperature_matrix.copy_from (temperature_mass_matrix);
-  //       temperature_matrix *= (2*time_step + old_time_step) /
-  //                             (time_step + old_time_step);
-  //       temperature_matrix.add (time_step, temperature_stiffness_matrix);
-  //     }
-  //   else
-  //     {
-  //       temperature_matrix.copy_from (temperature_mass_matrix);
-  //       temperature_matrix.add (time_step, temperature_stiffness_matrix);
-  //     }
-  // 
-  //   if (rebuild_temperature_preconditioner == true)
-  //     {
-  //       T_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-  //       T_preconditioner->initialize (temperature_matrix);
-  //       rebuild_temperature_preconditioner = false;
-  //     }
-  // 
-  //   temperature_rhs = 0;
-  // 
-  //   const QGauss<dim> quadrature_formula(parameters.temperature_degree+2);
-  //   const std::pair<double,double>
-  //   global_T_range = get_extrapolated_temperature_range();
-  // 
-  //   const double average_temperature = 0.5 * (global_T_range.first +
-  //                                             global_T_range.second);
-  //   const double global_entropy_variation =
-  //     get_entropy_variation (average_temperature);
-  // 
-  //   typedef
-  //   FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
-  //   CellFilter;
-  // 
-  //   WorkStream::
-  //   run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-  //                    temperature_dof_handler.begin_active()),
-  //        CellFilter (IteratorFilters::LocallyOwnedCell(),
-  //                    temperature_dof_handler.end()),
-  //        std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-  //                         local_assemble_temperature_rhs,
-  //                         this,
-  //                         global_T_range,
-  //                         maximal_velocity,
-  //                         global_entropy_variation,
-  //                         std_cxx11::_1,
-  //                         std_cxx11::_2,
-  //                         std_cxx11::_3),
-  //        std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-  //                         copy_local_to_global_temperature_rhs,
-  //                         this,
-  //                         std_cxx11::_1),
-  //        Assembly::Scratch::
-  //        TemperatureRHS<dim> (temperature_fe, stokes_fe, mapping,
-  //                             quadrature_formula),
-  //        Assembly::CopyData::
-  //        TemperatureRHS<dim> (temperature_fe));
-  // 
-  //   temperature_rhs.compress(VectorOperation::add);
-  // }
-
-
 
 
 
@@ -2236,9 +1789,6 @@ namespace Step32
       old_time_step = time_step;
     
       const double scaling = (dim==3 ? 0.25 : 1.0);
-      // time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
-      //              (parameters.temperature_degree *
-      //               get_cfl_number()));
       const double cfl_number = 1e-20;
       time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
                      (parameters.temperature_degree *
@@ -2255,53 +1805,9 @@ namespace Step32
             << std::endl;
     
       temperature_solution = old_temperature_solution;
-      // assemble_temperature_system (maximal_velocity);
     }
     computing_timer.exit_section ();
 
-    // computing_timer.enter_section ("   Solve temperature system");
-    // {
-    //   SolverControl solver_control (temperature_matrix.m(),
-    //                                 1e-12*temperature_rhs.l2_norm());
-    //   SolverCG<TrilinosWrappers::MPI::Vector>   cg (solver_control);
-    // 
-    //   TrilinosWrappers::MPI::Vector
-    //   distributed_temperature_solution (temperature_rhs);
-    //   distributed_temperature_solution = temperature_solution;
-    // 
-    //   cg.solve (temperature_matrix, distributed_temperature_solution,
-    //             temperature_rhs, *T_preconditioner);
-    // 
-    //   temperature_constraints.distribute (distributed_temperature_solution);
-    //   temperature_solution = distributed_temperature_solution;
-    // 
-    //   pcout << "   "
-    //         << solver_control.last_step()
-    //         << " CG iterations for temperature" << std::endl;
-    //   computing_timer.exit_section();
-    // 
-    //   double temperature[2] = { std::numeric_limits<double>::max(),
-    //                             -std::numeric_limits<double>::max()
-    //                           };
-    //   double global_temperature[2];
-    // 
-    //   for (unsigned int i=distributed_temperature_solution.local_range().first;
-    //        i < distributed_temperature_solution.local_range().second; ++i)
-    //     {
-    //       temperature[0] = std::min<double> (temperature[0],
-    //                                          distributed_temperature_solution(i));
-    //       temperature[1] = std::max<double> (temperature[1],
-    //                                          distributed_temperature_solution(i));
-    //     }
-    // 
-    //   temperature[0] *= -1.0;
-    //   Utilities::MPI::max (temperature, MPI_COMM_WORLD, global_temperature);
-    //   global_temperature[0] *= -1.0;
-    // 
-    //   pcout << "   Temperature range: "
-    //         << global_temperature[0] << ' ' << global_temperature[1]
-    //         << std::endl;
-    // }
   }
 
 
@@ -2671,7 +2177,6 @@ start_time_iteration:
 
         assemble_stokes_system ();
         build_stokes_preconditioner ();
-        // assemble_temperature_matrix ();
 
         solve ();
 
@@ -2704,8 +2209,6 @@ start_time_iteration:
         TrilinosWrappers::MPI::BlockVector old_old_stokes_solution;
         old_old_stokes_solution      = old_stokes_solution;
         old_stokes_solution          = stokes_solution;
-        // old_old_temperature_solution = old_temperature_solution;
-        // old_temperature_solution     = temperature_solution;
         if (old_time_step > 0)
           {
             {
@@ -2717,15 +2220,6 @@ start_time_iteration:
                                     distr_old_solution);
               stokes_solution = distr_solution;
             }
-            // {
-              // TrilinosWrappers::MPI::Vector distr_solution (temperature_rhs);
-              // distr_solution = temperature_solution;
-              // TrilinosWrappers::MPI::Vector distr_old_solution (temperature_rhs);
-              // distr_old_solution = old_old_temperature_solution;
-              // distr_solution .sadd (1.+time_step/old_time_step, -time_step/old_time_step,
-                                    // distr_old_solution);
-              // temperature_solution = distr_solution;
-            // }
           }
 
         if ((timestep_number > 0) && (timestep_number % 100 == 0))
