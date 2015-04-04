@@ -64,6 +64,7 @@ namespace Step32
 {
   using namespace dealii;
 
+
   namespace EquationData
   {
     const double eta                   = 1e21;    /* Pa s       */
@@ -80,8 +81,8 @@ namespace Step32
     const double T1      =  700+273;              /* K          */
 
     // Added in review
-    const double temperature_initial_values = 1 ;
-    const double nu  = 1; 
+    const double temperature_initial_values = 1.0 ;
+    const double nu                         = 1.0; 
 
     template <int dim>
     Tensor<1,dim> gravity_vector (const Point<dim> &p)
@@ -93,6 +94,7 @@ namespace Step32
     const double pressure_scaling = eta / 10000;
     const double year_in_seconds  = 60*60*24*365.2425;
   }
+
 
   namespace LinearSolvers
   {
@@ -157,7 +159,6 @@ namespace Step32
   }
 
 
-
   namespace Assembly
   {
     namespace Scratch
@@ -192,8 +193,6 @@ namespace Step32
         phi_p (stokes_fe.dofs_per_cell)
       {}
 
-
-
       template <int dim>
       StokesPreconditioner<dim>::
       StokesPreconditioner (const StokesPreconditioner &scratch)
@@ -205,8 +204,6 @@ namespace Step32
         grad_phi_u (scratch.grad_phi_u),
         phi_p (scratch.phi_p)
       {}
-
-
 
       template <int dim>
       struct StokesSystem : public StokesPreconditioner<dim>
@@ -661,10 +658,10 @@ namespace Step32
     copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
 
 
-    void
-    local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                       Assembly::Scratch::TemperatureMatrix<dim>  &scratch,
-                                       Assembly::CopyData::TemperatureMatrix<dim> &data);
+    // void
+    // local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
+    //                                    Assembly::Scratch::TemperatureMatrix<dim>  &scratch,
+    //                                    Assembly::CopyData::TemperatureMatrix<dim> &data);
 
     void
     copy_local_to_global_temperature_matrix (const Assembly::CopyData::TemperatureMatrix<dim> &data);
@@ -1576,43 +1573,43 @@ namespace Step32
 
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::
-  local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                     Assembly::Scratch::TemperatureMatrix<dim> &scratch,
-                                     Assembly::CopyData::TemperatureMatrix<dim> &data)
-  {
-    const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
-    const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
-
-    scratch.temperature_fe_values.reinit (cell);
-    cell->get_dof_indices (data.local_dof_indices);
-
-    data.local_mass_matrix = 0;
-    data.local_stiffness_matrix = 0;
-
-    for (unsigned int q=0; q<n_q_points; ++q)
-      {
-        for (unsigned int k=0; k<dofs_per_cell; ++k)
-          {
-            scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
-            scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
-          }
-
-        for (unsigned int i=0; i<dofs_per_cell; ++i)
-          for (unsigned int j=0; j<dofs_per_cell; ++j)
-            {
-              data.local_mass_matrix(i,j)
-              += (scratch.phi_T[i] * scratch.phi_T[j]
-                  *
-                  scratch.temperature_fe_values.JxW(q));
-              data.local_stiffness_matrix(i,j)
-              += (EquationData::kappa * scratch.grad_phi_T[i] * scratch.grad_phi_T[j]
-                  *
-                  scratch.temperature_fe_values.JxW(q));
-            }
-      }
-  }
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::
+  // local_assemble_temperature_matrix (const typename DoFHandler<dim>::active_cell_iterator &cell,
+  //                                    Assembly::Scratch::TemperatureMatrix<dim> &scratch,
+  //                                    Assembly::CopyData::TemperatureMatrix<dim> &data)
+  // {
+  //   const unsigned int dofs_per_cell = scratch.temperature_fe_values.get_fe().dofs_per_cell;
+  //   const unsigned int n_q_points    = scratch.temperature_fe_values.n_quadrature_points;
+  // 
+  //   scratch.temperature_fe_values.reinit (cell);
+  //   cell->get_dof_indices (data.local_dof_indices);
+  // 
+  //   data.local_mass_matrix = 0;
+  //   data.local_stiffness_matrix = 0;
+  // 
+  //   for (unsigned int q=0; q<n_q_points; ++q)
+  //     {
+  //       for (unsigned int k=0; k<dofs_per_cell; ++k)
+  //         {
+  //           scratch.grad_phi_T[k] = scratch.temperature_fe_values.shape_grad (k,q);
+  //           scratch.phi_T[k]      = scratch.temperature_fe_values.shape_value (k, q);
+  //         }
+  // 
+  //       for (unsigned int i=0; i<dofs_per_cell; ++i)
+  //         for (unsigned int j=0; j<dofs_per_cell; ++j)
+  //           {
+  //             data.local_mass_matrix(i,j)
+  //             += (scratch.phi_T[i] * scratch.phi_T[j]
+  //                 *
+  //                 scratch.temperature_fe_values.JxW(q));
+  //             data.local_stiffness_matrix(i,j)
+  //             += (EquationData::kappa * scratch.grad_phi_T[i] * scratch.grad_phi_T[j]
+  //                 *
+  //                 scratch.temperature_fe_values.JxW(q));
+  //           }
+  //     }
+  // }
 
 
 
@@ -1646,25 +1643,25 @@ namespace Step32
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
     CellFilter;
 
-    WorkStream::
-    run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     temperature_dof_handler.begin_active()),
-         CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     temperature_dof_handler.end()),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          local_assemble_temperature_matrix,
-                          this,
-                          std_cxx11::_1,
-                          std_cxx11::_2,
-                          std_cxx11::_3),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          copy_local_to_global_temperature_matrix,
-                          this,
-                          std_cxx11::_1),
-         Assembly::Scratch::
-         TemperatureMatrix<dim> (temperature_fe, mapping, quadrature_formula),
-         Assembly::CopyData::
-         TemperatureMatrix<dim> (temperature_fe));
+    // WorkStream::
+    // run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+    //                  temperature_dof_handler.begin_active()),
+    //      CellFilter (IteratorFilters::LocallyOwnedCell(),
+    //                  temperature_dof_handler.end()),
+    //     //  std_cxx11::bind (&BoussinesqFlowProblem<dim>::
+    //     //                   local_assemble_temperature_matrix,
+    //     //                   this,
+    //     //                   std_cxx11::_1,
+    //     //                   std_cxx11::_2,
+    //     //                   std_cxx11::_3),
+    //      std_cxx11::bind (&BoussinesqFlowProblem<dim>::
+    //                       copy_local_to_global_temperature_matrix,
+    //                       this,
+    //                       std_cxx11::_1),
+    //      Assembly::Scratch::
+    //      TemperatureMatrix<dim> (temperature_fe, mapping, quadrature_formula),
+    //      Assembly::CopyData::
+    //      TemperatureMatrix<dim> (temperature_fe));
 
     temperature_mass_matrix.compress(VectorOperation::add);
     temperature_stiffness_matrix.compress(VectorOperation::add);
