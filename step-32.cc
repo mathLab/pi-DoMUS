@@ -544,7 +544,7 @@ namespace Step32
     void assemble_stokes_preconditioner ();
     void build_stokes_preconditioner ();
     void assemble_stokes_system ();
-    void project_temperature_field ();
+    // void project_temperature_field ();
     double get_entropy_variation (const double average_temperature) const;
     void solve ();
     void output_results ();
@@ -915,78 +915,78 @@ namespace Step32
   }
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::project_temperature_field ()
-  {
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::project_temperature_field ()
+  // {
 
-    QGauss<dim> quadrature(parameters.temperature_degree+2);
-    UpdateFlags update_flags = UpdateFlags(update_values   |
-                                           update_quadrature_points |
-                                           update_JxW_values);
-    FEValues<dim> fe_values (mapping, temperature_fe, quadrature, update_flags);
+    // QGauss<dim> quadrature(parameters.temperature_degree+2);
+    // UpdateFlags update_flags = UpdateFlags(update_values   |
+                                          //  update_quadrature_points |
+                                          //  update_JxW_values);
+    // FEValues<dim> fe_values (mapping, temperature_fe, quadrature, update_flags);
 
-    const unsigned int dofs_per_cell = fe_values.dofs_per_cell,
-                       n_q_points    = fe_values.n_quadrature_points;
+    // const unsigned int dofs_per_cell = fe_values.dofs_per_cell,
+                      //  n_q_points    = fe_values.n_quadrature_points;
 
-    std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-    Vector<double> cell_vector (dofs_per_cell);
-    FullMatrix<double> matrix_for_bc (dofs_per_cell, dofs_per_cell);
+    // std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+    // Vector<double> cell_vector (dofs_per_cell);
+    // FullMatrix<double> matrix_for_bc (dofs_per_cell, dofs_per_cell);
 
-    std::vector<double> rhs_values(n_q_points);
+    // std::vector<double> rhs_values(n_q_points);
 
-    TrilinosWrappers::MPI::Vector
-    rhs (temperature_mass_matrix.row_partitioner()),
-        solution (temperature_mass_matrix.row_partitioner());
+    // TrilinosWrappers::MPI::Vector
+    // rhs (temperature_mass_matrix.row_partitioner()),
+        // solution (temperature_mass_matrix.row_partitioner());
 
-    typename DoFHandler<dim>::active_cell_iterator
-    cell = temperature_dof_handler.begin_active(),
-    endc = temperature_dof_handler.end();
+    // typename DoFHandler<dim>::active_cell_iterator
+    // cell = temperature_dof_handler.begin_active(),
+    // endc = temperature_dof_handler.end();
+    // 
+    // for (; cell!=endc; ++cell)
+    //   if (cell->is_locally_owned())
+    //     {
+    //       cell->get_dof_indices (local_dof_indices);
+    //       fe_values.reinit (cell);
+    // 
+    //       cell_vector = 0;
+    //       matrix_for_bc = 0;
+    //       for (unsigned int point=0; point<n_q_points; ++point)
+    //         for (unsigned int i=0; i<dofs_per_cell; ++i)
+    //           {
+    //             cell_vector(i) += rhs_values[point] *
+    //                               fe_values.shape_value(i,point) *
+    //                               fe_values.JxW(point);
+    //             if (temperature_constraints.is_inhomogeneously_constrained(local_dof_indices[i]))
+    //               {
+    //                 for (unsigned int j=0; j<dofs_per_cell; ++j)
+    //                   matrix_for_bc(j,i) += fe_values.shape_value(i,point) *
+    //                                         fe_values.shape_value(j,point) *
+    //                                         fe_values.JxW(point);
+    //               }
+    //           }
+    // 
+    //       temperature_constraints.distribute_local_to_global (cell_vector,
+    //                                                           local_dof_indices,
+    //                                                           rhs,
+    //                                                           matrix_for_bc);
+    //     }
 
-    for (; cell!=endc; ++cell)
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices (local_dof_indices);
-          fe_values.reinit (cell);
+    // rhs.compress (VectorOperation::add);
 
-          cell_vector = 0;
-          matrix_for_bc = 0;
-          for (unsigned int point=0; point<n_q_points; ++point)
-            for (unsigned int i=0; i<dofs_per_cell; ++i)
-              {
-                cell_vector(i) += rhs_values[point] *
-                                  fe_values.shape_value(i,point) *
-                                  fe_values.JxW(point);
-                if (temperature_constraints.is_inhomogeneously_constrained(local_dof_indices[i]))
-                  {
-                    for (unsigned int j=0; j<dofs_per_cell; ++j)
-                      matrix_for_bc(j,i) += fe_values.shape_value(i,point) *
-                                            fe_values.shape_value(j,point) *
-                                            fe_values.JxW(point);
-                  }
-              }
+    // SolverControl solver_control(5*rhs.size(), 1e-12*rhs.l2_norm());
+    // SolverCG<TrilinosWrappers::MPI::Vector> cg(solver_control);
 
-          temperature_constraints.distribute_local_to_global (cell_vector,
-                                                              local_dof_indices,
-                                                              rhs,
-                                                              matrix_for_bc);
-        }
+    // TrilinosWrappers::PreconditionJacobi preconditioner_mass;
+    // preconditioner_mass.initialize(temperature_mass_matrix, 1.3);
 
-    rhs.compress (VectorOperation::add);
+    // cg.solve (temperature_mass_matrix, solution, rhs, preconditioner_mass);
 
-    SolverControl solver_control(5*rhs.size(), 1e-12*rhs.l2_norm());
-    SolverCG<TrilinosWrappers::MPI::Vector> cg(solver_control);
+    // temperature_constraints.distribute (solution);
 
-    TrilinosWrappers::PreconditionJacobi preconditioner_mass;
-    preconditioner_mass.initialize(temperature_mass_matrix, 1.3);
-
-    cg.solve (temperature_mass_matrix, solution, rhs, preconditioner_mass);
-
-    temperature_constraints.distribute (solution);
-
-    temperature_solution = solution;
-    old_temperature_solution = solution;
-    old_old_temperature_solution = solution;
-  }
+    // temperature_solution = solution;
+    // old_temperature_solution = solution;
+    // old_old_temperature_solution = solution;
+  // }
 
 
 
@@ -1933,7 +1933,7 @@ start_time_iteration:
     // This function has to be removed:
     //  Removing this function causes a lot of errors!!!
     //  Probably division by zero... somewhere
-    project_temperature_field ();
+    // project_temperature_field ();
 
     timestep_number           = 0;
     time_step = old_time_step = 0;
