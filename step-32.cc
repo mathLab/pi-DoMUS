@@ -425,8 +425,8 @@ namespace Step32
                               const std::vector<IndexSet> &stokes_relevant_partitioning);
     void setup_stokes_preconditioner (const std::vector<IndexSet> &stokes_partitioning,
                                       const std::vector<IndexSet> &stokes_relevant_partitioning);
-    void setup_temperature_matrices (const IndexSet &temperature_partitioning,
-                                     const IndexSet &temperature_relevant_partitioning);
+    // void setup_temperature_matrices (const IndexSet &temperature_partitioning,
+                                    //  const IndexSet &temperature_relevant_partitioning);
 
 
     void
@@ -770,31 +770,31 @@ namespace Step32
   }
 
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::
-  setup_temperature_matrices (const IndexSet &temperature_partitioner,
-                              const IndexSet &temperature_relevant_partitioner)
-  {
-    T_preconditioner.reset ();
-    temperature_mass_matrix.clear ();
-    temperature_stiffness_matrix.clear ();
-    temperature_matrix.clear ();
-
-    TrilinosWrappers::SparsityPattern sp(temperature_partitioner,
-                                         temperature_partitioner,
-                                         temperature_relevant_partitioner,
-                                         MPI_COMM_WORLD);
-    DoFTools::make_sparsity_pattern (temperature_dof_handler, sp,
-                                     temperature_constraints, false,
-                                     Utilities::MPI::
-                                     this_mpi_process(MPI_COMM_WORLD));
-    sp.compress();
-
-    temperature_matrix.reinit (sp);
-    temperature_mass_matrix.reinit (sp);
-    temperature_stiffness_matrix.reinit (sp);
-  }
-
+  // template <int dim>
+  // void BoussinesqFlowProblem<dim>::
+  // setup_temperature_matrices (const IndexSet &temperature_partitioner,
+  //                             const IndexSet &temperature_relevant_partitioner)
+  // {
+  //   T_preconditioner.reset ();
+  //   temperature_mass_matrix.clear ();
+  //   temperature_stiffness_matrix.clear ();
+  //   temperature_matrix.clear ();
+  // 
+  //   TrilinosWrappers::SparsityPattern sp(temperature_partitioner,
+  //                                        temperature_partitioner,
+  //                                        temperature_relevant_partitioner,
+  //                                        MPI_COMM_WORLD);
+  //   DoFTools::make_sparsity_pattern (temperature_dof_handler, sp,
+  //                                    temperature_constraints, false,
+  //                                    Utilities::MPI::
+  //                                    this_mpi_process(MPI_COMM_WORLD));
+  //   sp.compress();
+  // 
+  //   temperature_matrix.reinit (sp);
+  //   temperature_mass_matrix.reinit (sp);
+  //   temperature_stiffness_matrix.reinit (sp);
+  // }
+  // 
 
 
   template <int dim>
@@ -885,8 +885,8 @@ namespace Step32
     setup_stokes_matrix (stokes_partitioning, stokes_relevant_partitioning);
     setup_stokes_preconditioner (stokes_partitioning,
                                  stokes_relevant_partitioning);
-    setup_temperature_matrices (temperature_partitioning,
-                                temperature_relevant_partitioning);
+    // setup_temperature_matrices (temperature_partitioning,
+                                // temperature_relevant_partitioning);
 
     stokes_rhs.reinit (stokes_partitioning, stokes_relevant_partitioning,
                        MPI_COMM_WORLD, true);
