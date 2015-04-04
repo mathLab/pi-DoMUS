@@ -227,7 +227,6 @@ namespace Step32
         std::vector<double>                  old_temperature_values;
       };
 
-
       template <int dim>
       StokesSystem<dim>::
       StokesSystem (const FiniteElement<dim> &stokes_fe,
@@ -248,7 +247,6 @@ namespace Step32
         old_temperature_values (stokes_quadrature.size())
       {}
 
-
       template <int dim>
       StokesSystem<dim>::
       StokesSystem (const StokesSystem<dim> &scratch)
@@ -263,7 +261,6 @@ namespace Step32
         div_phi_u (scratch.div_phi_u),
         old_temperature_values (scratch.old_temperature_values)
       {}
-
 
       template <int dim>
       struct TemperatureMatrix
@@ -913,83 +910,6 @@ namespace Step32
                                          average_entropy - (-global_maxima[0]));
     return entropy_diff;
   }
-
-
-  // template <int dim>
-  // void BoussinesqFlowProblem<dim>::project_temperature_field ()
-  // {
-
-    // QGauss<dim> quadrature(parameters.temperature_degree+2);
-    // UpdateFlags update_flags = UpdateFlags(update_values   |
-                                          //  update_quadrature_points |
-                                          //  update_JxW_values);
-    // FEValues<dim> fe_values (mapping, temperature_fe, quadrature, update_flags);
-
-    // const unsigned int dofs_per_cell = fe_values.dofs_per_cell,
-                      //  n_q_points    = fe_values.n_quadrature_points;
-
-    // std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-    // Vector<double> cell_vector (dofs_per_cell);
-    // FullMatrix<double> matrix_for_bc (dofs_per_cell, dofs_per_cell);
-
-    // std::vector<double> rhs_values(n_q_points);
-
-    // TrilinosWrappers::MPI::Vector
-    // rhs (temperature_mass_matrix.row_partitioner()),
-        // solution (temperature_mass_matrix.row_partitioner());
-
-    // typename DoFHandler<dim>::active_cell_iterator
-    // cell = temperature_dof_handler.begin_active(),
-    // endc = temperature_dof_handler.end();
-    // 
-    // for (; cell!=endc; ++cell)
-    //   if (cell->is_locally_owned())
-    //     {
-    //       cell->get_dof_indices (local_dof_indices);
-    //       fe_values.reinit (cell);
-    // 
-    //       cell_vector = 0;
-    //       matrix_for_bc = 0;
-    //       for (unsigned int point=0; point<n_q_points; ++point)
-    //         for (unsigned int i=0; i<dofs_per_cell; ++i)
-    //           {
-    //             cell_vector(i) += rhs_values[point] *
-    //                               fe_values.shape_value(i,point) *
-    //                               fe_values.JxW(point);
-    //             if (temperature_constraints.is_inhomogeneously_constrained(local_dof_indices[i]))
-    //               {
-    //                 for (unsigned int j=0; j<dofs_per_cell; ++j)
-    //                   matrix_for_bc(j,i) += fe_values.shape_value(i,point) *
-    //                                         fe_values.shape_value(j,point) *
-    //                                         fe_values.JxW(point);
-    //               }
-    //           }
-    // 
-    //       temperature_constraints.distribute_local_to_global (cell_vector,
-    //                                                           local_dof_indices,
-    //                                                           rhs,
-    //                                                           matrix_for_bc);
-    //     }
-
-    // rhs.compress (VectorOperation::add);
-
-    // SolverControl solver_control(5*rhs.size(), 1e-12*rhs.l2_norm());
-    // SolverCG<TrilinosWrappers::MPI::Vector> cg(solver_control);
-
-    // TrilinosWrappers::PreconditionJacobi preconditioner_mass;
-    // preconditioner_mass.initialize(temperature_mass_matrix, 1.3);
-
-    // cg.solve (temperature_mass_matrix, solution, rhs, preconditioner_mass);
-
-    // temperature_constraints.distribute (solution);
-
-    // temperature_solution = solution;
-    // old_temperature_solution = solution;
-    // old_old_temperature_solution = solution;
-  // }
-
-
-
 
 
   template <int dim>
@@ -1929,11 +1849,6 @@ namespace Step32
     unsigned int pre_refinement_step = 0;
 
 start_time_iteration:
-
-    // This function has to be removed:
-    //  Removing this function causes a lot of errors!!!
-    //  Probably division by zero... somewhere
-    // project_temperature_field ();
 
     timestep_number           = 0;
     time_step = old_time_step = 0;
