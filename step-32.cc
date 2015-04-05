@@ -774,14 +774,14 @@ namespace Step32
                                                        mapping);
       stokes_constraints.close ();
     }
-    {
-      temperature_constraints.clear ();
-      temperature_constraints.reinit (temperature_relevant_partitioning);
-
-      DoFTools::make_hanging_node_constraints (temperature_dof_handler,
-                                               temperature_constraints);
-      temperature_constraints.close ();
-    }
+    // {
+    //   temperature_constraints.clear ();
+    //   temperature_constraints.reinit (temperature_relevant_partitioning);
+    // 
+    //   DoFTools::make_hanging_node_constraints (temperature_dof_handler,
+    //                                            temperature_constraints);
+    //   temperature_constraints.close ();
+    // }
 
     setup_stokes_matrix (stokes_partitioning, stokes_relevant_partitioning);
     setup_stokes_preconditioner (stokes_partitioning,
@@ -1313,50 +1313,50 @@ namespace Step32
     TrilinosWrappers::MPI::Vector joint_solution;
     joint_solution.reinit (joint_dof_handler.locally_owned_dofs(), MPI_COMM_WORLD);
 
-    {
-      std::vector<types::global_dof_index> local_joint_dof_indices (joint_fe.dofs_per_cell);
-      std::vector<types::global_dof_index> local_stokes_dof_indices (stokes_fe.dofs_per_cell);
-      std::vector<types::global_dof_index> local_temperature_dof_indices (temperature_fe.dofs_per_cell);
-
-      typename DoFHandler<dim>::active_cell_iterator
-      joint_cell       = joint_dof_handler.begin_active(),
-      joint_endc       = joint_dof_handler.end(),
-      stokes_cell      = stokes_dof_handler.begin_active(),
-      temperature_cell = temperature_dof_handler.begin_active();
-      for (; joint_cell!=joint_endc;
-           ++joint_cell, ++stokes_cell, ++temperature_cell)
-        if (joint_cell->is_locally_owned())
-          {
-            joint_cell->get_dof_indices (local_joint_dof_indices);
-            stokes_cell->get_dof_indices (local_stokes_dof_indices);
-            temperature_cell->get_dof_indices (local_temperature_dof_indices);
-
-            for (unsigned int i=0; i<joint_fe.dofs_per_cell; ++i)
-              if (joint_fe.system_to_base_index(i).first.first == 0)
-                {
-                  Assert (joint_fe.system_to_base_index(i).second
-                          <
-                          local_stokes_dof_indices.size(),
-                          ExcInternalError());
-
-                  joint_solution(local_joint_dof_indices[i])
-                    = stokes_solution(local_stokes_dof_indices
-                                      [joint_fe.system_to_base_index(i).second]);
-                }
-              else
-                {
-                  Assert (joint_fe.system_to_base_index(i).first.first == 1,
-                          ExcInternalError());
-                  Assert (joint_fe.system_to_base_index(i).second
-                          <
-                          local_temperature_dof_indices.size(),
-                          ExcInternalError());
-                  // joint_solution(local_joint_dof_indices[i])
-                  //   = temperature_solution(local_temperature_dof_indices
-                  //                          [joint_fe.system_to_base_index(i).second]);
-                }
-          }
-    }
+    // {
+    //   std::vector<types::global_dof_index> local_joint_dof_indices (joint_fe.dofs_per_cell);
+    //   std::vector<types::global_dof_index> local_stokes_dof_indices (stokes_fe.dofs_per_cell);
+    //   std::vector<types::global_dof_index> local_temperature_dof_indices (temperature_fe.dofs_per_cell);
+    // 
+    //   typename DoFHandler<dim>::active_cell_iterator
+    //   joint_cell       = joint_dof_handler.begin_active(),
+    //   joint_endc       = joint_dof_handler.end(),
+    //   stokes_cell      = stokes_dof_handler.begin_active(),
+    //   temperature_cell = temperature_dof_handler.begin_active();
+    //   for (; joint_cell!=joint_endc;
+    //        ++joint_cell, ++stokes_cell, ++temperature_cell)
+    //     if (joint_cell->is_locally_owned())
+    //       {
+    //         joint_cell->get_dof_indices (local_joint_dof_indices);
+    //         stokes_cell->get_dof_indices (local_stokes_dof_indices);
+    //         temperature_cell->get_dof_indices (local_temperature_dof_indices);
+    // 
+    //         for (unsigned int i=0; i<joint_fe.dofs_per_cell; ++i)
+    //           if (joint_fe.system_to_base_index(i).first.first == 0)
+    //             {
+    //               Assert (joint_fe.system_to_base_index(i).second
+    //                       <
+    //                       local_stokes_dof_indices.size(),
+    //                       ExcInternalError());
+    // 
+    //               joint_solution(local_joint_dof_indices[i])
+    //                 = stokes_solution(local_stokes_dof_indices
+    //                                   [joint_fe.system_to_base_index(i).second]);
+    //             }
+    //           else
+    //             {
+    //               Assert (joint_fe.system_to_base_index(i).first.first == 1,
+    //                       ExcInternalError());
+    //               Assert (joint_fe.system_to_base_index(i).second
+    //                       <
+    //                       local_temperature_dof_indices.size(),
+    //                       ExcInternalError());
+    //               // joint_solution(local_joint_dof_indices[i])
+    //               //   = temperature_solution(local_temperature_dof_indices
+    //               //                          [joint_fe.system_to_base_index(i).second]);
+    //             }
+    //       }
+    // }
 
     joint_solution.compress(VectorOperation::insert);
 
