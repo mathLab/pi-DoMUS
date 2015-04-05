@@ -1,6 +1,12 @@
 ##
 #  CMake script for the step-32 tutorial program:
 ##
+cmake_minimum_required(VERSION 2.8)
+
+# project (gradient)
+# file(GLOB cc_files source/*.c*)
+# include_directories(include)
+# add_executable(gradient ${cc_files})
 
 # Set the name of the project and target:
 SET(TARGET "step-32")
@@ -9,9 +15,10 @@ SET(TARGET "step-32")
 # the one step-X.cc file, but as you expand your project you may wish
 # to add other source files as well. If your project becomes much larger,
 # you may want to either replace the following statement by something like
-#  FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
-#  FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
-#  SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
+ FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
+ FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
+ include_directories(include)
+ SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
 # or switch altogether to the large project CMakeLists.txt file discussed
 # in the "CMake in user projects" page accessible from the "User info"
 # page of the documentation.
@@ -55,3 +62,24 @@ ENDIF()
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 PROJECT(${TARGET})
 DEAL_II_INVOKE_AUTOPILOT()
+
+
+# find_package(MPI REQUIRED)
+# include_directories(${MPI_INCLUDE_PATH})
+
+# target_link_libraries(gradient ${MPI_LIBRARIES})
+# 
+# if(MPI_COMPILE_FLAGS)
+#   set_target_properties(gradient PROPERTIES
+#     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+# endif()
+# 
+# if(MPI_LINK_FLAGS)
+#   set_target_properties(gradient PROPERTIES
+#     LINK_FLAGS "${MPI_LINK_FLAGS}")
+# endif()
+# 
+# add_custom_target(run
+#     COMMAND gradient
+#     DEPENDS gradient
+#     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
