@@ -60,8 +60,6 @@
 #include <deal.II/distributed/grid_refinement.h>
 
 
-namespace Step32
-{
   using namespace dealii;
 
 
@@ -1471,12 +1469,10 @@ start_time_iteration:
         !((timestep_number-1) % parameters.graphical_output_interval == 0))
       output_results ();
   }
-}
 
 
 int main (int argc, char *argv[])
 {
-  using namespace Step32;
   using namespace dealii;
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
