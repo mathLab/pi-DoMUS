@@ -77,8 +77,8 @@ using namespace dealii;
     stabilization_c_R (0.11),
     stabilization_beta (0.078),
     stokes_velocity_degree (2),
-    use_locally_conservative_discretization (true),
-    temperature_degree (2)
+    use_locally_conservative_discretization (true)//,
+    // temperature_degree (2)
   {
     ParameterHandler prm;
     BoussinesqFlowProblem<dim>::Parameters::declare_parameters (prm);
@@ -204,7 +204,7 @@ using namespace dealii;
     prm.enter_subsection ("Discretization");
     {
       stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
-      temperature_degree     = prm.get_integer ("Temperature polynomial degree");
+      // temperature_degree     = prm.get_integer ("Temperature polynomial degree");
       use_locally_conservative_discretization
         = prm.get_bool ("Use locally conservative discretization");
     }
@@ -240,7 +240,8 @@ using namespace dealii;
 
     stokes_dof_handler (triangulation),
 
-    temperature_fe (parameters.temperature_degree),
+    // temperature_fe (parameters.temperature_degree),
+    temperature_fe (2),
     temperature_dof_handler (triangulation),
 
     time_step (0),
@@ -790,7 +791,7 @@ using namespace dealii;
       const double scaling = (dim==3 ? 0.25 : 1.0);
       const double cfl_number = 1e-20;
       time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
-                     (parameters.temperature_degree *
+                     (2 *
                       cfl_number));
                       
     }

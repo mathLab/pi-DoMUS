@@ -46,7 +46,7 @@ class BoussinesqFlowProblem
 			unsigned int stokes_velocity_degree;
 			bool         use_locally_conservative_discretization;
 
-			unsigned int temperature_degree;
+			// unsigned int temperature_degree;
 		};
 
 	private:
