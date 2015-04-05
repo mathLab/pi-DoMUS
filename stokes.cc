@@ -1040,21 +1040,21 @@ start_time_iteration:
 
         solve ();
 
-        pcout << std::endl;
-
-        if ((timestep_number == 0) &&
-            (pre_refinement_step < parameters.initial_adaptive_refinement))
-          {
-            refine_mesh (parameters.initial_global_refinement +
-                         parameters.initial_adaptive_refinement);
-            ++pre_refinement_step;
-            goto start_time_iteration;
-          }
-        else if ((timestep_number > 0)
-                 &&
-                 (timestep_number % parameters.adaptive_refinement_interval == 0))
-          refine_mesh (parameters.initial_global_refinement +
-                       parameters.initial_adaptive_refinement);
+        // pcout << std::endl;
+        // 
+        // if ((timestep_number == 0) &&
+        //     (pre_refinement_step < parameters.initial_adaptive_refinement))
+        //   {
+        //     refine_mesh (parameters.initial_global_refinement +
+        //                  parameters.initial_adaptive_refinement);
+        //     ++pre_refinement_step;
+        //     goto start_time_iteration;
+        //   }
+        // else if ((timestep_number > 0)
+        //          &&
+        //          (timestep_number % parameters.adaptive_refinement_interval == 0))
+        //   refine_mesh (parameters.initial_global_refinement +
+        //                parameters.initial_adaptive_refinement);
 
         if (//(parameters.generate_graphical_output == true)
             //&&
@@ -1112,7 +1112,7 @@ int main (int argc, char *argv[])
       if (argc>=2)
         parameter_filename = argv[1];
       else
-        parameter_filename = "step-32.prm";
+        parameter_filename = "stokes.prm";
 
       const int dim = 2;
       BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);

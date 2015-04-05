@@ -1,5 +1,5 @@
 ##
-#  CMake script for the step-32 tutorial program:
+#  CMake script for the stokes tutorial program:
 ##
 cmake_minimum_required(VERSION 2.8)
 
@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 2.8)
 # add_executable(gradient ${cc_files})
 
 # Set the name of the project and target:
-SET(TARGET "step-32")
+SET(TARGET "stokes")
 
 # Declare all source files the target consists of. Here, this is only
 # the one step-X.cc file, but as you expand your project you may wish
