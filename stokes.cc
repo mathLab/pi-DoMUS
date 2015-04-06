@@ -78,7 +78,6 @@ using namespace dealii;
     stabilization_beta (0.078),
     stokes_velocity_degree (2),
     use_locally_conservative_discretization (true)//,
-    // temperature_degree (2)
   {
     ParameterHandler prm;
     BoussinesqFlowProblem<dim>::Parameters::declare_parameters (prm);
@@ -164,9 +163,6 @@ using namespace dealii;
                          Patterns::Integer (1),
                          "The polynomial degree to use for the velocity variables "
                          "in the Stokes system.");
-      prm.declare_entry ("Temperature polynomial degree", "2",
-                         Patterns::Integer (1),
-                         "The polynomial degree to use for the temperature variable.");
       prm.declare_entry ("Use locally conservative discretization", "true",
                          Patterns::Bool (),
                          "Whether to use a Stokes discretization that is locally "
@@ -204,7 +200,6 @@ using namespace dealii;
     prm.enter_subsection ("Discretization");
     {
       stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
-      // temperature_degree     = prm.get_integer ("Temperature polynomial degree");
       use_locally_conservative_discretization
         = prm.get_bool ("Use locally conservative discretization");
     }
@@ -240,17 +235,11 @@ using namespace dealii;
 
     stokes_dof_handler (triangulation),
 
-    // temperature_fe (parameters.temperature_degree),
-    temperature_fe (2),
-    temperature_dof_handler (triangulation),
-
     time_step (0),
     old_time_step (0),
     timestep_number (0),
     rebuild_stokes_matrix (true),
     rebuild_stokes_preconditioner (true),
-    rebuild_temperature_matrices (true),
-    rebuild_temperature_preconditioner (true),
 
     computing_timer (MPI_COMM_WORLD,
                      pcout,
@@ -332,16 +321,12 @@ using namespace dealii;
     stokes_dof_handler.distribute_dofs (stokes_fe);
     DoFRenumbering::component_wise (stokes_dof_handler, stokes_sub_blocks);
 
-    // temperature_dof_handler.distribute_dofs (temperature_fe);
-
     std::vector<types::global_dof_index> stokes_dofs_per_block (2);
     DoFTools::count_dofs_per_block (stokes_dof_handler, stokes_dofs_per_block,
                                     stokes_sub_blocks);
 
     const unsigned int n_u = stokes_dofs_per_block[0],
                        n_p = stokes_dofs_per_block[1];
-                      //  ,
-                      //  n_T = temperature_dof_handler.n_dofs();
 
     std::locale s = pcout.get_stream().getloc();
     pcout.get_stream().imbue(std::locale(""));
@@ -361,7 +346,6 @@ using namespace dealii;
 
 
     std::vector<IndexSet> stokes_partitioning, stokes_relevant_partitioning;
-    // IndexSet temperature_partitioning (n_T), temperature_relevant_partitioning (n_T);
     IndexSet stokes_relevant_set;
     {
       IndexSet stokes_index_set = stokes_dof_handler.locally_owned_dofs();
@@ -373,9 +357,6 @@ using namespace dealii;
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(0,n_u));
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(n_u,n_u+n_p));
 
-      // temperature_partitioning = temperature_dof_handler.locally_owned_dofs();
-      // DoFTools::extract_locally_relevant_dofs (temperature_dof_handler,
-                                              //  temperature_relevant_partitioning);
     }
 
     {
@@ -400,14 +381,6 @@ using namespace dealii;
                                                        mapping);
       stokes_constraints.close ();
     }
-    // {
-    //   temperature_constraints.clear ();
-    //   temperature_constraints.reinit (temperature_relevant_partitioning);
-    // 
-    //   DoFTools::make_hanging_node_constraints (temperature_dof_handler,
-    //                                            temperature_constraints);
-    //   temperature_constraints.close ();
-    // }
 
     setup_stokes_matrix (stokes_partitioning, stokes_relevant_partitioning);
     setup_stokes_preconditioner (stokes_partitioning,
@@ -420,8 +393,6 @@ using namespace dealii;
 
     rebuild_stokes_matrix              = true;
     rebuild_stokes_preconditioner      = true;
-    // rebuild_temperature_matrices       = true;
-    // rebuild_temperature_preconditioner = true;
 
     computing_timer.exit_section();
   }
@@ -568,15 +539,6 @@ using namespace dealii;
     const FEValuesExtractors::Vector velocities (0);
     const FEValuesExtractors::Scalar pressure (dim);
 
-    // scratch.stokes_fe_values.reinit (cell);
-
-    // typename DoFHandler<dim>::active_cell_iterator
-    // temperature_cell (&triangulation,
-    //                   cell->level(),
-    //                   cell->index(),
-    //                   &temperature_dof_handler);
-    // scratch.temperature_fe_values.reinit (temperature_cell);
-
     if (rebuild_stokes_matrix)
       data.local_matrix = 0;
     data.local_rhs = 0;
@@ -584,8 +546,6 @@ using namespace dealii;
 
     for (unsigned int q=0; q<n_q_points; ++q)
       {
-        // const double old_temperature = scratch.old_temperature_values[q];
-
         for (unsigned int k=0; k<dofs_per_cell; ++k)
           {
             scratch.phi_u[k] = scratch.stokes_fe_values[velocities].value (k,q);
@@ -776,22 +736,6 @@ using namespace dealii;
     }
     computing_timer.exit_section();
 
-
-    // computing_timer.enter_section ("   Assemble temperature rhs");
-    // {
-    //   // This part has to be removed:
-    //   //  If removed an infinite loop starts
-    //   old_time_step = time_step;
-    // 
-    //   const double scaling = (dim==3 ? 0.25 : 1.0);
-    //   const double cfl_number = 1e-20;
-    //   time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
-    //                  (2 *
-    //                   cfl_number));
-    //                   
-    // }
-    // computing_timer.exit_section ();
-
   }
 
 
@@ -899,9 +843,6 @@ using namespace dealii;
 
         const double pressure = (uh[q](dim)-minimal_pressure);
         computed_quantities[q](dim) = pressure;
-
-        const double temperature = uh[q](dim+1);
-        computed_quantities[q](dim+1) = temperature;
 
         Tensor<2,dim> grad_u;
         for (unsigned int d=0; d<dim; ++d)

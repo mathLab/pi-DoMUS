@@ -28,9 +28,6 @@ subsection Discretization
   # system.
   set Stokes velocity polynomial degree       = 2
 
-  # The polynomial degree to use for the temperature variable.
-  set Temperature polynomial degree           = 2
-
   # Whether to use a Stokes discretization that is locally conservative at the
   # expense of a larger number of degrees of freedom, or to go with a cheaper
   # discretization that does not locally conserve mass (although it is

@@ -47,7 +47,6 @@ class BoussinesqFlowProblem
 			unsigned int stokes_velocity_degree;
 			bool         use_locally_conservative_discretization;
 
-			// unsigned int temperature_degree;
 		};
 
 	private:
@@ -71,16 +70,6 @@ class BoussinesqFlowProblem
 		TrilinosWrappers::MPI::BlockVector        old_stokes_solution;
 		TrilinosWrappers::MPI::BlockVector        stokes_rhs;
 
-
-		FE_Q<dim>                                 temperature_fe;
-		DoFHandler<dim>                           temperature_dof_handler;
-		ConstraintMatrix                          temperature_constraints;
-
-		TrilinosWrappers::SparseMatrix            temperature_mass_matrix;
-		TrilinosWrappers::SparseMatrix            temperature_stiffness_matrix;
-		TrilinosWrappers::SparseMatrix            temperature_matrix;
-
-
 		double                                    time_step;
 		double                                    old_time_step;
 		unsigned int                              timestep_number;
@@ -91,8 +80,6 @@ class BoussinesqFlowProblem
 
 		bool                                      rebuild_stokes_matrix;
 		bool                                      rebuild_stokes_preconditioner;
-		bool                                      rebuild_temperature_matrices;
-		bool                                      rebuild_temperature_preconditioner;
 
 		TimerOutput                               computing_timer;
 
