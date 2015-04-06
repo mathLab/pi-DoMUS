@@ -920,32 +920,29 @@ using namespace dealii;
   {
     computing_timer.enter_section ("Postprocessing");
 
-    const FESystem<dim> joint_fe (stokes_fe, 1,
-                                  temperature_fe, 1);
-
-    DoFHandler<dim> joint_dof_handler (triangulation);
-    joint_dof_handler.distribute_dofs (joint_fe);
-    Assert (joint_dof_handler.n_dofs() ==
-            stokes_dof_handler.n_dofs() + temperature_dof_handler.n_dofs(),
-            ExcInternalError());
-
-    TrilinosWrappers::MPI::Vector joint_solution;
-    joint_solution.reinit (joint_dof_handler.locally_owned_dofs(), MPI_COMM_WORLD);
-
-    joint_solution.compress(VectorOperation::insert);
-
-    IndexSet locally_relevant_joint_dofs(joint_dof_handler.n_dofs());
-    DoFTools::extract_locally_relevant_dofs (joint_dof_handler, locally_relevant_joint_dofs);
-    TrilinosWrappers::MPI::Vector locally_relevant_joint_solution;
-    locally_relevant_joint_solution.reinit (locally_relevant_joint_dofs, MPI_COMM_WORLD);
-    locally_relevant_joint_solution = joint_solution;
-
-    Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
-                                 stokes_solution.block(1).minimal_value());
+    // const FESystem<dim> stokes_fe, 1;
+    // 
+    // DoFHandler<dim> triangulation;
+    // 
+    // joint_dof_handler.distribute_dofs (stokes_fe);
+    // 
+    // TrilinosWrappers::MPI::Vector joint_solution;
+    // joint_solution.reinit (joint_dof_handler.locally_owned_dofs(), MPI_COMM_WORLD);
+    // 
+    // joint_solution.compress(VectorOperation::insert);
+    // 
+    // IndexSet locally_relevant_joint_dofs(joint_dof_handler.n_dofs());
+    // DoFTools::extract_locally_relevant_dofs (joint_dof_handler, locally_relevant_joint_dofs);
+    // TrilinosWrappers::MPI::Vector locally_relevant_joint_solution;
+    // locally_relevant_joint_solution.reinit (locally_relevant_joint_dofs, MPI_COMM_WORLD);
+    // locally_relevant_joint_solution = joint_solution;
+    // 
+    // Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
+    //                              stokes_solution.block(1).minimal_value());
 
     DataOut<dim> data_out;
-    data_out.attach_dof_handler (joint_dof_handler);
-    data_out.add_data_vector (locally_relevant_joint_solution, postprocessor);
+    data_out.attach_dof_handler (stokes_dof_handler);
+    // data_out.add_data_vector (locally_relevant_joint_solution, postprocessor);
     data_out.build_patches ();
 
     static int out_index=0;
@@ -1020,67 +1017,10 @@ using namespace dealii;
     assemble_stokes_system ();
     build_stokes_preconditioner ();
     solve ();
-/*
         
-        
-
-        
-
-        // pcout << std::endl;
-        // 
-        // if ((timestep_number == 0) &&
-        //     (pre_refinement_step < parameters.initial_adaptive_refinement))
-        //   {
-        //     refine_mesh (parameters.initial_global_refinement +
-        //                  parameters.initial_adaptive_refinement);
-        //     ++pre_refinement_step;
-        //     goto start_time_iteration;
-        //   }
-        // else if ((timestep_number > 0)
-        //          &&
-        //          (timestep_number % parameters.adaptive_refinement_interval == 0))
-        //   refine_mesh (parameters.initial_global_refinement +
-        //                parameters.initial_adaptive_refinement);
-
-        if (//(parameters.generate_graphical_output == true)
-            //&&
-            (timestep_number % parameters.graphical_output_interval == 0))
-          output_results ();
-
-        // if (time > parameters.end_time * EquationData::year_in_seconds)
-        //   break;
-        if (time > 5 * EquationData::year_in_seconds)
-          break;
-
-        TrilinosWrappers::MPI::BlockVector old_old_stokes_solution;
-        old_old_stokes_solution      = old_stokes_solution;
-        old_stokes_solution          = stokes_solution;
-        if (old_time_step > 0)
-          {
-            {
-              TrilinosWrappers::MPI::BlockVector distr_solution (stokes_rhs);
-              distr_solution = stokes_solution;
-              TrilinosWrappers::MPI::BlockVector distr_old_solution (stokes_rhs);
-              distr_old_solution = old_old_stokes_solution;
-              distr_solution .sadd (1.+time_step/old_time_step, -time_step/old_time_step,
-                                    distr_old_solution);
-              stokes_solution = distr_solution;
-            }
-          }
-
-        if ((timestep_number > 0) && (timestep_number % 100 == 0))
-          computing_timer.print_summary ();
-
-        time += time_step;
-        ++timestep_number;
-      }
-    while (true);
-
-    if ((parameters.generate_graphical_output == true)
-        &&
-        !((timestep_number-1) % parameters.graphical_output_interval == 0))
-      output_results ();
-      */
+    // refine_mesh ( 1 );
+    
+    output_results ();
   }
 
 
