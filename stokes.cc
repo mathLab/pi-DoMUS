@@ -1019,11 +1019,12 @@ using namespace dealii;
     setup_dofs();
     assemble_stokes_system ();
     build_stokes_preconditioner ();
+    solve ();
 /*
         
         
 
-        solve ();
+        
 
         // pcout << std::endl;
         // 
