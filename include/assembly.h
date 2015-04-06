@@ -10,7 +10,7 @@ namespace Assembly
 		template <int dim>
 		struct StokesPreconditioner
 		{
-		StokesPreconditioner (const FiniteElement<dim> &stokes_fe,
+		StokesPreconditioner (	const FiniteElement<dim> &stokes_fe,
 								const Quadrature<dim>    &stokes_quadrature,
 								const Mapping<dim>       &mapping,
 								const UpdateFlags         update_flags);
@@ -52,7 +52,7 @@ namespace Assembly
 		template <int dim>
 		struct StokesSystem : public StokesPreconditioner<dim>
 		{
-		StokesSystem (const FiniteElement<dim> &stokes_fe,
+		StokesSystem (  const FiniteElement<dim> &stokes_fe,
 						const Mapping<dim>       &mapping,
 						const Quadrature<dim>    &stokes_quadrature,
 						const UpdateFlags         stokes_update_flags
@@ -64,7 +64,7 @@ namespace Assembly
 		StokesSystem (const StokesSystem<dim> &data);
 
 
-		FEValues<dim>                        temperature_fe_values;
+		// FEValues<dim>                        temperature_fe_values;
 
 		std::vector<Tensor<1,dim> >          phi_u;
 		std::vector<SymmetricTensor<2,dim> > grads_phi_u;
@@ -75,10 +75,10 @@ namespace Assembly
 
 		template <int dim>
 		StokesSystem<dim>::
-		StokesSystem (const FiniteElement<dim> &stokes_fe,
-					const Mapping<dim>       &mapping,
-					const Quadrature<dim>    &stokes_quadrature,
-					const UpdateFlags         stokes_update_flags)
+		StokesSystem (  const FiniteElement<dim> &stokes_fe,
+						const Mapping<dim>       &mapping,
+						const Quadrature<dim>    &stokes_quadrature,
+						const UpdateFlags         stokes_update_flags)
 		:
 		StokesPreconditioner<dim> (stokes_fe, stokes_quadrature,
 									mapping,

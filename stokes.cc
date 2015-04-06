@@ -573,14 +573,14 @@ using namespace dealii;
     const FEValuesExtractors::Vector velocities (0);
     const FEValuesExtractors::Scalar pressure (dim);
 
-    scratch.stokes_fe_values.reinit (cell);
+    // scratch.stokes_fe_values.reinit (cell);
 
-    typename DoFHandler<dim>::active_cell_iterator
-    temperature_cell (&triangulation,
-                      cell->level(),
-                      cell->index(),
-                      &temperature_dof_handler);
-    scratch.temperature_fe_values.reinit (temperature_cell);
+    // typename DoFHandler<dim>::active_cell_iterator
+    // temperature_cell (&triangulation,
+    //                   cell->level(),
+    //                   cell->index(),
+    //                   &temperature_dof_handler);
+    // scratch.temperature_fe_values.reinit (temperature_cell);
 
     if (rebuild_stokes_matrix)
       data.local_matrix = 0;
@@ -589,7 +589,7 @@ using namespace dealii;
 
     for (unsigned int q=0; q<n_q_points; ++q)
       {
-        const double old_temperature = scratch.old_temperature_values[q];
+        // const double old_temperature = scratch.old_temperature_values[q];
 
         for (unsigned int k=0; k<dofs_per_cell; ++k)
           {
@@ -599,7 +599,7 @@ using namespace dealii;
                 scratch.grads_phi_u[k] = scratch.stokes_fe_values[velocities].symmetric_gradient(k,q);
                 scratch.div_phi_u[k]   = scratch.stokes_fe_values[velocities].divergence (k, q);
                 scratch.phi_p[k]       = scratch.stokes_fe_values[pressure].value (k, q);
-              }
+              } 
           }
 
         if (rebuild_stokes_matrix == true)
@@ -688,9 +688,7 @@ using namespace dealii;
                               ?
                               update_gradients
                               :
-                              UpdateFlags(0))),
-                            temperature_fe,
-                            update_values),
+                              UpdateFlags(0)))),
          Assembly::CopyData::
          StokesSystem<dim> (stokes_fe));
 
@@ -1024,26 +1022,10 @@ using namespace dealii;
   void BoussinesqFlowProblem<dim>::run ()
   {
     make_grid();
-
     setup_dofs();
+    assemble_stokes_system ();
 /*
-    unsigned int pre_refinement_step = 0;
-
-start_time_iteration:
-
-    timestep_number           = 0;
-    time_step = old_time_step = 0;
-
-    double time = 0;
-
-    do
-      {
-        pcout << "Timestep " << timestep_number
-              << ":  t=" << time/EquationData::year_in_seconds
-              << " years"
-              << std::endl;
-
-        assemble_stokes_system ();
+        
         build_stokes_preconditioner ();
 
         solve ();
