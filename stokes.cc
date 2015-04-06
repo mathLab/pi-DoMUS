@@ -466,8 +466,6 @@ using namespace dealii;
       }
   }
 
-
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::
@@ -477,7 +475,6 @@ using namespace dealii;
                                                    data.local_dof_indices,
                                                    stokes_preconditioner_matrix);
   }
-
 
   template <int dim>
   void
@@ -519,7 +516,6 @@ using namespace dealii;
   }
 
 
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::build_stokes_preconditioner ()
@@ -557,7 +553,6 @@ using namespace dealii;
     pcout << std::endl;
     computing_timer.exit_section();
   }
-
 
 
   template <int dim>
@@ -1024,9 +1019,10 @@ using namespace dealii;
     make_grid();
     setup_dofs();
     assemble_stokes_system ();
+    build_stokes_preconditioner ();
 /*
         
-        build_stokes_preconditioner ();
+        
 
         solve ();
 
