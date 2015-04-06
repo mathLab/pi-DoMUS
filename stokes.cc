@@ -332,15 +332,16 @@ using namespace dealii;
     stokes_dof_handler.distribute_dofs (stokes_fe);
     DoFRenumbering::component_wise (stokes_dof_handler, stokes_sub_blocks);
 
-    temperature_dof_handler.distribute_dofs (temperature_fe);
+    // temperature_dof_handler.distribute_dofs (temperature_fe);
 
     std::vector<types::global_dof_index> stokes_dofs_per_block (2);
     DoFTools::count_dofs_per_block (stokes_dof_handler, stokes_dofs_per_block,
                                     stokes_sub_blocks);
 
     const unsigned int n_u = stokes_dofs_per_block[0],
-                       n_p = stokes_dofs_per_block[1],
-                       n_T = temperature_dof_handler.n_dofs();
+                       n_p = stokes_dofs_per_block[1];
+                      //  ,
+                      //  n_T = temperature_dof_handler.n_dofs();
 
     std::locale s = pcout.get_stream().getloc();
     pcout.get_stream().imbue(std::locale(""));
@@ -351,15 +352,16 @@ using namespace dealii;
           << " levels)"
           << std::endl
           << "Number of degrees of freedom: "
-          << n_u + n_p + n_T
-          << " (" << n_u << '+' << n_p << '+'<< n_T <<')'
+          << n_u + n_p // + n_T
+          << " (" << n_u << '+' << n_p //<< '+' //<< n_T 
+          << ')'
           << std::endl
           << std::endl;
     pcout.get_stream().imbue(s);
 
 
     std::vector<IndexSet> stokes_partitioning, stokes_relevant_partitioning;
-    IndexSet temperature_partitioning (n_T), temperature_relevant_partitioning (n_T);
+    // IndexSet temperature_partitioning (n_T), temperature_relevant_partitioning (n_T);
     IndexSet stokes_relevant_set;
     {
       IndexSet stokes_index_set = stokes_dof_handler.locally_owned_dofs();
@@ -371,9 +373,9 @@ using namespace dealii;
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(0,n_u));
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(n_u,n_u+n_p));
 
-      temperature_partitioning = temperature_dof_handler.locally_owned_dofs();
-      DoFTools::extract_locally_relevant_dofs (temperature_dof_handler,
-                                               temperature_relevant_partitioning);
+      // temperature_partitioning = temperature_dof_handler.locally_owned_dofs();
+      // DoFTools::extract_locally_relevant_dofs (temperature_dof_handler,
+                                              //  temperature_relevant_partitioning);
     }
 
     {
@@ -418,8 +420,8 @@ using namespace dealii;
 
     rebuild_stokes_matrix              = true;
     rebuild_stokes_preconditioner      = true;
-    rebuild_temperature_matrices       = true;
-    rebuild_temperature_preconditioner = true;
+    // rebuild_temperature_matrices       = true;
+    // rebuild_temperature_preconditioner = true;
 
     computing_timer.exit_section();
   }
@@ -1008,6 +1010,7 @@ using namespace dealii;
                                 EquationData::R1,
                                 (dim==3) ? 96 : 12,
                                 true);
+                                
     static HyperShellBoundary<dim> boundary;
     triangulation.set_boundary (0, boundary);
     triangulation.set_boundary (1, boundary);
@@ -1023,7 +1026,7 @@ using namespace dealii;
     make_grid();
 
     setup_dofs();
-
+/*
     unsigned int pre_refinement_step = 0;
 
 start_time_iteration:
@@ -1099,6 +1102,7 @@ start_time_iteration:
         &&
         !((timestep_number-1) % parameters.graphical_output_interval == 0))
       output_results ();
+      */
   }
 
 
