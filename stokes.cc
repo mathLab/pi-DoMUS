@@ -777,20 +777,20 @@ using namespace dealii;
     computing_timer.exit_section();
 
 
-    computing_timer.enter_section ("   Assemble temperature rhs");
-    {
-      // This part has to be removed:
-      //  If removed an infinite loop starts
-      old_time_step = time_step;
-    
-      const double scaling = (dim==3 ? 0.25 : 1.0);
-      const double cfl_number = 1e-20;
-      time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
-                     (2 *
-                      cfl_number));
-                      
-    }
-    computing_timer.exit_section ();
+    // computing_timer.enter_section ("   Assemble temperature rhs");
+    // {
+    //   // This part has to be removed:
+    //   //  If removed an infinite loop starts
+    //   old_time_step = time_step;
+    // 
+    //   const double scaling = (dim==3 ? 0.25 : 1.0);
+    //   const double cfl_number = 1e-20;
+    //   time_step = (scaling/(2.1*dim*std::sqrt(1.*dim)) /
+    //                  (2 *
+    //                   cfl_number));
+    //                   
+    // }
+    // computing_timer.exit_section ();
 
   }
 
@@ -986,7 +986,6 @@ using namespace dealii;
     computing_timer.exit_section ();
     out_index++;
   }
-
 
   template <int dim>
   void BoussinesqFlowProblem<dim>::refine_mesh (const unsigned int max_grid_level)
