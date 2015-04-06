@@ -999,9 +999,8 @@ using namespace dealii;
     // Rewrite this function using a refinement on stoke's equation!
   }
 
-
   template <int dim>
-  void BoussinesqFlowProblem<dim>::run ()
+  void BoussinesqFlowProblem<dim>::make_grid()
   {
     GridGenerator::hyper_shell (triangulation,
                                 Point<dim>(),
@@ -1016,6 +1015,12 @@ using namespace dealii;
     global_Omega_diameter = GridTools::diameter (triangulation);
 
     triangulation.refine_global (parameters.initial_global_refinement);
+  }
+
+  template <int dim>
+  void BoussinesqFlowProblem<dim>::run ()
+  {
+    make_grid();
 
     setup_dofs();
 

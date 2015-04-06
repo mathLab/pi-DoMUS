@@ -12,6 +12,7 @@ class BoussinesqFlowProblem
 		void run ();
 
 	private:
+		void make_grid();
 		void setup_dofs ();
 		void assemble_stokes_preconditioner ();
 		void build_stokes_preconditioner ();
