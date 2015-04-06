@@ -55,9 +55,11 @@ namespace Assembly
 		StokesSystem (const FiniteElement<dim> &stokes_fe,
 						const Mapping<dim>       &mapping,
 						const Quadrature<dim>    &stokes_quadrature,
-						const UpdateFlags         stokes_update_flags,
-						const FiniteElement<dim> &temperature_fe,
-						const UpdateFlags         temperature_update_flags);
+						const UpdateFlags         stokes_update_flags
+						// ,
+						// const FiniteElement<dim> &temperature_fe,
+						// const UpdateFlags         temperature_update_flags
+						);
 
 		StokesSystem (const StokesSystem<dim> &data);
 
@@ -76,19 +78,18 @@ namespace Assembly
 		StokesSystem (const FiniteElement<dim> &stokes_fe,
 					const Mapping<dim>       &mapping,
 					const Quadrature<dim>    &stokes_quadrature,
-					const UpdateFlags         stokes_update_flags,
-					const FiniteElement<dim> &temperature_fe,
-					const UpdateFlags         temperature_update_flags)
+					const UpdateFlags         stokes_update_flags)
 		:
 		StokesPreconditioner<dim> (stokes_fe, stokes_quadrature,
 									mapping,
 									stokes_update_flags),
-		temperature_fe_values (mapping, temperature_fe, stokes_quadrature,
-								temperature_update_flags),
+		// temperature_fe_values (mapping, temperature_fe, stokes_quadrature,
+								// temperature_update_flags),
 		phi_u (stokes_fe.dofs_per_cell),
 		grads_phi_u (stokes_fe.dofs_per_cell),
-		div_phi_u (stokes_fe.dofs_per_cell),
-		old_temperature_values (stokes_quadrature.size())
+		div_phi_u (stokes_fe.dofs_per_cell)//,
+		// old_temperature_values (stokes_quadrature.size()
+		// )
 		{}
 
 		template <int dim>
@@ -96,14 +97,14 @@ namespace Assembly
 		StokesSystem (const StokesSystem<dim> &scratch)
 		:
 		StokesPreconditioner<dim> (scratch),
-		temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
-								scratch.temperature_fe_values.get_fe(),
-								scratch.temperature_fe_values.get_quadrature(),
-								scratch.temperature_fe_values.get_update_flags()),
+		// temperature_fe_values (scratch.temperature_fe_values.get_mapping(),
+		// 						scratch.temperature_fe_values.get_fe(),
+		// 						scratch.temperature_fe_values.get_quadrature(),
+		// 						scratch.temperature_fe_values.get_update_flags()),
 		phi_u (scratch.phi_u),
 		grads_phi_u (scratch.grads_phi_u),
-		div_phi_u (scratch.div_phi_u),
-		old_temperature_values (scratch.old_temperature_values)
+		div_phi_u (scratch.div_phi_u)
+		// old_temperature_values (scratch.old_temperature_values)
 		{}
 
 	}
