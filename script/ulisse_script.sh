@@ -8,5 +8,6 @@ make distclean
 cmake ..
 make
 
-mpirun -np 20 ./step-32 > output.dat
+mpirun -np 20
+mpirun -np 20 ./stokes > output.dat
 
