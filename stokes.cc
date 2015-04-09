@@ -64,6 +64,11 @@
 #include "assembly.h"
 #include "boussinesq_flow_problem.h"
 
+#include "parsed_grid_generator.h"
+#include "parsed_finite_element.h"
+#include "utilities.h"
+
+
 using namespace dealii;
 
   template <int dim>
@@ -215,14 +220,14 @@ using namespace dealii;
            (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
             == 0)),
 
-    triangulation (MPI_COMM_WORLD,
+    /*triangulation (MPI_COMM_WORLD,
                    typename Triangulation<dim>::MeshSmoothing
                    (Triangulation<dim>::smoothing_on_refinement |
-                    Triangulation<dim>::smoothing_on_coarsening)),
+                    Triangulation<dim>::smoothing_on_coarsening)),*/
 
     mapping (4),
 
-    stokes_fe (FE_Q<dim>(parameters.stokes_velocity_degree),
+    /*stokes_fe (FE_Q<dim>(parameters.stokes_velocity_degree),
                dim,
                (parameters.use_locally_conservative_discretization
                 ?
@@ -231,9 +236,9 @@ using namespace dealii;
                 :
                 static_cast<const FiniteElement<dim> &>
                 (FE_Q<dim>(parameters.stokes_velocity_degree-1))),
-               1),
+               1),*/
 
-    stokes_dof_handler (triangulation),
+    // stokes_dof_handler (*triangulation),
 
     time_step (0),
     old_time_step (0),
@@ -246,6 +251,19 @@ using namespace dealii;
                      TimerOutput::summary,
                      TimerOutput::wall_times)
   {}
+
+
+
+  template <int dim>
+  BoussinesqFlowProblem<dim>::~BoussinesqFlowProblem ()
+  {
+    stokes_dof_handler->clear ();
+    smart_delete(stokes_dof_handler);
+    smart_delete(stokes_fe);
+    smart_delete(triangulation);
+  }
+
+
 
 
   template <int dim>
@@ -267,7 +285,7 @@ using namespace dealii;
         else
           coupling[c][d] = DoFTools::none;
 
-    DoFTools::make_sparsity_pattern (stokes_dof_handler,
+    DoFTools::make_sparsity_pattern (*stokes_dof_handler,
                                      coupling, sp,
                                      stokes_constraints, false,
                                      Utilities::MPI::
@@ -300,7 +318,7 @@ using namespace dealii;
         else
           coupling[c][d] = DoFTools::none;
 
-    DoFTools::make_sparsity_pattern (stokes_dof_handler,
+    DoFTools::make_sparsity_pattern (*stokes_dof_handler,
                                      coupling, sp,
                                      stokes_constraints, false,
                                      Utilities::MPI::
@@ -318,11 +336,11 @@ using namespace dealii;
 
     std::vector<unsigned int> stokes_sub_blocks (dim+1,0);
     stokes_sub_blocks[dim] = 1;
-    stokes_dof_handler.distribute_dofs (stokes_fe);
-    DoFRenumbering::component_wise (stokes_dof_handler, stokes_sub_blocks);
+    stokes_dof_handler->distribute_dofs (*stokes_fe);
+    DoFRenumbering::component_wise (*stokes_dof_handler, stokes_sub_blocks);
 
     std::vector<types::global_dof_index> stokes_dofs_per_block (2);
-    DoFTools::count_dofs_per_block (stokes_dof_handler, stokes_dofs_per_block,
+    DoFTools::count_dofs_per_block (*stokes_dof_handler, stokes_dofs_per_block,
                                     stokes_sub_blocks);
 
     const unsigned int n_u = stokes_dofs_per_block[0],
@@ -331,9 +349,9 @@ using namespace dealii;
     std::locale s = pcout.get_stream().getloc();
     pcout.get_stream().imbue(std::locale(""));
     pcout << "Number of active cells: "
-          << triangulation.n_global_active_cells()
+          << triangulation->n_global_active_cells()
           << " (on "
-          << triangulation.n_levels()
+          << triangulation->n_levels()
           << " levels)"
           << std::endl
           << "Number of degrees of freedom: "
@@ -348,11 +366,11 @@ using namespace dealii;
     std::vector<IndexSet> stokes_partitioning, stokes_relevant_partitioning;
     IndexSet stokes_relevant_set;
     {
-      IndexSet stokes_index_set = stokes_dof_handler.locally_owned_dofs();
+      IndexSet stokes_index_set = stokes_dof_handler->locally_owned_dofs();
       stokes_partitioning.push_back(stokes_index_set.get_view(0,n_u));
       stokes_partitioning.push_back(stokes_index_set.get_view(n_u,n_u+n_p));
 
-      DoFTools::extract_locally_relevant_dofs (stokes_dof_handler,
+      DoFTools::extract_locally_relevant_dofs (*stokes_dof_handler,
                                                stokes_relevant_set);
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(0,n_u));
       stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(n_u,n_u+n_p));
@@ -363,22 +381,23 @@ using namespace dealii;
       stokes_constraints.clear ();
       stokes_constraints.reinit (stokes_relevant_set);
 
-      DoFTools::make_hanging_node_constraints (stokes_dof_handler,
+      DoFTools::make_hanging_node_constraints (*stokes_dof_handler,
                                                stokes_constraints);
 
       FEValuesExtractors::Vector velocity_components(0);
-      VectorTools::interpolate_boundary_values (stokes_dof_handler,
+      VectorTools::interpolate_boundary_values (*stokes_dof_handler,
                                                 0,
                                                 ZeroFunction<dim>(dim+1),
                                                 stokes_constraints,
-                                                stokes_fe.component_mask(velocity_components));
+                                                stokes_fe->component_mask(velocity_components));
 
-      std::set<types::boundary_id> no_normal_flux_boundaries;
+      /*std::set<types::boundary_id> no_normal_flux_boundaries;
       no_normal_flux_boundaries.insert (1);
-      VectorTools::compute_no_normal_flux_constraints (stokes_dof_handler, 0,
+      VectorTools::compute_no_normal_flux_constraints (*stokes_dof_handler, 
+                                                       1,
                                                        no_normal_flux_boundaries,
                                                        stokes_constraints,
-                                                       mapping);
+                                                       mapping);*/
       stokes_constraints.close ();
     }
 
@@ -404,7 +423,7 @@ using namespace dealii;
                                         Assembly::Scratch::StokesPreconditioner<dim> &scratch,
                                         Assembly::CopyData::StokesPreconditioner<dim> &data)
   {
-    const unsigned int   dofs_per_cell   = stokes_fe.dofs_per_cell;
+    const unsigned int   dofs_per_cell   = stokes_fe->dofs_per_cell;
     const unsigned int   n_q_points      = scratch.stokes_fe_values.n_quadrature_points;
 
     const FEValuesExtractors::Vector velocities (0);
@@ -461,9 +480,9 @@ using namespace dealii;
 
     WorkStream::
     run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler.begin_active()),
+                     stokes_dof_handler->begin_active()),
          CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler.end()),
+                     stokes_dof_handler->end()),
          std_cxx11::bind (&BoussinesqFlowProblem<dim>::
                           local_assemble_stokes_preconditioner,
                           this,
@@ -475,13 +494,13 @@ using namespace dealii;
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesPreconditioner<dim> (stokes_fe, quadrature_formula,
+         StokesPreconditioner<dim> (*stokes_fe, quadrature_formula,
                                     mapping,
                                     update_JxW_values |
                                     update_values |
                                     update_gradients),
          Assembly::CopyData::
-         StokesPreconditioner<dim> (stokes_fe));
+         StokesPreconditioner<dim> (*stokes_fe));
 
     stokes_preconditioner_matrix.compress(VectorOperation::add);
   }
@@ -501,8 +520,8 @@ using namespace dealii;
 
     std::vector<std::vector<bool> > constant_modes;
     FEValuesExtractors::Vector velocity_components(0);
-    DoFTools::extract_constant_modes (stokes_dof_handler,
-                                      stokes_fe.component_mask(velocity_components),
+    DoFTools::extract_constant_modes (*stokes_dof_handler,
+                                      stokes_fe->component_mask(velocity_components),
                                       constant_modes);
 
     Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
@@ -621,9 +640,9 @@ using namespace dealii;
 
     WorkStream::
     run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler.begin_active()),
+                     stokes_dof_handler->begin_active()),
          CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler.end()),
+                     stokes_dof_handler->end()),
          std_cxx11::bind (&BoussinesqFlowProblem<dim>::
                           local_assemble_stokes_system,
                           this,
@@ -635,7 +654,7 @@ using namespace dealii;
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesSystem<dim> (stokes_fe, mapping, quadrature_formula,
+         StokesSystem<dim> (*stokes_fe, mapping, quadrature_formula,
                             (update_values    |
                              update_quadrature_points  |
                              update_JxW_values |
@@ -645,7 +664,7 @@ using namespace dealii;
                               :
                               UpdateFlags(0)))),
          Assembly::CopyData::
-         StokesSystem<dim> (stokes_fe));
+         StokesSystem<dim> (*stokes_fe));
 
     if (rebuild_stokes_matrix == true)
       stokes_matrix.compress(VectorOperation::add);
@@ -867,23 +886,55 @@ using namespace dealii;
     // 
     // joint_dof_handler.distribute_dofs (stokes_fe);
     // 
-    // TrilinosWrappers::MPI::Vector joint_solution;
-    // joint_solution.reinit (joint_dof_handler.locally_owned_dofs(), MPI_COMM_WORLD);
-    // 
-    // joint_solution.compress(VectorOperation::insert);
-    // 
-    // IndexSet locally_relevant_joint_dofs(joint_dof_handler.n_dofs());
-    // DoFTools::extract_locally_relevant_dofs (joint_dof_handler, locally_relevant_joint_dofs);
-    // TrilinosWrappers::MPI::Vector locally_relevant_joint_solution;
-    // locally_relevant_joint_solution.reinit (locally_relevant_joint_dofs, MPI_COMM_WORLD);
-    // locally_relevant_joint_solution = joint_solution;
-    // 
-    // Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
-    //                              stokes_solution.block(1).minimal_value());
+    /* TrilinosWrappers::MPI::Vector solution;
+     solution.reinit (stokes_dof_handler->locally_owned_dofs(), MPI_COMM_WORLD);
+     {
+      std::vector<types::global_dof_index> local_stokes_dof_indices (stokes_fe->dofs_per_cell);
+
+      typename DoFHandler<dim>::active_cell_iterator
+      stokes_cell      = stokes_dof_handler->begin_active(),
+      for (; joint_cell!=joint_endc;
+           ++joint_cell, ++stokes_cell, ++temperature_cell)
+        if (joint_cell->is_locally_owned())
+          {
+            stokes_cell->get_dof_indices (local_stokes_dof_indices);
+
+            for (unsigned int i=0; i<joint_fe.dofs_per_cell; ++i)
+              if (joint_fe.system_to_base_index(i).first.first == 0)
+                {
+
+                  solution(local_stokes_dof_indices[i])
+                    = stokes_solution(local_stokes_dof_indices
+                                      [joint_fe.system_to_base_index(i).second]);
+                }
+              else
+                {
+                  Assert (joint_fe.system_to_base_index(i).first.first == 1,
+                          ExcInternalError());
+                  Assert (joint_fe.system_to_base_index(i).second
+                          <
+                          local_temperature_dof_indices.size(),
+                          ExcInternalError());
+                  joint_solution(local_joint_dof_indices[i])
+                    = temperature_solution(local_temperature_dof_indices
+                                           [joint_fe.system_to_base_index(i).second]);
+                }
+          }
+    } 
+     solution->compress(VectorOperation::insert);
+
+     IndexSet locally_relevant_dofs(stokes_dof_handler->n_dofs());
+     DoFTools::extract_locally_relevant_dofs (*stokes_dof_handler, locally_relevant_dofs);
+     TrilinosWrappers::MPI::Vector locally_relevant_solution;
+     locally_relevant_solution.reinit (locally_relevant_dofs, MPI_COMM_WORLD);
+     locally_relevant_solution = stokes_solution;
+    // */
+    Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
+                                 stokes_solution.block(1).minimal_value());
 
     DataOut<dim> data_out;
-    data_out.attach_dof_handler (stokes_dof_handler);
-    // data_out.add_data_vector (locally_relevant_joint_solution, postprocessor);
+    data_out.attach_dof_handler (*stokes_dof_handler);
+    data_out.add_data_vector (stokes_solution, postprocessor);
     data_out.build_patches ();
 
     static int out_index=0;
@@ -891,7 +942,7 @@ using namespace dealii;
                                   Utilities::int_to_string (out_index, 5) +
                                   "." +
                                   Utilities::int_to_string
-                                  (triangulation.locally_owned_subdomain(), 4) +
+                                  (triangulation->locally_owned_subdomain(), 4) +
                                   ".vtu");
     std::ofstream output (filename.c_str());
     data_out.write_vtu (output);
@@ -932,28 +983,41 @@ using namespace dealii;
   }
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::make_grid()
+  void BoussinesqFlowProblem<dim>::make_grid_fe()
   {
-    GridGenerator::hyper_shell (triangulation,
+    /*GridGenerator::hyper_shell (triangulation,
                                 Point<dim>(),
                                 EquationData::R0,
                                 EquationData::R1,
                                 (dim==3) ? 96 : 12,
-                                true);
+                                true);*/
                                 
-    static HyperShellBoundary<dim> boundary;
-    triangulation.set_boundary (0, boundary);
-    triangulation.set_boundary (1, boundary);
+    //static HyperCubeBoundary<dim> boundary;
+    ParsedGridGenerator<dim,dim> pgg("Cube");
 
-    global_Omega_diameter = GridTools::diameter (triangulation);
+    ParsedFiniteElement<dim,dim> fe_builder("FE_Q");
 
-    triangulation.refine_global (parameters.initial_global_refinement);
+    ParameterAcceptor::initialize("params.prm");
+
+    triangulation = pgg.distributed(MPI_COMM_WORLD);
+
+    //triangulation->set_boundary (0, boundary);
+    //triangulation->set_boundary (1, boundary);
+
+    global_Omega_diameter = GridTools::diameter (*triangulation);
+
+    stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+
+    stokes_fe=fe_builder();
+
+    triangulation->refine_global (parameters.initial_global_refinement);
+    
   }
 
   template <int dim>
   void BoussinesqFlowProblem<dim>::run ()
   {
-    make_grid();
+    make_grid_fe();
     setup_dofs();
     assemble_stokes_system ();
     build_stokes_preconditioner ();

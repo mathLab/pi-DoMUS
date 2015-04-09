@@ -9,10 +9,12 @@ class BoussinesqFlowProblem
 	public:
 		struct Parameters;
 		BoussinesqFlowProblem (Parameters &parameters);
+      ~BoussinesqFlowProblem ();
+
 		void run ();
 
 	private:
-		void make_grid();
+		void make_grid_fe();
 		void setup_dofs ();
 		void assemble_stokes_preconditioner ();
 		void build_stokes_preconditioner ();
@@ -54,21 +56,34 @@ class BoussinesqFlowProblem
 
 		ConditionalOStream                        pcout;
 
-		parallel::distributed::Triangulation<dim> triangulation;
+     // MPI_Comm                                  mpi_communicator;
+
+      SmartPointer<parallel::distributed::Triangulation<dim> > triangulation;
+		// parallel::distributed::Triangulation<dim> triangulation;
+
 		double                                    global_Omega_diameter;
 
 		const MappingQ<dim>                       mapping;
 
-		const FESystem<dim>                       stokes_fe;
-		DoFHandler<dim>                           stokes_dof_handler;
+      SmartPointer<FiniteElement<dim,dim> >     stokes_fe;
+
+		//const FESystem<dim>                       stokes_fe;
+      SmartPointer<DoFHandler<dim> >            stokes_dof_handler;
+		//DoFHandler<dim>                           stokes_dof_handler;
 		ConstraintMatrix                          stokes_constraints;
 
 		TrilinosWrappers::BlockSparseMatrix       stokes_matrix;
 		TrilinosWrappers::BlockSparseMatrix       stokes_preconditioner_matrix;
 
-		TrilinosWrappers::MPI::BlockVector        stokes_solution;
+		/*TrilinosWrappers::MPI::Vector        stokes_solution;
+		TrilinosWrappers::MPI::Vector        old_stokes_solution;
+		TrilinosWrappers::MPI::Vector        stokes_rhs;*/
+
+      TrilinosWrappers::MPI::BlockVector        stokes_solution;
 		TrilinosWrappers::MPI::BlockVector        old_stokes_solution;
 		TrilinosWrappers::MPI::BlockVector        stokes_rhs;
+
+      //TrilinosWrappers::MPI::Vector             locally_relevant_solution;
 
 		double                                    time_step;
 		double                                    old_time_step;
