@@ -249,7 +249,8 @@ using namespace dealii;
     computing_timer (MPI_COMM_WORLD,
                      pcout,
                      TimerOutput::summary,
-                     TimerOutput::wall_times)
+                     TimerOutput::wall_times),
+    boundary_conditions("Dirichlet boundary conditions")
   {}
 
 
@@ -385,9 +386,10 @@ using namespace dealii;
                                                stokes_constraints);
 
       FEValuesExtractors::Vector velocity_components(0);
+      boundary_conditions.set_time(time_step*time_step_number);
       VectorTools::interpolate_boundary_values (*stokes_dof_handler,
                                                 0,
-                                                ZeroFunction<dim>(dim+1),
+                                                boundary_conditions,
                                                 stokes_constraints,
                                                 stokes_fe->component_mask(velocity_components));
 
@@ -805,8 +807,6 @@ using namespace dealii;
   {
     std::vector<std::string> solution_names (dim, "velocity");
     solution_names.push_back ("p");
-    solution_names.push_back ("T");
-    solution_names.push_back ("friction_heating");
     solution_names.push_back ("partition");
 
     return solution_names;
@@ -821,9 +821,6 @@ using namespace dealii;
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
     interpretation (dim,
                     DataComponentInterpretation::component_is_part_of_vector);
-
-    interpretation.push_back (DataComponentInterpretation::component_is_scalar);
-    interpretation.push_back (DataComponentInterpretation::component_is_scalar);
     interpretation.push_back (DataComponentInterpretation::component_is_scalar);
     interpretation.push_back (DataComponentInterpretation::component_is_scalar);
 
@@ -852,7 +849,7 @@ using namespace dealii;
     const unsigned int n_quadrature_points = uh.size();
     Assert (duh.size() == n_quadrature_points,                  ExcInternalError());
     Assert (computed_quantities.size() == n_quadrature_points,  ExcInternalError());
-    Assert (uh[0].size() == dim+2,                              ExcInternalError());
+    Assert (uh[0].size() == dim+1,                              ExcInternalError());
 
     for (unsigned int q=0; q<n_quadrature_points; ++q)
       {
@@ -863,14 +860,8 @@ using namespace dealii;
         const double pressure = (uh[q](dim)-minimal_pressure);
         computed_quantities[q](dim) = pressure;
 
-        Tensor<2,dim> grad_u;
-        for (unsigned int d=0; d<dim; ++d)
-          grad_u[d] = duh[q][d];
-        const SymmetricTensor<2,dim> strain_rate = symmetrize (grad_u);
-        computed_quantities[q](dim+2) = 2 * EquationData::eta *
-                                        strain_rate * strain_rate;
 
-        computed_quantities[q](dim+3) = partition;
+        computed_quantities[q](dim+1) = partition;
       }
   }
 

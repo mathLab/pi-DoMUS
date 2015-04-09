@@ -1,6 +1,8 @@
 #ifndef BOUSSINESQ_FLOW_PROBLEM 
 #define BOUSSINESQ_FLOW_PROBLEM
 
+#include "parsed_function.h"
+
 using namespace dealii;
 
 template <int dim>
@@ -122,6 +124,8 @@ class BoussinesqFlowProblem
 		copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
 
 		class Postprocessor;
+
+      ParsedFunction<dim, dim+1> boundary_conditions;
 };
 
 #endif
