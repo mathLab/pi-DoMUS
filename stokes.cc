@@ -923,6 +923,9 @@ using namespace dealii;
 
     triangulation = pgg.distributed(MPI_COMM_WORLD);
 
+    //triangulation->set_boundary (0, boundary);
+    //triangulation->set_boundary (1, boundary);
+
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
     stokes_dof_handler = new DoFHandler<dim>(*triangulation);

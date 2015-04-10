@@ -1,6 +1,6 @@
 # Listing of Parameters
 # ---------------------
-# The end time of the simulation in years.
+# The end time of the simulation in seconds.
 set End time                            = 1e8
 
 # Whether graphical output is to be generated or not. You may not want to get
@@ -13,7 +13,7 @@ set Initial adaptive refinement         = 2
 
 # The number of global refinement steps performed on the initial coarse mesh,
 # before the problem is first solved there.
-set Initial global refinement           = 5
+set Initial global refinement           = 4
 
 # The number of time steps between each generation of graphical output files.
 set Time steps between graphical output = 50
@@ -33,19 +33,6 @@ subsection Discretization
   # discretization that does not locally conserve mass (although it is
   # globally conservative.
   set Use locally conservative discretization = true
-end
-
-
-subsection Stabilization parameters
-  # The exponent in the entropy viscosity stabilization.
-  set alpha = 2
-
-  # The beta factor in the artificial viscosity stabilization. An appropriate
-  # value for 2d is 0.052 and 0.078 for 3d.
-  set beta  = 0.078
-
-  # The c_R factor in the entropy viscosity stabilization.
-  set c_R   = 0.11
 end
 
 
