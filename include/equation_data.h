@@ -15,7 +15,7 @@ namespace EquationData
 	Tensor<1,dim> gravity_vector (const Point<dim> &p)
 	{
 		const double r = p.norm();
-		return r*p;
+		return 0*r*p;
 	}
 
 	const double year_in_seconds  = 60*60*24*365.2425;

@@ -537,11 +537,21 @@ using namespace dealii;
                                                 .quadrature_point(q));
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
+           {
+          /*data.local_rhs(i) += (1.  *
+                                scratch.phi_u[i]) *
+                               scratch.stokes_fe_values.JxW(q);*/
           data.local_rhs(i) += (EquationData::density *
                                 gravity  *
                                 scratch.phi_u[i]) *
                                scratch.stokes_fe_values.JxW(q);
+           }
       }
+
+     /*std::ofstream myfile;
+     myfile.open ("matrix.txt");
+     data.local_matrix.print;
+     myfile.close();*/
 
     cell->get_dof_indices (data.local_dof_indices);
   }
@@ -644,6 +654,7 @@ using namespace dealii;
       PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
 
       unsigned int n_iterations = 0;
+      //const double solver_tolerance = 1e-8 * stokes_rhs.l2_norm();
       const double solver_tolerance = 1e-8 * stokes_rhs.l2_norm();
       SolverControl solver_control (30, solver_tolerance);
 
@@ -659,6 +670,12 @@ using namespace dealii;
           solver(solver_control, mem,
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(30, true));
+
+          /*SolverGMRES<TrilinosWrappers::MPI::BlockVector>
+          solver(solver_control, mem,
+                 SolverGMRES<TrilinosWrappers::MPI::BlockVector>::
+                 AdditionalData(30, true));*/
+
           solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
                        preconditioner);
 
@@ -674,10 +691,17 @@ using namespace dealii;
                                 true);
 
           SolverControl solver_control_refined (stokes_matrix.m(), solver_tolerance);
+
           SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
           solver(solver_control_refined, mem,
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
+
+          /*SolverGMRES<TrilinosWrappers::MPI::BlockVector>
+          solver(solver_control_refined, mem,
+                 SolverGMRES<TrilinosWrappers::MPI::BlockVector>::
+                 AdditionalData(50, true));*/
+
           solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
                        preconditioner);
 
