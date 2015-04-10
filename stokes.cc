@@ -536,7 +536,7 @@ using namespace dealii;
                                         - (scratch.phi_p[i] * scratch.div_phi_u[j]))
                                         * scratch.stokes_fe_values.JxW(q);
 
-        const Tensor<1,dim>
+        /*const Tensor<1,dim>
         gravity = EquationData::gravity_vector (scratch.stokes_fe_values
                                                 .quadrature_point(q));
 
@@ -546,7 +546,7 @@ using namespace dealii;
                                 gravity  *
                                 scratch.phi_u[i]) *
                                scratch.stokes_fe_values.JxW(q);
-           }
+           }*/
       }
 
     cell->get_dof_indices (data.local_dof_indices);
@@ -809,7 +809,7 @@ using namespace dealii;
       {
         for (unsigned int d=0; d<dim; ++d)
           computed_quantities[q](d)
-            = (uh[q](d) *  EquationData::year_in_seconds * 100);
+            = (uh[q](d));// *  EquationData::year_in_seconds * 100);
 
         const double pressure = (uh[q](dim)-minimal_pressure);
         computed_quantities[q](dim) = pressure;
