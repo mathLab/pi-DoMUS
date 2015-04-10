@@ -365,6 +365,8 @@ using namespace dealii;
     computing_timer.exit_section();
   }
 
+
+
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::
@@ -505,6 +507,8 @@ using namespace dealii;
     const FEValuesExtractors::Vector velocities (0);
     const FEValuesExtractors::Scalar pressure (dim);
 
+    scratch.stokes_fe_values.reinit (cell);
+
     if (rebuild_stokes_matrix)
       data.local_matrix = 0;
     data.local_rhs = 0;
@@ -538,20 +542,12 @@ using namespace dealii;
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
            {
-          /*data.local_rhs(i) += (1.  *
-                                scratch.phi_u[i]) *
-                               scratch.stokes_fe_values.JxW(q);*/
           data.local_rhs(i) += (EquationData::density *
                                 gravity  *
                                 scratch.phi_u[i]) *
                                scratch.stokes_fe_values.JxW(q);
            }
       }
-
-     /*std::ofstream myfile;
-     myfile.open ("matrix.txt");
-     data.local_matrix.print;
-     myfile.close();*/
 
     cell->get_dof_indices (data.local_dof_indices);
   }
