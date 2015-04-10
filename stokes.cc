@@ -78,11 +78,8 @@ using namespace dealii;
     initial_global_refinement (2),
     initial_adaptive_refinement (2),
     adaptive_refinement_interval (10),
-    stabilization_alpha (2),
-    stabilization_c_R (0.11),
-    stabilization_beta (0.078),
     stokes_velocity_degree (2),
-    use_locally_conservative_discretization (true)//,
+    use_locally_conservative_discretization (true)
   {
     ParameterHandler prm;
     BoussinesqFlowProblem<dim>::Parameters::declare_parameters (prm);
@@ -121,7 +118,7 @@ using namespace dealii;
   {
     prm.declare_entry ("End time", "1e8",
                        Patterns::Double (0),
-                       "The end time of the simulation in years.");
+                       "The end time of the simulation in seconds.");
     prm.declare_entry ("Initial global refinement", "2",
                        Patterns::Integer (0),
                        "The number of global refinement steps performed on "
@@ -144,23 +141,6 @@ using namespace dealii;
                        Patterns::Integer (1),
                        "The number of time steps between each generation of "
                        "graphical output files.");
-
-    prm.enter_subsection ("Stabilization parameters");
-    {
-      prm.declare_entry ("alpha", "2",
-                         Patterns::Double (1, 2),
-                         "The exponent in the entropy viscosity stabilization.");
-      prm.declare_entry ("c_R", "0.11",
-                         Patterns::Double (0),
-                         "The c_R factor in the entropy viscosity "
-                         "stabilization.");
-      prm.declare_entry ("beta", "0.078",
-                         Patterns::Double (0),
-                         "The beta factor in the artificial viscosity "
-                         "stabilization. An appropriate value for 2d is 0.052 "
-                         "and 0.078 for 3d.");
-    }
-    prm.leave_subsection ();
 
     prm.enter_subsection ("Discretization");
     {
@@ -194,14 +174,6 @@ using namespace dealii;
     generate_graphical_output   = prm.get_bool ("Generate graphical output");
     graphical_output_interval   = prm.get_integer ("Time steps between graphical output");
 
-    prm.enter_subsection ("Stabilization parameters");
-    {
-      stabilization_alpha = prm.get_double ("alpha");
-      stabilization_c_R   = prm.get_double ("c_R");
-      stabilization_beta  = prm.get_double ("beta");
-    }
-    prm.leave_subsection ();
-
     prm.enter_subsection ("Discretization");
     {
       stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
@@ -220,25 +192,7 @@ using namespace dealii;
            (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
             == 0)),
 
-    /*triangulation (MPI_COMM_WORLD,
-                   typename Triangulation<dim>::MeshSmoothing
-                   (Triangulation<dim>::smoothing_on_refinement |
-                    Triangulation<dim>::smoothing_on_coarsening)),*/
-
     mapping (4),
-
-    /*stokes_fe (FE_Q<dim>(parameters.stokes_velocity_degree),
-               dim,
-               (parameters.use_locally_conservative_discretization
-                ?
-                static_cast<const FiniteElement<dim> &>
-                (FE_DGP<dim>(parameters.stokes_velocity_degree-1))
-                :
-                static_cast<const FiniteElement<dim> &>
-                (FE_Q<dim>(parameters.stokes_velocity_degree-1))),
-               1),*/
-
-    // stokes_dof_handler (*triangulation),
 
     time_step (0),
     old_time_step (0),
@@ -356,8 +310,8 @@ using namespace dealii;
           << " levels)"
           << std::endl
           << "Number of degrees of freedom: "
-          << n_u + n_p // + n_T
-          << " (" << n_u << '+' << n_p //<< '+' //<< n_T 
+          << n_u + n_p
+          << " (" << n_u << '+' << n_p
           << ')'
           << std::endl
           << std::endl;
@@ -393,13 +347,6 @@ using namespace dealii;
                                                 stokes_constraints,
                                                 stokes_fe->component_mask(velocity_components));
 
-      /*std::set<types::boundary_id> no_normal_flux_boundaries;
-      no_normal_flux_boundaries.insert (1);
-      VectorTools::compute_no_normal_flux_constraints (*stokes_dof_handler, 
-                                                       1,
-                                                       no_normal_flux_boundaries,
-                                                       stokes_constraints,
-                                                       mapping);*/
       stokes_constraints.close ();
     }
 
@@ -922,9 +869,6 @@ using namespace dealii;
     ParameterAcceptor::initialize("params.prm");
 
     triangulation = pgg.distributed(MPI_COMM_WORLD);
-
-    //triangulation->set_boundary (0, boundary);
-    //triangulation->set_boundary (1, boundary);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
