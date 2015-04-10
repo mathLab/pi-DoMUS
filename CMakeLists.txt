@@ -16,9 +16,9 @@ SET(TARGET "stokes")
 # to add other source files as well. If your project becomes much larger,
 # you may want to either replace the following statement by something like
  FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
- FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
+ # FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
  include_directories(include)
- SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
+ # SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
 # or switch altogether to the large project CMakeLists.txt file discussed
 # in the "CMake in user projects" page accessible from the "User info"
 # page of the documentation.
@@ -64,31 +64,24 @@ PROJECT(${TARGET})
 DEAL_II_INVOKE_AUTOPILOT()
 
 IF("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.g.so)
+  TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.g.dylib)
+  # TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.g.so)
 ELSE()
-TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.so)
+  TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.dylib)
+  # TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.so)
 ENDIF()
 
+SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+SET(CMAKE_FIND_LIBRARY_SUFFIXES "dylib")
+# SET(CMAKE_FIND_LIBRARY_SUFFIXES "so")
 
 INCLUDE_DIRECTORIES($ENV{DEAL_II_SAK}/include)
+LINK_DIRECTORIES($ENV{DEAL_II_SAK}/lib)
 
+# MacOS
+FIND_LIBRARY(libdealii-sak.dylib libdealii-sak.dylib PATHS $ENV{DEAL_II_SAK}/lib )
+FIND_LIBRARY(libdealii-sak.g.dylib libdealii-sak.g.dylib PATHS $ENV{DEAL_II_SAK}/lib )
+# # Linux
+# FIND_LIBRARY(libdealii-sak.so libdealii-sak.so PATHS $ENV{DEAL_II_SAK}/lib )
+# FIND_LIBRARY(libdealii-sak.g.so libdealii-sak.g.so PATHS $ENV{DEAL_II_SAK}/lib )
 
-# find_package(MPI REQUIRED)
-# include_directories(${MPI_INCLUDE_PATH})
-
-# target_link_libraries(gradient ${MPI_LIBRARIES})
-# 
-# if(MPI_COMPILE_FLAGS)
-#   set_target_properties(gradient PROPERTIES
-#     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-# endif()
-# 
-# if(MPI_LINK_FLAGS)
-#   set_target_properties(gradient PROPERTIES
-#     LINK_FLAGS "${MPI_LINK_FLAGS}")
-# endif()
-# 
-# add_custom_target(run
-#     COMMAND gradient
-#     DEPENDS gradient
-#     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
