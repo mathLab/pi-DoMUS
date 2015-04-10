@@ -5,7 +5,7 @@ set End time                            = 1e8
 
 # Whether graphical output is to be generated or not. You may not want to get
 # graphical output if the number of processors is large.
-set Generate graphical output           = true
+set Generate graphical output           = false
 
 # The number of adaptive refinement steps performed after initial global
 # refinement.
@@ -16,11 +16,11 @@ set Initial adaptive refinement         = 2
 set Initial global refinement           = 5
 
 # The number of time steps between each generation of graphical output files.
-set Time steps between graphical output = 1
+set Time steps between graphical output = 50
 
 # The number of time steps after which the mesh is to be adapted based on
 # computed error indicators.
-set Time steps between mesh refinement  = 1
+set Time steps between mesh refinement  = 10
 
 
 subsection Discretization

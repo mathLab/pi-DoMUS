@@ -386,7 +386,7 @@ using namespace dealii;
                                                stokes_constraints);
 
       FEValuesExtractors::Vector velocity_components(0);
-      boundary_conditions.set_time(time_step*time_step_number);
+      //boundary_conditions.set_time(time_step*time_step_number);
       VectorTools::interpolate_boundary_values (*stokes_dof_handler,
                                                 0,
                                                 boundary_conditions,
@@ -451,8 +451,6 @@ using namespace dealii;
                                                        scratch.grad_phi_u[j])
                                        +
                                        (1./EquationData::eta) *
-                                       EquationData::pressure_scaling *
-                                       EquationData::pressure_scaling *
                                        (scratch.phi_p[i] * scratch.phi_p[j]))
                                       * scratch.stokes_fe_values.JxW(q);
       }
@@ -582,11 +580,9 @@ using namespace dealii;
           for (unsigned int i=0; i<dofs_per_cell; ++i)
             for (unsigned int j=0; j<dofs_per_cell; ++j)
               data.local_matrix(i,j) += (EquationData::eta * 2 *
-                                         (scratch.grads_phi_u[i] * scratch.grads_phi_u[j])
-                                         - (EquationData::pressure_scaling *
-                                            scratch.div_phi_u[i] * scratch.phi_p[j])
-                                         - (EquationData::pressure_scaling *
-                                            scratch.phi_p[i] * scratch.div_phi_u[j]))
+                                        (scratch.grads_phi_u[i] * scratch.grads_phi_u[j])
+                                        - (scratch.div_phi_u[i] * scratch.phi_p[j])
+                                        - (scratch.phi_p[i] * scratch.div_phi_u[j]))
                                         * scratch.stokes_fe_values.JxW(q);
 
         const Tensor<1,dim>
@@ -681,16 +677,12 @@ using namespace dealii;
   template <int dim>
   void BoussinesqFlowProblem<dim>::solve ()
   {
-    computing_timer.enter_section ("   Solve Stokes system");
 
-    {
       pcout << "   Solving Stokes system... " << std::flush;
 
       TrilinosWrappers::MPI::BlockVector
       distributed_stokes_solution (stokes_rhs);
       distributed_stokes_solution = stokes_solution;
-
-      distributed_stokes_solution.block(1) /= EquationData::pressure_scaling;
 
       const unsigned int
       start = (distributed_stokes_solution.block(0).size() +
@@ -749,14 +741,9 @@ using namespace dealii;
 
       stokes_constraints.distribute (distributed_stokes_solution);
 
-      distributed_stokes_solution.block(1) *= EquationData::pressure_scaling;
-
       stokes_solution = distributed_stokes_solution;
       pcout << n_iterations  << " iterations."
             << std::endl;
-    }
-    computing_timer.exit_section();
-
   }
 
 
@@ -871,55 +858,6 @@ using namespace dealii;
   {
     computing_timer.enter_section ("Postprocessing");
 
-    // const FESystem<dim> stokes_fe, 1;
-    // 
-    // DoFHandler<dim> triangulation;
-    // 
-    // joint_dof_handler.distribute_dofs (stokes_fe);
-    // 
-    /* TrilinosWrappers::MPI::Vector solution;
-     solution.reinit (stokes_dof_handler->locally_owned_dofs(), MPI_COMM_WORLD);
-     {
-      std::vector<types::global_dof_index> local_stokes_dof_indices (stokes_fe->dofs_per_cell);
-
-      typename DoFHandler<dim>::active_cell_iterator
-      stokes_cell      = stokes_dof_handler->begin_active(),
-      for (; joint_cell!=joint_endc;
-           ++joint_cell, ++stokes_cell, ++temperature_cell)
-        if (joint_cell->is_locally_owned())
-          {
-            stokes_cell->get_dof_indices (local_stokes_dof_indices);
-
-            for (unsigned int i=0; i<joint_fe.dofs_per_cell; ++i)
-              if (joint_fe.system_to_base_index(i).first.first == 0)
-                {
-
-                  solution(local_stokes_dof_indices[i])
-                    = stokes_solution(local_stokes_dof_indices
-                                      [joint_fe.system_to_base_index(i).second]);
-                }
-              else
-                {
-                  Assert (joint_fe.system_to_base_index(i).first.first == 1,
-                          ExcInternalError());
-                  Assert (joint_fe.system_to_base_index(i).second
-                          <
-                          local_temperature_dof_indices.size(),
-                          ExcInternalError());
-                  joint_solution(local_joint_dof_indices[i])
-                    = temperature_solution(local_temperature_dof_indices
-                                           [joint_fe.system_to_base_index(i).second]);
-                }
-          }
-    } 
-     solution->compress(VectorOperation::insert);
-
-     IndexSet locally_relevant_dofs(stokes_dof_handler->n_dofs());
-     DoFTools::extract_locally_relevant_dofs (*stokes_dof_handler, locally_relevant_dofs);
-     TrilinosWrappers::MPI::Vector locally_relevant_solution;
-     locally_relevant_solution.reinit (locally_relevant_dofs, MPI_COMM_WORLD);
-     locally_relevant_solution = stokes_solution;
-    // */
     Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
                                  stokes_solution.block(1).minimal_value());
 
@@ -976,14 +914,7 @@ using namespace dealii;
   template <int dim>
   void BoussinesqFlowProblem<dim>::make_grid_fe()
   {
-    /*GridGenerator::hyper_shell (triangulation,
-                                Point<dim>(),
-                                EquationData::R0,
-                                EquationData::R1,
-                                (dim==3) ? 96 : 12,
-                                true);*/
-                                
-    //static HyperCubeBoundary<dim> boundary;
+
     ParsedGridGenerator<dim,dim> pgg("Cube");
 
     ParsedFiniteElement<dim,dim> fe_builder("FE_Q");
@@ -991,9 +922,6 @@ using namespace dealii;
     ParameterAcceptor::initialize("params.prm");
 
     triangulation = pgg.distributed(MPI_COMM_WORLD);
-
-    //triangulation->set_boundary (0, boundary);
-    //triangulation->set_boundary (1, boundary);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
