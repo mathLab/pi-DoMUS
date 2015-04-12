@@ -1,121 +1,99 @@
 ##
-#  CMake script for the stokes tutorial program:
+# CMake script for large project, with one executable
+# and a library of objects, optionally
+# depending on dealii-sak. 
+#
+# The structure of the directory is assumed to be: 
+# ./source: containing implementations and one file with "int main()"
+# ./include: containing all class declarations
+# ./tests: containing pairs of files: test.cc/test.output to test
+#
+# If you set the environemnt variable DEAL_II_SAK, 
+# everything will work out of the box
 ##
-# cmake_minimum_required(VERSION 2.8)
 
-# project (gradient)
-# file(GLOB cc_files source/*.c*)
-# include_directories(include)
-# add_executable(gradient ${cc_files})
-
-# Set the name of the project and target:
-SET(TARGET "stoke")
+# Set the name of the project and target
+# If your application follows the structure above, you don't need to 
+# specify anything else. 
+SET(TARGET stoke)
 SET(_main source/main.cc)
-# Declare all source files the target consists of. Here, this is only
-# the one step-X.cc file, but as you expand your project you may wish
-# to add other source files as well. If your project becomes much larger,
-# you may want to either replace the following statement by something like
- # FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
- file(GLOB _files source/*cc)
- # FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
- include_directories(include)
- # SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
-# or switch altogether to the large project CMakeLists.txt file discussed
-# in the "CMake in user projects" page accessible from the "User info"
-# page of the documentation.
-# SET(TARGET_SRC
-#   ${TARGET_SRC} 
-#   ${TARGET}.cc
-#   )
-SET(TARGET_SRC
-    ${_files}
-  )
-  
-  IF(NOT "${_main}" STREQUAL "") 
-      LIST(REMOVE_ITEM _files
-        ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
-      )
-  ENDIF()
-# Define the output that should be cleaned:
-SET(CLEAN_UP_FILES *.vtu *.pvtu *.visit)
 
-# Usually, you will not need to modify anything beyond this point...
+# Set the _main variable to empty if you don't want an executable
+# but only a library
+#SET(_main "")
+
+############################################################
+# Normally you shouldn't need to change anything below.
+############################################################
+# Declare all source files the target consists of:
+file(GLOB _files source/*cc)
+
+# Don't compile the main file into the library
+IF(NOT "${_main}" STREQUAL "") 
+    LIST(REMOVE_ITEM _files
+      ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
+    )
+ENDIF()
+
+INCLUDE_DIRECTORIES(include)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
-FIND_PACKAGE(deal.II 8.3 QUIET
+FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
-  )
-IF(NOT ${deal.II_FOUND})
-  MESSAGE(FATAL_ERROR "\n"
-    "*** Could not locate a (sufficiently recent) version of deal.II. ***\n\n"
-    "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
-    "or set an environment variable \"DEAL_II_DIR\" that contains this path."
-    )
-ENDIF()
-
-#
-# Are all dependencies fullfilled?
-#
-IF( NOT DEAL_II_WITH_MPI OR
-    NOT DEAL_II_WITH_P4EST OR
-    NOT DEAL_II_WITH_TRILINOS )
-  MESSAGE(FATAL_ERROR "
-Error! The deal.II library found at ${DEAL_II_PATH} was not configured with
-    DEAL_II_WITH_MPI = ON
-    DEAL_II_WITH_P4EST = ON
-    DEAL_II_WITH_TRILINOS = ON
-One or all of these are OFF in your installation but are required for this tutorial step."
-    )
-ENDIF()
+)
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 PROJECT(${TARGET})
-DEAL_II_INVOKE_AUTOPILOT()
 
-IF("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.g.dylib)
-  # TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.g.so)
-ELSE()
-  TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.dylib)
-  # TARGET_LINK_LIBRARIES(${TARGET} $ENV{DEAL_II_SAK}/lib/libdealii-sak.so)
-ENDIF()
+SET(DEAL_II_SAK "$ENV{DEAL_II_SAK}" CACHE PATH "Path to dealii-sak")
 
-SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-SET(CMAKE_FIND_LIBRARY_SUFFIXES "dylib")
-# SET(CMAKE_FIND_LIBRARY_SUFFIXES "so")
+# We one library and one target for each type of deal.II library
+# we found. If you compiled deal.II with both Release and Debug
+# mode, this will generate both Release and Debug programs for you
+# The debug library and program are postfixed with ".g"
+SET(_d2_build_types "Release;Debug")
+SET(Release_postfix "")
+SET(Debug_postfix ".g")
 
-INCLUDE_DIRECTORIES($ENV{DEAL_II_SAK}/include)
-LINK_DIRECTORIES($ENV{DEAL_II_SAK}/lib)
+FOREACH(_build_type ${_d2_build_types})
+    # Only build this type, if deal.II was compiled with it.
+    IF(DEAL_II_BUILD_TYPE MATCHES "${_build_type}")
+	MESSAGE("-- Found ${_build_type} version of deal.II.")
 
-# MacOS
-FIND_LIBRARY(libdealii-sak.dylib libdealii-sak.dylib PATHS $ENV{DEAL_II_SAK}/lib )
-FIND_LIBRARY(libdealii-sak.g.dylib libdealii-sak.g.dylib PATHS $ENV{DEAL_II_SAK}/lib )
-# # Linux
-# FIND_LIBRARY(libdealii-sak.so libdealii-sak.so PATHS $ENV{DEAL_II_SAK}/lib )
-# FIND_LIBRARY(libdealii-sak.g.so libdealii-sak.g.so PATHS $ENV{DEAL_II_SAK}/lib )
+	SET(_lib "${TARGET}-lib${${_build_type}_postfix}")
+	MESSAGE("-- Configuring library ${_lib}")
 
-IF(DEAL_II_BUILD_TYPE MATCHES "Release")
-  ADD_LIBRARY(${TARGET}-lib SHARED ${_files})
-  IF(NOT "${_main}" STREQUAL "") 
-  	# ADD_EXECUTABLE(${TARGET} ${_main})
-  	TARGET_LINK_LIBRARIES(${TARGET} ${TARGET}-lib)
-  	DEAL_II_SETUP_TARGET(${TARGET} RELEASE)
-  ENDIF()
-  SET(TEST_LIBRARIES_RELEASE ${TARGET}-lib)
-  DEAL_II_SETUP_TARGET(${TARGET}-lib RELEASE)
-ENDIF()
+	STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
 
-IF(DEAL_II_BUILD_TYPE MATCHES "Debug")
-  ADD_LIBRARY(${TARGET}-lib.g SHARED ${_files})
-  IF(NOT "${_main}" STREQUAL "") 
-  	ADD_EXECUTABLE(${TARGET}.g ${_main})
-  	# TARGET_LINK_LIBRARIES(${TARGET}.g ${TARGET}-lib.g)
-  	# DEAL_II_SETUP_TARGET(${TARGET}.g DEBUG)
-  ENDIF()
-  SET(TEST_LIBRARIES_DEBUG ${TARGET}-lib.g)
-  DEAL_II_SETUP_TARGET(${TARGET}-lib.g DEBUG)
-ENDIF()
+	# Add all files, except the main file, to the library
+	ADD_LIBRARY(${_lib} SHARED ${_files})
+	
+	# Look for dealii-sak. If not found, ignore it. 
+	SET(_sak dealii-sak${${_build_type}_postfix})
+	MESSAGE("-- Looking for ${_sak} in ${DEAL_II_SAK}")
+	FIND_LIBRARY(SAK ${_sak} HINTS ${DEAL_II_SAK} PATH_SUFFIXES lib)
+	IF(NOT "${SAK}" STREQUAL "SAK-NOTFOUND")
+	    TARGET_LINK_LIBRARIES(${_lib} ${SAK})
+	    MESSAGE("-- Library ${_sak} found: ${SAK}")
+	ELSE()
+	    MESSAGE(WARNING "-- Library dealii-sak not found: ${SAK}")
+	ENDIF()
+    
+	# Compile an executable only if required by the user
+	IF(NOT "${_main}" STREQUAL "") 
+	    SET(_exe "${TARGET}${${_build_type}_postfix}")
+	    MESSAGE("-- Configuring executable ${_exe}")
+	    ADD_EXECUTABLE(${_exe} ${_main})
+	    TARGET_LINK_LIBRARIES(${_exe} ${_lib})
+	    DEAL_II_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+	ENDIF()
+	SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
+	DEAL_II_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
+    ENDIF()
+ENDFOREACH()
 
-# ADD_SUBDIRECTORY(tests)
-# ENABLE_TESTINGm()
+INCLUDE_DIRECTORIES(${DEAL_II_SAK}/include)
+
+ADD_SUBDIRECTORY(tests)
+ENABLE_TESTING()
