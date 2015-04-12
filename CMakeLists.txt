@@ -1,7 +1,7 @@
 ##
 #  CMake script for the stokes tutorial program:
 ##
-cmake_minimum_required(VERSION 2.8)
+# cmake_minimum_required(VERSION 2.8)
 
 # project (gradient)
 # file(GLOB cc_files source/*.c*)
@@ -9,23 +9,33 @@ cmake_minimum_required(VERSION 2.8)
 # add_executable(gradient ${cc_files})
 
 # Set the name of the project and target:
-SET(TARGET "stokes")
-
+SET(TARGET "stoke")
+SET(_main source/main.cc)
 # Declare all source files the target consists of. Here, this is only
 # the one step-X.cc file, but as you expand your project you may wish
 # to add other source files as well. If your project becomes much larger,
 # you may want to either replace the following statement by something like
- FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
+ # FILE(GLOB_RECURSE TARGET_SRC  "source/*.cc")
+ file(GLOB _files source/*cc)
  # FILE(GLOB_RECURSE TARGET_INC  "include/*.h")
  include_directories(include)
  # SET(TARGET_SRC ${TARGET_SRC}  ${TARGET_INC})
 # or switch altogether to the large project CMakeLists.txt file discussed
 # in the "CMake in user projects" page accessible from the "User info"
 # page of the documentation.
+# SET(TARGET_SRC
+#   ${TARGET_SRC} 
+#   ${TARGET}.cc
+#   )
 SET(TARGET_SRC
-  ${TARGET}.cc
+    ${_files}
   )
-
+  
+  IF(NOT "${_main}" STREQUAL "") 
+      LIST(REMOVE_ITEM _files
+        ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
+      )
+  ENDIF()
 # Define the output that should be cleaned:
 SET(CLEAN_UP_FILES *.vtu *.pvtu *.visit)
 
@@ -85,3 +95,27 @@ FIND_LIBRARY(libdealii-sak.g.dylib libdealii-sak.g.dylib PATHS $ENV{DEAL_II_SAK}
 # FIND_LIBRARY(libdealii-sak.so libdealii-sak.so PATHS $ENV{DEAL_II_SAK}/lib )
 # FIND_LIBRARY(libdealii-sak.g.so libdealii-sak.g.so PATHS $ENV{DEAL_II_SAK}/lib )
 
+IF(DEAL_II_BUILD_TYPE MATCHES "Release")
+  ADD_LIBRARY(${TARGET}-lib SHARED ${_files})
+  IF(NOT "${_main}" STREQUAL "") 
+  	# ADD_EXECUTABLE(${TARGET} ${_main})
+  	TARGET_LINK_LIBRARIES(${TARGET} ${TARGET}-lib)
+  	DEAL_II_SETUP_TARGET(${TARGET} RELEASE)
+  ENDIF()
+  SET(TEST_LIBRARIES_RELEASE ${TARGET}-lib)
+  DEAL_II_SETUP_TARGET(${TARGET}-lib RELEASE)
+ENDIF()
+
+IF(DEAL_II_BUILD_TYPE MATCHES "Debug")
+  ADD_LIBRARY(${TARGET}-lib.g SHARED ${_files})
+  IF(NOT "${_main}" STREQUAL "") 
+  	ADD_EXECUTABLE(${TARGET}.g ${_main})
+  	# TARGET_LINK_LIBRARIES(${TARGET}.g ${TARGET}-lib.g)
+  	# DEAL_II_SETUP_TARGET(${TARGET}.g DEBUG)
+  ENDIF()
+  SET(TEST_LIBRARIES_DEBUG ${TARGET}-lib.g)
+  DEAL_II_SETUP_TARGET(${TARGET}-lib.g DEBUG)
+ENDIF()
+
+# ADD_SUBDIRECTORY(tests)
+# ENABLE_TESTINGm()
