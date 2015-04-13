@@ -66,6 +66,9 @@
 #include "linear_solver.h"
 #include "assembly.h"
 
+#include "parsed_grid_generator.h"
+#include "parsed_finite_element.h"
+#include "utilities.h"
 #include "parsed_function.h"
 
 using namespace dealii;
@@ -180,9 +183,13 @@ class BoussinesqFlowProblem
 
 		class Postprocessor;
 
+      ParsedGridGenerator<dim,dim> pgg;
+
+      ParsedFiniteElement<dim,dim> fe_builder;
+
       ParsedFunction<dim, dim+1> boundary_conditions;
 
-      ParsedFunction<dim, dim+1> rhs_force;
+      ParsedFunction<dim, dim+1> right_hand_side;
 };
 
 #endif

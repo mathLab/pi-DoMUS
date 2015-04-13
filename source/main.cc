@@ -1,4 +1,4 @@
-#include <deal.II/base/quadrature_lib.h>
+/*#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/utilities.h>
@@ -61,10 +61,10 @@
 
 #include "equation_data.h"
 #include "linear_solver.h"
-#include "assembly.h"
-#include "boussinesq_flow_problem.h"
+#include "assembly.h"*/
+#include "boussinesq_flow_problem.cc"
 
-#include "utilities.h"
+//#include "utilities.h"
 
 
 
@@ -90,6 +90,7 @@ int main (int argc, char *argv[])
       const int dim = 2;
       BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
       BoussinesqFlowProblem<dim> flow_problem (parameters);
+      ParameterAcceptor::initialize("params.prm");
       flow_problem.run ();
     }
   catch (std::exception &exc)

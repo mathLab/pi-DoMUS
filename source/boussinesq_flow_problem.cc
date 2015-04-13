@@ -1,4 +1,4 @@
-#include <deal.II/base/quadrature_lib.h>
+/*#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/utilities.h>
@@ -57,11 +57,8 @@
 
 #include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
-#include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/distributed/grid_refinement.h>*/
 
-#include "utilities.h"
-#include "parsed_grid_generator.h"
-#include "parsed_finite_element.h"
 #include "boussinesq_flow_problem.h"
 
 using namespace dealii;
@@ -199,9 +196,14 @@ using namespace dealii;
                      pcout,
                      TimerOutput::summary,
                      TimerOutput::wall_times),
+
+    pgg("Cube"),
+
+    fe_builder("FE_Q"),
+
     boundary_conditions("Dirichlet boundary conditions"),
     
-    rhs_force("Right-hand side force")
+    right_hand_side("Right-hand side force")
   {}
 
 
@@ -506,9 +508,16 @@ using namespace dealii;
 
     scratch.stokes_fe_values.reinit (cell);
 
+    std::vector<Vector<double> > rhs_values (n_q_points,
+                                             Vector<double>(dim+1));
+
+    //right_hand_side.vector_value_list (scratch.stokes_fe_values
+    //                                  .get_quadrature_points(),
+    //                                   rhs_values);
+
     if (rebuild_stokes_matrix)
       data.local_matrix = 0;
-    data.local_rhs = 0;
+      data.local_rhs = 0;
 
 
     for (unsigned int q=0; q<n_q_points; ++q)
@@ -545,11 +554,26 @@ using namespace dealii;
                                scratch.stokes_fe_values.JxW(q);
            }*/
 
-        /*for (unsigned int i=0; i<dofs_per_cell; ++i)
+        //std::vector<double> rhs_values ();
+
+        /*right_hand_side.vector_value (scratch.stokes_fe_values
+                                      .quadrature_point(q),
+                                      rhs_values);*/
+
+         /*const Tensor<1,dim> aux_rhs;
+
+         for (unsigned int i=0; i<dofs_per_cell; ++i)
            {
-          data.local_rhs(i) += (rhs_force  *
-                                scratch.phi_u[i]) *
-                                scratch.stokes_fe_values.JxW(q);
+           const unsigned int
+           component_i = stokes_fe->system_to_component_index(i).first;
+
+           //aux_rhs(0,0) = 1.;//rhs_values[q](component_i);
+
+           data.local_rhs(i) += (scratch.phi_u[i] *
+                                 //rhs_values[q](component_i)
+                                 aux_rhs 
+                                 ) *
+                                 scratch.stokes_fe_values.JxW(q);
            }*/
       }
 
@@ -877,11 +901,11 @@ using namespace dealii;
   void BoussinesqFlowProblem<dim>::make_grid_fe()
   {
 
-    ParsedGridGenerator<dim,dim> pgg("Cube");
+    //ParsedGridGenerator<dim,dim> pgg("Cube");
 
-    ParsedFiniteElement<dim,dim> fe_builder("FE_Q");
+    //ParsedFiniteElement<dim,dim> fe_builder("FE_Q");
 
-    ParameterAcceptor::initialize("params.prm");
+    //ParameterAcceptor::initialize("params.prm");
 
     triangulation = pgg.distributed(MPI_COMM_WORLD);
 
