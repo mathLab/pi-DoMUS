@@ -59,15 +59,10 @@
 #include <deal.II/distributed/tria.h>
 #include <deal.II/distributed/grid_refinement.h>
 
-#include "equation_data.h"
-#include "linear_solver.h"
-#include "assembly.h"
-#include "boussinesq_flow_problem.h"
-
+#include "utilities.h"
 #include "parsed_grid_generator.h"
 #include "parsed_finite_element.h"
-#include "utilities.h"
-
+#include "boussinesq_flow_problem.h"
 
 using namespace dealii;
 
@@ -900,67 +895,20 @@ using namespace dealii;
     
   }
 
-  template <int dim>
-  void BoussinesqFlowProblem<dim>::run ()
-  {
-    make_grid_fe();
-    setup_dofs();
-    assemble_stokes_system ();
-    build_stokes_preconditioner ();
-    solve ();
-        
-    // refine_mesh ( 1 );
-    
-    output_results ();
-  }
 
-
-int main (int argc, char *argv[])
+template <int dim>
+void BoussinesqFlowProblem<dim>::run ()
 {
-  using namespace dealii;
-
-  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
-                                                      numbers::invalid_unsigned_int);
-
-  try
-    {
-      deallog.depth_console (0);
-
-      std::string parameter_filename;
-      if (argc>=2)
-        parameter_filename = argv[1];
-      else
-        parameter_filename = "stokes.prm";
-
-      const int dim = 2;
-      BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
-      BoussinesqFlowProblem<dim> flow_problem (parameters);
-      flow_problem.run ();
-    }
-  catch (std::exception &exc)
-    {
-      std::cerr << std::endl << std::endl
-                << "----------------------------------------------------"
-                << std::endl;
-      std::cerr << "Exception on processing: " << std::endl
-                << exc.what() << std::endl
-                << "Aborting!" << std::endl
-                << "----------------------------------------------------"
-                << std::endl;
-
-      return 1;
-    }
-  catch (...)
-    {
-      std::cerr << std::endl << std::endl
-                << "----------------------------------------------------"
-                << std::endl;
-      std::cerr << "Unknown exception!" << std::endl
-                << "Aborting!" << std::endl
-                << "----------------------------------------------------"
-                << std::endl;
-      return 1;
-    }
-
-  return 0;
+	make_grid_fe();
+	setup_dofs();
+	assemble_stokes_system ();
+	build_stokes_preconditioner ();
+	solve ();
+	// refine_mesh ( 1 );
+	output_results ();
 }
+
+
+template class BoussinesqFlowProblem<1>;
+template class BoussinesqFlowProblem<2>;
+template class BoussinesqFlowProblem<3>;
