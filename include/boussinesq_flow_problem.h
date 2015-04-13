@@ -181,6 +181,8 @@ class BoussinesqFlowProblem
 		class Postprocessor;
 
       ParsedFunction<dim, dim+1> boundary_conditions;
+
+      ParsedFunction<dim, dim+1> rhs_force;
 };
 
 #endif

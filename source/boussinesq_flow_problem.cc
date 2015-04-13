@@ -199,7 +199,9 @@ using namespace dealii;
                      pcout,
                      TimerOutput::summary,
                      TimerOutput::wall_times),
-    boundary_conditions("Dirichlet boundary conditions")
+    boundary_conditions("Dirichlet boundary conditions"),
+    
+    rhs_force("Right-hand side force")
   {}
 
 
@@ -542,6 +544,13 @@ using namespace dealii;
                                 scratch.phi_u[i]) *
                                scratch.stokes_fe_values.JxW(q);
            }*/
+
+        /*for (unsigned int i=0; i<dofs_per_cell; ++i)
+           {
+          data.local_rhs(i) += (rhs_force  *
+                                scratch.phi_u[i]) *
+                                scratch.stokes_fe_values.JxW(q);
+           }*/
       }
 
     cell->get_dof_indices (data.local_dof_indices);
@@ -645,9 +654,9 @@ using namespace dealii;
       PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
 
       unsigned int n_iterations = 0;
-      //const double solver_tolerance = 1e-8 * stokes_rhs.l2_norm();
       const double solver_tolerance = 1e-8 * stokes_rhs.l2_norm();
-      SolverControl solver_control (30, solver_tolerance);
+      //SolverControl solver_control (30, solver_tolerance);
+      SolverControl solver_control (100, solver_tolerance);
 
       try
         {
@@ -661,11 +670,6 @@ using namespace dealii;
           solver(solver_control, mem,
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(30, true));
-
-          /*SolverGMRES<TrilinosWrappers::MPI::BlockVector>
-          solver(solver_control, mem,
-                 SolverGMRES<TrilinosWrappers::MPI::BlockVector>::
-                 AdditionalData(30, true));*/
 
           solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
                        preconditioner);
@@ -688,10 +692,6 @@ using namespace dealii;
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-          /*SolverGMRES<TrilinosWrappers::MPI::BlockVector>
-          solver(solver_control_refined, mem,
-                 SolverGMRES<TrilinosWrappers::MPI::BlockVector>::
-                 AdditionalData(50, true));*/
 
           solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
                        preconditioner);
@@ -804,7 +804,7 @@ using namespace dealii;
       {
         for (unsigned int d=0; d<dim; ++d)
           computed_quantities[q](d)
-            = (uh[q](d));// *  EquationData::year_in_seconds * 100);
+            = (uh[q](d));
 
         const double pressure = (uh[q](dim)-minimal_pressure);
         computed_quantities[q](dim) = pressure;
