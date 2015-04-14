@@ -814,12 +814,6 @@ using namespace dealii;
   void BoussinesqFlowProblem<dim>::make_grid_fe()
   {
 
-    //ParsedGridGenerator<dim,dim> pgg("Cube");
-
-    //ParsedFiniteElement<dim,dim> fe_builder("FE_Q");
-
-    //ParameterAcceptor::initialize("params.prm");
-
     triangulation = pgg.distributed(MPI_COMM_WORLD);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);

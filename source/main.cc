@@ -1,4 +1,4 @@
-#include "boussinesq_flow_problem.cc"
+#include "boussinesq_flow_problem.h"
 
 int main (int argc, char *argv[])
 {
@@ -6,6 +6,8 @@ int main (int argc, char *argv[])
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
                                                       numbers::invalid_unsigned_int);
+
+  /*Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);*/
 
   try
     {

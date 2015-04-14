@@ -5,7 +5,7 @@ using namespace dealii;
 
 namespace EquationData
 {
-	const double eta                   = 1e21;    /* Pa s       */
+	const double eta                   = 1;    /* Pa s       */
 	const double density               = 3300;    /* kg / m^3   */  
 
 	const double nu                    = 1.0; 
