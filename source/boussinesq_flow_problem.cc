@@ -448,12 +448,12 @@ using namespace dealii;
 
     scratch.stokes_fe_values.reinit (cell);
 
-    //std::vector<Vector<double> > rhs_values (n_q_points,
-    //                                         Vector<double>(dim+1));
+    std::vector<Vector<double> > rhs_values (n_q_points,
+                                             Vector<double>(dim+1));
 
-    //right_hand_side.vector_value_list (scratch.stokes_fe_values
-    //                                  .get_quadrature_points(),
-    //                                   rhs_values);
+    right_hand_side.vector_value_list (scratch.stokes_fe_values
+				       .get_quadrature_points(),
+                                       rhs_values);
 
     if (rebuild_stokes_matrix)
       data.local_matrix = 0;
@@ -474,48 +474,20 @@ using namespace dealii;
           }
 
         if (rebuild_stokes_matrix == true)
-          for (unsigned int i=0; i<dofs_per_cell; ++i)
+          for (unsigned int i=0; i<dofs_per_cell; ++i) {
             for (unsigned int j=0; j<dofs_per_cell; ++j)
               data.local_matrix(i,j) += (EquationData::eta * 2 *
                                         (scratch.grads_phi_u[i] * scratch.grads_phi_u[j])
                                         - (scratch.div_phi_u[i] * scratch.phi_p[j])
                                         - (scratch.phi_p[i] * scratch.div_phi_u[j]))
                                         * scratch.stokes_fe_values.JxW(q);
-
-        /*const Tensor<1,dim>
-        gravity = EquationData::gravity_vector (scratch.stokes_fe_values
-                                                .quadrature_point(q));
-
-        for (unsigned int i=0; i<dofs_per_cell; ++i)
-           {
-          data.local_rhs(i) += (EquationData::density *
-                                gravity  *
-                                scratch.phi_u[i]) *
-                               scratch.stokes_fe_values.JxW(q);
-           }*/
-
-//        std::vector<double> rhs_values ();
-        Vector<double> rhs_values;
-
-        right_hand_side.vector_value (scratch.stokes_fe_values
-                                      .quadrature_point(q),
-                                      rhs_values);
-
-         /*const Tensor<1,dim> aux_rhs;
-
-         for (unsigned int i=0; i<dofs_per_cell; ++i)
-           {
-           const unsigned int
-           component_i = stokes_fe->system_to_component_index(i).first;
-
-           //aux_rhs(0,0) = 1.;//rhs_values[q](component_i);
-
-           data.local_rhs(i) += (scratch.phi_u[i] *
-                                 //rhs_values[q](component_i)
-                                 aux_rhs 
-                                 ) *
-                                 scratch.stokes_fe_values.JxW(q);
-           }*/
+	
+	    unsigned int comp_i = stokes_fe->system_to_component_index(i).first;
+	    if(comp_i<dim)
+	      data.local_rhs(i) += (rhs_values[q](comp_i) *
+				    scratch.phi_u[i][comp_i] *
+				    scratch.stokes_fe_values.JxW(q));
+	  }
       }
 
     cell->get_dof_indices (data.local_dof_indices);
