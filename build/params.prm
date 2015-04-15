@@ -81,12 +81,80 @@ subsection Dirichlet boundary conditions
 end
 
 
+subsection ErrorHandler<2>
+  set Compute error            = true
+  set Error file format        = tex
+  set Output error tables      = true
+  # Comma separated list of names for the components. This will be used both
+  # for error tables in text format and to output the solution to a file. Note
+  # that in the case of a vector function the error name which is used to
+  # compute the norm (supposing the type of the other components is 'Add') is
+  # the first one.
+  set Solution names           = u
+
+  # Comma separated version of the same thing as above for the latex version
+  # of the table.
+  set Solution names for latex = u
+
+  # Comma separated list of table names.
+  set Table names              = error
+  set Write error files        = false
+
+
+  subsection Table 0
+    # Evaluate convergence rates and add a column to the table for each
+    # computed norm.
+    set Add convergence rates          = true
+
+    # The extra columns to add to the table.
+    set Extra terms                    = cells,dofs
+
+    # The caption that will go under the table if we write the file in tex
+    # format. The default value for this object is the same name as the table
+    # name.
+    set Latex table caption            = error
+
+    # Each component is separated by a semicolon, and each norm by a comma.
+    # Implemented norms are Linfty, L2, H1 and AddUp, which means that the
+    # norm is added to the previous component. Useful for vector valued
+    # functions.
+    set List of error norms to compute = Linfty, L2, H1
+
+    # The key to use to compute the convergence rates.
+    set Rate key                       = 
+  end
+
+  subsection Table 1
+    # Evaluate convergence rates and add a column to the table for each
+    # computed norm.
+    set Add convergence rates          = true
+
+    # The extra columns to add to the table.
+    set Extra terms                    = cells,dofs
+
+    # The caption that will go under the table if we write the file in tex
+    # format. The default value for this object is the same name as the table
+    # name.
+    set Latex table caption            = error
+
+    # Each component is separated by a semicolon, and each norm by a comma.
+    # Implemented norms are Linfty, L2, H1 and AddUp, which means that the
+    # norm is added to the previous component. Useful for vector valued
+    # functions.
+    set List of error norms to compute = Linfty, L2, H1
+
+    # The key to use to compute the convergence rates.
+    set Rate key                       = 
+  end
+
+end
+
+
 subsection FE_Q
   # The finite element space to use. For vector finite elements use the
   # notation FESystem[FE_Q(2)^2-FE_DGP(1)] (e.g. Navier-Stokes).
   set Finite element space = FESystem[FE_Q(2)^dim-FE_Q(1)]
 end
-
 
 subsection Right-hand side force
   # Sometimes it is convenient to use symbolic constants in the expression
@@ -127,3 +195,5 @@ subsection Right-hand side force
   # expression.
   set Variable names      = x,y,t
 end
+
+

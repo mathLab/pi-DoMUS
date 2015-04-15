@@ -49,12 +49,14 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/solution_transfer.h>
 
+#include <typeinfo>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <limits>
 #include <locale>
 #include <string>
+#include <math.h>
 
 #include <deal.II/distributed/solution_transfer.h>
 

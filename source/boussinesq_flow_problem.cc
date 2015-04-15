@@ -130,6 +130,9 @@ using namespace dealii;
     virtual double value (const Point<dim>   &p,
                           const unsigned int  component = 0) const;
 
+    /*virtual Tensor<1,dim> value (const Point<dim>   &p,
+                                 const unsigned int  component = 0) const;*/
+
     virtual Tensor<1,dim> gradient (const Point<dim>   &p,
                                     const unsigned int  component = 0) const;
   };
@@ -137,15 +140,11 @@ using namespace dealii;
 
   template <int dim>
   double Solution<dim>::value (const Point<dim>   &p,
-                               const unsigned int) const
+                                 const unsigned int) const
   {
     double return_value = 0;
-    /*for (unsigned int i=0; i<this->n_source_centers; ++i)
-      {
-        const Tensor<1,dim> x_minus_xi = p - this->source_centers[i];
-        return_value += std::exp(-x_minus_xi.norm_square() /
-                                 (this->width * this->width));
-      }*/
+    
+    return_value = numbers::PI*cos(numbers::PI*p[0])*cos(numbers::PI*p[1]);
 
     return return_value;
   }
@@ -153,7 +152,7 @@ using namespace dealii;
 
   template <int dim>
   Tensor<1,dim> Solution<dim>::gradient (const Point<dim>   &p,
-                                         const unsigned int) const
+                                             const unsigned int) const
   {
     Tensor<1,dim> return_value;
 
