@@ -8,6 +8,7 @@ using namespace dealii;
     :
     end_time (1e8),
     initial_global_refinement (2),
+    //step_global_refinement (1),
     initial_adaptive_refinement (2),
     adaptive_refinement_interval (10),
     stokes_velocity_degree (2),
@@ -56,6 +57,11 @@ using namespace dealii;
                        "The number of global refinement steps performed on "
                        "the initial coarse mesh, before the problem is first "
                        "solved there.");
+    /*prm.declare_entry ("Step global refinement", "2",
+                       Patterns::Integer (0),
+                       "The number of global refinement steps performed on "
+                       "the initial coarse mesh, before the problem is first "
+                       "solved there.");*/
     prm.declare_entry ("Initial adaptive refinement", "2",
                        Patterns::Integer (0),
                        "The number of adaptive refinement steps performed after "
@@ -115,9 +121,58 @@ using namespace dealii;
     prm.leave_subsection ();
   }
 
+  template <int dim>
+  class Solution : public Function<dim>
+  {
+  public:
+    Solution () : Function<dim>() {}
+
+    virtual double value (const Point<dim>   &p,
+                          const unsigned int  component = 0) const;
+
+    virtual Tensor<1,dim> gradient (const Point<dim>   &p,
+                                    const unsigned int  component = 0) const;
+  };
+
 
   template <int dim>
-  BoussinesqFlowProblem<dim>::BoussinesqFlowProblem (Parameters &parameters_)
+  double Solution<dim>::value (const Point<dim>   &p,
+                               const unsigned int) const
+  {
+    double return_value = 0;
+    /*for (unsigned int i=0; i<this->n_source_centers; ++i)
+      {
+        const Tensor<1,dim> x_minus_xi = p - this->source_centers[i];
+        return_value += std::exp(-x_minus_xi.norm_square() /
+                                 (this->width * this->width));
+      }*/
+
+    return return_value;
+  }
+
+
+  template <int dim>
+  Tensor<1,dim> Solution<dim>::gradient (const Point<dim>   &p,
+                                         const unsigned int) const
+  {
+    Tensor<1,dim> return_value;
+
+    /*for (unsigned int i=0; i<this->n_source_centers; ++i)
+      {
+        const Tensor<1,dim> x_minus_xi = p - this->source_centers[i];
+
+        return_value += (-2 / (this->width * this->width) *
+                         std::exp(-x_minus_xi.norm_square() /
+                                  (this->width * this->width)) *
+                         x_minus_xi);
+      }*/
+
+    return return_value;
+  }
+
+
+  template <int dim>
+  BoussinesqFlowProblem<dim>::BoussinesqFlowProblem (Parameters &parameters_, const RefinementMode refinement_mode)
     :
     parameters (parameters_),
     pcout (std::cout,
@@ -136,6 +191,8 @@ using namespace dealii;
                      pcout,
                      TimerOutput::summary,
                      TimerOutput::wall_times),
+
+    refinement_mode (refinement_mode),
 
     pgg("Cube"),
 
@@ -805,9 +862,27 @@ using namespace dealii;
   }
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::refine_mesh (const unsigned int max_grid_level)
+  void BoussinesqFlowProblem<dim>::refine_mesh ()
   {
-    // Rewrite this function using a refinement on stoke's equation!
+    switch (refinement_mode)
+      {
+      case global_refinement:
+      {
+        triangulation->refine_global (1);
+        break;
+      }
+
+      case adaptive_refinement:
+      {
+        triangulation->refine_global (1);
+        break;
+      }
+
+      default:
+      {
+        Assert (false, ExcNotImplemented());
+      }
+      }
   }
 
   template <int dim>
@@ -826,16 +901,84 @@ using namespace dealii;
     
   }
 
+/*namespace ConvTables
+{
+  template const double SolutionBase<2>::width;
+}*/
+
+
+  template <int dim>
+  void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
+  {
+    eh.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
+  }
 
 template <int dim>
 void BoussinesqFlowProblem<dim>::run ()
 {
-	make_grid_fe();
-	setup_dofs();
+
+   const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
+    for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
+      {
+        if (cycle == 0)
+          {
+            make_grid_fe ();
+          }
+        else
+          refine_mesh ();
+
+
+        setup_dofs ();
+	     assemble_stokes_system ();
+	     build_stokes_preconditioner ();
+	     solve ();
+
+        process_solution (cycle);
+      }
+
+    eh.output_table(std::cout, refinement_mode);
+
+    /*std::string vtk_filename;
+    switch (refinement_mode)
+      {
+      case global_refinement:
+        vtk_filename = "solution-global";
+        break;
+      case adaptive_refinement:
+        vtk_filename = "solution-adaptive";
+        break;
+      default:
+        Assert (false, ExcNotImplemented());
+      }
+
+    switch (stokes_fe->degree)
+      {
+      case 1:
+        vtk_filename += "-q1";
+        break;
+      case 2:
+        vtk_filename += "-q2";
+        break;
+
+      default:
+        Assert (false, ExcNotImplemented());
+      }
+
+    vtk_filename += ".vtk";
+    std::ofstream output (vtk_filename.c_str());
+
+    DataOut<dim> data_out;
+    data_out.attach_dof_handler (*dof_handler);
+    data_out.add_data_vector (stokes_solution, "solution");
+
+    data_out.build_patches (stokes_fe->degree);
+    data_out.write_vtk (output);*/
+
+	//make_grid_fe();
+	/*setup_dofs();
 	assemble_stokes_system ();
 	build_stokes_preconditioner ();
-	solve ();
-	// refine_mesh ( 1 );
+	solve ();*/
 	output_results ();
 }
 

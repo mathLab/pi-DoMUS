@@ -21,7 +21,7 @@ int main (int argc, char *argv[])
 
       const int dim = 2;
       BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
-      BoussinesqFlowProblem<dim> flow_problem (parameters);
+      BoussinesqFlowProblem<dim> flow_problem (parameters, BoussinesqFlowProblem<dim>::global_refinement);
       ParameterAcceptor::initialize("params.prm");
       flow_problem.run ();
     }

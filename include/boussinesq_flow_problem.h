@@ -68,9 +68,10 @@
 
 #include "parsed_grid_generator.h"
 #include "parsed_finite_element.h"
+#include "error_handler.h"
 #include "utilities.h"
 #include "parsed_function.h"
-//#include "boussinesq_flow_problem.h"
+
 
 using namespace dealii;
 
@@ -78,8 +79,14 @@ template <int dim>
 class BoussinesqFlowProblem
 {
 	public:
+
+      enum RefinementMode
+    {
+      global_refinement=0, adaptive_refinement=1
+    };
+
 		struct Parameters;
-		BoussinesqFlowProblem (Parameters &parameters);
+		BoussinesqFlowProblem (Parameters &parameters, const RefinementMode refinement_mode);
       ~BoussinesqFlowProblem ();
 
 		void run ();
@@ -92,7 +99,9 @@ class BoussinesqFlowProblem
 		void assemble_stokes_system ();
 		void solve ();
 		void output_results ();
-		void refine_mesh (const unsigned int max_grid_level);
+		//void refine_mesh (const unsigned int max_grid_level);
+      void refine_mesh ();
+      void process_solution (const unsigned int cycle);
 
 	public:
 
@@ -106,6 +115,7 @@ class BoussinesqFlowProblem
 			double       end_time;
 
 			unsigned int initial_global_refinement;
+         //unsigned int initial_global_refinement;
 			unsigned int initial_adaptive_refinement;
 
 			bool         generate_graphical_output;
@@ -183,14 +193,18 @@ class BoussinesqFlowProblem
 		copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
 
 		class Postprocessor;
+ 
+      const RefinementMode                    refinement_mode;
 
-      ParsedGridGenerator<dim,dim> pgg;
+      ErrorHandler<2>                         eh;
 
-      ParsedFiniteElement<dim,dim> fe_builder;
+      ParsedGridGenerator<dim,dim>            pgg;
 
-      ParsedFunction<dim, dim+1> boundary_conditions;
+      ParsedFiniteElement<dim,dim>            fe_builder;
 
-      ParsedFunction<dim, dim+1> right_hand_side;
+      ParsedFunction<dim, dim+1>              boundary_conditions;
+
+      ParsedFunction<dim, dim+1>              right_hand_side;
 };
 
 #endif

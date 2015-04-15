@@ -10,13 +10,6 @@ namespace EquationData
 
 	const double nu                    = 1.0; 
 
-	template <int dim>
-	Tensor<1,dim> gravity_vector (const Point<dim> &p)
-	{
-		const double r = p.norm();
-		return 0*r*p;
-	}
-
 }
 
 #endif
