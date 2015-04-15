@@ -198,7 +198,7 @@ class BoussinesqFlowProblem
  
       const RefinementMode                    refinement_mode;
 
-      ErrorHandler<2>                         eh;
+      ErrorHandler<>                          eh;
 
       ParsedGridGenerator<dim,dim>            pgg;
 

@@ -122,7 +122,8 @@ using namespace dealii;
   }
 
   template <int dim>
-  class Solution : public Function<dim>
+  class Solution : public Function<dim>//,
+    //protected SolutionBase<dim>
   {
   public:
     Solution () : Function<dim>() {}
@@ -130,8 +131,8 @@ using namespace dealii;
     virtual double value (const Point<dim>   &p,
                           const unsigned int  component = 0) const;
 
-    /*virtual Tensor<1,dim> value (const Point<dim>   &p,
-                                 const unsigned int  component = 0) const;*/
+    //virtual Tensor<1,dim> value (const Point<dim>   &p,
+    //                             const unsigned int  component = 0) const;
 
     virtual Tensor<1,dim> gradient (const Point<dim>   &p,
                                     const unsigned int  component = 0) const;
@@ -143,6 +144,8 @@ using namespace dealii;
                                  const unsigned int) const
   {
     double return_value = 0;
+
+    //Tensor<1,dim> return_value;
     
     return_value = numbers::PI*cos(numbers::PI*p[0])*cos(numbers::PI*p[1]);
 
@@ -156,15 +159,8 @@ using namespace dealii;
   {
     Tensor<1,dim> return_value;
 
-    /*for (unsigned int i=0; i<this->n_source_centers; ++i)
-      {
-        const Tensor<1,dim> x_minus_xi = p - this->source_centers[i];
-
-        return_value += (-2 / (this->width * this->width) *
-                         std::exp(-x_minus_xi.norm_square() /
-                                  (this->width * this->width)) *
-                         x_minus_xi);
-      }*/
+    return_value[0] = -std::pow(numbers::PI, 2.0)*sin(numbers::PI*p[0]) * cos(numbers::PI*p[1]);
+    return_value[1] = -std::pow(numbers::PI, 2.0)*cos(numbers::PI*p[0]) * sin(numbers::PI*p[1]);
 
     return return_value;
   }
@@ -936,6 +932,7 @@ void BoussinesqFlowProblem<dim>::run ()
       }
 
     eh.output_table(std::cout, refinement_mode);
+    //eh.output_table(deallog.get_file_stream());
 
     /*std::string vtk_filename;
     switch (refinement_mode)
