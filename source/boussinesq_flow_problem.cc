@@ -854,7 +854,7 @@ using namespace dealii;
   template <int dim>
   void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
   {
-    // eh_v.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
+    eh_v.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
   }
 
 template <int dim>
@@ -879,17 +879,9 @@ void BoussinesqFlowProblem<dim>::run ()
       output_results ();
     }
     
-    // std::ofstream f("errors.txt");
-    // eh_v.output_table(f, refinement_mode);
-    // f.close();
-
-	//make_grid_fe();
-	setup_dofs();
-	assemble_stokes_system ();
-	build_stokes_preconditioner ();
-	solve ();
-  
-	output_results ();
+    std::ofstream f("errors.txt");
+    eh_v.output_table(f, refinement_mode);
+    f.close();
 }
 
 
