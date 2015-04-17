@@ -158,7 +158,7 @@ using namespace dealii;
   template <int dim>
   BoussinesqFlowProblem<dim>::~BoussinesqFlowProblem ()
   {
-    stokes_dof_handler->clear ();
+    // stokes_dof_handler->clear ();
     smart_delete(stokes_dof_handler);
     smart_delete(stokes_fe);
     smart_delete(triangulation);
@@ -854,7 +854,7 @@ using namespace dealii;
   template <int dim>
   void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
   {
-    eh.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
+    // eh_v.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
   }
 
 template <int dim>
@@ -879,46 +879,9 @@ void BoussinesqFlowProblem<dim>::run ()
       output_results ();
     }
     
-    std::ofstream f("errors.txt");
-    eh.output_table(f, refinement_mode);
-    f.close();
-
-    // std::string vtk_filename;
-    // switch (refinement_mode)
-    //   {
-    //   case global_refinement:
-    //     vtk_filename = "solution-global";
-    //     break;
-    //   case adaptive_refinement:
-    //     vtk_filename = "solution-adaptive";
-    //     break;
-    //   default:
-    //     Assert (false, ExcNotImplemented());
-    //   }
-    // 
-    // switch (stokes_fe->degree)
-    //   {
-    //   case 1:
-    //     vtk_filename += "-q1";
-    //     break;
-    //   case 2:
-    //     vtk_filename += "-q2";
-    //     break;
-    // 
-    //   default:
-    //     Assert (false, ExcNotImplemented());
-    //   }
-    // 
-    // vtk_filename += ".vtk";
-    // std::ofstream output (vtk_filename.c_str());
-    // 
-    // DataOut<dim> data_out;
-    // data_out.attach_dof_handler (*stokes_dof_handler);
-    // data_out.add_data_vector (stokes_solution, "solution");
-    // 
-    // data_out.build_patches (stokes_fe->degree);
-    // data_out.write_vtk (output);
-
+    // std::ofstream f("errors.txt");
+    // eh_v.output_table(f, refinement_mode);
+    // f.close();
 
 	//make_grid_fe();
 	setup_dofs();
@@ -930,6 +893,6 @@ void BoussinesqFlowProblem<dim>::run ()
 }
 
 
-template class BoussinesqFlowProblem<1>;
+// template class BoussinesqFlowProblem<1>;
 template class BoussinesqFlowProblem<2>;
-template class BoussinesqFlowProblem<3>;
+// template class BoussinesqFlowProblem<3>;

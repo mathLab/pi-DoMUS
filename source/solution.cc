@@ -1,22 +1,37 @@
 #include "solution.h"
-#include <deal.II/lac/vector.h>
+
 
 template <int dim>
-void Solution<dim>::value (const Point<dim>   &p,
-							Vector<double> &vector_value) const
+void Solution<dim>::vector_value (	const Point<dim>   &p,
+									Vector<double> &value) const
 							// const unsigned int) const
 {
 	// Tensor<1,dim+1> return_value;
-
-	vector_value(0) = numbers::PI*cos(numbers::PI*p[0])*cos(numbers::PI*p[1]);
-	vector_value(1) = numbers::PI*sin(numbers::PI*p[0])*sin(numbers::PI*p[1]);
-	vector_value(2) = 0;
-	if (dim == 3)
-		vector_value(3) = 0;
-	
+	// Vector<double> value (dim +1);
+	value(0) = numbers::PI*cos(numbers::PI*p[0])*cos(numbers::PI*p[1]);
+	value(1) = numbers::PI*sin(numbers::PI*p[0])*sin(numbers::PI*p[1]);
+	value(2) = 0;
+	// if (dim == 3)
+	// 	value(3) = 0;
+	// 
 	// return return_value;
 }
 
+
+template <int dim>
+void Solution<dim>::vector_gradient (	const Point<dim>   &p,
+										std::vector<Tensor<1,dim>> &gradients) const
+
+{
+	// Tensor<2,dim+1> return_value;
+	// std::vector<Tensor<1,dim>> gradients (dim + 1);
+	
+	gradients[0][0] = - numbers::PI*numbers::PI*sin(numbers::PI*p[0])*cos(numbers::PI*p[1]);
+	gradients[0][1] = - numbers::PI*numbers::PI*cos(numbers::PI*p[0])*sin(numbers::PI*p[1]);
+	gradients[1][0] = numbers::PI*numbers::PI*cos(numbers::PI*p[0])*sin(numbers::PI*p[1]);
+	gradients[1][1] = numbers::PI*numbers::PI*sin(numbers::PI*p[0])*cos(numbers::PI*p[1]);
+	
+}
 // 
 // template <int dim>
 // Tensor<2,dim+1> Solution<dim>::gradient (const Point<dim>   &p,
@@ -52,6 +67,6 @@ void Solution<dim>::value (const Point<dim>   &p,
 // 	return return_value;
 // }
 
-template class Solution<1>; // DA ELIMINARE!
+// template class Solution<1>; // DA ELIMINARE!
 template class Solution<2>;
-template class Solution<3>;
+// template class Solution<3>;

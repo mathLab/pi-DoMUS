@@ -13,9 +13,11 @@ class Solution : public Function<dim>
 	public:
 	Solution () : Function<dim>(dim+1) {}
 
-	virtual void value (const Point<dim>   &p,
-							Vector<double> &vector_value) const;
+	virtual void vector_value (const Point<dim>   &p,
+							Vector<double> &value) const;
 							// const unsigned int  component = 0) const;
+	virtual void vector_gradient (const Point<dim>   &p,
+							std::vector<Tensor<1,dim>> &gradients) const;
 
 	/*virtual Tensor<1,dim> value (const Point<dim>   &p,
 								const unsigned int  component = 0) const;*/
