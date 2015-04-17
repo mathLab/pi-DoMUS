@@ -67,6 +67,7 @@
 #include "equation_data.h"
 #include "linear_solver.h"
 #include "assembly.h"
+#include "solution.h"
 
 #include "parsed_grid_generator.h"
 #include "parsed_finite_element.h"
@@ -102,8 +103,8 @@ class BoussinesqFlowProblem
 		void solve ();
 		void output_results ();
 		//void refine_mesh (const unsigned int max_grid_level);
-      void refine_mesh ();
-      void process_solution (const unsigned int cycle);
+		void refine_mesh ();
+		void process_solution (const unsigned int cycle);
 
 	public:
 
@@ -139,22 +140,22 @@ class BoussinesqFlowProblem
 
 		ConditionalOStream                        pcout;
 
-      SmartPointer<parallel::distributed::Triangulation<dim> > triangulation;
+		SmartPointer<parallel::distributed::Triangulation<dim> > triangulation;
 
 		double                                    global_Omega_diameter;
 
 		const MappingQ<dim>                       mapping;
 
-      SmartPointer<FiniteElement<dim,dim> >     stokes_fe;
+		SmartPointer<FiniteElement<dim,dim> >     stokes_fe;
 
-      SmartPointer<DoFHandler<dim> >            stokes_dof_handler;
+		SmartPointer<DoFHandler<dim> >            stokes_dof_handler;
 
 		ConstraintMatrix                          stokes_constraints;
 
 		TrilinosWrappers::BlockSparseMatrix       stokes_matrix;
 		TrilinosWrappers::BlockSparseMatrix       stokes_preconditioner_matrix;
 
-      TrilinosWrappers::MPI::BlockVector        stokes_solution;
+		TrilinosWrappers::MPI::BlockVector        stokes_solution;
 		TrilinosWrappers::MPI::BlockVector        old_stokes_solution;
 		TrilinosWrappers::MPI::BlockVector        stokes_rhs;
 
@@ -195,18 +196,18 @@ class BoussinesqFlowProblem
 		copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
 
 		class Postprocessor;
- 
-      const RefinementMode                    refinement_mode;
 
-      ErrorHandler<2>                         eh;
+		const RefinementMode                    refinement_mode;
 
-      ParsedGridGenerator<dim,dim>            pgg;
+		ErrorHandler<2>                         eh;
 
-      ParsedFiniteElement<dim,dim>            fe_builder;
+		ParsedGridGenerator<dim,dim>            pgg;
 
-      ParsedFunction<dim, dim+1>              boundary_conditions;
+		ParsedFiniteElement<dim,dim>            fe_builder;
 
-      ParsedFunction<dim, dim+1>              right_hand_side;
+		ParsedFunction<dim, dim+1>              boundary_conditions;
+
+		ParsedFunction<dim, dim+1>              right_hand_side;
 };
 
 #endif

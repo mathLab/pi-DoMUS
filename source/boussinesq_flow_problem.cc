@@ -1,5 +1,6 @@
-
+#include "solution.h"
 #include "boussinesq_flow_problem.h"
+
 
 using namespace dealii;
 
@@ -97,7 +98,6 @@ using namespace dealii;
     prm.leave_subsection ();
   }
 
-
   template <int dim>
   void
   BoussinesqFlowProblem<dim>::Parameters::
@@ -120,55 +120,6 @@ using namespace dealii;
     }
     prm.leave_subsection ();
   }
-
-  template <int dim>
-  class Solution : public Function<dim>
-  {
-  public:
-    Solution () : Function<dim>() {}
-
-    virtual double value (const Point<dim>   &p,
-                          const unsigned int  component = 0) const;
-
-    /*virtual Tensor<1,dim> value (const Point<dim>   &p,
-                                 const unsigned int  component = 0) const;*/
-
-    virtual Tensor<1,dim> gradient (const Point<dim>   &p,
-                                    const unsigned int  component = 0) const;
-  };
-
-
-  template <int dim>
-  double Solution<dim>::value (const Point<dim>   &p,
-                                 const unsigned int) const
-  {
-    double return_value = 0;
-    
-    return_value = numbers::PI*cos(numbers::PI*p[0])*cos(numbers::PI*p[1]);
-
-    return return_value;
-  }
-
-
-  template <int dim>
-  Tensor<1,dim> Solution<dim>::gradient (const Point<dim>   &p,
-                                             const unsigned int) const
-  {
-    Tensor<1,dim> return_value;
-
-    /*for (unsigned int i=0; i<this->n_source_centers; ++i)
-      {
-        const Tensor<1,dim> x_minus_xi = p - this->source_centers[i];
-
-        return_value += (-2 / (this->width * this->width) *
-                         std::exp(-x_minus_xi.norm_square() /
-                                  (this->width * this->width)) *
-                         x_minus_xi);
-      }*/
-
-    return return_value;
-  }
-
 
   template <int dim>
   BoussinesqFlowProblem<dim>::BoussinesqFlowProblem (Parameters &parameters_, const RefinementMode refinement_mode)
@@ -212,8 +163,6 @@ using namespace dealii;
     smart_delete(stokes_fe);
     smart_delete(triangulation);
   }
-
-
 
 
   template <int dim>
@@ -637,8 +586,8 @@ using namespace dealii;
       const unsigned int
       start = (distributed_stokes_solution.block(0).size() +
                distributed_stokes_solution.block(1).local_range().first),
-              end   = (distributed_stokes_solution.block(0).size() +
-                       distributed_stokes_solution.block(1).local_range().second);
+      end   = (distributed_stokes_solution.block(0).size() +
+               distributed_stokes_solution.block(1).local_range().second);
       for (unsigned int i=start; i<end; ++i)
         if (stokes_constraints.is_constrained (i))
           distributed_stokes_solution(i) = 0;
@@ -748,9 +697,9 @@ using namespace dealii;
   BoussinesqFlowProblem<dim>::Postprocessor::get_names() const
   {
     std::vector<std::string> solution_names (dim, "velocity");
-    solution_names.push_back ("p");
-    solution_names.push_back ("partition");
-
+      solution_names.push_back ("p");
+      solution_names.push_back ("partition");
+      
     return solution_names;
   }
 
@@ -868,12 +817,14 @@ using namespace dealii;
       case global_refinement:
       {
         triangulation->refine_global (1);
+        // triangulation->refine_global (2);
         break;
       }
 
       case adaptive_refinement:
       {
         triangulation->refine_global (1);
+        // triangulation->refine_global (2);
         break;
       }
 
@@ -899,13 +850,7 @@ using namespace dealii;
     triangulation->refine_global (parameters.initial_global_refinement);
     
   }
-
-/*namespace ConvTables
-{
-  template const double SolutionBase<2>::width;
-}*/
-
-
+  
   template <int dim>
   void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
   {
@@ -918,66 +863,68 @@ void BoussinesqFlowProblem<dim>::run ()
 
    const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
     for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
-      {
-        if (cycle == 0)
-          {
-            make_grid_fe ();
-          }
-        else
-          refine_mesh ();
+    {
+      if (cycle == 0)
+        {
+          make_grid_fe ();
+        }
+      else
+        refine_mesh ();
 
+      setup_dofs ();
+      assemble_stokes_system ();
+      build_stokes_preconditioner ();
+      solve ();
+      process_solution (cycle);
+      output_results ();
+    }
+    
+    std::ofstream f("errors.txt");
+    eh.output_table(f, refinement_mode);
+    f.close();
 
-        setup_dofs ();
-	     assemble_stokes_system ();
-	     build_stokes_preconditioner ();
-	     solve ();
-
-        process_solution (cycle);
-      }
-
-    eh.output_table(std::cout, refinement_mode);
-
-    /*std::string vtk_filename;
-    switch (refinement_mode)
-      {
-      case global_refinement:
-        vtk_filename = "solution-global";
-        break;
-      case adaptive_refinement:
-        vtk_filename = "solution-adaptive";
-        break;
-      default:
-        Assert (false, ExcNotImplemented());
-      }
-
-    switch (stokes_fe->degree)
-      {
-      case 1:
-        vtk_filename += "-q1";
-        break;
-      case 2:
-        vtk_filename += "-q2";
-        break;
-
-      default:
-        Assert (false, ExcNotImplemented());
-      }
-
-    vtk_filename += ".vtk";
-    std::ofstream output (vtk_filename.c_str());
-
-    DataOut<dim> data_out;
-    data_out.attach_dof_handler (*dof_handler);
-    data_out.add_data_vector (stokes_solution, "solution");
-
-    data_out.build_patches (stokes_fe->degree);
-    data_out.write_vtk (output);*/
+    // std::string vtk_filename;
+    // switch (refinement_mode)
+    //   {
+    //   case global_refinement:
+    //     vtk_filename = "solution-global";
+    //     break;
+    //   case adaptive_refinement:
+    //     vtk_filename = "solution-adaptive";
+    //     break;
+    //   default:
+    //     Assert (false, ExcNotImplemented());
+    //   }
+    // 
+    // switch (stokes_fe->degree)
+    //   {
+    //   case 1:
+    //     vtk_filename += "-q1";
+    //     break;
+    //   case 2:
+    //     vtk_filename += "-q2";
+    //     break;
+    // 
+    //   default:
+    //     Assert (false, ExcNotImplemented());
+    //   }
+    // 
+    // vtk_filename += ".vtk";
+    // std::ofstream output (vtk_filename.c_str());
+    // 
+    // DataOut<dim> data_out;
+    // data_out.attach_dof_handler (*stokes_dof_handler);
+    // data_out.add_data_vector (stokes_solution, "solution");
+    // 
+    // data_out.build_patches (stokes_fe->degree);
+    // data_out.write_vtk (output);
 
 	//make_grid_fe();
-	/*setup_dofs();
+	setup_dofs();
 	assemble_stokes_system ();
 	build_stokes_preconditioner ();
-	solve ();*/
+	solve ();
+  
 	output_results ();
 }
 
