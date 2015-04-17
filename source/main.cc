@@ -12,6 +12,7 @@ int main (int argc, char *argv[])
   try
     {
       deallog.depth_console (0);
+      //initlog();
 
       std::string parameter_filename;
       if (argc>=2)
@@ -19,11 +20,20 @@ int main (int argc, char *argv[])
       else
         parameter_filename = "stokes.prm";
 
+
       const int dim = 2;
       BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
       BoussinesqFlowProblem<dim> flow_problem (parameters, BoussinesqFlowProblem<dim>::global_refinement);
+      //ParameterAcceptor::initialize("params.prm");
+
       ParameterAcceptor::initialize("params.prm");
+      //ParameterAcceptor::clear();
+      ParameterAcceptor::prm.log_parameters(deallog);
+
       flow_problem.run ();
+
+      std::cout << std::endl;
+
     }
   catch (std::exception &exc)
     {
