@@ -732,9 +732,9 @@ using namespace dealii;
   BoussinesqFlowProblem<dim>::Postprocessor::
   compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
                                      const std::vector<std::vector<Tensor<1,dim> > > &duh,
-                                     const std::vector<std::vector<Tensor<2,dim> > > &/*dduh*/,
-                                     const std::vector<Point<dim> >                  &/*normals*/,
-                                     const std::vector<Point<dim> >                  &/*evaluation_points*/,
+                                     const std::vector<std::vector<Tensor<2,dim> > > &dduh,
+                                     const std::vector<Point<dim> >                  &normals,
+                                     const std::vector<Point<dim> >                  &evaluation_points,
                                      std::vector<Vector<double> >                    &computed_quantities) const
   {
     const unsigned int n_quadrature_points = uh.size();
@@ -854,7 +854,7 @@ using namespace dealii;
   template <int dim>
   void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
   {
-    eh_v.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
+    eh.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
   }
 
 template <int dim>
@@ -879,9 +879,9 @@ void BoussinesqFlowProblem<dim>::run ()
       output_results ();
     }
     
-    std::ofstream f("errors.txt");
-    eh_v.output_table(f, refinement_mode);
-    f.close();
+    // std::ofstream f("errors.txt");
+    eh.output_table(std::cout, refinement_mode);
+    // f.close();
 }
 
 

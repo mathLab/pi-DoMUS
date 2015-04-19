@@ -90,7 +90,7 @@ class BoussinesqFlowProblem
 
 		struct Parameters;
 		BoussinesqFlowProblem (Parameters &parameters, const RefinementMode refinement_mode);
-      ~BoussinesqFlowProblem ();
+       ~BoussinesqFlowProblem ();
 
 		void run ();
 
@@ -199,8 +199,7 @@ class BoussinesqFlowProblem
 
 		const RefinementMode                    refinement_mode;
 
-		ErrorHandler<1>                         eh_v;
-		ErrorHandler<1>                         eh_p;
+		ErrorHandler<1>                         eh;
 
 		ParsedGridGenerator<dim,dim>            pgg;
 
