@@ -90,7 +90,7 @@ class BoussinesqFlowProblem
 
 		struct Parameters;
 		BoussinesqFlowProblem (Parameters &parameters, const RefinementMode refinement_mode);
-       ~BoussinesqFlowProblem ();
+      // ~BoussinesqFlowProblem ();
 
 		void run ();
 
@@ -140,15 +140,15 @@ class BoussinesqFlowProblem
 
 		ConditionalOStream                        pcout;
 
-		SmartPointer<parallel::distributed::Triangulation<dim> > triangulation;
+      shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
 
 		double                                    global_Omega_diameter;
 
 		const MappingQ<dim>                       mapping;
 
-		SmartPointer<FiniteElement<dim,dim> >     stokes_fe;
+		shared_ptr<FiniteElement<dim,dim> >       stokes_fe;
 
-		SmartPointer<DoFHandler<dim> >            stokes_dof_handler;
+		shared_ptr<DoFHandler<dim> >              stokes_dof_handler;
 
 		ConstraintMatrix                          stokes_constraints;
 

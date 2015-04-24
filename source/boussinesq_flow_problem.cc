@@ -155,14 +155,14 @@ using namespace dealii;
 
 
 
-  template <int dim>
+  /*template <int dim>
   BoussinesqFlowProblem<dim>::~BoussinesqFlowProblem ()
   {
     // stokes_dof_handler->clear ();
     smart_delete(stokes_dof_handler);
     smart_delete(stokes_fe);
     smart_delete(triangulation);
-  }
+  }*/
 
 
   template <int dim>
@@ -839,13 +839,16 @@ using namespace dealii;
   void BoussinesqFlowProblem<dim>::make_grid_fe()
   {
 
-    triangulation = pgg.distributed(MPI_COMM_WORLD);
+    triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
+    stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
+
+    //triangulation = pgg.distributed(MPI_COMM_WORLD);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
-    stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+    //stokes_dof_handler = new DoFHandler<dim>(*triangulation);
 
-    stokes_fe=fe_builder();
+    stokes_fe=SP(fe_builder());
 
     triangulation->refine_global (parameters.initial_global_refinement);
     
