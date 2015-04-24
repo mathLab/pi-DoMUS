@@ -154,8 +154,7 @@ using namespace dealii;
   {}
 
 
-
-  /*template <int dim>
+  /* template <int dim>
   NavierStokes<dim>::~NavierStokes ()
   {
     // navier_stokes_dof_handler->clear ();
@@ -835,7 +834,7 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
-    //navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+    // navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
 
     navier_stokes_fe=SP(fe_builder());
 

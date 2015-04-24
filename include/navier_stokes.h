@@ -89,6 +89,7 @@ class NavierStokes
 		};
 
 		struct Parameters;
+
 		NavierStokes (Parameters &parameters, const RefinementMode refinement_mode);
     //    ~NavierStokes ();
 
