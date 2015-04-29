@@ -5,121 +5,67 @@
 using namespace dealii;
 
   template <int dim>
-  NavierStokes<dim>::Parameters::Parameters (const std::string &parameter_filename)
-    :
-    end_time (1e8),
-    initial_global_refinement (2),
-    //step_global_refinement (1),
-    initial_adaptive_refinement (2),
-    adaptive_refinement_interval (10),
-    navier_stokes_velocity_degree (2),
-    use_locally_conservative_discretization (true)
-  {
-    ParameterHandler prm;
-    NavierStokes<dim>::Parameters::declare_parameters (prm);
-
-    std::ifstream parameter_file (parameter_filename.c_str());
-
-    if (!parameter_file)
-      {
-        parameter_file.close ();
-
-        std::ostringstream message;
-        message << "Input parameter file <"
-                << parameter_filename << "> not found. Creating a"
-                << std::endl
-                << "template file of the same name."
-                << std::endl;
-
-        std::ofstream parameter_out (parameter_filename.c_str());
-        prm.print_parameters (parameter_out,
-                              ParameterHandler::Text);
-
-        AssertThrow (false, ExcMessage (message.str().c_str()));
-      }
-
-    const bool success = prm.read_input (parameter_file);
-    AssertThrow (success, ExcMessage ("Invalid input parameter file."));
-
-    parse_parameters (prm);
-  }
-
-
-  template <int dim>
   void
   NavierStokes<dim>::Parameters::
   declare_parameters (ParameterHandler &prm)
   {
-    prm.declare_entry ("End time", "1e8",
-                       Patterns::Double (0),
-                       "The end time of the simulation in seconds.");
-    prm.declare_entry ("Initial global refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of global refinement steps performed on "
-                       "the initial coarse mesh, before the problem is first "
-                       "solved there.");
-    /*prm.declare_entry ("Step global refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of global refinement steps performed on "
-                       "the initial coarse mesh, before the problem is first "
-                       "solved there.");*/
-    prm.declare_entry ("Initial adaptive refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of adaptive refinement steps performed after "
-                       "initial global refinement.");
-    prm.declare_entry ("Time steps between mesh refinement", "10",
-                       Patterns::Integer (1),
-                       "The number of time steps after which the mesh is to be "
-                       "adapted based on computed error indicators.");
-    prm.declare_entry ("Generate graphical output", "false",
-                       Patterns::Bool (),
-                       "Whether graphical output is to be generated or not. "
-                       "You may not want to get graphical output if the number "
-                       "of processors is large.");
-    prm.declare_entry ("Time steps between graphical output", "50",
-                       Patterns::Integer (1),
-                       "The number of time steps between each generation of "
-                       "graphical output files.");
+    add_parameter(  prm, 
+                    &end_time,
+                    "End time", 
+                    "1e8",
+                    Patterns::Double (0));
 
-    prm.enter_subsection ("Discretization");
-    {
-      prm.declare_entry ("Navier Stokes velocity polynomial degree", "2",
-                         Patterns::Integer (1),
-                         "The polynomial degree to use for the velocity variables "
-                         "in the Navier Stokes system.");
-      prm.declare_entry ("Use locally conservative discretization", "true",
-                         Patterns::Bool (),
-                         "Whether to use a Navier Stokes discretization that is locally "
-                         "conservative at the expense of a larger number of degrees "
-                         "of freedom, or to go with a cheaper discretization "
-                         "that does not locally conserve mass (although it is "
-                         "globally conservative.");
-    }
-    prm.leave_subsection ();
-  }
+    add_parameter(  prm, 
+                    &initial_global_refinement,
+                    "Initial global refinement", 
+                    "1",
+                    Patterns::Integer (0));
 
-  template <int dim>
-  void
-  NavierStokes<dim>::Parameters::
-  parse_parameters (ParameterHandler &prm)
-  {
-    end_time                    = prm.get_double ("End time");
-    initial_global_refinement   = prm.get_integer ("Initial global refinement");
-    initial_adaptive_refinement = prm.get_integer ("Initial adaptive refinement");
+    add_parameter(  prm,
+                    &initial_adaptive_refinement,
+                    "Initial adaptive refinement",
+                    "2",
+                    Patterns::Integer (0));
+                    
+    add_parameter(  prm,
+                    &adaptive_refinement_interval,
+                    "Time steps between mesh refinement",
+                    "10",
+                    Patterns::Integer (1));
+                    
+    add_parameter(  prm,
+                    &generate_graphical_output,
+                    "Generate graphical output",
+                    "false",
+                    Patterns::Bool ());
+                    
+    add_parameter(  prm,
+                    &graphical_output_interval,
+                    "Time steps between graphical output",
+                    "50",
+                    Patterns::Integer (1));
 
-    adaptive_refinement_interval= prm.get_integer ("Time steps between mesh refinement");
+    // prm.enter_subsection ("Discretization");
+    add_parameter(  prm,
+                    &stokes_velocity_degree,
+                    "Stokes velocity polynomial degree",
+                    "2",
+                    Patterns::Integer (1));
 
-    generate_graphical_output   = prm.get_bool ("Generate graphical output");
-    graphical_output_interval   = prm.get_integer ("Time steps between graphical output");
-
-    prm.enter_subsection ("Discretization");
-    {
-      navier_stokes_velocity_degree = prm.get_integer ("Navier Stokes velocity polynomial degree");
-      use_locally_conservative_discretization
-        = prm.get_bool ("Use locally conservative discretization");
-    }
-    prm.leave_subsection ();
-  }
+    add_parameter(  prm,
+                    &use_locally_conservative_discretization,
+                    "Use locally conservative discretization",
+                    "true",
+                    Patterns::Bool ());
+    
+    // add_parameter(  prm,
+    //             &k,
+    //             "...",
+    //             "1",
+    //             Patterns::Bool ());
+    // 
+    // fe_builder.declare_parameters(&k);
+  };
 
   template <int dim>
   NavierStokes<dim>::NavierStokes (Parameters &parameters_, const RefinementMode refinement_mode)
@@ -146,11 +92,14 @@ using namespace dealii;
 
     pgg("Cube"),
 
-    fe_builder("FE_Q"),
+    fe_builder( "FE_Q", 
+                "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
 
-    boundary_conditions("Dirichlet boundary conditions"),
+    boundary_conditions(  "Dirichlet boundary conditions", 
+                          "k*pi*cos(k*pi*x)*cos(k*pi*y);  k*pi*sin(k*pi*x)*sin(k*pi*y); 0"),
     
-    right_hand_side("Right-hand side force", "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0" )
+    right_hand_side(      "Right-hand side force", 
+                          "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0" )
   {}
 
 
@@ -853,15 +802,11 @@ template <int dim>
 void NavierStokes<dim>::run ()
 {
 std::cout << "----" << end_time << "----" << std::endl;
-/*
+
    const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
     for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
     {
-<<<<<<< HEAD
       if (cycle == 0)
-=======
-	 if (cycle == 0)
->>>>>>> trying to get rid of stokes.prm
         {
           make_grid_fe ();
         }
@@ -878,7 +823,6 @@ std::cout << "----" << end_time << "----" << std::endl;
     
     // std::ofstream f("errors.txt");
     eh.output_table(std::cout, refinement_mode);
-	*/
     // f.close();
 }
 
