@@ -92,14 +92,18 @@ using namespace dealii;
 
     pgg("Cube"),
 
-    fe_builder( "FE_Q", 
-                "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
+
+    fe_builder(           "FE_Q", 
+                          "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
 
     boundary_conditions(  "Dirichlet boundary conditions", 
-                          "k*pi*cos(k*pi*x)*cos(k*pi*y);  k*pi*sin(k*pi*x)*sin(k*pi*y); 0"),
+                          "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0", 
+                          "k=1"),
     
-    right_hand_side(      "Right-hand side force", 
-                          "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0" )
+    right_hand_side(      "Right-hand side force",
+                          "2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0", 
+                          "k=1" )
+
   {}
 
 
