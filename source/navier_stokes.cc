@@ -829,7 +829,7 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
   {
 
     triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
-    stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
+    navier_stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
 
     //triangulation = pgg.distributed(MPI_COMM_WORLD);
 
