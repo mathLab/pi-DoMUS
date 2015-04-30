@@ -387,13 +387,13 @@ using namespace dealii;
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesPreconditioner<dim> (*navier_stokes_fe, quadrature_formula,
+         NavierStokesPreconditioner<dim> (*navier_stokes_fe, quadrature_formula,
                                     mapping,
                                     update_JxW_values |
                                     update_values |
                                     update_gradients),
          Assembly::CopyData::
-         StokesPreconditioner<dim> (*navier_stokes_fe));
+         NavierStokesPreconditioner<dim> (*navier_stokes_fe));
 
     navier_stokes_preconditioner_matrix.compress(VectorOperation::add);
   }
