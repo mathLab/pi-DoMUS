@@ -1,5 +1,5 @@
-#ifndef BOUSSINESQ_FLOW_PROBLEM 
-#define BOUSSINESQ_FLOW_PROBLEM
+#ifndef _NAVIER_STOKES_PROBLEM_
+#define _NAVIER_STOKES_PROBLEM_
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
@@ -59,7 +59,6 @@
 #include <math.h>
 
 #include <deal.II/distributed/solution_transfer.h>
-
 #include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/distributed/grid_refinement.h>
@@ -79,27 +78,28 @@
 using namespace dealii;
 
 template <int dim>
-class BoussinesqFlowProblem
+class NavierStokes
 {
 	public:
 
-      enum RefinementMode
-    {
-      global_refinement=0, adaptive_refinement=1
-    };
+		enum RefinementMode
+		{
+			global_refinement=0, 
+			adaptive_refinement=1
+		};
 
 		struct Parameters;
-		BoussinesqFlowProblem (Parameters &parameters, const RefinementMode refinement_mode);
-      // ~BoussinesqFlowProblem ();
+		NavierStokes (Parameters &parameters, const RefinementMode refinement_mode);
+    //    ~NavierStokes ();
 
 		void run ();
 
 	private:
 		void make_grid_fe();
 		void setup_dofs ();
-		void assemble_stokes_preconditioner ();
-		void build_stokes_preconditioner ();
-		void assemble_stokes_system ();
+		void assemble_navier_stokes_preconditioner ();
+		void build_navier_stokes_preconditioner ();
+		void assemble_navier_stokes_system ();
 		void solve ();
 		void output_results ();
 		//void refine_mesh (const unsigned int max_grid_level);
@@ -130,7 +130,7 @@ class BoussinesqFlowProblem
 			double       stabilization_c_R;
 			double       stabilization_beta;
 
-			unsigned int stokes_velocity_degree;
+			unsigned int navier_stokes_velocity_degree;
 			bool         use_locally_conservative_discretization;
 
 		};
@@ -146,18 +146,18 @@ class BoussinesqFlowProblem
 
 		const MappingQ<dim>                       mapping;
 
-		shared_ptr<FiniteElement<dim,dim> >       stokes_fe;
+		shared_ptr<FiniteElement<dim,dim> >       navier_stokes_fe;
 
-		shared_ptr<DoFHandler<dim> >              stokes_dof_handler;
+		shared_ptr<DoFHandler<dim> >              navier_stokes_dof_handler;
 
-		ConstraintMatrix                          stokes_constraints;
+		ConstraintMatrix                          navier_stokes_constraints;
 
-		TrilinosWrappers::BlockSparseMatrix       stokes_matrix;
-		TrilinosWrappers::BlockSparseMatrix       stokes_preconditioner_matrix;
+		TrilinosWrappers::BlockSparseMatrix       navier_stokes_matrix;
+		TrilinosWrappers::BlockSparseMatrix       navier_stokes_preconditioner_matrix;
 
-		TrilinosWrappers::MPI::BlockVector        stokes_solution;
-		TrilinosWrappers::MPI::BlockVector        old_stokes_solution;
-		TrilinosWrappers::MPI::BlockVector        stokes_rhs;
+		TrilinosWrappers::MPI::BlockVector        navier_stokes_solution;
+		TrilinosWrappers::MPI::BlockVector        old_navier_stokes_solution;
+		TrilinosWrappers::MPI::BlockVector        navier_stokes_rhs;
 
 		double                                    time_step;
 		double                                    old_time_step;
@@ -167,33 +167,33 @@ class BoussinesqFlowProblem
 		std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
 		std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
 
-		bool                                      rebuild_stokes_matrix;
-		bool                                      rebuild_stokes_preconditioner;
+		bool                                      rebuild_navier_stokes_matrix;
+		bool                                      rebuild_navier_stokes_preconditioner;
 
 		TimerOutput                               computing_timer;
 
-		void setup_stokes_matrix (const std::vector<IndexSet> &stokes_partitioning,
-									const std::vector<IndexSet> &stokes_relevant_partitioning);
-		void setup_stokes_preconditioner (const std::vector<IndexSet> &stokes_partitioning,
-											const std::vector<IndexSet> &stokes_relevant_partitioning);
+		void setup_navier_stokes_matrix (	const std::vector<IndexSet> &navier_stokes_partitioning,
+											const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
+		void setup_navier_stokes_preconditioner (	const std::vector<IndexSet> &navier_stokes_partitioning,
+													const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
 
 
 		void
-		local_assemble_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
-												Assembly::Scratch::StokesPreconditioner<dim> &scratch,
-												Assembly::CopyData::StokesPreconditioner<dim> &data);
+		local_assemble_navier_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
+												Assembly::Scratch::NavierStokesPreconditioner<dim> &scratch,
+												Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
 
 		void
-		copy_local_to_global_stokes_preconditioner (const Assembly::CopyData::StokesPreconditioner<dim> &data);
+		copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
 
 
 		void
-		local_assemble_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
-										Assembly::Scratch::StokesSystem<dim>  &scratch,
-										Assembly::CopyData::StokesSystem<dim> &data);
+		local_assemble_navier_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
+										Assembly::Scratch::NavierStokesSystem<dim>  &scratch,
+										Assembly::CopyData::NavierStokesSystem<dim> &data);
 
 		void
-		copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data);
+		copy_local_to_global_navier_stokes_system (const Assembly::CopyData::NavierStokesSystem<dim> &data);
 
 		class Postprocessor;
 

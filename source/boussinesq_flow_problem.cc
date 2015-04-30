@@ -1,22 +1,22 @@
 #include "solution.h"
-#include "boussinesq_flow_problem.h"
+#include "navier_navier_stokes.h"
 
 
 using namespace dealii;
 
   template <int dim>
-  BoussinesqFlowProblem<dim>::Parameters::Parameters (const std::string &parameter_filename)
+  NavierStokes<dim>::Parameters::Parameters (const std::string &parameter_filename)
     :
     end_time (1e8),
     initial_global_refinement (2),
     //step_global_refinement (1),
     initial_adaptive_refinement (2),
     adaptive_refinement_interval (10),
-    stokes_velocity_degree (2),
+    navier_stokes_velocity_degree (2),
     use_locally_conservative_discretization (true)
   {
     ParameterHandler prm;
-    BoussinesqFlowProblem<dim>::Parameters::declare_parameters (prm);
+    NavierStokes<dim>::Parameters::declare_parameters (prm);
 
     std::ifstream parameter_file (parameter_filename.c_str());
 
@@ -47,7 +47,7 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::Parameters::
+  NavierStokes<dim>::Parameters::
   declare_parameters (ParameterHandler &prm)
   {
     prm.declare_entry ("End time", "1e8",
@@ -100,7 +100,7 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::Parameters::
+  NavierStokes<dim>::Parameters::
   parse_parameters (ParameterHandler &prm)
   {
     end_time                    = prm.get_double ("End time");
@@ -114,7 +114,7 @@ using namespace dealii;
 
     prm.enter_subsection ("Discretization");
     {
-      stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
+      navier_stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
       use_locally_conservative_discretization
         = prm.get_bool ("Use locally conservative discretization");
     }
@@ -122,7 +122,7 @@ using namespace dealii;
   }
 
   template <int dim>
-  BoussinesqFlowProblem<dim>::BoussinesqFlowProblem (Parameters &parameters_, const RefinementMode refinement_mode)
+  NavierStokes<dim>::NavierStokes (Parameters &parameters_, const RefinementMode refinement_mode)
     :
     parameters (parameters_),
     pcout (std::cout,
@@ -134,8 +134,8 @@ using namespace dealii;
     time_step (0),
     old_time_step (0),
     timestep_number (0),
-    rebuild_stokes_matrix (true),
-    rebuild_stokes_preconditioner (true),
+    rebuild_navier_stokes_matrix (true),
+    rebuild_navier_stokes_preconditioner (true),
 
     computing_timer (MPI_COMM_WORLD,
                      pcout,
@@ -156,24 +156,24 @@ using namespace dealii;
 
 
   /*template <int dim>
-  BoussinesqFlowProblem<dim>::~BoussinesqFlowProblem ()
+  NavierStokes<dim>::~NavierStokes ()
   {
-    // stokes_dof_handler->clear ();
-    smart_delete(stokes_dof_handler);
-    smart_delete(stokes_fe);
+    // navier_stokes_dof_handler->clear ();
+    smart_delete(navier_stokes_dof_handler);
+    smart_delete(navier_stokes_fe);
     smart_delete(triangulation);
   }*/
 
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::
-  setup_stokes_matrix (const std::vector<IndexSet> &stokes_partitioning,
-                       const std::vector<IndexSet> &stokes_relevant_partitioning)
+  void NavierStokes<dim>::
+  setup_navier_stokes_matrix (const std::vector<IndexSet> &navier_stokes_partitioning,
+                       const std::vector<IndexSet> &navier_stokes_relevant_partitioning)
   {
-    stokes_matrix.clear ();
+    navier_stokes_matrix.clear ();
 
-    TrilinosWrappers::BlockSparsityPattern sp(stokes_partitioning, stokes_partitioning,
-                                              stokes_relevant_partitioning,
+    TrilinosWrappers::BlockSparsityPattern sp(navier_stokes_partitioning, navier_stokes_partitioning,
+                                              navier_stokes_relevant_partitioning,
                                               MPI_COMM_WORLD);
 
     Table<2,DoFTools::Coupling> coupling (dim+1, dim+1);
@@ -184,29 +184,29 @@ using namespace dealii;
         else
           coupling[c][d] = DoFTools::none;
 
-    DoFTools::make_sparsity_pattern (*stokes_dof_handler,
+    DoFTools::make_sparsity_pattern (*navier_stokes_dof_handler,
                                      coupling, sp,
-                                     stokes_constraints, false,
+                                     navier_stokes_constraints, false,
                                      Utilities::MPI::
                                      this_mpi_process(MPI_COMM_WORLD));
     sp.compress();
 
-    stokes_matrix.reinit (sp);
+    navier_stokes_matrix.reinit (sp);
   }
 
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::
-  setup_stokes_preconditioner (const std::vector<IndexSet> &stokes_partitioning,
-                               const std::vector<IndexSet> &stokes_relevant_partitioning)
+  void NavierStokes<dim>::
+  setup_navier_stokes_preconditioner (const std::vector<IndexSet> &navier_stokes_partitioning,
+                               const std::vector<IndexSet> &navier_stokes_relevant_partitioning)
   {
     Amg_preconditioner.reset ();
     Mp_preconditioner.reset ();
 
-    stokes_preconditioner_matrix.clear ();
+    navier_stokes_preconditioner_matrix.clear ();
 
-    TrilinosWrappers::BlockSparsityPattern sp(stokes_partitioning, stokes_partitioning,
-                                              stokes_relevant_partitioning,
+    TrilinosWrappers::BlockSparsityPattern sp(navier_stokes_partitioning, navier_stokes_partitioning,
+                                              navier_stokes_relevant_partitioning,
                                               MPI_COMM_WORLD);
 
     Table<2,DoFTools::Coupling> coupling (dim+1, dim+1);
@@ -217,33 +217,33 @@ using namespace dealii;
         else
           coupling[c][d] = DoFTools::none;
 
-    DoFTools::make_sparsity_pattern (*stokes_dof_handler,
+    DoFTools::make_sparsity_pattern (*navier_stokes_dof_handler,
                                      coupling, sp,
-                                     stokes_constraints, false,
+                                     navier_stokes_constraints, false,
                                      Utilities::MPI::
                                      this_mpi_process(MPI_COMM_WORLD));
     sp.compress();
 
-    stokes_preconditioner_matrix.reinit (sp);
+    navier_stokes_preconditioner_matrix.reinit (sp);
   }
 
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::setup_dofs ()
+  void NavierStokes<dim>::setup_dofs ()
   {
     computing_timer.enter_section("Setup dof systems");
 
-    std::vector<unsigned int> stokes_sub_blocks (dim+1,0);
-    stokes_sub_blocks[dim] = 1;
-    stokes_dof_handler->distribute_dofs (*stokes_fe);
-    DoFRenumbering::component_wise (*stokes_dof_handler, stokes_sub_blocks);
+    std::vector<unsigned int> navier_stokes_sub_blocks (dim+1,0);
+    navier_stokes_sub_blocks[dim] = 1;
+    navier_stokes_dof_handler->distribute_dofs (*navier_stokes_fe);
+    DoFRenumbering::component_wise (*navier_stokes_dof_handler, navier_stokes_sub_blocks);
 
-    std::vector<types::global_dof_index> stokes_dofs_per_block (2);
-    DoFTools::count_dofs_per_block (*stokes_dof_handler, stokes_dofs_per_block,
-                                    stokes_sub_blocks);
+    std::vector<types::global_dof_index> navier_stokes_dofs_per_block (2);
+    DoFTools::count_dofs_per_block (*navier_stokes_dof_handler, navier_stokes_dofs_per_block,
+                                    navier_stokes_sub_blocks);
 
-    const unsigned int n_u = stokes_dofs_per_block[0],
-                       n_p = stokes_dofs_per_block[1];
+    const unsigned int n_u = navier_stokes_dofs_per_block[0],
+                       n_p = navier_stokes_dofs_per_block[1];
 
     std::locale s = pcout.get_stream().getloc();
     pcout.get_stream().imbue(std::locale(""));
@@ -262,49 +262,49 @@ using namespace dealii;
     pcout.get_stream().imbue(s);
 
 
-    std::vector<IndexSet> stokes_partitioning, stokes_relevant_partitioning;
-    IndexSet stokes_relevant_set;
+    std::vector<IndexSet> navier_stokes_partitioning, navier_stokes_relevant_partitioning;
+    IndexSet navier_stokes_relevant_set;
     {
-      IndexSet stokes_index_set = stokes_dof_handler->locally_owned_dofs();
-      stokes_partitioning.push_back(stokes_index_set.get_view(0,n_u));
-      stokes_partitioning.push_back(stokes_index_set.get_view(n_u,n_u+n_p));
+      IndexSet navier_stokes_index_set = navier_stokes_dof_handler->locally_owned_dofs();
+      navier_stokes_partitioning.push_back(navier_stokes_index_set.get_view(0,n_u));
+      navier_stokes_partitioning.push_back(navier_stokes_index_set.get_view(n_u,n_u+n_p));
 
-      DoFTools::extract_locally_relevant_dofs (*stokes_dof_handler,
-                                               stokes_relevant_set);
-      stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(0,n_u));
-      stokes_relevant_partitioning.push_back(stokes_relevant_set.get_view(n_u,n_u+n_p));
+      DoFTools::extract_locally_relevant_dofs (*navier_stokes_dof_handler,
+                                               navier_stokes_relevant_set);
+      navier_stokes_relevant_partitioning.push_back(navier_stokes_relevant_set.get_view(0,n_u));
+      navier_stokes_relevant_partitioning.push_back(navier_stokes_relevant_set.get_view(n_u,n_u+n_p));
 
     }
 
     {
-      stokes_constraints.clear ();
-      stokes_constraints.reinit (stokes_relevant_set);
+      navier_stokes_constraints.clear ();
+      navier_stokes_constraints.reinit (navier_stokes_relevant_set);
 
-      DoFTools::make_hanging_node_constraints (*stokes_dof_handler,
-                                               stokes_constraints);
+      DoFTools::make_hanging_node_constraints (*navier_stokes_dof_handler,
+                                               navier_stokes_constraints);
 
       FEValuesExtractors::Vector velocity_components(0);
       //boundary_conditions.set_time(time_step*time_step_number);
-      VectorTools::interpolate_boundary_values (*stokes_dof_handler,
+      VectorTools::interpolate_boundary_values (*navier_stokes_dof_handler,
                                                 0,
                                                 boundary_conditions,
-                                                stokes_constraints,
-                                                stokes_fe->component_mask(velocity_components));
+                                                navier_stokes_constraints,
+                                                navier_stokes_fe->component_mask(velocity_components));
 
-      stokes_constraints.close ();
+      navier_stokes_constraints.close ();
     }
 
-    setup_stokes_matrix (stokes_partitioning, stokes_relevant_partitioning);
-    setup_stokes_preconditioner (stokes_partitioning,
-                                 stokes_relevant_partitioning);
+    setup_navier_stokes_matrix (navier_stokes_partitioning, navier_stokes_relevant_partitioning);
+    setup_navier_stokes_preconditioner (navier_stokes_partitioning,
+                                 navier_stokes_relevant_partitioning);
 
-    stokes_rhs.reinit (stokes_partitioning, stokes_relevant_partitioning,
+    navier_stokes_rhs.reinit (navier_stokes_partitioning, navier_stokes_relevant_partitioning,
                        MPI_COMM_WORLD, true);
-    stokes_solution.reinit (stokes_relevant_partitioning, MPI_COMM_WORLD);
-    old_stokes_solution.reinit (stokes_solution);
+    navier_stokes_solution.reinit (navier_stokes_relevant_partitioning, MPI_COMM_WORLD);
+    old_navier_stokes_solution.reinit (navier_stokes_solution);
 
-    rebuild_stokes_matrix              = true;
-    rebuild_stokes_preconditioner      = true;
+    rebuild_navier_stokes_matrix              = true;
+    rebuild_navier_stokes_preconditioner      = true;
 
     computing_timer.exit_section();
   }
@@ -313,18 +313,18 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::
-  local_assemble_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                        Assembly::Scratch::StokesPreconditioner<dim> &scratch,
-                                        Assembly::CopyData::StokesPreconditioner<dim> &data)
+  NavierStokes<dim>::
+  local_assemble_navier_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                        Assembly::Scratch::NavierStokesPreconditioner<dim> &scratch,
+                                        Assembly::CopyData::NavierStokesPreconditioner<dim> &data)
   {
-    const unsigned int   dofs_per_cell   = stokes_fe->dofs_per_cell;
-    const unsigned int   n_q_points      = scratch.stokes_fe_values.n_quadrature_points;
+    const unsigned int   dofs_per_cell   = navier_stokes_fe->dofs_per_cell;
+    const unsigned int   n_q_points      = scratch.navier_stokes_fe_values.n_quadrature_points;
 
     const FEValuesExtractors::Vector velocities (0);
     const FEValuesExtractors::Scalar pressure (dim);
 
-    scratch.stokes_fe_values.reinit (cell);
+    scratch.navier_stokes_fe_values.reinit (cell);
     cell->get_dof_indices (data.local_dof_indices);
 
     data.local_matrix = 0;
@@ -333,8 +333,8 @@ using namespace dealii;
       {
         for (unsigned int k=0; k<dofs_per_cell; ++k)
           {
-            scratch.grad_phi_u[k] = scratch.stokes_fe_values[velocities].gradient(k,q);
-            scratch.phi_p[k]      = scratch.stokes_fe_values[pressure].value (k, q);
+            scratch.grad_phi_u[k] = scratch.navier_stokes_fe_values[velocities].gradient(k,q);
+            scratch.phi_p[k]      = scratch.navier_stokes_fe_values[pressure].value (k, q);
           }
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
@@ -345,27 +345,27 @@ using namespace dealii;
                                        +
                                        (1./EquationData::eta) *
                                        (scratch.phi_p[i] * scratch.phi_p[j]))
-                                      * scratch.stokes_fe_values.JxW(q);
+                                      * scratch.navier_stokes_fe_values.JxW(q);
       }
   }
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::
-  copy_local_to_global_stokes_preconditioner (const Assembly::CopyData::StokesPreconditioner<dim> &data)
+  NavierStokes<dim>::
+  copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data)
   {
-    stokes_constraints.distribute_local_to_global (data.local_matrix,
+    navier_stokes_constraints.distribute_local_to_global (data.local_matrix,
                                                    data.local_dof_indices,
-                                                   stokes_preconditioner_matrix);
+                                                   navier_stokes_preconditioner_matrix);
   }
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::assemble_stokes_preconditioner ()
+  NavierStokes<dim>::assemble_navier_stokes_preconditioner ()
   {
-    stokes_preconditioner_matrix = 0;
+    navier_stokes_preconditioner_matrix = 0;
 
-    const QGauss<dim> quadrature_formula(parameters.stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -373,48 +373,48 @@ using namespace dealii;
 
     WorkStream::
     run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler->begin_active()),
+                     navier_stokes_dof_handler->begin_active()),
          CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler->end()),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          local_assemble_stokes_preconditioner,
+                     navier_stokes_dof_handler->end()),
+         std_cxx11::bind (&NavierStokes<dim>::
+                          local_assemble_navier_stokes_preconditioner,
                           this,
                           std_cxx11::_1,
                           std_cxx11::_2,
                           std_cxx11::_3),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          copy_local_to_global_stokes_preconditioner,
+         std_cxx11::bind (&NavierStokes<dim>::
+                          copy_local_to_global_navier_stokes_preconditioner,
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesPreconditioner<dim> (*stokes_fe, quadrature_formula,
+         StokesPreconditioner<dim> (*navier_stokes_fe, quadrature_formula,
                                     mapping,
                                     update_JxW_values |
                                     update_values |
                                     update_gradients),
          Assembly::CopyData::
-         StokesPreconditioner<dim> (*stokes_fe));
+         StokesPreconditioner<dim> (*navier_stokes_fe));
 
-    stokes_preconditioner_matrix.compress(VectorOperation::add);
+    navier_stokes_preconditioner_matrix.compress(VectorOperation::add);
   }
 
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::build_stokes_preconditioner ()
+  NavierStokes<dim>::build_navier_stokes_preconditioner ()
   {
-    if (rebuild_stokes_preconditioner == false)
+    if (rebuild_navier_stokes_preconditioner == false)
       return;
 
     computing_timer.enter_section ("   Build Stokes preconditioner");
     pcout << "   Rebuilding Stokes preconditioner..." << std::flush;
 
-    assemble_stokes_preconditioner ();
+    assemble_navier_stokes_preconditioner ();
 
     std::vector<std::vector<bool> > constant_modes;
     FEValuesExtractors::Vector velocity_components(0);
-    DoFTools::extract_constant_modes (*stokes_dof_handler,
-                                      stokes_fe->component_mask(velocity_components),
+    DoFTools::extract_constant_modes (*navier_stokes_dof_handler,
+                                      navier_stokes_fe->component_mask(velocity_components),
                                       constant_modes);
 
     Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
@@ -427,11 +427,11 @@ using namespace dealii;
     Amg_data.smoother_sweeps = 2;
     Amg_data.aggregation_threshold = 0.02;
 
-    Mp_preconditioner->initialize (stokes_preconditioner_matrix.block(1,1));
-    Amg_preconditioner->initialize (stokes_preconditioner_matrix.block(0,0),
+    Mp_preconditioner->initialize (navier_stokes_preconditioner_matrix.block(1,1));
+    Amg_preconditioner->initialize (navier_stokes_preconditioner_matrix.block(0,0),
                                     Amg_data);
 
-    rebuild_stokes_preconditioner = false;
+    rebuild_navier_stokes_preconditioner = false;
 
     pcout << std::endl;
     computing_timer.exit_section();
@@ -440,27 +440,27 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::
-  local_assemble_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                Assembly::Scratch::StokesSystem<dim> &scratch,
-                                Assembly::CopyData::StokesSystem<dim> &data)
+  NavierStokes<dim>::
+  local_assemble_navier_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                Assembly::Scratch::NavierStokesSystem<dim> &scratch,
+                                Assembly::CopyData::NavierStokesSystem<dim> &data)
   {
-    const unsigned int dofs_per_cell = scratch.stokes_fe_values.get_fe().dofs_per_cell;
-    const unsigned int n_q_points    = scratch.stokes_fe_values.n_quadrature_points;
+    const unsigned int dofs_per_cell = scratch.navier_stokes_fe_values.get_fe().dofs_per_cell;
+    const unsigned int n_q_points    = scratch.navier_stokes_fe_values.n_quadrature_points;
 
     const FEValuesExtractors::Vector velocities (0);
     const FEValuesExtractors::Scalar pressure (dim);
 
-    scratch.stokes_fe_values.reinit (cell);
+    scratch.navier_stokes_fe_values.reinit (cell);
 
     std::vector<Vector<double> > rhs_values (n_q_points,
                                              Vector<double>(dim+1));
 
-    right_hand_side.vector_value_list (scratch.stokes_fe_values
+    right_hand_side.vector_value_list (scratch.navier_stokes_fe_values
 				       .get_quadrature_points(),
                                        rhs_values);
 
-    if (rebuild_stokes_matrix)
+    if (rebuild_navier_stokes_matrix)
       data.local_matrix = 0;
       data.local_rhs = 0;
 
@@ -469,29 +469,29 @@ using namespace dealii;
       {
         for (unsigned int k=0; k<dofs_per_cell; ++k)
           {
-            scratch.phi_u[k] = scratch.stokes_fe_values[velocities].value (k,q);
-            if (rebuild_stokes_matrix)
+            scratch.phi_u[k] = scratch.navier_stokes_fe_values[velocities].value (k,q);
+            if (rebuild_navier_stokes_matrix)
               {
-                scratch.grads_phi_u[k] = scratch.stokes_fe_values[velocities].symmetric_gradient(k,q);
-                scratch.div_phi_u[k]   = scratch.stokes_fe_values[velocities].divergence (k, q);
-                scratch.phi_p[k]       = scratch.stokes_fe_values[pressure].value (k, q);
+                scratch.grads_phi_u[k] = scratch.navier_stokes_fe_values[velocities].symmetric_gradient(k,q);
+                scratch.div_phi_u[k]   = scratch.navier_stokes_fe_values[velocities].divergence (k, q);
+                scratch.phi_p[k]       = scratch.navier_stokes_fe_values[pressure].value (k, q);
               } 
           }
 
-        if (rebuild_stokes_matrix == true)
+        if (rebuild_navier_stokes_matrix == true)
           for (unsigned int i=0; i<dofs_per_cell; ++i) {
             for (unsigned int j=0; j<dofs_per_cell; ++j)
               data.local_matrix(i,j) += (EquationData::eta * 2 *
                                         (scratch.grads_phi_u[i] * scratch.grads_phi_u[j])
                                         - (scratch.div_phi_u[i] * scratch.phi_p[j])
                                         - (scratch.phi_p[i] * scratch.div_phi_u[j]))
-                                        * scratch.stokes_fe_values.JxW(q);
+                                        * scratch.navier_stokes_fe_values.JxW(q);
 	
-	    unsigned int comp_i = stokes_fe->system_to_component_index(i).first;
+	    unsigned int comp_i = navier_stokes_fe->system_to_component_index(i).first;
 	    if(comp_i<dim)
 	      data.local_rhs(i) += (rhs_values[q](comp_i) *
 				    scratch.phi_u[i][comp_i] *
-				    scratch.stokes_fe_values.JxW(q));
+				    scratch.navier_stokes_fe_values.JxW(q));
 	  }
       }
 
@@ -502,34 +502,34 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::
-  copy_local_to_global_stokes_system (const Assembly::CopyData::StokesSystem<dim> &data)
+  NavierStokes<dim>::
+  copy_local_to_global_navier_stokes_system (const Assembly::CopyData::NavierStokesSystem<dim> &data)
   {
-    if (rebuild_stokes_matrix == true)
-      stokes_constraints.distribute_local_to_global (data.local_matrix,
+    if (rebuild_navier_stokes_matrix == true)
+      navier_stokes_constraints.distribute_local_to_global (data.local_matrix,
                                                      data.local_rhs,
                                                      data.local_dof_indices,
-                                                     stokes_matrix,
-                                                     stokes_rhs);
+                                                     navier_stokes_matrix,
+                                                     navier_stokes_rhs);
     else
-      stokes_constraints.distribute_local_to_global (data.local_rhs,
+      navier_stokes_constraints.distribute_local_to_global (data.local_rhs,
                                                      data.local_dof_indices,
-                                                     stokes_rhs);
+                                                     navier_stokes_rhs);
   }
 
 
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::assemble_stokes_system ()
+  void NavierStokes<dim>::assemble_navier_stokes_system ()
   {
     computing_timer.enter_section ("   Assemble Stokes system");
 
-    if (rebuild_stokes_matrix == true)
-      stokes_matrix=0;
+    if (rebuild_navier_stokes_matrix == true)
+      navier_stokes_matrix=0;
 
-    stokes_rhs=0;
+    navier_stokes_rhs=0;
 
-    const QGauss<dim> quadrature_formula(parameters.stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -537,66 +537,66 @@ using namespace dealii;
 
     WorkStream::
     run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler->begin_active()),
+                     navier_stokes_dof_handler->begin_active()),
          CellFilter (IteratorFilters::LocallyOwnedCell(),
-                     stokes_dof_handler->end()),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          local_assemble_stokes_system,
+                     navier_stokes_dof_handler->end()),
+         std_cxx11::bind (&NavierStokes<dim>::
+                          local_assemble_navier_stokes_system,
                           this,
                           std_cxx11::_1,
                           std_cxx11::_2,
                           std_cxx11::_3),
-         std_cxx11::bind (&BoussinesqFlowProblem<dim>::
-                          copy_local_to_global_stokes_system,
+         std_cxx11::bind (&NavierStokes<dim>::
+                          copy_local_to_global_navier_stokes_system,
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesSystem<dim> (*stokes_fe, mapping, quadrature_formula,
+         StokesSystem<dim> (*navier_stokes_fe, mapping, quadrature_formula,
                             (update_values    |
                              update_quadrature_points  |
                              update_JxW_values |
-                             (rebuild_stokes_matrix == true
+                             (rebuild_navier_stokes_matrix == true
                               ?
                               update_gradients
                               :
                               UpdateFlags(0)))),
          Assembly::CopyData::
-         StokesSystem<dim> (*stokes_fe));
+         StokesSystem<dim> (*navier_stokes_fe));
 
-    if (rebuild_stokes_matrix == true)
-      stokes_matrix.compress(VectorOperation::add);
-    stokes_rhs.compress(VectorOperation::add);
+    if (rebuild_navier_stokes_matrix == true)
+      navier_stokes_matrix.compress(VectorOperation::add);
+    navier_stokes_rhs.compress(VectorOperation::add);
 
-    rebuild_stokes_matrix = false;
+    rebuild_navier_stokes_matrix = false;
 
     pcout << std::endl;
     computing_timer.exit_section();
   }
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::solve ()
+  void NavierStokes<dim>::solve ()
   {
 
       pcout << "   Solving Stokes system... " << std::flush;
 
       TrilinosWrappers::MPI::BlockVector
-      distributed_stokes_solution (stokes_rhs);
-      distributed_stokes_solution = stokes_solution;
+      distributed_navier_stokes_solution (navier_stokes_rhs);
+      distributed_navier_stokes_solution = navier_stokes_solution;
 
       const unsigned int
-      start = (distributed_stokes_solution.block(0).size() +
-               distributed_stokes_solution.block(1).local_range().first),
-      end   = (distributed_stokes_solution.block(0).size() +
-               distributed_stokes_solution.block(1).local_range().second);
+      start = (distributed_navier_stokes_solution.block(0).size() +
+               distributed_navier_stokes_solution.block(1).local_range().first),
+      end   = (distributed_navier_stokes_solution.block(0).size() +
+               distributed_navier_stokes_solution.block(1).local_range().second);
       for (unsigned int i=start; i<end; ++i)
-        if (stokes_constraints.is_constrained (i))
-          distributed_stokes_solution(i) = 0;
+        if (navier_stokes_constraints.is_constrained (i))
+          distributed_navier_stokes_solution(i) = 0;
 
 
       PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
 
       unsigned int n_iterations = 0;
-      const double solver_tolerance = 1e-8 * stokes_rhs.l2_norm();
+      const double solver_tolerance = 1e-8 * navier_stokes_rhs.l2_norm();
       //SolverControl solver_control (30, solver_tolerance);
       SolverControl solver_control (100, solver_tolerance);
 
@@ -604,7 +604,7 @@ using namespace dealii;
         {
           const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
                 TrilinosWrappers::PreconditionJacobi>
-                preconditioner (stokes_matrix, stokes_preconditioner_matrix,
+                preconditioner (navier_stokes_matrix, navier_stokes_preconditioner_matrix,
                                 *Mp_preconditioner, *Amg_preconditioner,
                                 false);
 
@@ -613,7 +613,7 @@ using namespace dealii;
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(30, true));
 
-          solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
+          solver.solve(navier_stokes_matrix, distributed_navier_stokes_solution, navier_stokes_rhs,
                        preconditioner);
 
           n_iterations = solver_control.last_step();
@@ -623,11 +623,11 @@ using namespace dealii;
         {
           const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
                 TrilinosWrappers::PreconditionJacobi>
-                preconditioner (stokes_matrix, stokes_preconditioner_matrix,
+                preconditioner (navier_stokes_matrix, navier_stokes_preconditioner_matrix,
                                 *Mp_preconditioner, *Amg_preconditioner,
                                 true);
 
-          SolverControl solver_control_refined (stokes_matrix.m(), solver_tolerance);
+          SolverControl solver_control_refined (navier_stokes_matrix.m(), solver_tolerance);
 
           SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
           solver(solver_control_refined, mem,
@@ -635,7 +635,7 @@ using namespace dealii;
                  AdditionalData(50, true));
 
 
-          solver.solve(stokes_matrix, distributed_stokes_solution, stokes_rhs,
+          solver.solve(navier_stokes_matrix, distributed_navier_stokes_solution, navier_stokes_rhs,
                        preconditioner);
 
           n_iterations = (solver_control.last_step() +
@@ -643,9 +643,9 @@ using namespace dealii;
         }
 
 
-      stokes_constraints.distribute (distributed_stokes_solution);
+      navier_stokes_constraints.distribute (distributed_navier_stokes_solution);
 
-      stokes_solution = distributed_stokes_solution;
+      navier_stokes_solution = distributed_navier_stokes_solution;
       pcout << n_iterations  << " iterations."
             << std::endl;
   }
@@ -653,7 +653,7 @@ using namespace dealii;
 
 
   template <int dim>
-  class BoussinesqFlowProblem<dim>::Postprocessor : public DataPostprocessor<dim>
+  class NavierStokes<dim>::Postprocessor : public DataPostprocessor<dim>
   {
   public:
     Postprocessor (const unsigned int partition,
@@ -679,7 +679,7 @@ using namespace dealii;
 
 
   template <int dim>
-  BoussinesqFlowProblem<dim>::Postprocessor::
+  NavierStokes<dim>::Postprocessor::
   Postprocessor (const unsigned int partition,
                  const double       minimal_pressure)
     :
@@ -690,7 +690,7 @@ using namespace dealii;
 
   template <int dim>
   std::vector<std::string>
-  BoussinesqFlowProblem<dim>::Postprocessor::get_names() const
+  NavierStokes<dim>::Postprocessor::get_names() const
   {
     std::vector<std::string> solution_names (dim, "velocity");
       solution_names.push_back ("p");
@@ -702,7 +702,7 @@ using namespace dealii;
 
   template <int dim>
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-  BoussinesqFlowProblem<dim>::Postprocessor::
+  NavierStokes<dim>::Postprocessor::
   get_data_component_interpretation () const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -717,7 +717,7 @@ using namespace dealii;
 
   template <int dim>
   UpdateFlags
-  BoussinesqFlowProblem<dim>::Postprocessor::get_needed_update_flags() const
+  NavierStokes<dim>::Postprocessor::get_needed_update_flags() const
   {
     return update_values | update_gradients | update_q_points;
   }
@@ -725,7 +725,7 @@ using namespace dealii;
 
   template <int dim>
   void
-  BoussinesqFlowProblem<dim>::Postprocessor::
+  NavierStokes<dim>::Postprocessor::
   compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
                                      std::vector<Vector<double> >                    &computed_quantities) const
   {
@@ -747,16 +747,16 @@ using namespace dealii;
 
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::output_results ()
+  void NavierStokes<dim>::output_results ()
   {
     computing_timer.enter_section ("Postprocessing");
 
     Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
-                                 stokes_solution.block(1).minimal_value());
+                                 navier_stokes_solution.block(1).minimal_value());
 
     DataOut<dim> data_out;
-    data_out.attach_dof_handler (*stokes_dof_handler);
-    data_out.add_data_vector (stokes_solution, postprocessor);
+data_out.attach_dof_handler (*navier_stokes_dof_handler);
+    data_out.add_data_vector (navier_stokes_solution, postprocessor);
     // data_out.build_patches ();
 
     static int out_index=0;
@@ -799,7 +799,7 @@ using namespace dealii;
   }
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::refine_mesh ()
+  void NavierStokes<dim>::refine_mesh ()
   {
     switch (refinement_mode)
       {
@@ -825,7 +825,7 @@ using namespace dealii;
   }
 
   template <int dim>
-  void BoussinesqFlowProblem<dim>::make_grid_fe()
+  void NavierStokes<dim>::make_grid_fe()
   {
 
     triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
@@ -835,22 +835,22 @@ using namespace dealii;
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
-    //stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+    //navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
 
-    stokes_fe=SP(fe_builder());
+    navier_stokes_fe=SP(fe_builder());
 
     triangulation->refine_global (parameters.initial_global_refinement);
     
   }
   
   template <int dim>
-  void BoussinesqFlowProblem<dim>::process_solution ()
+  void NavierStokes<dim>::process_solution ()
   {
-    eh.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
+    eh.error_from_exact(*navier_stokes_dof_handler, navier_stokes_solution, Solution<dim>(), refinement_mode);
   }
 
 template <int dim>
-void BoussinesqFlowProblem<dim>::run ()
+void NavierStokes<dim>::run ()
 {
 
    const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
@@ -864,8 +864,8 @@ void BoussinesqFlowProblem<dim>::run ()
         refine_mesh ();
 
       setup_dofs ();
-      assemble_stokes_system ();
-      build_stokes_preconditioner ();
+      assemble_navier_stokes_system ();
+      build_navier_stokes_preconditioner ();
       solve ();
       process_solution ();
       output_results ();
@@ -877,6 +877,6 @@ void BoussinesqFlowProblem<dim>::run ()
 }
 
 
-// template class BoussinesqFlowProblem<1>;
-template class BoussinesqFlowProblem<2>;
-// template class BoussinesqFlowProblem<3>;
+// template class NavierStokes<1>;
+template class NavierStokes<2>;
+// template class NavierStokes<3>;
