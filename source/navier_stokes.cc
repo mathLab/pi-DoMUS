@@ -551,7 +551,7 @@ using namespace dealii;
                           this,
                           std_cxx11::_1),
          Assembly::Scratch::
-         StokesSystem<dim> (*navier_stokes_fe, mapping, quadrature_formula,
+         NavierStokesSystem<dim> (*navier_stokes_fe, mapping, quadrature_formula,
                             (update_values    |
                              update_quadrature_points  |
                              update_JxW_values |
@@ -561,7 +561,7 @@ using namespace dealii;
                               :
                               UpdateFlags(0)))),
          Assembly::CopyData::
-         StokesSystem<dim> (*navier_stokes_fe));
+         NavierStokesSystem<dim> (*navier_stokes_fe));
 
     if (rebuild_navier_stokes_matrix == true)
       navier_stokes_matrix.compress(VectorOperation::add);
