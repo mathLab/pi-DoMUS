@@ -83,13 +83,13 @@ using namespace dealii;
 
     prm.enter_subsection ("Discretization");
     {
-      prm.declare_entry ("Stokes velocity polynomial degree", "2",
+      prm.declare_entry ("Navier Stokes velocity polynomial degree", "2",
                          Patterns::Integer (1),
                          "The polynomial degree to use for the velocity variables "
-                         "in the Stokes system.");
+                         "in the Navier Stokes system.");
       prm.declare_entry ("Use locally conservative discretization", "true",
                          Patterns::Bool (),
-                         "Whether to use a Stokes discretization that is locally "
+                         "Whether to use a Navier Stokes discretization that is locally "
                          "conservative at the expense of a larger number of degrees "
                          "of freedom, or to go with a cheaper discretization "
                          "that does not locally conserve mass (although it is "
@@ -114,7 +114,7 @@ using namespace dealii;
 
     prm.enter_subsection ("Discretization");
     {
-      navier_stokes_velocity_degree = prm.get_integer ("Stokes velocity polynomial degree");
+      navier_stokes_velocity_degree = prm.get_integer ("Navier Stokes velocity polynomial degree");
       use_locally_conservative_discretization
         = prm.get_bool ("Use locally conservative discretization");
     }

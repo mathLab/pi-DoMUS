@@ -1,20 +1,3 @@
-# On branch master
-# Untracked files:
-#   (use "git add <file>..." to include in what will be committed)
-#
-#	CMakeCache.txt
-#	CMakeFiles/
-#	CTestTestfile.cmake
-#	Makefile
-#	cmake_install.cmake
-#	error.txt
-#	libstokes-lib.g.so
-#	libstokes-lib.so
-#	stokes
-#	stokes.g
-#	tests/
-nothing added to commit but untracked files present (use "git add" to track)
-[mbarde@cn04-29 build]$ cat stokes.prm
 # Listing of Parameters
 # ---------------------
 # The end time of the simulation in seconds.
@@ -41,11 +24,11 @@ set Time steps between mesh refinement  = 10
 
 
 subsection Discretization
-  # The polynomial degree to use for the velocity variables in the Stokes
+  # The polynomial degree to use for the velocity variables in the Navier Stokes
   # system.
-  set Stokes velocity polynomial degree       = 2
+  set Navier Stokes velocity polynomial degree       = 2
 
-  # Whether to use a Stokes discretization that is locally conservative at the
+  # Whether to use a Navier Stokes discretization that is locally conservative at the
   # expense of a larger number of degrees of freedom, or to go with a cheaper
   # discretization that does not locally conserve mass (although it is
   # globally conservative.
