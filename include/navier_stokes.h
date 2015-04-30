@@ -149,7 +149,7 @@ class NavierStokes
 
 		shared_ptr<FiniteElement<dim,dim> >       navier_stokes_fe;
 
-		shared_ptr<DoFHandler<dim> >              navier_stokes_dof_handler;
+		shared_ptr<DoFHandler<dim> >           	  navier_stokes_dof_handler;
 
 		ConstraintMatrix                          navier_stokes_constraints;
 
