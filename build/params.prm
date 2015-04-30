@@ -1,0 +1,41 @@
+# Listing of Parameters
+# ---------------------
+subsection Cube
+  set Grid to generate                                     = rectangle
+end
+
+subsection Dirichlet boundary conditions
+  set Function constants  = k=1
+  set Function expression = k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0
+end
+
+
+subsection ErrorHandler<1>
+  set Compute error            = true
+  set Error file format        = txt
+  set Output error tables      = true
+  set Solution names           = u, u, p
+  set Solution names for latex = u, u, p
+  set Table names              = error
+  set Write error files        = true
+
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = L2, H1; AddUp; L2
+    set Rate key                       = 
+  end
+
+end
+
+
+subsection FE_Q
+  set Finite element space = FESystem[FE_Q(2)^dim-FE_Q(1)]
+end
+
+
+subsection Right-hand side force
+  set Function constants  = k=1
+  set Function expression = 2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
+end
