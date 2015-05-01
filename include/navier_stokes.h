@@ -90,7 +90,8 @@ class NavierStokes
 
 		struct Parameters;
 
-		NavierStokes (Parameters &parameters, const RefinementMode refinement_mode);
+
+		NavierStokes (const RefinementMode refinement_mode);
     //    ~NavierStokes ();
 
 		void run ();
@@ -209,6 +210,8 @@ class NavierStokes
 		ParsedFunction<dim, dim+1>              boundary_conditions;
 
 		ParsedFunction<dim, dim+1>              right_hand_side;
+
+		ParsedDataOut<dim, dim+1> data_out;
 };
 
 #endif

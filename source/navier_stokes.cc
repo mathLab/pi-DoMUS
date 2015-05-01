@@ -150,7 +150,7 @@ using namespace dealii;
 
     boundary_conditions("Dirichlet boundary conditions"),
     
-    right_hand_side("Right-hand side force")
+    right_hand_side("Right-hand side force", "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0" )
   {}
 
 
@@ -852,11 +852,16 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
 template <int dim>
 void NavierStokes<dim>::run ()
 {
-
+std::cout << "----" << end_time << "----" << std::endl;
+/*
    const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
     for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
     {
+<<<<<<< HEAD
       if (cycle == 0)
+=======
+	 if (cycle == 0)
+>>>>>>> trying to get rid of stokes.prm
         {
           make_grid_fe ();
         }
@@ -873,6 +878,7 @@ void NavierStokes<dim>::run ()
     
     // std::ofstream f("errors.txt");
     eh.output_table(std::cout, refinement_mode);
+	*/
     // f.close();
 }
 

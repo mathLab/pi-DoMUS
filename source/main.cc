@@ -18,13 +18,14 @@ int main (int argc, char *argv[])
       if (argc>=2)
         parameter_filename = argv[1];
       else
-        parameter_filename = "navier_stokes.prm";
+        parameter_filename = "parameters.prm";
 
 
       const int dim = 2;
-      NavierStokes<dim>::Parameters  parameters(parameter_filename);
+      // BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
+      
       NavierStokes<dim> flow_problem (parameters, NavierStokes<dim>::global_refinement);
-      //ParameterAcceptor::initialize("params.prm");
+      ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 
       ParameterAcceptor::initialize("params.prm");
       //ParameterAcceptor::clear();
