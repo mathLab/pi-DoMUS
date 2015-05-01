@@ -88,9 +88,6 @@ class NavierStokes
 			adaptive_refinement=1
 		};
 
-		struct Parameters;
-
-
 		NavierStokes (const RefinementMode refinement_mode);
     //    ~NavierStokes ();
 
@@ -110,7 +107,6 @@ class NavierStokes
 
 	public:
 
-<<<<<<< HEAD
 		struct Parameters
 		{
 			Parameters (const std::string &parameter_filename);
@@ -140,9 +136,6 @@ class NavierStokes
 
 	private:
 		Parameters                               &parameters;
-=======
-		// Parameters                               &parameters;
->>>>>>> trying to get rid of params.prm
 
 		ConditionalOStream                        pcout;
 
@@ -211,8 +204,6 @@ class NavierStokes
 
 		ParsedFiniteElement<dim,dim>            fe_builder;
 
-		// ParameterHandler 						k;
-		
 		ParsedFunction<dim, dim+1>              boundary_conditions;
 
 		ParsedFunction<dim, dim+1>              right_hand_side;
