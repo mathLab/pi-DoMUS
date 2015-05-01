@@ -73,12 +73,13 @@
 #include "error_handler.h"
 #include "utilities.h"
 #include "parsed_function.h"
-
+#include "parsed_data_out.h"
+#include "parameter_acceptor.h"
 
 using namespace dealii;
 
 template <int dim>
-class NavierStokes
+class NavierStokes : public ParameterAcceptor
 {
 	public:
 
@@ -104,6 +105,23 @@ class NavierStokes
 		//void refine_mesh (const unsigned int max_grid_level);
 		void refine_mesh ();
 		void process_solution ();
+
+	public:
+		virtual void declare_parameters(ParameterHandler &prm);
+		
+	private:
+		double       end_time;
+		unsigned int initial_global_refinement;
+		//unsigned int initial_global_refinement;
+		unsigned int initial_adaptive_refinement;
+		bool         generate_graphical_output;
+		unsigned int graphical_output_interval;
+		unsigned int adaptive_refinement_interval;
+		double       stabilization_alpha;
+		double       stabilization_c_R;
+		double       stabilization_beta;
+		unsigned int stokes_velocity_degree;
+		bool         use_locally_conservative_discretization;
 
 	public:
 

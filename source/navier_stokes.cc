@@ -68,9 +68,8 @@ using namespace dealii;
   };
 
   template <int dim>
-  NavierStokes<dim>::NavierStokes (Parameters &parameters_, const RefinementMode refinement_mode)
+  NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
     :
-    parameters (parameters_),
     pcout (std::cout,
            (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
             == 0)),
@@ -318,7 +317,7 @@ using namespace dealii;
   {
     navier_stokes_preconditioner_matrix = 0;
 
-    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -482,7 +481,7 @@ using namespace dealii;
 
     navier_stokes_rhs=0;
 
-    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -792,7 +791,7 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
 
     navier_stokes_fe=SP(fe_builder());
 
-    triangulation->refine_global (parameters.initial_global_refinement);
+    triangulation->refine_global (initial_global_refinement);
     
   }
   
