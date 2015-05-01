@@ -796,7 +796,6 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
 template <int dim>
 void NavierStokes<dim>::run ()
 {
-std::cout << "----" << end_time << "----" << std::endl;
 
    const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
     for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
