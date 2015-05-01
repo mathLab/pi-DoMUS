@@ -6,7 +6,7 @@ using namespace dealii;
 
   template <int dim>
   void
-  NavierStokes<dim>::Parameters::
+  NavierStokes<dim>::
   declare_parameters (ParameterHandler &prm)
   {
     add_parameter(  prm, 
@@ -699,7 +699,7 @@ using namespace dealii;
                                  navier_stokes_solution.block(1).minimal_value());
 
     DataOut<dim> data_out;
-data_out.attach_dof_handler (*navier_stokes_dof_handler);
+    data_out.attach_dof_handler (*navier_stokes_dof_handler);
     data_out.add_data_vector (navier_stokes_solution, postprocessor);
     // data_out.build_patches ();
 

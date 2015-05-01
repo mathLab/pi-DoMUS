@@ -91,7 +91,9 @@ class NavierStokes : public ParameterAcceptor
 
 		NavierStokes (const RefinementMode refinement_mode);
     //    ~NavierStokes ();
-
+		
+		virtual void declare_parameters(ParameterHandler &prm);
+		
 		void run ();
 
 	private:
@@ -106,10 +108,6 @@ class NavierStokes : public ParameterAcceptor
 		void refine_mesh ();
 		void process_solution ();
 
-	public:
-		virtual void declare_parameters(ParameterHandler &prm);
-		
-	private:
 		double       end_time;
 		unsigned int initial_global_refinement;
 		//unsigned int initial_global_refinement;
@@ -123,38 +121,7 @@ class NavierStokes : public ParameterAcceptor
 		unsigned int stokes_velocity_degree;
 		bool         use_locally_conservative_discretization;
 
-	public:
-
-		struct Parameters
-		{
-			Parameters (const std::string &parameter_filename);
-
-			static void declare_parameters (ParameterHandler &prm);
-			void parse_parameters (ParameterHandler &prm);
-
-			double       end_time;
-
-			unsigned int initial_global_refinement;
-         //unsigned int initial_global_refinement;
-			unsigned int initial_adaptive_refinement;
-
-			bool         generate_graphical_output;
-			unsigned int graphical_output_interval;
-
-			unsigned int adaptive_refinement_interval;
-
-			double       stabilization_alpha;
-			double       stabilization_c_R;
-			double       stabilization_beta;
-
-			unsigned int navier_stokes_velocity_degree;
-			bool         use_locally_conservative_discretization;
-
-		};
-
 	private:
-		Parameters                               &parameters;
-
 		ConditionalOStream                        pcout;
 
 		shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
