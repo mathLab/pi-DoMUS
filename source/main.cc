@@ -1,4 +1,4 @@
-#include "boussinesq_flow_problem.h"
+#include "navier_stokes.h"
 
 int main (int argc, char *argv[])
 {
@@ -18,12 +18,12 @@ int main (int argc, char *argv[])
       if (argc>=2)
         parameter_filename = argv[1];
       else
-        parameter_filename = "stokes.prm";
+        parameter_filename = "navier_stokes.prm";
 
 
       const int dim = 2;
-      BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
-      BoussinesqFlowProblem<dim> flow_problem (parameters, BoussinesqFlowProblem<dim>::global_refinement);
+      NavierStokes<dim>::Parameters  parameters(parameter_filename);
+      NavierStokes<dim> flow_problem (parameters, NavierStokes<dim>::global_refinement);
       //ParameterAcceptor::initialize("params.prm");
 
       ParameterAcceptor::initialize("params.prm");

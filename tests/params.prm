@@ -39,3 +39,4 @@ subsection Right-hand side force
   set Function constants  = k=1
   set Function expression = 2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
 end
+

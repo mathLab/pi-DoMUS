@@ -15,7 +15,7 @@
 # Set the name of the project and target
 # If your application follows the structure above, you don't need to 
 # specify anything else. 
-SET(TARGET stokes)
+SET(TARGET navier_stokes)
 SET(_main source/main.cc)
 
 # Set the _main variable to empty if you don't want an executable
