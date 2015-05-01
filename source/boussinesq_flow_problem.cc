@@ -844,7 +844,7 @@ using namespace dealii;
   }
   
   template <int dim>
-  void BoussinesqFlowProblem<dim>::process_solution (const unsigned int cycle)
+  void BoussinesqFlowProblem<dim>::process_solution ()
   {
     eh.error_from_exact(*stokes_dof_handler, stokes_solution, Solution<dim>(), refinement_mode);
   }
@@ -867,7 +867,7 @@ void BoussinesqFlowProblem<dim>::run ()
       assemble_stokes_system ();
       build_stokes_preconditioner ();
       solve ();
-      process_solution (cycle);
+      process_solution ();
       output_results ();
     }
     

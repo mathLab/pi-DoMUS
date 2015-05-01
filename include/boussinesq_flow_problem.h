@@ -104,7 +104,7 @@ class BoussinesqFlowProblem
 		void output_results ();
 		//void refine_mesh (const unsigned int max_grid_level);
 		void refine_mesh ();
-		void process_solution (const unsigned int cycle);
+		void process_solution ();
 
 	public:
 
