@@ -757,7 +757,7 @@ using namespace dealii;
     DataOut<dim> data_out;
     data_out.attach_dof_handler (*stokes_dof_handler);
     data_out.add_data_vector (stokes_solution, postprocessor);
-    data_out.build_patches ();
+    // data_out.build_patches ();
 
     static int out_index=0;
     const std::string filename = ("solution-" +
