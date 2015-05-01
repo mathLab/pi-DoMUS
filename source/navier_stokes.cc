@@ -298,9 +298,9 @@ using namespace dealii;
   NavierStokes<dim>::
   copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data)
   {
-    navier_stokes_constraints.distribute_local_to_global (data.local_matrix,
-                                                   data.local_dof_indices,
-                                                   navier_stokes_preconditioner_matrix);
+    navier_stokes_constraints.distribute_local_to_global (  data.local_matrix,
+                                                            data.local_dof_indices,
+                                                            navier_stokes_preconditioner_matrix);
   }
 
   template <int dim>
