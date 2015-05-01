@@ -45,7 +45,6 @@ using namespace dealii;
                     "50",
                     Patterns::Integer (1));
 
-    // prm.enter_subsection ("Discretization");
     add_parameter(  prm,
                     &stokes_velocity_degree,
                     "Stokes velocity polynomial degree",
@@ -57,14 +56,6 @@ using namespace dealii;
                     "Use locally conservative discretization",
                     "true",
                     Patterns::Bool ());
-    
-    // add_parameter(  prm,
-    //             &k,
-    //             "...",
-    //             "1",
-    //             Patterns::Bool ());
-    // 
-    // fe_builder.declare_parameters(&k);
   };
 
   template <int dim>
@@ -114,7 +105,8 @@ using namespace dealii;
     smart_delete(navier_stokes_dof_handler);
     smart_delete(navier_stokes_fe);
     smart_delete(triangulation);
-  }*/
+  }
+  */
 
 
   template <int dim>
@@ -825,7 +817,7 @@ std::cout << "----" << end_time << "----" << std::endl;
     }
     
     // std::ofstream f("errors.txt");
-    eh.output_table(std::cout, refinement_mode);
+    eh.output_table(pcout, refinement_mode);
     // f.close();
 }
 
