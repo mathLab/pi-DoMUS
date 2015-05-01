@@ -56,7 +56,7 @@ using namespace dealii;
                     "Use locally conservative discretization",
                     "true",
                     Patterns::Bool ());
-  };
+  }
 
   template <int dim>
   NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)

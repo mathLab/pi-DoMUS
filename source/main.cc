@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 
 
-      ParameterAcceptor::initialize("params.prm");
+      // ParameterAcceptor::initialize("params.prm");
       //ParameterAcceptor::clear();
       ParameterAcceptor::prm.log_parameters(deallog);
 
