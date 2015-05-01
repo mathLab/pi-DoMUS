@@ -662,10 +662,6 @@ using namespace dealii;
     virtual
     void
     compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-                                       const std::vector<std::vector<Tensor<1,dim> > > &duh,
-                                       const std::vector<std::vector<Tensor<2,dim> > > &dduh,
-                                       const std::vector<Point<dim> >                  &normals,
-                                       const std::vector<Point<dim> >                  &evaluation_points,
                                        std::vector<Vector<double> >                    &computed_quantities) const;
 
     virtual std::vector<std::string> get_names () const;
@@ -731,14 +727,9 @@ using namespace dealii;
   void
   BoussinesqFlowProblem<dim>::Postprocessor::
   compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-                                     const std::vector<std::vector<Tensor<1,dim> > > &duh,
-                                     const std::vector<std::vector<Tensor<2,dim> > > &dduh,
-                                     const std::vector<Point<dim> >                  &normals,
-                                     const std::vector<Point<dim> >                  &evaluation_points,
                                      std::vector<Vector<double> >                    &computed_quantities) const
   {
     const unsigned int n_quadrature_points = uh.size();
-    Assert (duh.size() == n_quadrature_points,                  ExcInternalError());
     Assert (computed_quantities.size() == n_quadrature_points,  ExcInternalError());
     Assert (uh[0].size() == dim+1,                              ExcInternalError());
 
@@ -750,8 +741,6 @@ using namespace dealii;
 
         const double pressure = (uh[q](dim)-minimal_pressure);
         computed_quantities[q](dim) = pressure;
-
-
         computed_quantities[q](dim+1) = partition;
       }
   }
