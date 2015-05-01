@@ -27,6 +27,7 @@ int main (int argc, char *argv[])
       NavierStokes<dim> flow_problem (parameters, NavierStokes<dim>::global_refinement);
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 
+
       ParameterAcceptor::initialize("params.prm");
       //ParameterAcceptor::clear();
       ParameterAcceptor::prm.log_parameters(deallog);
