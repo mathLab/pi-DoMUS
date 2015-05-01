@@ -196,4 +196,29 @@ class NavierStokes : public ParameterAcceptor
 		ParsedDataOut<dim, dim+1> data_out;
 };
 
+template <int dim>
+class NavierStokes<dim>::Postprocessor : public DataPostprocessor<dim>
+{
+public:
+	Postprocessor (const unsigned int partition,
+								const double       minimal_pressure);
+
+	virtual
+	void
+	compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
+																		std::vector<Vector<double> >                    &computed_quantities) const;
+
+	virtual std::vector<std::string> get_names () const;
+
+	virtual
+	std::vector<DataComponentInterpretation::DataComponentInterpretation>
+	get_data_component_interpretation () const;
+
+	virtual UpdateFlags get_needed_update_flags () const;
+
+private:
+	const unsigned int partition;
+	const double       minimal_pressure;
+};
+
 #endif

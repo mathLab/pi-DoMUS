@@ -1,4 +1,3 @@
-#include "solution.h"
 #include "navier_stokes.h"
 
 
@@ -593,102 +592,6 @@ using namespace dealii;
       pcout << n_iterations  << " iterations."
             << std::endl;
   }
-
-
-
-  template <int dim>
-  class NavierStokes<dim>::Postprocessor : public DataPostprocessor<dim>
-  {
-  public:
-    Postprocessor (const unsigned int partition,
-                   const double       minimal_pressure);
-
-    virtual
-    void
-    compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-                                       std::vector<Vector<double> >                    &computed_quantities) const;
-
-    virtual std::vector<std::string> get_names () const;
-
-    virtual
-    std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    get_data_component_interpretation () const;
-
-    virtual UpdateFlags get_needed_update_flags () const;
-
-  private:
-    const unsigned int partition;
-    const double       minimal_pressure;
-  };
-
-
-  template <int dim>
-  NavierStokes<dim>::Postprocessor::
-  Postprocessor (const unsigned int partition,
-                 const double       minimal_pressure)
-    :
-    partition (partition),
-    minimal_pressure (minimal_pressure)
-  {}
-
-
-  template <int dim>
-  std::vector<std::string>
-  NavierStokes<dim>::Postprocessor::get_names() const
-  {
-    std::vector<std::string> solution_names (dim, "velocity");
-      solution_names.push_back ("p");
-      solution_names.push_back ("partition");
-      
-    return solution_names;
-  }
-
-
-  template <int dim>
-  std::vector<DataComponentInterpretation::DataComponentInterpretation>
-  NavierStokes<dim>::Postprocessor::
-  get_data_component_interpretation () const
-  {
-    std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    interpretation (dim,
-                    DataComponentInterpretation::component_is_part_of_vector);
-    interpretation.push_back (DataComponentInterpretation::component_is_scalar);
-    interpretation.push_back (DataComponentInterpretation::component_is_scalar);
-
-    return interpretation;
-  }
-
-
-  template <int dim>
-  UpdateFlags
-  NavierStokes<dim>::Postprocessor::get_needed_update_flags() const
-  {
-    return update_values | update_gradients | update_q_points;
-  }
-
-
-  template <int dim>
-  void
-  NavierStokes<dim>::Postprocessor::
-  compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-                                     std::vector<Vector<double> >                    &computed_quantities) const
-  {
-    const unsigned int n_quadrature_points = uh.size();
-    Assert (computed_quantities.size() == n_quadrature_points,  ExcInternalError());
-    Assert (uh[0].size() == dim+1,                              ExcInternalError());
-
-    for (unsigned int q=0; q<n_quadrature_points; ++q)
-      {
-        for (unsigned int d=0; d<dim; ++d)
-          computed_quantities[q](d)
-            = (uh[q](d));
-
-        const double pressure = (uh[q](dim)-minimal_pressure);
-        computed_quantities[q](dim) = pressure;
-        computed_quantities[q](dim+1) = partition;
-      }
-  }
-
 
   template <int dim>
   void NavierStokes<dim>::output_results ()
