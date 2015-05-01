@@ -73,12 +73,13 @@
 #include "error_handler.h"
 #include "utilities.h"
 #include "parsed_function.h"
-
+#include "parsed_data_out.h"
+#include "parameter_acceptor.h"
 
 using namespace dealii;
 
 template <int dim>
-class NavierStokes
+class NavierStokes : public ParameterAcceptor
 {
 	public:
 
@@ -88,11 +89,11 @@ class NavierStokes
 			adaptive_refinement=1
 		};
 
-		struct Parameters;
-
-		NavierStokes (Parameters &parameters, const RefinementMode refinement_mode);
+		NavierStokes (const RefinementMode refinement_mode);
     //    ~NavierStokes ();
-
+		
+		virtual void declare_parameters(ParameterHandler &prm);
+		
 		void run ();
 
 	private:
@@ -107,41 +108,23 @@ class NavierStokes
 		void refine_mesh ();
 		void process_solution ();
 
-	public:
-
-		struct Parameters
-		{
-			Parameters (const std::string &parameter_filename);
-
-			static void declare_parameters (ParameterHandler &prm);
-			void parse_parameters (ParameterHandler &prm);
-
-			double       end_time;
-
-			unsigned int initial_global_refinement;
-         //unsigned int initial_global_refinement;
-			unsigned int initial_adaptive_refinement;
-
-			bool         generate_graphical_output;
-			unsigned int graphical_output_interval;
-
-			unsigned int adaptive_refinement_interval;
-
-			double       stabilization_alpha;
-			double       stabilization_c_R;
-			double       stabilization_beta;
-
-			unsigned int navier_stokes_velocity_degree;
-			bool         use_locally_conservative_discretization;
-
-		};
+		double       end_time;
+		unsigned int initial_global_refinement;
+		//unsigned int initial_global_refinement;
+		unsigned int initial_adaptive_refinement;
+		bool         generate_graphical_output;
+		unsigned int graphical_output_interval;
+		unsigned int adaptive_refinement_interval;
+		double       stabilization_alpha;
+		double       stabilization_c_R;
+		double       stabilization_beta;
+		unsigned int stokes_velocity_degree;
+		bool         use_locally_conservative_discretization;
 
 	private:
-		Parameters                               &parameters;
-
 		ConditionalOStream                        pcout;
 
-      shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
+		shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
 
 		double                                    global_Omega_diameter;
 
@@ -209,6 +192,8 @@ class NavierStokes
 		ParsedFunction<dim, dim+1>              boundary_conditions;
 
 		ParsedFunction<dim, dim+1>              right_hand_side;
+
+		ParsedDataOut<dim, dim+1> data_out;
 };
 
 #endif

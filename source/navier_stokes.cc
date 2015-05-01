@@ -5,126 +5,62 @@
 using namespace dealii;
 
   template <int dim>
-  NavierStokes<dim>::Parameters::Parameters (const std::string &parameter_filename)
-    :
-    end_time (1e8),
-    initial_global_refinement (2),
-    //step_global_refinement (1),
-    initial_adaptive_refinement (2),
-    adaptive_refinement_interval (10),
-    navier_stokes_velocity_degree (2),
-    use_locally_conservative_discretization (true)
-  {
-    ParameterHandler prm;
-    NavierStokes<dim>::Parameters::declare_parameters (prm);
-
-    std::ifstream parameter_file (parameter_filename.c_str());
-
-    if (!parameter_file)
-      {
-        parameter_file.close ();
-
-        std::ostringstream message;
-        message << "Input parameter file <"
-                << parameter_filename << "> not found. Creating a"
-                << std::endl
-                << "template file of the same name."
-                << std::endl;
-
-        std::ofstream parameter_out (parameter_filename.c_str());
-        prm.print_parameters (parameter_out,
-                              ParameterHandler::Text);
-
-        AssertThrow (false, ExcMessage (message.str().c_str()));
-      }
-
-    const bool success = prm.read_input (parameter_file);
-    AssertThrow (success, ExcMessage ("Invalid input parameter file."));
-
-    parse_parameters (prm);
-  }
-
-
-  template <int dim>
   void
-  NavierStokes<dim>::Parameters::
+  NavierStokes<dim>::
   declare_parameters (ParameterHandler &prm)
   {
-    prm.declare_entry ("End time", "1e8",
-                       Patterns::Double (0),
-                       "The end time of the simulation in seconds.");
-    prm.declare_entry ("Initial global refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of global refinement steps performed on "
-                       "the initial coarse mesh, before the problem is first "
-                       "solved there.");
-    /*prm.declare_entry ("Step global refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of global refinement steps performed on "
-                       "the initial coarse mesh, before the problem is first "
-                       "solved there.");*/
-    prm.declare_entry ("Initial adaptive refinement", "2",
-                       Patterns::Integer (0),
-                       "The number of adaptive refinement steps performed after "
-                       "initial global refinement.");
-    prm.declare_entry ("Time steps between mesh refinement", "10",
-                       Patterns::Integer (1),
-                       "The number of time steps after which the mesh is to be "
-                       "adapted based on computed error indicators.");
-    prm.declare_entry ("Generate graphical output", "false",
-                       Patterns::Bool (),
-                       "Whether graphical output is to be generated or not. "
-                       "You may not want to get graphical output if the number "
-                       "of processors is large.");
-    prm.declare_entry ("Time steps between graphical output", "50",
-                       Patterns::Integer (1),
-                       "The number of time steps between each generation of "
-                       "graphical output files.");
+    add_parameter(  prm, 
+                    &end_time,
+                    "End time", 
+                    "1e8",
+                    Patterns::Double (0));
 
-    prm.enter_subsection ("Discretization");
-    {
-      prm.declare_entry ("Navier Stokes velocity polynomial degree", "2",
-                         Patterns::Integer (1),
-                         "The polynomial degree to use for the velocity variables "
-                         "in the Navier Stokes system.");
-      prm.declare_entry ("Use locally conservative discretization", "true",
-                         Patterns::Bool (),
-                         "Whether to use a Navier Stokes discretization that is locally "
-                         "conservative at the expense of a larger number of degrees "
-                         "of freedom, or to go with a cheaper discretization "
-                         "that does not locally conserve mass (although it is "
-                         "globally conservative.");
-    }
-    prm.leave_subsection ();
+    add_parameter(  prm, 
+                    &initial_global_refinement,
+                    "Initial global refinement", 
+                    "1",
+                    Patterns::Integer (0));
+
+    add_parameter(  prm,
+                    &initial_adaptive_refinement,
+                    "Initial adaptive refinement",
+                    "2",
+                    Patterns::Integer (0));
+                    
+    add_parameter(  prm,
+                    &adaptive_refinement_interval,
+                    "Time steps between mesh refinement",
+                    "10",
+                    Patterns::Integer (1));
+                    
+    add_parameter(  prm,
+                    &generate_graphical_output,
+                    "Generate graphical output",
+                    "false",
+                    Patterns::Bool ());
+                    
+    add_parameter(  prm,
+                    &graphical_output_interval,
+                    "Time steps between graphical output",
+                    "50",
+                    Patterns::Integer (1));
+
+    add_parameter(  prm,
+                    &stokes_velocity_degree,
+                    "Stokes velocity polynomial degree",
+                    "2",
+                    Patterns::Integer (1));
+
+    add_parameter(  prm,
+                    &use_locally_conservative_discretization,
+                    "Use locally conservative discretization",
+                    "true",
+                    Patterns::Bool ());
   }
 
   template <int dim>
-  void
-  NavierStokes<dim>::Parameters::
-  parse_parameters (ParameterHandler &prm)
-  {
-    end_time                    = prm.get_double ("End time");
-    initial_global_refinement   = prm.get_integer ("Initial global refinement");
-    initial_adaptive_refinement = prm.get_integer ("Initial adaptive refinement");
-
-    adaptive_refinement_interval= prm.get_integer ("Time steps between mesh refinement");
-
-    generate_graphical_output   = prm.get_bool ("Generate graphical output");
-    graphical_output_interval   = prm.get_integer ("Time steps between graphical output");
-
-    prm.enter_subsection ("Discretization");
-    {
-      navier_stokes_velocity_degree = prm.get_integer ("Navier Stokes velocity polynomial degree");
-      use_locally_conservative_discretization
-        = prm.get_bool ("Use locally conservative discretization");
-    }
-    prm.leave_subsection ();
-  }
-
-  template <int dim>
-  NavierStokes<dim>::NavierStokes (Parameters &parameters_, const RefinementMode refinement_mode)
+  NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
     :
-    parameters (parameters_),
     pcout (std::cout,
            (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
             == 0)),
@@ -146,11 +82,18 @@ using namespace dealii;
 
     pgg("Cube"),
 
-    fe_builder("FE_Q"),
 
-    boundary_conditions("Dirichlet boundary conditions"),
+    fe_builder(           "FE_Q", 
+                          "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
+
+    boundary_conditions(  "Dirichlet boundary conditions", 
+                          "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0", 
+                          "k=1"),
     
-    right_hand_side("Right-hand side force")
+    right_hand_side(      "Right-hand side force",
+                          "2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0", 
+                          "k=1" )
+
   {}
 
 
@@ -162,7 +105,8 @@ using namespace dealii;
     smart_delete(navier_stokes_dof_handler);
     smart_delete(navier_stokes_fe);
     smart_delete(triangulation);
-  }*/
+  }
+  */
 
 
   template <int dim>
@@ -354,9 +298,9 @@ using namespace dealii;
   NavierStokes<dim>::
   copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data)
   {
-    navier_stokes_constraints.distribute_local_to_global (data.local_matrix,
-                                                   data.local_dof_indices,
-                                                   navier_stokes_preconditioner_matrix);
+    navier_stokes_constraints.distribute_local_to_global (  data.local_matrix,
+                                                            data.local_dof_indices,
+                                                            navier_stokes_preconditioner_matrix);
   }
 
   template <int dim>
@@ -365,7 +309,7 @@ using namespace dealii;
   {
     navier_stokes_preconditioner_matrix = 0;
 
-    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -529,7 +473,7 @@ using namespace dealii;
 
     navier_stokes_rhs=0;
 
-    const QGauss<dim> quadrature_formula(parameters.navier_stokes_velocity_degree+1);
+    const QGauss<dim> quadrature_formula(stokes_velocity_degree+1);
 
     typedef
     FilteredIterator<typename DoFHandler<dim>::active_cell_iterator>
@@ -755,7 +699,7 @@ using namespace dealii;
                                  navier_stokes_solution.block(1).minimal_value());
 
     DataOut<dim> data_out;
-data_out.attach_dof_handler (*navier_stokes_dof_handler);
+    data_out.attach_dof_handler (*navier_stokes_dof_handler);
     data_out.add_data_vector (navier_stokes_solution, postprocessor);
     // data_out.build_patches ();
 
@@ -839,7 +783,7 @@ data_out.attach_dof_handler (*navier_stokes_dof_handler);
 
     navier_stokes_fe=SP(fe_builder());
 
-    triangulation->refine_global (parameters.initial_global_refinement);
+    triangulation->refine_global (initial_global_refinement);
     
   }
   
