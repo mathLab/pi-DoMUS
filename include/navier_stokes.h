@@ -139,7 +139,7 @@ class NavierStokes
 
 		ConditionalOStream                        pcout;
 
-      shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
+		shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
 
 		double                                    global_Omega_diameter;
 
