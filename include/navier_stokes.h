@@ -206,7 +206,11 @@ public:
 	virtual
 	void
 	compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-																		std::vector<Vector<double> >                    &computed_quantities) const;
+					   const std::vector<std::vector<Tensor<1,dim> > > &duh,
+					   const std::vector<std::vector<Tensor<2,dim> > > &/*dduh*/,
+					   const std::vector<Point<dim> >                  &/*normals*/,
+					   const std::vector<Point<dim> >                  &/*evaluation_points*/,
+					   std::vector<Vector<double> >                    &computed_quantities) const;
 
 	virtual std::vector<std::string> get_names () const;
 
