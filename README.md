@@ -38,3 +38,14 @@ Once you have updated your local repo, you have to upload your changes on the re
 to load **deal.ii** and **deal.ii SAK** :
 
 	. /home/mathlab/gnu.conf /home/mathlab/gnu/
+
+## Indentation:
+
+when you have made modifications to the code, make sure you run
+
+```
+	./script/indent
+```
+before committing, so that the indentation of the source code is consistent for all developers, and you don't commit space changes...
+
+For this to work, you have to install astyle 2.04 (**exactly this version**). 
