@@ -719,7 +719,7 @@ void NavierStokes<dim>::run ()
     }
     
     // std::ofstream f("errors.txt");
-    eh.output_table(std::cout, refinement_mode);
+    eh.output_table(pcout, refinement_mode);
     // f.close();
 }
 
