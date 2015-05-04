@@ -57,11 +57,13 @@ SET(Release_postfix "")
 SET(Debug_postfix ".g")
 
 FOREACH(_build_type ${_d2_build_types})
+    # Postfix to use everywhere
+    SET(_p "${${_build_type}_postfix}")
     # Only build this type, if deal.II was compiled with it.
     IF(DEAL_II_BUILD_TYPE MATCHES "${_build_type}")
 	MESSAGE("-- Found ${_build_type} version of deal.II.")
 
-	SET(_lib "${TARGET}-lib${${_build_type}_postfix}")
+	SET(_lib "${TARGET}-lib${_p}")
 	MESSAGE("-- Configuring library ${_lib}")
 
 	STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
@@ -72,12 +74,12 @@ FOREACH(_build_type ${_d2_build_types})
 	# Look for dealii-sak. If not found, ignore it. 
 	SET(_sak dealii-sak${${_build_type}_postfix})
 	MESSAGE("-- Looking for ${_sak} in ${DEAL_II_SAK}")
-	FIND_LIBRARY(SAK ${_sak} HINTS ${DEAL_II_SAK} PATH_SUFFIXES lib)
-	IF(NOT "${SAK}" STREQUAL "SAK-NOTFOUND")
-	    TARGET_LINK_LIBRARIES(${_lib} ${SAK})
-	    MESSAGE("-- Library ${_sak} found: ${SAK}")
+	FIND_LIBRARY(SAK${_p} ${_sak} HINTS ${DEAL_II_SAK} PATH_SUFFIXES lib)
+	IF(NOT "${SAK${_p}}" STREQUAL "SAK${_p}-NOTFOUND")
+	    TARGET_LINK_LIBRARIES(${_lib} ${SAK${_p}})
+	    MESSAGE("-- Library ${_sak} found: ${SAK${_p}}")
 	ELSE()
-	    MESSAGE(WARNING "-- Library dealii-sak not found: ${SAK}")
+	    MESSAGE(WARNING "-- Library dealii-sak not found: ${SAK${_p}}")
 	ENDIF()
     
 	# Compile an executable only if required by the user
