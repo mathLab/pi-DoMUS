@@ -45,7 +45,6 @@ subsection NavierStokes<2>
   set Generate graphical output               = false
   set Initial adaptive refinement             = 2
   set Initial global refinement               = 1
-  set Stokes velocity polynomial degree       = 2
   set Time steps between graphical output     = 50
   set Time steps between mesh refinement      = 10
   set Use locally conservative discretization = true

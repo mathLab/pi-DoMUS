@@ -45,12 +45,6 @@ using namespace dealii;
                     Patterns::Integer (1));
 
     add_parameter(  prm,
-                    &stokes_velocity_degree,
-                    "Stokes velocity polynomial degree",
-                    "2",
-                    Patterns::Integer (1));
-
-    add_parameter(  prm,
                     &use_locally_conservative_discretization,
                     "Use locally conservative discretization",
                     "true",
@@ -678,14 +672,16 @@ using namespace dealii;
     triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
     navier_stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
 
-    //triangulation = pgg.distributed(MPI_COMM_WORLD);
 
     global_Omega_diameter = GridTools::diameter (*triangulation);
 
-    // navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
-
     navier_stokes_fe=SP(fe_builder());
 
+    // Compute the velocity degree using the prm file:
+    // the first component is the velocity and therfore
+    // it is taken.
+    stokes_velocity_degree = navier_stokes_fe->degree;
+    
     triangulation->refine_global (initial_global_refinement);
     
   }
