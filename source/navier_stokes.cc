@@ -82,7 +82,7 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
   refinement_mode (refinement_mode),
 
-  eh(" ", "u, u, p","L2, Linfty, H1; AddUp; L2"),
+  eh("ErrorHandler<1>", "u, u, p","L2, Linfty, H1; AddUp; L2"),
 
   pgg("Cube"),
 
