@@ -23,7 +23,7 @@ int main (int argc, char *argv[])
 
       const int dim = 2;
       // BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
-      
+
       NavierStokes<dim> flow_problem (NavierStokes<dim>::global_refinement);
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 

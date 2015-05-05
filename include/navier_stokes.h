@@ -81,148 +81,148 @@ using namespace dealii;
 template <int dim>
 class NavierStokes : public ParameterAcceptor
 {
-	public:
+public:
 
-		enum RefinementMode
-		{
-			global_refinement=0, 
-			adaptive_refinement=1
-		};
+  enum RefinementMode
+  {
+    global_refinement=0,
+    adaptive_refinement=1
+  };
 
-		NavierStokes (const RefinementMode refinement_mode);
-    //    ~NavierStokes ();
-		
-		virtual void declare_parameters(ParameterHandler &prm);
-		
-		void run ();
+  NavierStokes (const RefinementMode refinement_mode);
+  //    ~NavierStokes ();
 
-	private:
-		void make_grid_fe();
-		void setup_dofs ();
-		void assemble_navier_stokes_preconditioner ();
-		void build_navier_stokes_preconditioner ();
-		void assemble_navier_stokes_system ();
-		void solve ();
-		void output_results ();
-		//void refine_mesh (const unsigned int max_grid_level);
-		void refine_mesh ();
-		void process_solution ();
+  virtual void declare_parameters(ParameterHandler &prm);
 
-		double       end_time;
-		unsigned int initial_global_refinement;
-		//unsigned int initial_global_refinement;
-		unsigned int initial_adaptive_refinement;
-		bool         generate_graphical_output;
-		unsigned int graphical_output_interval;
-		unsigned int adaptive_refinement_interval;
-		double       stabilization_alpha;
-		double       stabilization_c_R;
-		double       stabilization_beta;
-		unsigned int stokes_velocity_degree;
-		bool         use_locally_conservative_discretization;
+  void run ();
 
-	private:
-		ConditionalOStream                        pcout;
+private:
+  void make_grid_fe();
+  void setup_dofs ();
+  void assemble_navier_stokes_preconditioner ();
+  void build_navier_stokes_preconditioner ();
+  void assemble_navier_stokes_system ();
+  void solve ();
+  void output_results ();
+  //void refine_mesh (const unsigned int max_grid_level);
+  void refine_mesh ();
+  void process_solution ();
 
-		shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
+  double       end_time;
+  unsigned int initial_global_refinement;
+  //unsigned int initial_global_refinement;
+  unsigned int initial_adaptive_refinement;
+  bool         generate_graphical_output;
+  unsigned int graphical_output_interval;
+  unsigned int adaptive_refinement_interval;
+  double       stabilization_alpha;
+  double       stabilization_c_R;
+  double       stabilization_beta;
+  unsigned int stokes_velocity_degree;
+  bool         use_locally_conservative_discretization;
 
-		double                                    global_Omega_diameter;
+private:
+  ConditionalOStream                        pcout;
 
-		const MappingQ<dim>                       mapping;
+  shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
 
-		shared_ptr<FiniteElement<dim,dim> >       navier_stokes_fe;
+  double                                    global_Omega_diameter;
 
-		shared_ptr<DoFHandler<dim> >           	  navier_stokes_dof_handler;
+  const MappingQ<dim>                       mapping;
 
-		ConstraintMatrix                          navier_stokes_constraints;
+  shared_ptr<FiniteElement<dim,dim> >       navier_stokes_fe;
 
-		TrilinosWrappers::BlockSparseMatrix       navier_stokes_matrix;
-		TrilinosWrappers::BlockSparseMatrix       navier_stokes_preconditioner_matrix;
+  shared_ptr<DoFHandler<dim> >              navier_stokes_dof_handler;
 
-		TrilinosWrappers::MPI::BlockVector        navier_stokes_solution;
-		TrilinosWrappers::MPI::BlockVector        old_navier_stokes_solution;
-		TrilinosWrappers::MPI::BlockVector        navier_stokes_rhs;
+  ConstraintMatrix                          navier_stokes_constraints;
 
-		double                                    time_step;
-		double                                    old_time_step;
-		unsigned int                              timestep_number;
+  TrilinosWrappers::BlockSparseMatrix       navier_stokes_matrix;
+  TrilinosWrappers::BlockSparseMatrix       navier_stokes_preconditioner_matrix;
 
-		std_cxx11::shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
-		std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
-		std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
+  TrilinosWrappers::MPI::BlockVector        navier_stokes_solution;
+  TrilinosWrappers::MPI::BlockVector        old_navier_stokes_solution;
+  TrilinosWrappers::MPI::BlockVector        navier_stokes_rhs;
 
-		bool                                      rebuild_navier_stokes_matrix;
-		bool                                      rebuild_navier_stokes_preconditioner;
+  double                                    time_step;
+  double                                    old_time_step;
+  unsigned int                              timestep_number;
 
-		TimerOutput                               computing_timer;
+  std_cxx11::shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
+  std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
+  std_cxx11::shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
 
-		void setup_navier_stokes_matrix (	const std::vector<IndexSet> &navier_stokes_partitioning,
-											const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
-		void setup_navier_stokes_preconditioner (	const std::vector<IndexSet> &navier_stokes_partitioning,
-													const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
+  bool                                      rebuild_navier_stokes_matrix;
+  bool                                      rebuild_navier_stokes_preconditioner;
 
+  TimerOutput                               computing_timer;
 
-		void
-		local_assemble_navier_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
-												Assembly::Scratch::NavierStokesPreconditioner<dim> &scratch,
-												Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
-
-		void
-		copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
+  void setup_navier_stokes_matrix ( const std::vector<IndexSet> &navier_stokes_partitioning,
+                                    const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
+  void setup_navier_stokes_preconditioner ( const std::vector<IndexSet> &navier_stokes_partitioning,
+                                            const std::vector<IndexSet> &navier_stokes_relevant_partitioning);
 
 
-		void
-		local_assemble_navier_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
-										Assembly::Scratch::NavierStokesSystem<dim>  &scratch,
-										Assembly::CopyData::NavierStokesSystem<dim> &data);
+  void
+  local_assemble_navier_stokes_preconditioner (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                               Assembly::Scratch::NavierStokesPreconditioner<dim> &scratch,
+                                               Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
 
-		void
-		copy_local_to_global_navier_stokes_system (const Assembly::CopyData::NavierStokesSystem<dim> &data);
+  void
+  copy_local_to_global_navier_stokes_preconditioner (const Assembly::CopyData::NavierStokesPreconditioner<dim> &data);
 
-		class Postprocessor;
 
-		const RefinementMode                    refinement_mode;
+  void
+  local_assemble_navier_stokes_system (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                       Assembly::Scratch::NavierStokesSystem<dim>  &scratch,
+                                       Assembly::CopyData::NavierStokesSystem<dim> &data);
 
-		ErrorHandler<1>                         eh;
+  void
+  copy_local_to_global_navier_stokes_system (const Assembly::CopyData::NavierStokesSystem<dim> &data);
 
-		ParsedGridGenerator<dim,dim>            pgg;
+  class Postprocessor;
 
-		ParsedFiniteElement<dim,dim>            fe_builder;
+  const RefinementMode                    refinement_mode;
 
-		ParsedFunction<dim, dim+1>              boundary_conditions;
+  ErrorHandler<1>                         eh;
 
-		ParsedFunction<dim, dim+1>              right_hand_side;
+  ParsedGridGenerator<dim,dim>            pgg;
 
-		ParsedDataOut<dim, dim+1> data_out;
+  ParsedFiniteElement<dim,dim>            fe_builder;
+
+  ParsedFunction<dim, dim+1>              boundary_conditions;
+
+  ParsedFunction<dim, dim+1>              right_hand_side;
+
+  ParsedDataOut<dim, dim+1> data_out;
 };
 
 template <int dim>
 class NavierStokes<dim>::Postprocessor : public DataPostprocessor<dim>
 {
 public:
-	Postprocessor (const unsigned int partition,
-								const double       minimal_pressure);
+  Postprocessor (const unsigned int partition,
+                 const double       minimal_pressure);
 
-	virtual
-	void
-	compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-					   const std::vector<std::vector<Tensor<1,dim> > > &duh,
-					   const std::vector<std::vector<Tensor<2,dim> > > &/*dduh*/,
-					   const std::vector<Point<dim> >                  &/*normals*/,
-					   const std::vector<Point<dim> >                  &/*evaluation_points*/,
-					   std::vector<Vector<double> >                    &computed_quantities) const;
+  virtual
+  void
+  compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
+                                     const std::vector<std::vector<Tensor<1,dim> > > &duh,
+                                     const std::vector<std::vector<Tensor<2,dim> > > &/*dduh*/,
+                                     const std::vector<Point<dim> >                  &/*normals*/,
+                                     const std::vector<Point<dim> >                  &/*evaluation_points*/,
+                                     std::vector<Vector<double> >                    &computed_quantities) const;
 
-	virtual std::vector<std::string> get_names () const;
+  virtual std::vector<std::string> get_names () const;
 
-	virtual
-	std::vector<DataComponentInterpretation::DataComponentInterpretation>
-	get_data_component_interpretation () const;
+  virtual
+  std::vector<DataComponentInterpretation::DataComponentInterpretation>
+  get_data_component_interpretation () const;
 
-	virtual UpdateFlags get_needed_update_flags () const;
+  virtual UpdateFlags get_needed_update_flags () const;
 
 private:
-	const unsigned int partition;
-	const double       minimal_pressure;
+  const unsigned int partition;
+  const double       minimal_pressure;
 };
 
 #endif
