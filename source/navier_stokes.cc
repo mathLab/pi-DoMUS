@@ -82,8 +82,9 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
   refinement_mode (refinement_mode),
 
-  pgg("Cube"),
+  eh(" ", "u, u, p","L2, Linfty, H1; AddUp; L2"),
 
+  pgg("Cube"),
 
   fe_builder(           "FE_Q",
                         "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
