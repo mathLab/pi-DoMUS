@@ -1,5 +1,4 @@
 #include "navier_stokes.h"
-#include <deal.II/matrix_free/shape_info.h>
 
 using namespace dealii;
 
@@ -49,7 +48,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &stokes_velocity_degree,
                   "Stokes velocity polynomial degree",
-                  "6",
+                  "2",
                   Patterns::Integer (1));
 
   add_parameter(  prm,
@@ -87,7 +86,7 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
 
   fe_builder(           "FE_Q",
-                        "FESystem[FE_Q(6)^dim-FE_Q(1)]"),
+                        "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
 
   boundary_conditions(  "Dirichlet boundary conditions",
                         "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0",
@@ -692,7 +691,12 @@ void NavierStokes<dim>::make_grid_fe()
     triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
     navier_stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
 
+    // navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+
     navier_stokes_fe=SP(fe_builder());
+
+    // std::cout << "navier stokes fe : " << *navier_stokes_fe.get_degree() << std::endl;
+    triangulation->refine_global (initial_global_refinement);
 
     // Compute the velocity degree using the prm file:
     // the first component is the velocity and therfore
