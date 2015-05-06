@@ -689,22 +689,22 @@ template <int dim>
 void NavierStokes<dim>::make_grid_fe()
 {
 
-    triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
-    navier_stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
+  triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
+  navier_stokes_dof_handler = SP(new DoFHandler<dim>(*triangulation));
 
-    // navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
+  // navier_stokes_dof_handler = new DoFHandler<dim>(*triangulation);
 
-    navier_stokes_fe=SP(fe_builder());
+  navier_stokes_fe=SP(fe_builder());
 
-    // std::cout << "navier stokes fe : " << *navier_stokes_fe.get_degree() << std::endl;
-    triangulation->refine_global (initial_global_refinement);
+  // std::cout << "navier stokes fe : " << *navier_stokes_fe.get_degree() << std::endl;
+  triangulation->refine_global (initial_global_refinement);
 
-    // Compute the velocity degree using the prm file:
-    // the first component is the velocity and therfore
-    // it is taken.
-    stokes_velocity_degree = navier_stokes_fe->degree;
-    
-    triangulation->refine_global (initial_global_refinement);
+  // Compute the velocity degree using the prm file:
+  // the first component is the velocity and therfore
+  // it is taken.
+  stokes_velocity_degree = navier_stokes_fe->degree;
+
+  triangulation->refine_global (initial_global_refinement);
 }
 
 /* ------------------------ ERRORS ------------------------ */
@@ -738,10 +738,10 @@ void NavierStokes<dim>::run ()
       process_solution ();
       output_results ();
     }
-    
-    // std::ofstream f("errors.txt");
-    eh.output_table(pcout, refinement_mode);
-    // f.close();
+
+  // std::ofstream f("errors.txt");
+  eh.output_table(pcout, refinement_mode);
+  // f.close();
 }
 
 
