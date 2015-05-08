@@ -1,4 +1,5 @@
 #include "navier_stokes.h"
+#include <deal.II/lac/trilinos_precondition.h>
 
 using namespace dealii;
 
@@ -553,11 +554,39 @@ void NavierStokes<dim>::solve ()
   SolverControl solver_control (100, solver_tolerance);
 
   // BEGIN : linear operator
+  
+    SolverControl solver_control_lo(5000, 1e-6);
+    SolverGMRES<TrilinosWrappers::MPI::Vector> solver_lo(solver_control_lo);
+    
     std::cout << "navier_stokes_matrix -> " << type(navier_stokes_matrix) << std::endl;
     std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
-    auto b00 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
+    
+    auto S00 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
+    auto S01 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,1) );
+    auto S10 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,0) );
+    auto S11 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,1) );
+    
+    std::array<std::array<decltype(S00), 2>, 2> temp{ { S00, S01, S10, S11 } };
+    auto S = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >(temp);
+    
+    auto AMG = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_preconditioner_matrix.block(0,0) );
+    auto Mp  = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_preconditioner_matrix.block(1,1) );
+    
+    std::cout << "*Amg_preconditioner -> " << type(*Amg_preconditioner) << std::endl;
+    
+    TrilinosWrappers::PreconditionIdentity prec;
+    // auto S_inv = inverse_operator<SolverGMRES<TrilinosWrappers::MPI::Vector>, TrilinosWrappers::PreconditionIdentity >(S, solver_lo, TrilinosWrappers::PreconditionIdentity());
+    auto S_inv = inverse_operator<decltype(solver_lo), decltype(prec) >(S, solver_lo, prec);
+    
+    // S_inv.vmult(solution, system_rhs);
+    
+    
+    // std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
+    // auto AMG = linear_operator( *Amg_preconditioner );
+    // auto Mp  = linear_operator< TrilinosWrappers::MPI::Vector >( *Mp_preconditioner );
+    
     // auto boo = linear_operator(navier_stokes_matrix);
-    std::cout << "boo -> " << type(b00) << std::endl;
+    std::cout << "boo -> " << type(S00) << std::endl;
   // END
 
   try
