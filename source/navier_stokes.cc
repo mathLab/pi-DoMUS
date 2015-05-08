@@ -552,6 +552,14 @@ void NavierStokes<dim>::solve ()
   //SolverControl solver_control (30, solver_tolerance);
   SolverControl solver_control (100, solver_tolerance);
 
+  // BEGIN : linear operator
+    std::cout << "navier_stokes_matrix -> " << type(navier_stokes_matrix) << std::endl;
+    std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
+    auto b00 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
+    // auto boo = linear_operator(navier_stokes_matrix);
+    std::cout << "boo -> " << type(b00) << std::endl;
+  // END
+
   try
     {
       const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
