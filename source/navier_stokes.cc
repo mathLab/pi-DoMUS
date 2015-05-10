@@ -589,13 +589,18 @@ void NavierStokes<dim>::solve ()
       (navier_stokes_matrix.block(1,1),  *Mp_preconditioner );
     
     auto prec = identity_operator<TrilinosWrappers::MPI::BlockVector>(S.reinit_range_vector);
-    auto S_inv = inverse_operator(S, solver, prec);
     
     auto P01 = 0 * S01;
     auto P10 = Schur_inv * S10 * A_inv;
     
-    auto P = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ A_inv, P01 }} , {{ P10, Schur_inv}} }});
+    auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ A_inv, P01 }} , {{ P10, Schur_inv}} }});
     // Initialise solution in order to have the same dimension of navier_stokes_fe
+
+    S = P_inv * S;
+
+    auto S_inv = inverse_operator(S, solver, prec);
+    
+
     solution =  navier_stokes_rhs;
 
     std::cout << " Solution size : " << solution.size() << std::endl;
@@ -605,7 +610,7 @@ void NavierStokes<dim>::solve ()
     std::cout << " S 10 sie:      " << navier_stokes_matrix.block(1,0).m() << " x " << navier_stokes_matrix.block(1,0).n() << std::endl;
     std::cout << " S 11 sie:      " << navier_stokes_matrix.block(1,1).m() << " x " << navier_stokes_matrix.block(1,1).n() << std::endl;
 
-    // S_inv.vmult(solution, navier_stokes_rhs);
+    S_inv.vmult(solution, navier_stokes_rhs);
     
     
     // std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
