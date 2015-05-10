@@ -551,30 +551,25 @@ void NavierStokes<dim>::solve ()
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8 * navier_stokes_rhs.l2_norm();
   //SolverControl solver_control (30, solver_tolerance);
-  SolverControl solver_control (100, solver_tolerance);
+  SolverControl solver_control (1000, solver_tolerance); // Original value: 100
 
-  // BEGIN : linear operator
+  // BEGIN : linear operator part
 
   SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
   solver(solver_control, mem,
          SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
          AdditionalData(30, true));
 
-  std::cout << "navier_stokes_matrix -> " << type(navier_stokes_matrix) << std::endl;
-  std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
-
+  // SYSTEM MATRIX:
   auto S00 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
   auto S01 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,1) );
-  auto S10 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,0) );
+  auto S10 =  transpose_operator(S01);
+  // auto S10 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,0) );
   auto S11 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,1) );
 
-  auto S = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ S00, S01 }} , {{ S10, S11}} }});
-
-
-  // Preconditioners
+  // PRECONDITIONER:
   Amg_preconditioner->initialize(navier_stokes_preconditioner_matrix.block(0,0));
   Mp_preconditioner->initialize(navier_stokes_preconditioner_matrix.block(1,1));
-
 
   auto A_inv = linear_operator< TrilinosWrappers::MPI::Vector,
        TrilinosWrappers::MPI::Vector,
@@ -588,41 +583,66 @@ void NavierStokes<dim>::solve ()
        decltype(*Mp_preconditioner)>
        (navier_stokes_matrix.block(1,1),  *Mp_preconditioner );
 
-  auto prec = identity_operator<TrilinosWrappers::MPI::BlockVector>(S.reinit_range_vector);
 
-  // Assemble preconditioner
+  // Assemble preconditioner:
 
+  auto P00 = A_inv;
   auto P01 = 0 * S01;
   auto P10 = Schur_inv * S10 * A_inv;
-
-  auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ A_inv, P01 }} , {{ P10, Schur_inv}} }});
-  // Initialise solution in order to have the same dimension of navier_stokes_fe
+  auto P11 = -1 * Schur_inv;
 
   // S = P_inv * S;
 
+  // ASSEMBLE THE PROBLEM:
+  auto S     = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ S00, S01 }} , 
+                                                                            {{ S10, S11 }} }});
+  auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{ {{ P00, P01 }} , 
+                                                                            {{ P10, P11 }} }});
+
+  auto S_buffer = S;
+  auto prec  = identity_operator<TrilinosWrappers::MPI::BlockVector>(S_buffer.reinit_range_vector);
+
+
+  /*
+  // An attempt to solve the problem separating preconditioner.
+  auto buffer_rhs = navier_stokes_rhs;
+  P_inv.vmult(buffer_rhs, navier_stokes_rhs);
+  S = P_inv*S;
+  auto S_inv = inverse_operator(S, solver, prec);
+  S_inv.vmult(solution, buffer_rhs);
+  */
+
   auto S_inv = inverse_operator(S, solver, P_inv);
 
-
+  // Initialise solution in order to have the same dimension of navier_stokes_fe
   solution =  navier_stokes_rhs;
-
-  std::cout << " Solution size : " << solution.size() << std::endl;
-  std::cout << " RHS size :      " << navier_stokes_rhs.size() << std::endl;
-  std::cout << " S 00 sie:      " << navier_stokes_matrix.block(0,0).m() << " x " << navier_stokes_matrix.block(0,0).n() << std::endl;
-  std::cout << " S 01 sie:      " << navier_stokes_matrix.block(0,1).m() << " x " << navier_stokes_matrix.block(0,1).n() << std::endl;
-  std::cout << " S 10 sie:      " << navier_stokes_matrix.block(1,0).m() << " x " << navier_stokes_matrix.block(1,0).n() << std::endl;
-  std::cout << " S 11 sie:      " << navier_stokes_matrix.block(1,1).m() << " x " << navier_stokes_matrix.block(1,1).n() << std::endl;
-
   S_inv.vmult(solution, navier_stokes_rhs);
 
+  
+  // pcout << "navier_stokes_matrix :                 " << type(navier_stokes_matrix) << std::endl;
+  // pcout << "navier_stokes_preconditioner_matrix :  " << type(navier_stokes_preconditioner_matrix) << std::endl;
+  pcout << std::endl;
+  pcout << " Solution size :                       " << solution.size() << std::endl;
+  pcout << " RHS size :                            " << navier_stokes_rhs.size() << std::endl;
+  pcout << " S 00 size:                            " << navier_stokes_matrix.block(0,0).m() << " x " << navier_stokes_matrix.block(0,0).n() << std::endl;
+  pcout << " S 01 size:                            " << navier_stokes_matrix.block(0,1).m() << " x " << navier_stokes_matrix.block(0,1).n() << std::endl;
+  pcout << " S 10 size:                            " << navier_stokes_matrix.block(1,0).m() << " x " << navier_stokes_matrix.block(1,0).n() << std::endl;
+  pcout << " S 11 size:                            " << navier_stokes_matrix.block(1,1).m() << " x " << navier_stokes_matrix.block(1,1).n() << std::endl;
+  // pcout << " S00 :                                 " << type(S00) << std::endl;
+
+  n_iterations = solver_control.last_step();
+
+  pcout << " iterations:                           " <<  n_iterations 
+        << std::endl;
 
   // std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
   // auto AMG = linear_operator( *Amg_preconditioner );
   // auto Mp  = linear_operator< TrilinosWrappers::MPI::Vector >( *Mp_preconditioner );
 
   // auto boo = linear_operator(navier_stokes_matrix);
-  std::cout << "boo -> " << type(S00) << std::endl;
-  // END
 
+  // END
+  /*
   try
     {
       const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
@@ -667,10 +687,10 @@ void NavierStokes<dim>::solve ()
 
 
   navier_stokes_constraints.distribute (distributed_navier_stokes_solution);
-
-  navier_stokes_solution = distributed_navier_stokes_solution;
-  pcout << n_iterations  << " iterations."
-        << std::endl;
+  */
+  // navier_stokes_solution = distributed_navier_stokes_solution;
+  // pcout << n_iterations  << " iterations."
+  //       << std::endl;
 }
 
 /* ------------------------ OUTPUTS ------------------------ */
