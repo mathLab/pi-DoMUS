@@ -591,7 +591,9 @@ void NavierStokes<dim>::solve ()
     auto prec = identity_operator<TrilinosWrappers::MPI::BlockVector>(S.reinit_range_vector);
     auto S_inv = inverse_operator(S, solver, prec);
     
-    // S_inv.vmult(solution, system_rhs);
+    // Initialise solution in order to have the same dimension of navier_stokes_fe
+    solution =  navier_stokes_rhs;
+    // S_inv.vmult(solution, navier_stokes_rhs);
     
     
     // std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;

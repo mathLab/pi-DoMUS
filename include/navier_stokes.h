@@ -144,6 +144,7 @@ private:
   TrilinosWrappers::MPI::BlockVector        navier_stokes_solution;
   TrilinosWrappers::MPI::BlockVector        old_navier_stokes_solution;
   TrilinosWrappers::MPI::BlockVector        navier_stokes_rhs;
+  TrilinosWrappers::MPI::BlockVector        solution;
 
   double                                    time_step;
   double                                    old_time_step;
