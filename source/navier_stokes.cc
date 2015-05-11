@@ -547,8 +547,6 @@ void NavierStokes<dim>::solve ()
       distributed_navier_stokes_solution(i) = 0;
 
 
-  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
-
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-4;//1e-8 * navier_stokes_rhs.l2_norm();
 
@@ -584,17 +582,19 @@ void NavierStokes<dim>::solve ()
        decltype(*Mp_preconditioner)>
        (navier_stokes_matrix.block(1,1),  *Mp_preconditioner );
 
-
-  // // Assemble preconditioner:
-  // SolverControl solver_control_Mp (30, solver_tolerance);
-  // SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
-  // solver(solver_control_Mp, mem,
-  //        SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
-  //        AdditionalData(30, true));
-  // // auto S_inv = inverse_operator(S, solver, P_inv);
-  // auto Mp_buffer = Mp;
-  // auto prec      = identity_operator<TrilinosWrappers::MPI::Vector>(Mp_buffer.reinit_range_vector);
-  // auto Schur_inv = inverse_operator(Mp, solver, prec);
+  /*
+  // Invert Mp:
+  PrimitiveVectorMemory<TrilinosWrappers::MPI::Vector> mem_Mp;
+  SolverControl solver_control_Mp (30, solver_tolerance);
+  SolverFGMRES<TrilinosWrappers::MPI::Vector>
+  solver(solver_control_Mp, mem_Mp,
+          SolverFGMRES<TrilinosWrappers::MPI::Vector>::
+          AdditionalData(30, true));
+  // auto S_inv = inverse_operator(S, solver, P_inv);
+  auto Mp_buffer = Schur_inv;
+  auto prec      = identity_operator<TrilinosWrappers::MPI::Vector>(Mp_buffer.reinit_range_vector);
+  Schur_inv = inverse_operator(Schur_inv, solver, prec);
+  */
 
   auto P00 = A_inv;
   auto P01 = 0 * S01;
@@ -627,6 +627,8 @@ void NavierStokes<dim>::solve ()
   auto S_inv = inverse_operator(S, solver, prec);
   S_inv.vmult(solution, buffer_rhs);
   */
+
+  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
   try
     {
@@ -657,6 +659,7 @@ void NavierStokes<dim>::solve ()
       n_iterations = (solver_control.last_step() +
                       solver_control_refined.last_step());
     }
+
 
   // pcout << "navier_stokes_matrix :                 " << type(navier_stokes_matrix) << std::endl;
   // pcout << "navier_stokes_preconditioner_matrix :  " << type(navier_stokes_preconditioner_matrix) << std::endl;
