@@ -722,7 +722,7 @@ namespace internal
       static
       void reinit_range_vector (const Matrix &matrix, Vector &v, bool fast)
       {
-        // v.reinit(matrix.m(), fast);
+        v.reinit(matrix.m(), fast);
       }
 
       /**
@@ -740,7 +740,7 @@ namespace internal
       static
       void reinit_domain_vector (const Matrix &matrix, Vector &v, bool fast)
       {
-        // v.reinit(matrix.n(), fast);
+        v.reinit(matrix.n(), fast);
       }
     };
   } /* namespace LinearOperator */

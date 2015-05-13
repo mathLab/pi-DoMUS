@@ -76,25 +76,26 @@ void test ()
 
   TrilinosWrappers::SparsityPattern sp (row_partitioning,
                                         col_partitioning, MPI_COMM_WORLD);
-  if (my_id == 0)
-    {
-      sp.add (0, 0);
-      sp.add (0, 2);
-    }
-  if ((n_procs == 1) || (my_id == 1))
-    sp.add(2,3);
+  {
+    sp.add (0, 0);
+    sp.add (0, 2);
+    sp.add (2, 3);
+  }
+
   sp.compress();
 
   TrilinosWrappers::SparseMatrix A;
   A.clear ();
   A.reinit (sp);
-  if (my_id == 0)
-    {
-      A.add (0, 0, 1);
-      A.add (0, 2, 1);
-    }
-  if ((n_procs == 1) || (my_id == 1))
-    A.add(2,3, 2.0);
+  {
+    if (my_id == 0)
+      {
+        A.add (0, 0, 1);
+        A.add (0, 2, 1);
+        A.add (2, 3, 2.0);
+      }
+  }
+
   A.compress(VectorOperation::add);
 
   TrilinosWrappers::MPI::Vector x, y;
@@ -104,45 +105,32 @@ void test ()
   for (unsigned int i=0; i<col_partitioning.n_elements(); ++i)
     {
       const unsigned int global_index = col_partitioning.nth_index_in_set(i);
-      x(global_index) = (double)Testing::rand()/RAND_MAX;
+      x(global_index) = (double) global_index;
     }
 
   A.vmult (y, x);
 
+  Vector<double> ylocal = x;
+  deallog << "x  : " << ylocal << std::endl;
+
+  ylocal = y;
+  deallog << "A*x: " << ylocal << std::endl;
+
   auto S = linear_operator<TrilinosWrappers::MPI::Vector>( A );
 
-  deallog << type(S) << std::endl;
-  
-  // S.vmult (y, x);
-  
-  
-  // compare whether we got the same result
-  // (should be no roundoff difference)
-  if (my_id == 0) deallog << "OK" << std::endl;
+  S.vmult (y, x);
+
+  ylocal = y;
+  deallog << "S*y: " <<  ylocal << std::endl;
 }
 
 
 
 int main (int argc, char **argv)
 {
-  initlog();
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, numbers::invalid_unsigned_int);
+  MPILogInitAll init;
 
-  const unsigned int n_procs = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-  unsigned int myid = Utilities::MPI::this_mpi_process (MPI_COMM_WORLD);
-  deallog.push(Utilities::int_to_string(myid));
-
-  if (myid == 0)
-    {
-      std::ofstream logfile("output");
-      deallog.attach(logfile);
-      deallog << std::setprecision(4);
-      deallog.depth_console(0);
-      deallog.threshold_double(1.e-10);
-
-      test();
-    }
-  else
-    test();
+  test();
 
 }

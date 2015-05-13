@@ -560,11 +560,11 @@ void NavierStokes<dim>::solve ()
   //        AdditionalData(30, true));
 
   // SYSTEM MATRIX:
-  auto S00 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
-  auto S01 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,1) );
-  auto S10 =  transpose_operator(S01);
+  auto A = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
+  auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,1) );
+  auto B =  transpose_operator(Bt);
   // auto S10 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,0) );
-  auto S11 = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,1) );
+  auto ZeroP = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(1,1) );
 
   // PRECONDITIONER:
   Amg_preconditioner ->initialize(navier_stokes_preconditioner_matrix.block(0,0));
@@ -597,16 +597,16 @@ void NavierStokes<dim>::solve ()
   */
 
   auto P00 = A_inv;
-  auto P01 = 0 * S01;
-  auto P10 = Schur_inv * S10 * A_inv;
+  auto P01 = 0 * Bt;
+  auto P10 = Schur_inv * B * A_inv;
   auto P11 = -1 * Schur_inv;
 
   // S = P_inv * S;
 
   // ASSEMBLE THE PROBLEM:
   const auto S     = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
-      {{ S00, S01 }} ,
-      {{ S10, S11 }}
+      {{ A, Bt }} ,
+      {{ B, ZeroP }}
     }
   });
   const auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
@@ -636,11 +636,13 @@ void NavierStokes<dim>::solve ()
       solver(solver_control, mem,
              SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
              AdditionalData(30, true));
-      auto S_inv = inverse_operator(S, solver, P_inv);
+
+      solver.solve(S, distributed_navier_stokes_solution, navier_stokes_rhs, P_inv);
+      //      auto S_inv = inverse_operator(S, solver, P_inv);
 
       // Initialise solution in order to have the same dimension of navier_stokes_fe
       // solution =  navier_stokes_rhs;
-      S_inv.vmult(navier_stokes_solution, navier_stokes_rhs);
+      //      S_inv.vmult(navier_stokes_solution, navier_stokes_rhs);
       n_iterations = solver_control.last_step();
     }
   catch ( SolverControl::NoConvergence )

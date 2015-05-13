@@ -61,13 +61,13 @@ int main(int argc, char *argv[])
   Triangulation<2> triangulation;
   GridGenerator::hyper_cube (triangulation);
   triangulation.refine_global (2);
-  
+
   // Dof Handler
   DoFHandler<2> dof_handler (triangulation);
   static const FE_Q<2 > finite_element_base(1);
   static const FESystem<2,2> finite_element(finite_element_base, 1, finite_element_base, 1);
-  
-  
+
+
   /*------------------- Block Matrix : -------------------*/
 
   // initialize the fist elements to zero and the second to 1
@@ -75,39 +75,39 @@ int main(int argc, char *argv[])
 
   test_sub_blocks[0] = 0;
   test_sub_blocks[1] = 1;
-  
-  
+
+
   dof_handler.distribute_dofs (finite_element);
   DoFRenumbering::component_wise (dof_handler, test_sub_blocks);
-  
+
   std::vector<types::global_dof_index> dofs_per_block (2);
-  
-  DoFTools::count_dofs_per_block (dof_handler, 
-				  dofs_per_block,
-				  test_sub_blocks);
-        
+
+  DoFTools::count_dofs_per_block (dof_handler,
+                                  dofs_per_block,
+                                  test_sub_blocks);
+
   const unsigned int n_u = dofs_per_block[0],
                      n_p = dofs_per_block[1];
 
   TrilinosWrappers::BlockSparseMatrix       block_sparse_matrix;
   ConstraintMatrix                          test_constraints;
-  
+
   std::vector<IndexSet> test_partitioning, test_relevant_partitioning;
   IndexSet test_relevant_set;
   {
     IndexSet test_index_set = dof_handler.locally_owned_dofs();
     test_partitioning.push_back(test_index_set.get_view(0,n_u));
     test_partitioning.push_back(test_index_set.get_view(n_u,n_u+n_p));
-  
+
     DoFTools::extract_locally_relevant_dofs (dof_handler,
                                              test_relevant_set);
     test_relevant_partitioning.push_back(test_relevant_set.get_view(0,n_u));
     test_relevant_partitioning.push_back(test_relevant_set.get_view(n_u,n_u+n_p));
-  
+
   }
-  
+
   {
-  
+
     FEValuesExtractors::Vector velocity_components(0);
     //boundary_conditions.set_time(time_step*time_step_number);
     // VectorTools::interpolate_boundary_values (dof_handler,
@@ -115,43 +115,43 @@ int main(int argc, char *argv[])
     //                                           boundary_conditions,
     //                                           test_constraints,
     //                                           finite_element.component_mask(velocity_components));
-  
+
     test_constraints.close ();
   }
-  
+
   block_sparse_matrix.clear ();
 
-                     
-  TrilinosWrappers::BlockSparsityPattern sp(test_partitioning, 
+
+  TrilinosWrappers::BlockSparsityPattern sp(test_partitioning,
                                             test_partitioning,
                                             test_relevant_partitioning,
                                             MPI_COMM_WORLD);
 
-   Table<2,DoFTools::Coupling> coupling (2, 2);
-   for (unsigned int c=0; c<3; ++c)
-     for (unsigned int d=0; d<3; ++d)
-       if (! ((c==2) && (d==2)))
-         coupling[c][d] = DoFTools::always;
-       else
-         coupling[c][d] = DoFTools::none;
+  Table<2,DoFTools::Coupling> coupling (2, 2);
+  for (unsigned int c=0; c<3; ++c)
+    for (unsigned int d=0; d<3; ++d)
+      if (! ((c==2) && (d==2)))
+        coupling[c][d] = DoFTools::always;
+      else
+        coupling[c][d] = DoFTools::none;
 
-   DoFTools::make_sparsity_pattern (dof_handler,
-                                    coupling, sp,
-                                    test_constraints, false,
-                                    Utilities::MPI::
-                                    this_mpi_process(MPI_COMM_WORLD));
-   sp.compress();
-   block_sparse_matrix.reinit (sp);
-   
-// 
+  DoFTools::make_sparsity_pattern (dof_handler,
+                                   coupling, sp,
+                                   test_constraints, false,
+                                   Utilities::MPI::
+                                   this_mpi_process(MPI_COMM_WORLD));
+  sp.compress();
+  block_sparse_matrix.reinit (sp);
 
-// 
+//
 
-// 
+//
+
+//
 // setup_test_matrix (test_partitioning, test_relevant_partitioning);
 // setup_test_preconditioner (test_partitioning,
 //                                     test_relevant_partitioning);
-// 
+//
 // test_rhs.reinit (test_partitioning, test_relevant_partitioning,
 //                           MPI_COMM_WORLD, true);
 // test_solution.reinit (test_relevant_partitioning, MPI_COMM_WORLD);
