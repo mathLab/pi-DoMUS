@@ -22,16 +22,22 @@
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/index_set.h>
 
-#include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/trilinos_vector.h>
+#include <deal.II/lac/trilinos_block_vector.h>
+#include <deal.II/lac/parallel_vector.h>
+
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
-#include <deal.II/lac/trilinos_vector.h>
-#include <deal.II/lac/parallel_vector.h>
+
+
+#include "linear_operator.h"
+#include "utilities.h"
 
 #include <fstream>
 #include <iostream>
 #include <vector>
 
+using namespace dealii;
 
 void test ()
 {
@@ -103,7 +109,9 @@ void test ()
 
   A.vmult (y, x);
 
-  // auto S = linear_operator<TrilinosWrappers::MPI::Vector>( A );
+  auto S = linear_operator<TrilinosWrappers::MPI::Vector>( A );
+
+  deallog << type(S) << std::endl;
   
   // S.vmult (y, x);
   
@@ -117,6 +125,7 @@ void test ()
 
 int main (int argc, char **argv)
 {
+  initlog();
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, numbers::invalid_unsigned_int);
 
   const unsigned int n_procs = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
