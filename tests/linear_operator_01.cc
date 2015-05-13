@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (C) 2011 - 2015 by the deal.II authors
+// Copyright (C) 2004 - 2015 by the deal.II authors
 //
 // This file is part of the deal.II library.
 //
@@ -15,19 +15,18 @@
 
 
 
-// Test whether TrilinosWrappers::SparseMatrix::(T)vmult(_add) gives same
-// result with Trilinos vector and parallel distributed vector when one
-// processor does not have any rows
+// Test whether TrilinosWrappers::SparseMatrix::vmult gives same result with
+// Trilinos vector and parallel distributed vector
 
 #include "tests.h"
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/index_set.h>
+
+#include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
 #include <deal.II/lac/trilinos_vector.h>
 #include <deal.II/lac/parallel_vector.h>
-
-#include <deal.II/lac/linear_operator.h>
 
 #include <fstream>
 #include <iostream>
@@ -57,8 +56,13 @@ void test ()
       // col_relevant_set should be { [0, 3), [1, n_cols) }
       if (my_id == 0)
         {
-          row_partitioning.add_range(0, n_rows);
-          col_partitioning.add_range(0, n_cols);
+          row_partitioning.add_range(0, 2);
+          col_partitioning.add_range(0, 2);
+        }
+      else if (my_id == 1)
+        {
+          row_partitioning.add_range(2, n_rows);
+          col_partitioning.add_range(2, n_cols);
         }
     }
   else
@@ -70,8 +74,9 @@ void test ()
     {
       sp.add (0, 0);
       sp.add (0, 2);
-      sp.add (2, 3);
     }
+  if ((n_procs == 1) || (my_id == 1))
+    sp.add(2,3);
   sp.compress();
 
   TrilinosWrappers::SparseMatrix A;
@@ -81,75 +86,31 @@ void test ()
     {
       A.add (0, 0, 1);
       A.add (0, 2, 1);
-      A.add (2, 3, 2.0);
     }
+  if ((n_procs == 1) || (my_id == 1))
+    A.add(2,3, 2.0);
   A.compress(VectorOperation::add);
 
   TrilinosWrappers::MPI::Vector x, y;
   x.reinit (col_partitioning, MPI_COMM_WORLD);
   y.reinit (row_partitioning, MPI_COMM_WORLD);
 
-  parallel::distributed::Vector<double>
-  dx (col_partitioning, col_partitioning, MPI_COMM_WORLD),
-  dy (row_partitioning, row_partitioning, MPI_COMM_WORLD);
-
   for (unsigned int i=0; i<col_partitioning.n_elements(); ++i)
     {
       const unsigned int global_index = col_partitioning.nth_index_in_set(i);
-      dx(global_index) = (double)Testing::rand()/RAND_MAX;
-      x(global_index)  = dx(global_index);
+      x(global_index) = (double)Testing::rand()/RAND_MAX;
     }
-  dy = 1.;
 
   A.vmult (y, x);
-  A.vmult (dy, dx);
-  // 
-  // auto y_lo = y;
-  // auto dy_lo = dy;
-  // 
-  // auto a_op = linear_operator< TrilinosWrappers::MPI::Vector > (A);
-  // 
-  // a_op.vmult (y_lo, x);
-  // a_op.vmult (dy_lo, dx); 
-  // 
-  // // compare whether we got the same result
-  // // (should be no roundoff difference)
-  // for (unsigned int i=0; i<row_partitioning.n_elements(); ++i)
-  //   {
-  //     const unsigned int global_index = row_partitioning.nth_index_in_set(i);
-  //     AssertThrow (dy(global_index) == y(global_index), ExcInternalError());
-  //   }
-  //  
-  // A.vmult_add (y, x);
-  // A.vmult_add (dy, dx); 
-  // 
-  // if (my_id == 0) deallog << "OK" << std::endl;
-  // 
-  // // compare whether we got the same result
-  // // (should be no roundoff difference)
-  // for (unsigned int i=0; i<row_partitioning.n_elements(); ++i)
-  //   {
-  //     const unsigned int global_index = row_partitioning.nth_index_in_set(i);
-  //     AssertThrow (dy(global_index) == y(global_index), ExcInternalError());
-  //   }
-  // 
-  // A.Tvmult (x, y);
-  // A.Tvmult (dx, dy);
-  // for (unsigned int i=0; i<col_partitioning.n_elements(); ++i)
-  //   {
-  //     const unsigned int global_index = col_partitioning.nth_index_in_set(i);
-  //     AssertThrow (dx(global_index) == x(global_index), ExcInternalError());
-  //   }
-  // 
-  // A.Tvmult_add (x, y);
-  // A.Tvmult_add (dx, dy);
-  // for (unsigned int i=0; i<col_partitioning.n_elements(); ++i)
-  //   {
-  //     const unsigned int global_index = col_partitioning.nth_index_in_set(i);
-  //     AssertThrow (dx(global_index) == x(global_index), ExcInternalError());
-  //   }
-  // 
-  // if (my_id == 0) deallog << "OK" << std::endl;
+
+  // auto S = linear_operator<TrilinosWrappers::MPI::Vector>( A );
+  
+  // S.vmult (y, x);
+  
+  
+  // compare whether we got the same result
+  // (should be no roundoff difference)
+  if (my_id == 0) deallog << "OK" << std::endl;
 }
 
 
