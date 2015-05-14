@@ -667,7 +667,7 @@ void NavierStokes<dim>::solve ()
   // pcout << "navier_stokes_matrix :                 " << type(navier_stokes_matrix) << std::endl;
   // pcout << "navier_stokes_preconditioner_matrix :  " << type(navier_stokes_preconditioner_matrix) << std::endl;
   navier_stokes_constraints.distribute (distributed_navier_stokes_solution);
-  
+
   navier_stokes_solution = distributed_navier_stokes_solution;
   pcout << std::endl ;
   /*
@@ -686,7 +686,7 @@ void NavierStokes<dim>::solve ()
 
   pcout << " iterations:                           " <<  n_iterations
         << std::endl;
-*/
+  */
   // std::cout << "navier_stokes_preconditioner_matrix -> " << type(navier_stokes_preconditioner_matrix) << std::endl;
   // auto AMG = linear_operator( *Amg_preconditioner );
   // auto Mp  = linear_operator< TrilinosWrappers::MPI::Vector >( *Mp_preconditioner );
