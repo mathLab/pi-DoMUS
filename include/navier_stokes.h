@@ -21,6 +21,8 @@
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/precondition.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -142,6 +144,7 @@ private:
   TrilinosWrappers::MPI::BlockVector        navier_stokes_solution;
   TrilinosWrappers::MPI::BlockVector        old_navier_stokes_solution;
   TrilinosWrappers::MPI::BlockVector        navier_stokes_rhs;
+  TrilinosWrappers::MPI::BlockVector        solution;
 
   double                                    time_step;
   double                                    old_time_step;
