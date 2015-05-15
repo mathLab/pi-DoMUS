@@ -550,6 +550,56 @@ void NavierStokes<dim>::solve ()
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
 
+
+  /*   OLD CODE */
+
+  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem_old;
+  n_iterations = 0;
+  // solver_tolerance = 1e-8; //1e-8 * stokes_rhs.l2_norm();
+
+  SolverControl solver_control_old (30, solver_tolerance);
+  try
+    {
+      const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
+            TrilinosWrappers::PreconditionJacobi>
+            preconditioner (navier_stokes_matrix, navier_stokes_preconditioner_matrix,
+                            *Mp_preconditioner, *Amg_preconditioner,
+                            false);
+      SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+      solver(solver_control_old, mem_old,
+             SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+             AdditionalData(30, true));
+      solver.solve(navier_stokes_matrix, distributed_navier_stokes_solution, navier_stokes_rhs,
+                   preconditioner);
+      n_iterations = solver_control_old.last_step();
+    }
+  catch (SolverControl::NoConvergence)
+    {
+      const LinearSolvers::BlockSchurPreconditioner<TrilinosWrappers::PreconditionAMG,
+            TrilinosWrappers::PreconditionJacobi>
+            preconditioner (navier_stokes_matrix, navier_stokes_preconditioner_matrix,
+                            *Mp_preconditioner, *Amg_preconditioner,
+                            true);
+      SolverControl solver_control_refined_old (navier_stokes_matrix.m(), solver_tolerance);
+      SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+      solver(solver_control_refined_old, mem_old,
+             SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+             AdditionalData(50, true));
+      solver.solve(navier_stokes_matrix, distributed_navier_stokes_solution, navier_stokes_rhs,
+                   preconditioner);
+      n_iterations = (solver_control_old.last_step() +
+                      solver_control_refined_old.last_step());
+    }
+  navier_stokes_constraints.distribute (distributed_navier_stokes_solution);
+  navier_stokes_solution = distributed_navier_stokes_solution;
+  pcout << std::endl;
+  pcout << " no linear operators iterations:                        " <<  n_iterations
+        << std::endl;
+  pcout << std::endl;
+
+
+  /*   NEW CODE */
+
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( navier_stokes_matrix.block(0,1) );
@@ -604,7 +654,7 @@ void NavierStokes<dim>::solve ()
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-  auto S_inv = inverse_operator(S, solver, P_inv);
+  auto S_inv         = inverse_operator(S, solver, P_inv);
   auto S_inv_refined = inverse_operator(S, solver_refined, P_inv);
   try
     {
@@ -622,9 +672,14 @@ void NavierStokes<dim>::solve ()
   navier_stokes_constraints.distribute (distributed_navier_stokes_solution);
   navier_stokes_solution = distributed_navier_stokes_solution;
 
-  pcout << " iterations:                           " <<  n_iterations
+  pcout << std::endl;
+  pcout << " linear operators iterations:                           " <<  n_iterations
         << std::endl;
-  pcout << std::endl ;
+  pcout << std::endl;
+
+
+
+
 }
 
 /* ------------------------ OUTPUTS ------------------------ */
