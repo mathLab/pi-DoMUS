@@ -66,7 +66,6 @@
 #include <deal.II/distributed/grid_refinement.h>
 
 #include "equation_data.h"
-#include "linear_solver.h"
 #include "assembly.h"
 #include "solution.h"
 
