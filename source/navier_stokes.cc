@@ -603,14 +603,12 @@ void NavierStokes<dim>::solve ()
   try
     {
       distributed_navier_stokes_solution = S_inv*navier_stokes_rhs;
-      n_iterations = solver_control_pre.last_step() +
-                     solver_control.last_step();
+      n_iterations = solver_control.last_step();
     }
   catch ( SolverControl::NoConvergence )
     {
       distributed_navier_stokes_solution = S_inv_refined*navier_stokes_rhs;
-      n_iterations = (solver_control_pre.last_step() +
-                      solver_control.last_step() +
+      n_iterations = (solver_control.last_step() +
                       solver_control_refined.last_step());
     }
 
