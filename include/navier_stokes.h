@@ -83,6 +83,11 @@ using namespace dealii;
 template <int dim>
 class NavierStokes : public ParameterAcceptor
 {
+
+  // This is a class required to make tests
+  template<int fdim>
+  friend void test(NavierStokes<fdim> &);
+
 public:
 
   enum RefinementMode
