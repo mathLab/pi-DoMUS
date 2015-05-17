@@ -88,7 +88,8 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
   pgg("Cube"),
 
   fe_builder(           "FE_Q",
-                        "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
+                        "FESystem[FE_Q(2)^dim-FE_Q(1)]",
+                        "u,u,p"),
 
   boundary_conditions(  "Dirichlet boundary conditions",
                         "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0",
