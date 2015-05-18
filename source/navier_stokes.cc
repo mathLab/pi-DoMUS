@@ -155,8 +155,7 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
   data_out(              "ParsedDataOut<2, 2>",
                          "vtk",
-                         "solutions",
-                         "run_")
+                         "solutions/run")
 
 {}
 
