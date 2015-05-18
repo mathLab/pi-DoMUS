@@ -1,6 +1,13 @@
 #ifndef _ASSEMBLY_
 #define _ASSEMBLY_
 
+// #include <deal.II/fe/fe_q.h>
+// #include <deal.II/fe/fe_dgq.h>
+// #include <deal.II/fe/fe_dgp.h>
+// #include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_values.h>
+// #include <deal.II/fe/mapping_q.h>
+
 using namespace dealii;
 
 namespace Assembly
