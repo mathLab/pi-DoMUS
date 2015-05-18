@@ -88,7 +88,8 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
   pgg("Cube"),
 
   fe_builder(           "FE_Q",
-                        "FESystem[FE_Q(2)^dim-FE_Q(1)]"),
+                        "FESystem[FE_Q(2)^dim-FE_Q(1)]",
+                        "u,u,p"),
 
   boundary_conditions(  "Dirichlet boundary conditions",
                         "k*pi*cos(k*pi*x)*cos(k*pi*y); k*pi*sin(k*pi*x)*sin(k*pi*y); 0",
@@ -96,7 +97,9 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
   right_hand_side(      "Right-hand side force",
                         "2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0",
-                        "k=1" )
+                        "k=1" ),
+
+  data_out(              "ParsedDataOut<2, 2>", "vtk")
 
 {}
 
@@ -633,48 +636,14 @@ void NavierStokes<dim>::output_results ()
   Postprocessor postprocessor (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD),
                                navier_stokes_solution.block(1).minimal_value());
 
-  DataOut<dim> data_out;
-  data_out.attach_dof_handler (*navier_stokes_dof_handler);
-  data_out.add_data_vector (navier_stokes_solution, postprocessor);
-  // data_out.build_patches ();
-
-  static int out_index=0;
-  const std::string filename = ("solution-" +
-                                Utilities::int_to_string (out_index, 5) +
-                                "." +
-                                Utilities::int_to_string
-                                (triangulation->locally_owned_subdomain(), 4) +
-                                ".vtu");
-  std::ofstream output (filename.c_str());
-  data_out.write_vtu (output);
-
-
-  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
-    {
-      std::vector<std::string> filenames;
-      for (unsigned int i=0; i<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); ++i)
-        filenames.push_back (std::string("solution-") +
-                             Utilities::int_to_string (out_index, 5) +
-                             "." +
-                             Utilities::int_to_string(i, 4) +
-                             ".vtu");
-      const std::string
-      pvtu_master_filename = ("solution-" +
-                              Utilities::int_to_string (out_index, 5) +
-                              ".pvtu");
-      std::ofstream pvtu_master (pvtu_master_filename.c_str());
-      data_out.write_pvtu_record (pvtu_master, filenames);
-
-      const std::string
-      visit_master_filename = ("solution-" +
-                               Utilities::int_to_string (out_index, 5) +
-                               ".visit");
-      std::ofstream visit_master (visit_master_filename.c_str());
-      data_out.write_visit_record (visit_master, filenames);
-    }
+  std::stringstream suffix;
+  unsigned int cycle = 0;
+  suffix << "." << cycle;
+  data_out.prepare_data_output(*navier_stokes_dof_handler, suffix.str());
+  data_out.add_data_vector (navier_stokes_solution, "u,u,p");
+  data_out.write_data_and_clear();
 
   computing_timer.exit_section ();
-  out_index++;
 }
 
 /* ------------------------ MESH AND GRID ------------------------ */
@@ -756,8 +725,8 @@ void NavierStokes<dim>::run ()
       assemble_navier_stokes_system ();
       build_navier_stokes_preconditioner ();
       solve ();
-      process_solution ();
       output_results ();
+      process_solution ();
     }
 
   // std::ofstream f("errors.txt");

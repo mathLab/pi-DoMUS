@@ -200,7 +200,7 @@ private:
 
   ParsedFunction<dim, dim+1>              right_hand_side;
 
-  ParsedDataOut<dim, dim+1> data_out;
+  ParsedDataOut<dim, dim>                 data_out;
 };
 
 template <int dim>
