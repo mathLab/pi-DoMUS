@@ -11,7 +11,6 @@
 // #include <deal.II/lac/precondition.h>
 
 #include "assembly.h"
-#include "solution.h"
 
 #include "parsed_grid_generator.h"
 #include "parsed_finite_element.h"
@@ -144,6 +143,7 @@ private:
   ParsedFunction<dim, dim+1>              boundary_conditions;
 
   ParsedFunction<dim, dim+1>              right_hand_side;
+  ParsedFunction<dim, dim+1>              exact_solution;
 
   ParsedDataOut<dim, dim>                 data_out;
 };

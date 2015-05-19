@@ -1,0 +1,11 @@
+Number of active cells: 256 (on 5 levels)
+Number of degrees of freedom: 2467 (2178+289)
+
+
+   Rebuilding Stokes preconditioner...
+   Solving Stokes system... 
+ iterations:                           16
+
+cells dofs  u_Linfty      u_L2        u_H1        p_L2     
+  256 2467 2.517e-09 - 8.747e-10 - 1.829e-08 - 2.742e-08 - 
+
