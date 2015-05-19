@@ -1,0 +1,176 @@
+# Listing of Parameters
+# ---------------------
+subsection Cube
+  set Grid to generate           = rectangle
+
+  set Input grid file name       =
+  set Mesh smoothing alogrithm   = none
+
+  set Optional Point<spacedim> 1 = 0,0
+
+  set Optional Point<spacedim> 2 = 1,1
+
+  set Optional bool 1            = false
+
+  set Optional double 1          = 1.
+
+  set Optional double 2          = 0.5
+
+  set Optional int 1             = 1
+
+  set Optional vector of dim int = 1,1
+
+  set Output grid file name      =
+end
+
+
+subsection Dirichlet boundary conditions
+
+  set Function constants  = k=1     # default:
+
+  set Function expression = 0; 0; 0
+
+  set Variable names      = x,y,t
+end
+
+
+subsection ErrorHandler<1>
+  set Compute error            = true
+  set Error file format        = tex
+  set Output error tables      = true
+  set Solution names           = u, u, p
+
+  set Solution names for latex = u, u, p
+
+  set Table names              = error
+  set Write error files        = false
+
+
+  subsection Table 0
+    set Add convergence rates          = true
+
+    set Extra terms                    = cells,dofs
+
+    set Latex table caption            = error
+
+    set List of error norms to compute = L2, Linfty, H1; AddUp; L2
+
+    set Rate key                       =
+  end
+
+end
+
+
+subsection FE_Q
+  set Finite element space = FESystem[FE_Q(2)^dim-FE_Q(1)]
+end
+
+
+subsection NavierStokes<2>
+  set End time                                = 1e8
+  set Generate graphical output               = false
+  set Initial adaptive refinement             = 2
+  set Initial global refinement               = 2
+  set Stokes velocity polynomial degree       = 2
+  set Time steps between graphical output     = 50
+  set Time steps between mesh refinement      = 10
+  set Use locally conservative discretization = true
+end
+
+
+subsection ParsedDataOut<2, 3>
+  set Output partitioning = false
+  set Problem base name   = solution
+  set Solution names      = u
+
+
+  subsection Solution output format
+    set Output format = vtu # default: gnuplot
+
+    set Subdivisions  = 1
+
+
+    subsection DX output parameters
+      set Coordinates format = ascii
+
+      set Data format        = ascii
+
+      set Integer format     = ascii
+
+      set Write neighbors    = true
+    end
+
+    subsection Eps output parameters
+      set Azimut angle                        = 60
+
+      set Color function                      = default
+
+      set Color shading of interior of cells  = true
+
+      set Draw mesh lines                     = true
+
+      set Fill interior of cells              = true
+
+      set Index of vector for color           = 0
+
+      set Index of vector for height          = 0
+
+      set Line widths in eps units            = 0.5
+
+      set Scale to width or height            = width
+
+      set Scaling for z-axis                  = 1
+
+      set Size (width or height) in eps units = 300
+
+      set Turn angle                          = 30
+    end
+
+    subsection Gmv output parameters
+    end
+
+    subsection Gnuplot output parameters
+    end
+
+    subsection Povray output parameters
+      set Include external file = true
+
+      set Use bicubic patches   = false
+
+      set Use smooth triangles  = false
+    end
+
+    subsection Tecplot output parameters
+    end
+
+    subsection UCD output parameters
+      set Write preamble = true
+    end
+
+    subsection Vtk output parameters
+    end
+
+    subsection deal.II intermediate output parameters
+    end
+
+  end
+
+end
+
+subsection Exact solution
+  set Function constants  = k=1
+  set Function expression = 0;0;(x-0.5)
+  set Variable names      = x,y,t
+end
+
+
+subsection Right-hand side force
+
+  set Function constants  = k=1     # default: 
+
+  set Function expression = 1; 0; 0 # default: 0; 0; 0
+
+  set Variable names      = x,y,t
+end
+
+

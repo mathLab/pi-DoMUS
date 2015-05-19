@@ -156,6 +156,9 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
   right_hand_side(      "Right-hand side force",
                         "2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0",
                         "k=1" ),
+  exact_solution(      "Exact solution",
+                       "1; 0; 0",
+                       "k=1" ),
 
   data_out(              "ParsedDataOut<2, 2>",
                          "vtk",
@@ -764,7 +767,8 @@ void NavierStokes<dim>::make_grid_fe()
 template <int dim>
 void NavierStokes<dim>::process_solution ()
 {
-  eh.error_from_exact(*navier_stokes_dof_handler, navier_stokes_solution, Solution<dim>(), refinement_mode);
+    eh.error_from_exact(*navier_stokes_dof_handler, navier_stokes_solution, exact_solution, refinement_mode);
+    eh.output_table(pcout, refinement_mode);
 }
 
 /* ------------------------ RUN ------------------------ */
@@ -794,7 +798,6 @@ void NavierStokes<dim>::run ()
   // std::ofstream f("errors.txt");
   computing_timer.print_summary();
   timer_outfile.close();
-  eh.output_table(pcout, refinement_mode);
   // f.close();
 }
 
