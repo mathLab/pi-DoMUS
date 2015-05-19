@@ -153,7 +153,9 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
                         "2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0",
                         "k=1" ),
 
-  data_out(              "ParsedDataOut<2, 2>", "vtk")
+  data_out(              "ParsedDataOut<2, 2>",
+                         "vtk",
+                         "solutions/run")
 
 {}
 
@@ -693,7 +695,9 @@ void NavierStokes<dim>::output_results ()
   std::stringstream suffix;
   unsigned int cycle = 0;
   suffix << "." << cycle;
-  data_out.prepare_data_output(*navier_stokes_dof_handler, suffix.str());
+  data_out.prepare_data_output( *navier_stokes_dof_handler,
+                                suffix.str(),
+                                "used_parameters.prm");
   data_out.add_data_vector (navier_stokes_solution, "u,u,p");
   data_out.write_data_and_clear();
 
