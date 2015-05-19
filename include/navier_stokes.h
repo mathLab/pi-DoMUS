@@ -72,6 +72,8 @@ private:
 
 private:
   ConditionalOStream                        pcout;
+  std::ofstream                             timer_outfile;
+  ConditionalOStream                        tcout;
 
   shared_ptr<parallel::distributed::Triangulation<dim> > triangulation;
 

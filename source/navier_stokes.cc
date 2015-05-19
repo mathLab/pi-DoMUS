@@ -121,6 +121,10 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
           == 0)),
+  timer_outfile("timer_data"),
+  tcout (timer_outfile,
+         (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
+          == 0)),
 
   mapping (4),
 
@@ -131,7 +135,7 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
   rebuild_navier_stokes_preconditioner (true),
 
   computing_timer (MPI_COMM_WORLD,
-                   pcout,
+                   tcout,
                    TimerOutput::summary,
                    TimerOutput::wall_times),
 
@@ -765,8 +769,8 @@ template <int dim>
 void NavierStokes<dim>::run ()
 {
 
-  const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
-  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
+  //const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
+  for (unsigned int cycle=0; cycle<3; ++cycle)
     {
       if (cycle == 0)
         {
@@ -784,6 +788,8 @@ void NavierStokes<dim>::run ()
     }
 
   // std::ofstream f("errors.txt");
+  computing_timer.print_summary();
+  timer_outfile.close();
   eh.output_table(pcout, refinement_mode);
   // f.close();
 }
