@@ -164,7 +164,6 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
   data_out(              "ParsedDataOut<2, 2>",
                          "vtk")
-
 {}
 
 
@@ -705,8 +704,14 @@ void NavierStokes<dim>::output_results ()
   suffix << "." << cycle;
   data_out.prepare_data_output( *navier_stokes_dof_handler,
                                 suffix.str());
-  data_out.add_data_vector (navier_stokes_solution, "u,u,p");
-  data_out.write_data_and_clear("used_parameters.prm");
+  // data_out.add_data_vector (navier_stokes_solution, "u,u,p");
+  data_out.add_data_vector(navier_stokes_solution, fe_builder.get_component_names());
+
+  //  Una volta corretto il bug nelle cartelle:
+  //  Sostituire:
+  //      data_out.write_data_and_clear("used_parameters.prm timer_data");
+  //  a:
+  data_out.write_data_and_clear();
 
   computing_timer.exit_section ();
 }
