@@ -17,7 +17,7 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 //
 #include <deal.II/lac/trilinos_solver.h>
-#include <deal.II/lac/linear_operator.h>
+
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -41,6 +41,7 @@
 // #include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
 // #include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/lac/linear_operator.h>
 
 #include <typeinfo>
 #include <fstream>
@@ -650,6 +651,12 @@ void NavierStokes<dim>::solve ()
     }
   });
 
+  // std::array<LinearOperator<TrilinosWrappers::MPI::Vector, TrilinosWrappers::MPI::Vector>, 2> inverse_matrix{A_inv,Schur_inv};
+  // auto inverse_diagonal = block_diagonal_operator<2, TrilinosWrappers::MPI::BlockVector>(inverse_matrix);
+  auto inverse_diagonal = block_diagonal_operator<2,
+                            TrilinosWrappers::MPI::BlockVector,
+                            TrilinosWrappers::MPI::BlockVector >( {{P00, P11}} );
+
   PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
   SolverControl solver_control_refined (navier_stokes_matrix.m(), solver_tolerance);
@@ -664,7 +671,13 @@ void NavierStokes<dim>::solve ()
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-  auto S_inv         = inverse_operator(S, solver, P_inv);
+  auto S_inv = block_triangular_inverse<
+                      TrilinosWrappers::MPI::BlockVector,
+                      TrilinosWrappers::MPI::BlockVector,
+                      TrilinosWrappers::BlockSparseMatrix >
+                                      ( navier_stokes_matrix,
+                                        inverse_diagonal, false);
+  // auto S_inv         = inverse_operator(S, solver, P_inv);
   auto S_inv_refined = inverse_operator(S, solver_refined, P_inv);
   try
     {
