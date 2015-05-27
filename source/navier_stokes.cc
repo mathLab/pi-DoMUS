@@ -635,9 +635,9 @@ void NavierStokes<dim>::solve ()
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  auto P01 = 0 * Bt;
+  // auto P01 = 0 * Bt;
   auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
+  // auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
   const auto S     = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
@@ -645,17 +645,11 @@ void NavierStokes<dim>::solve ()
       {{ B, ZeroP }}
     }
   });
-  const auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
-    }
-  });
-
-  // std::array<LinearOperator<TrilinosWrappers::MPI::Vector, TrilinosWrappers::MPI::Vector>, 2> inverse_matrix{A_inv,Schur_inv};
-  // auto inverse_diagonal = block_diagonal_operator<2, TrilinosWrappers::MPI::BlockVector>(inverse_matrix);
-  auto inverse_diagonal = block_diagonal_operator<2,
-                            TrilinosWrappers::MPI::BlockVector,
-                            TrilinosWrappers::MPI::BlockVector >( {{P00, P11}} );
+  // const auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+  //     {{ P00, P01 }} ,
+  //     {{ P10, P11 }}
+  //   }
+  // });
 
   PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
@@ -671,13 +665,18 @@ void NavierStokes<dim>::solve ()
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-  auto S_inv = block_triangular_inverse<
-                      TrilinosWrappers::MPI::BlockVector,
-                      TrilinosWrappers::MPI::BlockVector,
-                      TrilinosWrappers::BlockSparseMatrix >
-                                      ( navier_stokes_matrix,
-                                        inverse_diagonal, false);
-  // auto S_inv         = inverse_operator(S, solver, P_inv);
+  auto inverse_diagonal = block_diagonal_operator<2,
+       TrilinosWrappers::MPI::BlockVector,
+  TrilinosWrappers::MPI::BlockVector >( {{A_inv, -1 * Schur_inv}} );
+
+  auto P_inv = block_triangular_inverse<
+               TrilinosWrappers::MPI::BlockVector,
+               TrilinosWrappers::MPI::BlockVector,
+               TrilinosWrappers::BlockSparseMatrix >
+               ( navier_stokes_matrix,
+                 inverse_diagonal);
+
+  auto S_inv         = inverse_operator(S, solver, P_inv);
   auto S_inv_refined = inverse_operator(S, solver_refined, P_inv);
   try
     {
