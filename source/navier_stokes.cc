@@ -17,7 +17,8 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 //
 #include <deal.II/lac/trilinos_solver.h>
-
+#include <deal.II/lac/block_linear_operator.h> // order is important
+#include <deal.II/lac/linear_operator.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -41,7 +42,6 @@
 // #include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
 // #include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/lac/linear_operator.h>
 
 #include <typeinfo>
 #include <fstream>
@@ -635,9 +635,9 @@ void NavierStokes<dim>::solve ()
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  // auto P01 = 0 * Bt;
+  auto P01 = 0 * Bt;
   auto P10 = Schur_inv * B * A_inv;
-  // auto P11 = -1 * Schur_inv;
+  auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
   const auto S     = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
@@ -645,11 +645,11 @@ void NavierStokes<dim>::solve ()
       {{ B, ZeroP }}
     }
   });
-  // const auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
-  //     {{ P00, P01 }} ,
-  //     {{ P10, P11 }}
-  //   }
-  // });
+  const auto P_inv = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+      {{ P00, P01 }} ,
+      {{ P10, P11 }}
+    }
+  });
 
   PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
@@ -665,27 +665,16 @@ void NavierStokes<dim>::solve ()
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-  auto inverse_diagonal = block_diagonal_operator<2,
-       TrilinosWrappers::MPI::BlockVector,
-  TrilinosWrappers::MPI::BlockVector >( {{A_inv, -1 * Schur_inv}} );
-
-  auto P_inv = block_triangular_inverse<
-               TrilinosWrappers::MPI::BlockVector,
-               TrilinosWrappers::MPI::BlockVector,
-               TrilinosWrappers::BlockSparseMatrix >
-               ( navier_stokes_matrix,
-                 inverse_diagonal);
-
   auto S_inv         = inverse_operator(S, solver, P_inv);
   auto S_inv_refined = inverse_operator(S, solver_refined, P_inv);
   try
     {
-      distributed_navier_stokes_solution = S_inv*navier_stokes_rhs;
+      S_inv.vmult(distributed_navier_stokes_solution, navier_stokes_rhs);
       n_iterations = solver_control.last_step();
     }
   catch ( SolverControl::NoConvergence )
     {
-      distributed_navier_stokes_solution = S_inv_refined*navier_stokes_rhs;
+      S_inv_refined.vmult(distributed_navier_stokes_solution, navier_stokes_rhs);
       n_iterations = (solver_control.last_step() +
                       solver_control_refined.last_step());
     }
