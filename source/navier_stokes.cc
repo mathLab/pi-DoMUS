@@ -635,7 +635,7 @@ void NavierStokes<dim>::solve ()
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  auto P01 = 0 * Bt;
+  auto P01 = null_operator(Bt.reinit_range_vector);
   auto P10 = Schur_inv * B * A_inv;
   auto P11 = -1 * Schur_inv;
 
