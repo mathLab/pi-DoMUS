@@ -120,10 +120,9 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
 template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
+void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool initial_step)
 {
   computing_timer.enter_section("Setup dof systems");
-
   std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
@@ -163,23 +162,39 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
       relevant_partitioning.push_back(relevant_set.get_view(std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i, 0),
                                                             std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i+1, 0)));
   }
+  constraints.clear ();
+  constraints.reinit (relevant_set);
 
-  {
-    constraints.clear ();
-    constraints.reinit (relevant_set);
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
 
-    DoFTools::make_hanging_node_constraints (*dof_handler,
-                                             constraints);
+  if (initial_step)
+    {
+      FEValuesExtractors::Vector velocity_components(0);
+      //boundary_conditions.set_time(time_step*time_step_number);
+      VectorTools::interpolate_boundary_values (*dof_handler,
+                                                0,
+                                                boundary_conditions,
+                                                constraints,
+                                                fe->component_mask(velocity_components));
+    }
+  else
+    {
+      FEValuesExtractors::Vector velocity_components(0);
+      FEValuesExtractors::Scalar p_components(dim);
+      VectorTools::interpolate_boundary_values (*dof_handler,
+                                                0,
+                                                ZeroFunction<dim>(dim),
+                                                constraints,
+                                                fe->component_mask(velocity_components));
+      VectorTools::interpolate_boundary_values (*dof_handler,
+                                                0,
+                                                ZeroFunction<dim>(1),
+                                                constraints,
+                                                fe->component_mask(p_components));
+    }
+  constraints.close ();
 
-    FEValuesExtractors::Vector velocity_components(0);
-    //boundary_conditions.set_time(time_step*time_step_number);
-    VectorTools::interpolate_boundary_values (*dof_handler,
-                                              0,
-                                              boundary_conditions,
-                                              constraints,
-                                              fe->component_mask(velocity_components));
-    constraints.close ();
-  }
 
   setup_matrix (partitioning, relevant_partitioning);
   setup_preconditioner (partitioning, relevant_partitioning);
@@ -187,7 +202,6 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   rhs.reinit (partitioning, relevant_partitioning,
               MPI_COMM_WORLD, true);
   solution.reinit (relevant_partitioning, MPI_COMM_WORLD);
-  old_solution.reinit (solution);
   old_solution.reinit (solution);
 
   rebuild_matrix              = true;
@@ -530,7 +544,8 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
 
 
   constraints.distribute (distributed_solution);
-  solution = distributed_solution;
+  const double alpha = 1.0;
+  solution.add(alpha,distributed_solution);
 
   pcout << std::endl;
   pcout << " iterations:                           " <<  n_iterations
@@ -538,7 +553,24 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
   pcout << std::endl;
 
 }
+/* ------------------------ residual ----------------------- */
 
+template <int dim, int spacedim, int n_components>
+double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha) const
+{
+  Vector<TrilinosWrappers::BlockVector> residual (dof_handler->n_dofs());
+  Vector<TrilinosWrappers::BlockVector> evaluation_point (dof_handler->n_dofs());
+  evaluation_point.swap(solution);
+	if (alpha >1e-10)
+		evaluation_point.add (alpha, newton_update);
+
+	
+}
+
+template <int dim, int spacedim, int n_components>
+double NFieldsProblem<dim, spacedim, n_components>::determine_step_length() const
+{
+}
 /* ------------------------ OUTPUTS ------------------------ */
 
 template <int dim, int spacedim, int n_components>
@@ -589,6 +621,7 @@ void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::run ()
 {
+	bool first_non_linear_step = true;
 
   for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
     {
@@ -599,12 +632,25 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh ();
 
-      setup_dofs ();
-      assemble_system ();
-      build_preconditioner ();
-      solve ();
-      output_results ();
-      process_solution ();
+			double residual = 10.;
+
+			while (residual > 1e-6)
+			{
+				pcout << "Initial residual: " 
+					<< compute_residual(0.0) 
+					<< std::endl;
+				setup_dofs (first_non_linear_step);
+				assemble_system ();
+				build_preconditioner ();
+				solve ();
+				residual = compute_residual(0.0);
+				pcout << "Residual=           " 
+					<< residual
+					<< std::endl;
+				output_results ();
+				process_solution ();
+				first_non_linear_step = false;
+			}
     }
 
   // std::ofstream f("errors.txt");
