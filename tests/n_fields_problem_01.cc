@@ -1,5 +1,5 @@
 #include "n_fields_problem.h"
-#include "non_linear_energy.h"
+#include "stokes_derived_interface.h"
 #include "tests.h"
 
 using namespace dealii;
