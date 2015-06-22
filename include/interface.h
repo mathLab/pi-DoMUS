@@ -2,6 +2,12 @@
 #define _interface_h_
 
 #include <deal.II/fe/fe_values.h>
+#include <deal.II/lac/trilinos_block_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/block_linear_operator.h>
+
 #include "dof_utilities.h"
 #include "parsed_finite_element.h"
 #include "sak_data.h"

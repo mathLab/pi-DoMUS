@@ -4,7 +4,13 @@
 #include "conservative_interface.h"
 #include "parsed_function.h"
 
+
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/lac/trilinos_block_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_precondition.h>
+
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/packaged_operation.h>
