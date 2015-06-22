@@ -30,87 +30,76 @@ public:
                                       n_components, default_coupling, default_preconditioner_coupling)
   {};
 
-  void add_fe_data(const unsigned int &dofs_per_cell,
-                   const unsigned int &n_q_points,
-                   SAKData &d) const;
+  virtual void initialize_data(const unsigned int &dofs_per_cell,
+                               const unsigned int &n_q_points,
+                               const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
+                               SAKData &d) const;
 
-  void add_solution(const TrilinosWrappers::MPI::BlockVector &sol,
-                    SAKData &d) const;
-
-  virtual void initialize_preconditioner_data(SAKData &d) const
+  virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                         Scratch &,
+                                         CopySystem &,
+                                         Sdouble &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  virtual void initialize_system_data(SAKData &d) const
+  virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                         Scratch &,
+                                         CopyPreconditioner &,
+                                         SSdouble &)  const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  virtual void fill_preconditioner_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                        Scratch &scratch,
-                                        CopyPreconditioner &data) const
+  virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                 Scratch &,
+                                 CopySystem &,
+                                 Sdouble &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  virtual void fill_system_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                Scratch   &scratch,
-                                CopySystem  &data) const
+  virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                 Scratch &,
+                                 CopySystem &,
+                                 SSdouble &)  const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  virtual void get_preconditioner_energy(const Scratch &, Sdouble &) const
-  {
-    Assert(false, ExcPureFunctionCalled ());
-  }
-
-  virtual void get_preconditioner_energy(const Scratch &, SSdouble &)  const
-  {
-    Assert(false, ExcPureFunctionCalled ());
-  }
-
-  virtual void get_system_energy(const Scratch &, Sdouble &) const
-  {
-    Assert(false, ExcPureFunctionCalled ());
-  }
-
-  virtual void get_system_energy(const Scratch &, SSdouble &)  const
-  {
-    Assert(false, ExcPureFunctionCalled ());
-  }
-
-  virtual void get_system_residual (const Scratch &scratch,
-                                    const CopySystem &data,
-                                    const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                    Scratch &scratch,
+                                    CopySystem &data,
                                     std::vector<Sdouble> &local_residual) const
   {
     SSdouble energy;
-    get_system_energy(scratch, energy);
+    get_system_energy(cell, scratch, data, energy);
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
       }
   }
 
-  virtual void get_system_residual (const Scratch &scratch,
-                                    const CopySystem &data,
-                                    const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                    Scratch &scratch,
+                                    CopySystem &data,
                                     std::vector<double> &local_residual) const
   {
     Sdouble energy;
-    get_system_energy(scratch, energy);
+    get_system_energy(cell, scratch, data, energy);
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
       }
   }
 
-  virtual void get_preconditioner_residual (const Scratch &scratch, std::vector<Sdouble> &local_residual) const
+  virtual void get_preconditioner_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                            Scratch &scratch,
+                                            CopyPreconditioner &data,
+                                            std::vector<Sdouble> &local_residual) const
   {
     SSdouble energy;
-    get_preconditioner_energy(scratch, energy);
+    get_preconditioner_energy(cell, scratch, data,energy);
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
@@ -130,19 +119,20 @@ public:
 
 
 template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::add_fe_data(const unsigned int &dofs_per_cell,
-                                                       const unsigned int &n_q_points,
-                                                       SAKData &d) const
+void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &dofs_per_cell,
+                                                           const unsigned int &n_q_points,
+                                                           const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
+                                                           SAKData &d) const
 {
   d.add_copy(dofs_per_cell, "dofs_per_cell");
   d.add_copy(n_q_points, "n_q_points");
-}
-
-template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::add_solution(const TrilinosWrappers::MPI::BlockVector &sol,
-                                                        SAKData &d) const
-{
-  d.add_ref(sol, "sol");
+  if (sols.size() > 1)
+    for (unsigned int i=0; i<sols.size(); ++i)
+      {
+        d.add_ref(*sols[i], "sol["+Utilities::int_to_string(i)+"]");
+      }
+  else
+    d.add_ref(*sols[0], "sol");
 }
 
 #endif
