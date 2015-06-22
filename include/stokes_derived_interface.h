@@ -32,34 +32,22 @@ public:
   virtual void declare_parameters (ParameterHandler &prm);
 
   template <typename Number>
-  void templated_initialize_preconditioner_data(SAKData &d) const;
+  void initialize_preconditioner_data(SAKData &d) const;
+
 
   template <typename Number>
-  void templated_initialize_system_data(SAKData &d) const;
-
-  /* Overriding of Interface functions */
-
-  void initialize_preconditioner_data(SAKData &d) const
-  {
-    templated_initialize_preconditioner_data<SSdouble>(d);
-  }
-
-  void initialize_system_data(SAKData &d) const
-  {
-    templated_initialize_system_data<SSdouble>(d);
-    templated_initialize_system_data<Sdouble>(d);
-  }
-  /* end of overriding */
+  void initialize_system_data(SAKData &d) const;
 
 
   /* these functions MUST have the follwowing names
    *  because they are called by the ConservativeInterface class
    */
-
+  template <typename Number>
   void prepare_preconditioner_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
                                    Scratch &scratch,
                                    CopyPreconditioner    &data) const;
 
+  template <typename Number>
   void prepare_system_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
                            Scratch &scratch,
                            CopySystem    &data) const;
@@ -67,10 +55,16 @@ public:
 
 
   template<typename Number>
-  void preconditioner_energy(const Scratch &scratch, Number &energy) const;
+  void preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &,
+                             Scratch &,
+                             CopyPreconditioner &,
+                             Number &energy) const;
 
   template<typename Number>
-  void system_energy(const Scratch &scratch, Number &energy) const;
+  void system_energy(const typename DoFHandler<dim>::active_cell_iterator &,
+                     Scratch &,
+                     CopySystem &,
+                     Number &energy) const;
 
   virtual void compute_system_operators(const DoFHandler<dim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
@@ -99,9 +93,11 @@ StokesDerivedInterface<dim>::StokesDerivedInterface() :
 {};
 
 
+
+
 template<int dim>
-template <typename Number>
-void StokesDerivedInterface<dim>::templated_initialize_preconditioner_data(SAKData &d) const
+template<typename Number>
+void StokesDerivedInterface<dim>::initialize_preconditioner_data(SAKData &d) const
 {
   std::string suffix = typeid(Number).name();
   auto &n_q_points = d.get<unsigned int >("n_q_points");
@@ -120,7 +116,7 @@ void StokesDerivedInterface<dim>::templated_initialize_preconditioner_data(SAKDa
 
 template <int dim>
 template<typename Number>
-void StokesDerivedInterface<dim>::templated_initialize_system_data(SAKData &d) const
+void StokesDerivedInterface<dim>::initialize_system_data(SAKData &d) const
 {
   std::string suffix = typeid(Number).name();
   auto &n_q_points = d.get<unsigned int >("n_q_points");
@@ -141,11 +137,11 @@ void StokesDerivedInterface<dim>::templated_initialize_system_data(SAKData &d) c
 }
 
 template <int dim>
+template <typename Number>
 void StokesDerivedInterface<dim>::prepare_preconditioner_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
     Scratch &scratch,
     CopyPreconditioner    &data) const
 {
-  typedef SSdouble Number;
   std::string suffix = typeid(Number).name();
   auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
@@ -166,11 +162,11 @@ void StokesDerivedInterface<dim>::prepare_preconditioner_data(const typename DoF
 
 
 template <int dim>
+template <typename Number>
 void StokesDerivedInterface<dim>::prepare_system_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
                                                       Scratch &scratch,
                                                       CopySystem    &data) const
 {
-  typedef SSdouble Number;
   std::string suffix = typeid(Number).name();
   auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
@@ -194,9 +190,18 @@ void StokesDerivedInterface<dim>::prepare_system_data(const typename DoFHandler<
 
 template <int dim>
 template<typename Number>
-void StokesDerivedInterface<dim>::preconditioner_energy(const Scratch &scratch, Number &energy) const
+void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                                        Scratch &scratch,
+                                                        CopyPreconditioner &data,
+                                                        Number &energy) const
 {
   std::string suffix = typeid(Number).name();
+
+  if (scratch.anydata.have("ps"+suffix) == false)
+    initialize_preconditioner_data<Number>(scratch.anydata);
+
+  prepare_preconditioner_data<Number>(cell, scratch, data);
+
   auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
   auto &grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("grad_us"+suffix);
 
@@ -215,9 +220,18 @@ void StokesDerivedInterface<dim>::preconditioner_energy(const Scratch &scratch, 
 
 template <int dim>
 template<typename Number>
-void StokesDerivedInterface<dim>::system_energy(const Scratch &scratch, Number &energy) const
+void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                                Scratch &scratch,
+                                                CopySystem &data,
+                                                Number &energy) const
 {
   std::string suffix = typeid(Number).name();
+
+  if (scratch.anydata.have("ps"+suffix) == false)
+    initialize_system_data<Number>(scratch.anydata);
+
+  prepare_system_data<Number>(cell, scratch, data);
+
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
   auto &div_us = scratch.anydata.template get<std::vector <Number> > ("div_us"+suffix);
   auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);

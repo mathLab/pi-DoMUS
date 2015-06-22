@@ -17,41 +17,39 @@ public:
     Interface<dim,spacedim,n_components>(name, default_fe, default_component_names,
                                          default_coupling, default_preconditioner_coupling) {};
 
-  virtual void get_system_energy(const Scratch &d, Sdouble &energy) const
+  virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &c,
+                                 Scratch &s,
+                                 CopySystem &d,
+                                 Sdouble &e) const
   {
-    static_cast<const Implementation *>(this)->system_energy(d, energy);
+    static_cast<const Implementation *>(this)->system_energy(c,s,d,e);
   }
 
 
-  virtual void get_system_energy(const Scratch &d, SSdouble &energy) const
+  virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &c,
+                                 Scratch &s,
+                                 CopySystem &d,
+                                 SSdouble &e) const
   {
-    static_cast<const Implementation *>(this)->system_energy(d, energy);
-  }
-
-  virtual void get_preconditioner_energy(const Scratch &d, Sdouble &energy) const
-  {
-    static_cast<const Implementation *>(this)->preconditioner_energy(d, energy);
-  }
-
-
-  virtual void get_preconditioner_energy(const Scratch &d, SSdouble &energy) const
-  {
-    static_cast<const Implementation *>(this)->preconditioner_energy(d, energy);
+    static_cast<const Implementation *>(this)->system_energy(c,s,d,e);
   }
 
 
-  virtual void fill_preconditioner_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                        Scratch &scratch,
-                                        CopyPreconditioner    &data) const
+  virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &c,
+                                         Scratch &s,
+                                         CopySystem &d,
+                                         Sdouble &e) const
   {
-    static_cast<const Implementation *>(this)->prepare_preconditioner_data(cell,scratch,data);
+    static_cast<const Implementation *>(this)->preconditioner_energy(c,s,d,e);
   }
 
-  virtual void fill_system_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                Scratch &scratch,
-                                CopySystem    &data) const
+
+  virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &c,
+                                         Scratch &s,
+                                         CopyPreconditioner &d,
+                                         SSdouble &e) const
   {
-    static_cast<const Implementation *>(this)->prepare_system_data(cell,scratch,data);
+    static_cast<const Implementation *>(this)->preconditioner_energy(c,s,d,e);
   }
 };
 

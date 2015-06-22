@@ -264,9 +264,7 @@ local_assemble_preconditioner (const typename DoFHandler<dim,spacedim>::active_c
 
   data.local_matrix = 0;
 
-
-  energy.fill_preconditioner_data(cell, scratch, data);
-  energy.get_preconditioner_residual(scratch, data.sacado_residual);
+  energy.get_preconditioner_residual(cell, scratch, data, data.sacado_residual);
 
   for (unsigned int i=0; i<dofs_per_cell; ++i)
     for (unsigned int j=0; j<dofs_per_cell; ++j)
@@ -298,14 +296,11 @@ NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
 
   SAKData preconditioner_data;
 
-  energy.add_solution(solution,preconditioner_data);
-
-  energy.add_fe_data(fe->dofs_per_cell,
-                     quadrature_formula.size(),
-                     preconditioner_data);
-
-  energy.initialize_preconditioner_data(preconditioner_data);
-
+  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+  sols.push_back(&solution);
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         sols,preconditioner_data);
 
   WorkStream::
   run (CellFilter (IteratorFilters::LocallyOwnedCell(),
@@ -372,8 +367,7 @@ local_assemble_system (const typename DoFHandler<dim,spacedim>::active_cell_iter
   if (rebuild_matrix == true)
     {
       data.local_matrix = 0;
-      energy.fill_system_data(cell, scratch, data);
-      energy.get_system_residual(scratch, data, cell, data.sacado_residual);
+      energy.get_system_residual(cell, scratch, data, data.sacado_residual);
 
       for (unsigned int i=0; i<dofs_per_cell; ++i)
         {
@@ -385,7 +379,7 @@ local_assemble_system (const typename DoFHandler<dim,spacedim>::active_cell_iter
     }
   else
     {
-      energy.get_system_residual(scratch, data, cell, data.double_residual);
+      energy.get_system_residual(cell, scratch, data, data.double_residual);
 
       for (unsigned int i=0; i<dofs_per_cell; ++i)
         data.local_rhs(i) -= data.double_residual[i];
@@ -427,11 +421,11 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system ()
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
   SAKData system_data;
-  energy.add_solution(solution,system_data);
-  energy.add_fe_data(fe->dofs_per_cell,
-                     quadrature_formula.size(),system_data);
-
-  energy.initialize_system_data(system_data);
+  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+  sols.push_back(&solution);
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         sols, system_data);
 
   typedef
   FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
