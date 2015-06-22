@@ -1,4 +1,5 @@
-#include "navier_stokes.h"
+#include "stokes_derived_interface.h"
+#include "n_fields_problem.h"
 
 int main (int argc, char *argv[])
 {
@@ -24,7 +25,9 @@ int main (int argc, char *argv[])
       const int dim = 2;
       // BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
 
-      NavierStokes<dim> flow_problem (NavierStokes<dim>::global_refinement);
+      StokesDerivedInterface<dim> energy;
+      NFieldsProblem<dim,dim,dim+1> n_problem (energy);
+      // NavierStokes<dim> flow_problem (NavierStokes<dim>::global_refinement);
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 
 
@@ -32,7 +35,7 @@ int main (int argc, char *argv[])
       //ParameterAcceptor::clear();
       ParameterAcceptor::prm.log_parameters(deallog);
 
-      flow_problem.run ();
+      n_problem.run ();
 
       std::cout << std::endl;
 

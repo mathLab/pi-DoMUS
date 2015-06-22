@@ -1,14 +1,13 @@
 #ifndef _ASSEMBLY_
 #define _ASSEMBLY_
 
-// #include <deal.II/fe/fe_q.h>
-// #include <deal.II/fe/fe_dgq.h>
-// #include <deal.II/fe/fe_dgp.h>
-// #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
-// #include <deal.II/fe/mapping_q.h>
+#include "sak_data.h"
+#include "Sacado.hpp"
 
 using namespace dealii;
+typedef Sacado::Fad::DFad<double> Sdouble;
+typedef Sacado::Fad::DFad<Sdouble> SSdouble;
 
 namespace Assembly
 {
@@ -151,6 +150,115 @@ namespace Assembly
     NavierStokesSystem (const NavierStokesSystem<dim> &data)
       :
       NavierStokesPreconditioner<dim> (data),
+      local_rhs (data.local_rhs)
+    {}
+
+  }
+}
+
+
+namespace Assembly
+{
+  namespace Scratch
+  {
+    template <int dim, int spacedim>
+    struct NFields
+    {
+      NFields     (const SAKData &anydata,
+                   const FiniteElement<dim, spacedim> &fe,
+                   const Quadrature<dim>    &quadrature,
+                   const Mapping<dim, spacedim>       &mapping,
+                   const UpdateFlags         update_flags);
+
+      NFields     (const NFields &scratch);
+
+      SAKData                     anydata;
+      FEValues<dim, spacedim>     fe_values;
+    };
+    template <int dim, int spacedim>
+    NFields<dim,spacedim>::NFields (const SAKData &data,
+                                    const FiniteElement<dim, spacedim> &fe,
+                                    const Quadrature<dim>    &quadrature,
+                                    const Mapping<dim, spacedim>       &mapping,
+                                    const UpdateFlags         update_flags)
+      :
+      anydata     (data),
+      fe_values   (mapping, fe, quadrature,
+                   update_flags)
+    {}
+
+    template <int dim, int spacedim>
+    NFields<dim,spacedim>::NFields (const NFields &scratch)
+      :
+      anydata   (scratch.anydata),
+      fe_values ( scratch.fe_values.get_mapping(),
+                  scratch.fe_values.get_fe(),
+                  scratch.fe_values.get_quadrature(),
+                  scratch.fe_values.get_update_flags())
+    {}
+
+
+  }
+
+
+
+  namespace CopyData
+  {
+    template <int dim, int spacedim>
+    struct NFieldsPreconditioner
+    {
+      NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe);
+      NFieldsPreconditioner (const NFieldsPreconditioner &data);
+
+      FullMatrix<double>          local_matrix;
+      std::vector<types::global_dof_index> local_dof_indices;
+      std::vector<Sdouble> sacado_residual;
+      std::vector<double> double_residual;
+    };
+
+    template <int dim, int spacedim>
+    NFieldsPreconditioner<dim, spacedim>::
+    NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe)
+      :
+      local_matrix (fe.dofs_per_cell,
+                    fe.dofs_per_cell),
+      local_dof_indices (fe.dofs_per_cell),
+      sacado_residual (fe.dofs_per_cell),
+      double_residual (fe.dofs_per_cell)
+    {}
+
+    template <int dim, int spacedim>
+    NFieldsPreconditioner<dim, spacedim>::
+    NFieldsPreconditioner (const NFieldsPreconditioner &data)
+      :
+      local_matrix (data.local_matrix),
+      local_dof_indices (data.local_dof_indices),
+      sacado_residual (data.sacado_residual),
+      double_residual (data.double_residual)
+    {}
+
+    template <int dim, int spacedim>
+    struct NFieldsSystem : public NFieldsPreconditioner<dim, spacedim>
+    {
+      NFieldsSystem (const FiniteElement<dim, spacedim> &fe);
+      NFieldsSystem (const NFieldsSystem<dim, spacedim> &data);
+
+      Vector<double> local_rhs;
+    };
+
+    template <int dim, int spacedim>
+    NFieldsSystem<dim, spacedim>::
+    NFieldsSystem (const FiniteElement<dim, spacedim> &fe)
+      :
+      NFieldsPreconditioner<dim, spacedim> (fe),
+      local_rhs (fe.dofs_per_cell)
+    {}
+
+    template <int dim, int spacedim>
+    NFieldsSystem<dim, spacedim>::
+    NFieldsSystem (const NFieldsSystem<dim, spacedim> &data)
+      :
+      NFieldsPreconditioner<dim, spacedim> (data),
       local_rhs (data.local_rhs)
     {}
 
