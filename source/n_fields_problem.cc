@@ -544,8 +544,10 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
 
 
   constraints.distribute (distributed_solution);
-  const double alpha = 1.0;
-  solution.add(alpha,distributed_solution);
+	newton_update = distributed_solution;
+  const double alpha = determine_step_length();
+
+  solution += alpha*newton_update;
 
   pcout << std::endl;
   pcout << " iterations:                           " <<  n_iterations
@@ -556,20 +558,66 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
 /* ------------------------ residual ----------------------- */
 
 template <int dim, int spacedim, int n_components>
-double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha) const
+double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha)// const
 {
-  Vector<TrilinosWrappers::BlockVector> residual (dof_handler->n_dofs());
-  Vector<TrilinosWrappers::BlockVector> evaluation_point (dof_handler->n_dofs());
-  evaluation_point.swap(solution);
+  TrilinosWrappers::MPI::BlockVector evaluation_point (solution);
 	if (alpha >1e-10)
-		evaluation_point.add (alpha, newton_update);
+		evaluation_point += alpha*newton_update;
+		
+  const QGauss<dim> quadrature_formula(fe->degree+1);
+  SAKData residual_data;
+  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+  sols.push_back(&evaluation_point);
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         sols, residual_data);
 
+	rhs=0;
+  typedef
+  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+  CellFilter;
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+                        local_assemble_system,
+                        this,
+                        std_cxx11::_1,
+                        std_cxx11::_2,
+                        std_cxx11::_3),
+       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+                        copy_local_to_global_system,
+                        this,
+                        std_cxx11::_1),
+       Assembly::Scratch::
+       NFields<dim,spacedim> (residual_data,
+                              *fe,
+                              quadrature_formula,
+                              mapping,
+                              (update_values    |
+                               update_quadrature_points  |
+                               update_JxW_values |
+                               (rebuild_matrix == false
+                                ?
+                                update_gradients
+                                :
+                                UpdateFlags(0)))),
+       Assembly::CopyData::
+       NFieldsSystem<dim,spacedim> (*fe));
+
+  rhs.compress(VectorOperation::add);
+
+  pcout << std::endl;
+	return rhs.l2_norm();
 	
 }
 
 template <int dim, int spacedim, int n_components>
 double NFieldsProblem<dim, spacedim, n_components>::determine_step_length() const
 {
+	return 1.0;
 }
 /* ------------------------ OUTPUTS ------------------------ */
 
@@ -636,10 +684,10 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
 
 			while (residual > 1e-6)
 			{
+				setup_dofs (first_non_linear_step);
 				pcout << "Initial residual: " 
 					<< compute_residual(0.0) 
 					<< std::endl;
-				setup_dofs (first_non_linear_step);
 				assemble_system ();
 				build_preconditioner ();
 				solve ();

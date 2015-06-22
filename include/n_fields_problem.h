@@ -58,7 +58,7 @@ private:
   void output_results ();
   //void refine_mesh (const unsigned int max_grid_level);
   void refine_mesh ();
-  double compute_residual(const double alpha) const;
+  double compute_residual(const double alpha); // const;
   double determine_step_length () const;
   void process_solution ();
 
