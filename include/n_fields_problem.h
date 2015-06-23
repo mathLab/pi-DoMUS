@@ -49,7 +49,6 @@ public:
 
 private:
   void make_grid_fe();
-  void setup_dofs (const bool initial_step);
   void setup_dofs ();
   void assemble_preconditioner ();
   void build_preconditioner ();
