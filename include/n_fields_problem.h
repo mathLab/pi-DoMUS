@@ -49,7 +49,6 @@ public:
 
 private:
   void make_grid_fe();
-  //void setup_dofs (const bool initial_step);
   void setup_dofs ();
   void assemble_preconditioner ();
   void build_preconditioner ();
@@ -58,7 +57,7 @@ private:
   void output_results ();
   //void refine_mesh (const unsigned int max_grid_level);
   void refine_mesh ();
-  double compute_residual(const double alpha) const;
+  double compute_residual(const double alpha); // const;
   double determine_step_length () const;
   void process_solution ();
 

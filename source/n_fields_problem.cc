@@ -1,5 +1,6 @@
 #include "n_fields_problem.h"
 #include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
@@ -123,10 +124,10 @@ template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
 {
   computing_timer.enter_section("Setup dof systems");
-
   std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
+
 
   std::vector<types::global_dof_index> dofs_per_block (energy.n_blocks());
   DoFTools::count_dofs_per_block (*dof_handler, dofs_per_block,
@@ -163,32 +164,32 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
       relevant_partitioning.push_back(relevant_set.get_view(std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i, 0),
                                                             std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i+1, 0)));
   }
+  constraints.clear ();
+  constraints.reinit (relevant_set);
 
-  {
-    constraints.clear ();
-    constraints.reinit (relevant_set);
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
 
-    DoFTools::make_hanging_node_constraints (*dof_handler,
-                                             constraints);
+  FEValuesExtractors::Vector velocity_components(0);
+//      boundary_conditions.set_time(time_step*time_step_number);
+  VectorTools::interpolate_boundary_values (*dof_handler,
+                                            0,
+                                            boundary_conditions,
+                                            constraints,
+                                            fe->component_mask(velocity_components));
+  constraints.close ();
 
-    FEValuesExtractors::Vector velocity_components(0);
-    //boundary_conditions.set_time(time_step*time_step_number);
-    VectorTools::interpolate_boundary_values (*dof_handler,
-                                              0,
-                                              boundary_conditions,
-                                              constraints,
-                                              fe->component_mask(velocity_components));
-    constraints.close ();
-  }
 
   setup_matrix (partitioning, relevant_partitioning);
   setup_preconditioner (partitioning, relevant_partitioning);
 
   rhs.reinit (partitioning, relevant_partitioning,
               MPI_COMM_WORLD, true);
+//  solution.reinit (partitioning, relevant_partitioning,
+//              MPI_COMM_WORLD, true);
   solution.reinit (relevant_partitioning, MPI_COMM_WORLD);
-  old_solution.reinit (solution);
-  old_solution.reinit (solution);
+  newton_update.reinit(solution);
+  old_solution.reinit (rhs);
 
   rebuild_matrix              = true;
   rebuild_preconditioner      = true;
@@ -530,7 +531,10 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
 
 
   constraints.distribute (distributed_solution);
-  solution = distributed_solution;
+  newton_update = distributed_solution;
+  const double alpha = determine_step_length();
+  solution += alpha*newton_update;
+
 
   pcout << std::endl;
   pcout << " iterations:                           " <<  n_iterations
@@ -538,7 +542,66 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
   pcout << std::endl;
 
 }
+/* ------------------------ residual ----------------------- */
 
+template <int dim, int spacedim, int n_components>
+double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha)// const
+{
+  TrilinosWrappers::MPI::BlockVector evaluation_point (solution);
+  if (alpha >1e-10)
+    evaluation_point += alpha*newton_update;
+
+  const QGauss<dim> quadrature_formula(fe->degree+1);
+  SAKData residual_data;
+  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+  sols.push_back(&evaluation_point);
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         sols, residual_data);
+
+  rhs=0;
+  typedef
+  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+  CellFilter;
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+                        local_assemble_system,
+                        this,
+                        std_cxx11::_1,
+                        std_cxx11::_2,
+                        std_cxx11::_3),
+       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+                        copy_local_to_global_system,
+                        this,
+                        std_cxx11::_1),
+       Assembly::Scratch::
+       NFields<dim,spacedim> (residual_data,
+                              *fe,
+                              quadrature_formula,
+                              mapping,
+                              (update_values    |
+                               update_quadrature_points  |
+                               update_JxW_values |
+                               update_gradients)),
+       Assembly::CopyData::
+       NFieldsSystem<dim,spacedim> (*fe));
+
+  rhs.compress(VectorOperation::add);
+
+  pcout << std::endl;
+  return rhs.l2_norm();
+
+}
+
+template <int dim, int spacedim, int n_components>
+double NFieldsProblem<dim, spacedim, n_components>::determine_step_length() const
+{
+  return 1.0;
+}
 /* ------------------------ OUTPUTS ------------------------ */
 
 template <int dim, int spacedim, int n_components>
@@ -552,6 +615,7 @@ void NFieldsProblem<dim, spacedim, n_components>::output_results ()
   data_out.prepare_data_output( *dof_handler,
                                 suffix.str());
   data_out.add_data_vector (solution, energy.get_component_names());
+//  data_out.add_data_vector (newton_update, energy.get_component_names());
   data_out.write_data_and_clear();
 
   computing_timer.exit_section ();
@@ -563,6 +627,9 @@ template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
 {
   triangulation->refine_global (1);
+  //dof_handler->distribute_dofs(*fe);
+  //TrilinosWrappers::MPI::BlockVector tmp(dof_handler->n_dofs());
+  //solution_transfer.interpolate(solution, tmp);
 }
 
 
@@ -599,12 +666,24 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh ();
 
+      double residual = 10.;
       setup_dofs ();
-      assemble_system ();
-      build_preconditioner ();
-      solve ();
-      output_results ();
-      process_solution ();
+
+      while (residual > 1e-6)
+        {
+          pcout << "Initial residual: "
+                << compute_residual(0.0)
+                << std::endl;
+          assemble_system ();
+          build_preconditioner ();
+          solve ();
+          residual = compute_residual(0.0);
+          pcout << "Residual=           "
+                << residual
+                << std::endl;
+          output_results ();
+          process_solution ();
+        }
     }
 
   // std::ofstream f("errors.txt");
