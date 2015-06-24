@@ -7,6 +7,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
+#include <deal.II/numerics/vector_tools.h>
 
 #include "dof_utilities.h"
 #include "parsed_finite_element.h"
@@ -27,11 +28,25 @@ public:
             const std::string &default_coupling="",
             const std::string &default_preconditioner_coupling="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
-                                      n_components, default_coupling, default_preconditioner_coupling)
+                                      n_components, default_coupling, default_preconditioner_coupling),
+    boundary_conditions("Dirichlet boundary conditions")
   {};
+
+  virtual void apply_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                          const FiniteElement<dim,spacedim> &fe,
+                          ConstraintMatrix &constraints) const
+  {
+    VectorTools::interpolate_boundary_values (dof_handler,
+                                              0,
+                                              boundary_conditions,
+                                              constraints);
+
+  };
+
 
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
+                               const unsigned int &n_face_q_points,
                                const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
                                SAKData &d) const;
 
@@ -115,17 +130,22 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+protected:
+  ParsedFunction<spacedim, n_components> boundary_conditions;
+
 };
 
 
 template<int dim, int spacedim, int n_components>
 void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &dofs_per_cell,
                                                            const unsigned int &n_q_points,
+                                                           const unsigned int &n_face_q_points,
                                                            const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
                                                            SAKData &d) const
 {
   d.add_copy(dofs_per_cell, "dofs_per_cell");
   d.add_copy(n_q_points, "n_q_points");
+  d.add_copy(n_face_q_points, "n_face_q_points");
   if (sols.size() > 1)
     for (unsigned int i=0; i<sols.size(); ++i)
       {

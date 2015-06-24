@@ -8,6 +8,7 @@
 #include <deal.II/base/utilities.h>
 // #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/work_stream.h>
+#include <deal.II/fe/mapping_q_eulerian.h>
 
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/solver_cg.h>
@@ -71,11 +72,22 @@ declare_parameters (ParameterHandler &prm)
                   "1",
                   Patterns::Integer (0));
 
-
   add_parameter(  prm,
                   &n_cycles,
                   "Number of cycles",
                   "3",
+                  Patterns::Integer (0));
+
+  add_parameter(  prm,
+                  &fixed_alpha,
+                  "Alpha for Newton's iterations",
+                  "1",
+                  Patterns::Double (0));
+
+  add_parameter(  prm,
+                  &max_newton_it,
+                  "Maximum number of Newton's iterations",
+                  "5",
                   Patterns::Integer (0));
 }
 
@@ -107,10 +119,6 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
 
   pgg("Domain"),
 
-
-  boundary_conditions("Dirichlet boundary conditions"),
-
-  right_hand_side("Right-hand side force"),
   exact_solution("Exact solution"),
 
   data_out("Output Parameters", "vtu")
@@ -170,23 +178,16 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  FEValuesExtractors::Vector velocity_components(0);
-//      boundary_conditions.set_time(time_step*time_step_number);
-  VectorTools::interpolate_boundary_values (*dof_handler,
-                                            0,
-                                            boundary_conditions,
-                                            constraints,
-                                            fe->component_mask(velocity_components));
-  constraints.close ();
+  energy.apply_bcs(*dof_handler, *fe ,constraints);
 
+  constraints.close ();
 
   setup_matrix (partitioning, relevant_partitioning);
   setup_preconditioner (partitioning, relevant_partitioning);
 
   rhs.reinit (partitioning, relevant_partitioning,
               MPI_COMM_WORLD, true);
-//  solution.reinit (partitioning, relevant_partitioning,
-//              MPI_COMM_WORLD, true);
+
   solution.reinit (relevant_partitioning, MPI_COMM_WORLD);
   newton_update.reinit(solution);
   old_solution.reinit (rhs);
@@ -290,6 +291,7 @@ NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
   preconditioner_matrix = 0;
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
+  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
   typedef
   FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
@@ -301,6 +303,7 @@ NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
   sols.push_back(&solution);
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
+                         face_quadrature_formula.size(),
                          sols,preconditioner_data);
 
   WorkStream::
@@ -324,7 +327,9 @@ NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
                               mapping,
                               update_JxW_values |
                               update_values |
-                              update_gradients),
+                              update_gradients,
+                              face_quadrature_formula,
+                              UpdateFlags(0)),
        Assembly::CopyData::
        NFieldsPreconditioner<dim,spacedim> (*fe));
 
@@ -421,11 +426,13 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system ()
   rhs=0;
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
+  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
   std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
   sols.push_back(&solution);
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
+                         face_quadrature_formula.size(),
                          sols, system_data);
 
   typedef
@@ -451,14 +458,14 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system ()
                               *fe,
                               quadrature_formula,
                               mapping,
-                              (update_values    |
-                               update_quadrature_points  |
-                               update_JxW_values |
-                               (rebuild_matrix == true
-                                ?
-                                update_gradients
-                                :
-                                UpdateFlags(0)))),
+                              update_values    |
+                              update_quadrature_points  |
+                              update_JxW_values |
+                              update_gradients,
+                              face_quadrature_formula,
+                              update_values            |
+                              update_quadrature_points |
+                              update_JxW_values),
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
@@ -484,15 +491,16 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
   distributed_solution (rhs);
   distributed_solution = solution;
 
-  const unsigned int
-  start = (distributed_solution.block(0).size() +
-           distributed_solution.block(1).local_range().first);
-  const unsigned int
-  end   = (distributed_solution.block(0).size() +
-           distributed_solution.block(1).local_range().second);
-  for (unsigned int i=start; i<end; ++i)
-    if (constraints.is_constrained (i))
-      distributed_solution(i) = 0;
+  // [TODO] make n_block independent
+//  const unsigned int
+//  start = (distributed_solution.block(0).size() +
+//           distributed_solution.block(1).local_range().first);
+//  const unsigned int
+//  end   = (distributed_solution.block(0).size() +
+//           distributed_solution.block(1).local_range().second);
+//  for (unsigned int i=start; i<end; ++i)
+//    if (constraints.is_constrained (i))
+//      distributed_solution(i) = 0;
 
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
@@ -532,8 +540,10 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
 
   constraints.distribute (distributed_solution);
   newton_update = distributed_solution;
-  const double alpha = determine_step_length();
-  solution += alpha*newton_update;
+  TrilinosWrappers::MPI::BlockVector nwt (solution);
+  nwt = distributed_solution;
+  nwt *= fixed_alpha;
+  solution += nwt;
 
 
   pcout << std::endl;
@@ -548,15 +558,22 @@ template <int dim, int spacedim, int n_components>
 double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha)// const
 {
   TrilinosWrappers::MPI::BlockVector evaluation_point (solution);
+  TrilinosWrappers::MPI::BlockVector nwt (solution);
+  nwt = newton_update;
   if (alpha >1e-10)
-    evaluation_point += alpha*newton_update;
+    {
+      nwt *= alpha;
+      evaluation_point += nwt;
+    }
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
+  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData residual_data;
   std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
   sols.push_back(&evaluation_point);
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
+                         face_quadrature_formula.size(),
                          sols, residual_data);
 
   rhs=0;
@@ -583,16 +600,19 @@ double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const doubl
                               *fe,
                               quadrature_formula,
                               mapping,
-                              (update_values    |
-                               update_quadrature_points  |
-                               update_JxW_values |
-                               update_gradients)),
+                              update_values    |
+                              update_quadrature_points  |
+                              update_JxW_values |
+                              update_gradients,
+                              face_quadrature_formula,
+                              update_values            |
+                              update_quadrature_points |
+                              update_JxW_values),
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
   rhs.compress(VectorOperation::add);
 
-  pcout << std::endl;
   return rhs.l2_norm();
 
 }
@@ -615,7 +635,8 @@ void NFieldsProblem<dim, spacedim, n_components>::output_results ()
   data_out.prepare_data_output( *dof_handler,
                                 suffix.str());
   data_out.add_data_vector (solution, energy.get_component_names());
-//  data_out.add_data_vector (newton_update, energy.get_component_names());
+  //MappingQEulerian<dim,TrilinosWrappers::MPI::BlockVector> q_mapping(fe->degree, *dof_handler, solution);
+  //data_out.write_data_and_clear("",q_mapping);
   data_out.write_data_and_clear();
 
   computing_timer.exit_section ();
@@ -669,11 +690,14 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       double residual = 10.;
       setup_dofs ();
 
-      while (residual > 1e-6)
+      pcout << "Initial residual: "
+            << compute_residual(0.0)
+            << std::endl;
+      unsigned int it = 0;
+
+      while (residual > 1e-6 && it < max_newton_it)
         {
-          pcout << "Initial residual: "
-                << compute_residual(0.0)
-                << std::endl;
+          it += 1;
           assemble_system ();
           build_preconditioner ();
           solve ();

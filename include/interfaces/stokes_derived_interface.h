@@ -26,6 +26,11 @@ class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, Stoke
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
 public:
+  /* override the apply_bcs function */
+  void apply_bcs (const DoFHandler<dim> &dof_handler,
+                  const FiniteElement<dim> &fe,
+                  ConstraintMatrix &constraints) const;
+
   /* specific and useful functions for this very problem */
   StokesDerivedInterface();
 
@@ -93,6 +98,18 @@ StokesDerivedInterface<dim>::StokesDerivedInterface() :
 {};
 
 
+template <int dim>
+void StokesDerivedInterface<dim>::apply_bcs (const DoFHandler<dim> &dof_handler,
+                                             const FiniteElement<dim> &fe,
+                                             ConstraintMatrix &constraints) const
+{
+  FEValuesExtractors::Vector velocities(0);
+  VectorTools::interpolate_boundary_values (dof_handler,
+                                            0,
+                                            this->boundary_conditions,
+                                            constraints,
+                                            fe.component_mask(velocities));
+}
 
 
 template<int dim>
