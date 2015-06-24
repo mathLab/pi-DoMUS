@@ -85,7 +85,7 @@ FOREACH(_build_type ${_d2_build_types})
 	ENDIF()
 
 	FOREACH(_slib ${SUNDIALS_LIBS})
-	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS ${SUNDIALS_DIR} PATH_SUFFIXES lib)
+	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS $ENV{SUNDIALS_DIR} PATH_SUFFIXES lib)
 	    IF(NOT "${SUNDIALS_${_slib}}" STREQUAL "${_slib}-NOTFOUND")
 		TARGET_LINK_LIBRARIES(${_lib} ${SUNDIALS_${_slib}})
 		MESSAGE("-- Library ${_slib} found: ${SUNDIALS_${_slib}}")
