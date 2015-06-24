@@ -1,5 +1,5 @@
-#ifndef _neohookean_interface_h_
-#define _neohookean_interface_h_
+#ifndef _neo_hookean_two_fields_interface_h_
+#define _neo_hookean_two_fields_interface_h_
 
 #include "conservative_interface.h"
 #include "parsed_function.h"

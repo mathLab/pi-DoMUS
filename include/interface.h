@@ -131,7 +131,7 @@ public:
   }
 
 protected:
-  ParsedFunction<dim, n_components> boundary_conditions;
+  ParsedFunction<spacedim, n_components> boundary_conditions;
 
 };
 
