@@ -168,23 +168,28 @@ namespace Assembly
                    const FiniteElement<dim, spacedim> &fe,
                    const Quadrature<dim>    &quadrature,
                    const Mapping<dim, spacedim>       &mapping,
-                   const UpdateFlags         update_flags);
+                   const UpdateFlags         update_flags,
+                   const Quadrature<dim-1>    &face_quadrature,
+                   const UpdateFlags         face_update_flags);
 
       NFields     (const NFields &scratch);
 
       SAKData                     anydata;
       FEValues<dim, spacedim>     fe_values;
+      FEFaceValues<dim, spacedim>     fe_face_values;
     };
     template <int dim, int spacedim>
     NFields<dim,spacedim>::NFields (const SAKData &data,
                                     const FiniteElement<dim, spacedim> &fe,
                                     const Quadrature<dim>    &quadrature,
                                     const Mapping<dim, spacedim>       &mapping,
-                                    const UpdateFlags         update_flags)
+                                    const UpdateFlags         update_flags,
+                                    const Quadrature<dim-1>    &face_quadrature,
+                                    const UpdateFlags         face_update_flags)
       :
-      anydata     (data),
-      fe_values   (mapping, fe, quadrature,
-                   update_flags)
+      anydata         (data),
+      fe_values       (mapping, fe, quadrature, update_flags),
+      fe_face_values   (mapping, fe, face_quadrature, face_update_flags)
     {}
 
     template <int dim, int spacedim>
@@ -194,7 +199,11 @@ namespace Assembly
       fe_values ( scratch.fe_values.get_mapping(),
                   scratch.fe_values.get_fe(),
                   scratch.fe_values.get_quadrature(),
-                  scratch.fe_values.get_update_flags())
+                  scratch.fe_values.get_update_flags()),
+      fe_face_values ( scratch.fe_values.get_mapping(),
+                       scratch.fe_values.get_fe(),
+                       scratch.fe_face_values.get_quadrature(),
+                       scratch.fe_face_values.get_update_flags())
     {}
 
 

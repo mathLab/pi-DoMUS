@@ -1,4 +1,4 @@
-#include "stokes_derived_interface.h"
+#include "interfaces/stokes_derived_interface.h"
 #include "n_fields_problem.h"
 
 int main (int argc, char *argv[])

@@ -21,7 +21,6 @@
 #include "parameter_acceptor.h"
 
 #include "sak_data.h"
-#include "stokes_derived_interface.h"
 
 using namespace dealii;
 
@@ -63,6 +62,8 @@ private:
 
   unsigned int n_cycles;
   unsigned int initial_global_refinement;
+  unsigned int max_newton_it;
+  double fixed_alpha;
 
   const Interface<dim,spacedim,n_components>    &energy;
   ConditionalOStream        pcout;
@@ -120,8 +121,6 @@ private:
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim,spacedim>   pgg;
 
-  ParsedFunction<spacedim, n_components>        boundary_conditions;
-  ParsedFunction<spacedim, n_components>        right_hand_side;
   ParsedFunction<spacedim, n_components>        exact_solution;
 
   ParsedDataOut<dim, spacedim>                  data_out;
