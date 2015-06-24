@@ -1,0 +1,23 @@
+# Parameter file generated with 
+# DEAL_II_SAK_GIT_BRANCH=master.g
+# DEAL_II_SAK_GIT_SHORTREV=e7a6881.g
+# DEAL_II_GIT_BRANCH=
+# DEAL_II_GIT_SHORTREV=
+subsection DAETimeIntegrator<dealii::TrilinosWrappers::MPI::BlockVector>
+  subsection IDA Solver Params
+    set Absolute error tolerance        = 1e-2
+    set Final time                      = 10
+    set Initial condition type          = 0
+    set Initial step size               = 1e-5
+    set Initial time                    = 0
+    set Min step size                   = 5e-5
+    set Provide jacobian preconditioner = false
+    set Provide jacobian product        = true
+    set Relative error tolerance        = 1e-3
+    set Seconds between each output     = 1e-1
+    set Use iterative algorithm         = true
+  end
+end
+subsection Solver<dealii::TrilinosWrappers::MPI::BlockVector>
+  set Number of comps = 2
+end

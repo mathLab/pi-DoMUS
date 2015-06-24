@@ -28,6 +28,8 @@ SET(_main source/main.cc)
 # Declare all source files the target consists of:
 file(GLOB _files source/*cc)
 
+set(SUNDIALS_LIBS "sundials_ida;sundials_nvecserial;sundials_nvecparallel")
+
 # Don't compile the main file into the library
 IF(NOT "${_main}" STREQUAL "") 
     LIST(REMOVE_ITEM _files
@@ -81,7 +83,17 @@ FOREACH(_build_type ${_d2_build_types})
 	ELSE()
 	    MESSAGE(WARNING "-- Library dealii-sak not found: ${SAK${_p}}")
 	ENDIF()
-    
+
+	FOREACH(_slib ${SUNDIALS_LIBS})
+	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS ${SUNDIALS_DIR} PATH_SUFFIXES lib)
+	    IF(NOT "${SUNDIALS_${_slib}}" STREQUAL "${_slib}-NOTFOUND")
+		TARGET_LINK_LIBRARIES(${_lib} ${SUNDIALS_${_slib}})
+		MESSAGE("-- Library ${_slib} found: ${SUNDIALS_${_slib}}")
+	    ELSE()
+		MESSAGE(WARNING "-- Library ${_slib} not found: ${SUNDIALS_${_slib}}")
+	    ENDIF()
+	ENDFOREACH()
+
 	# Compile an executable only if required by the user
 	IF(NOT "${_main}" STREQUAL "") 
 	    SET(_exe "${TARGET}${${_build_type}_postfix}")
@@ -96,6 +108,7 @@ FOREACH(_build_type ${_d2_build_types})
 ENDFOREACH()
 
 INCLUDE_DIRECTORIES(${DEAL_II_SAK}/include)
+INCLUDE_DIRECTORIES(${SUNDIALS_DIR}/include)
 
 ADD_SUBDIRECTORY(tests)
 ENABLE_TESTING()
