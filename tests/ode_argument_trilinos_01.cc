@@ -36,7 +36,7 @@ public:
 
   virtual void declare_parameters(ParameterHandler &prm)
   {
-    add_parameter(prm, &n_dofs_, "Number of comps", "1", Patterns::Integer(0));
+    add_parameter(prm, &n_dofs_, "Number of comps", "2", Patterns::Integer(0));
   }
 
   virtual unsigned int n_dofs() const

@@ -7,9 +7,10 @@
 
 // For time integration.
 #include <ida/ida.h>
-#include <ida/ida_dense.h>
-#include <ida/ida_lapack.h>
+#include <ida/ida_spils.h>
 #include <ida/ida_spgmr.h>
+#include <ida/ida_spbcgs.h>
+#include <ida/ida_sptfqmr.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
@@ -28,31 +29,11 @@ public:
    * integrator to find out about the solution to a given src. */
   DAETimeIntegrator(OdeArgument<VEC> &solver);
 
-  /** In cases in which we don't get  the integrator parameters
-   * from a file, we use a constructor in which they are directly
-   * specified. */
-  DAETimeIntegrator(OdeArgument<VEC> &solver,
-                    double initial_step_size,
-                    double min_step_size,
-                    double initial_time,
-                    double final_time,
-                    double abs_tol,
-                    double rel_tol,
-                    unsigned int max_n_steps,
-                    double outputs_period,
-                    unsigned int ic_type,
-                    bool use_iterative,
-                    bool provide_jac,
-                    bool provide_jac_prec);
-
   /** House cleaning. */
   ~DAETimeIntegrator();
 
   /** Declare parameters for this class to function properly. */
   virtual void declare_parameters(ParameterHandler &prm);
-
-  /** Parse a parameter handler. */
-  virtual void parse_parameters(ParameterHandler &prm);
 
   /** Evolve. This function returns the final number of steps. */
   unsigned int start_ode(VEC &solution,
@@ -95,14 +76,21 @@ private:
 
   double outputs_period;
 
-  unsigned int ic_type;
+  /** Type of initial conditions. */
+  std::string ic_type;
+
+  /** Alpha to use in Newton method for IC calculation. */
+  double ic_alpha;
+
+  /** Maximum number of iterations for Newton method in IC calculation. */
+  unsigned ic_max_iter;
 
   /** Initialization flag.*/
   bool is_initialized;
 
   /** If true, we use
   preconditioned gmres. */
-  bool use_iterative;
+  std::string iterative_solver_type;
 
   /** Provides the Jacobian vector
   product. If this is false,
@@ -114,6 +102,8 @@ private:
   preconditioning is used. */
   bool provide_jac_prec;
 
+  /** Use local tolerances when computing absolute tolerance. */
+  bool use_local_tolerances;
 
   /** Ida memory object. */
   void *ida_mem;

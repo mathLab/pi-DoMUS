@@ -240,6 +240,7 @@ int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
 
 template <typename VEC>
 DAETimeIntegrator<VEC>::DAETimeIntegrator(OdeArgument<VEC> &bubble) :
+  ParameterAcceptor("IDA Solver Parameters"),
   solver(bubble),
   is_initialized(false)
 {
@@ -255,42 +256,6 @@ DAETimeIntegrator<VEC>::DAETimeIntegrator(OdeArgument<VEC> &bubble) :
 }
 
 template <typename VEC>
-DAETimeIntegrator<VEC>::DAETimeIntegrator(OdeArgument<VEC> &bubble,
-                                          double initial_step_size,
-                                          double min_step_size,
-                                          double initial_time,
-                                          double final_time,
-                                          double abs_tol,
-                                          double rel_tol,
-                                          unsigned int max_n_steps,
-                                          double outputs_period,
-                                          unsigned int ic_type,
-                                          bool use_iterative,
-                                          bool provide_jac,
-                                          bool provide_jac_prec) :
-  final_time(final_time),
-  initial_time(initial_time),
-  solver(bubble),
-  initial_step_size(initial_step_size),
-  min_step_size(min_step_size),
-  abs_tol(abs_tol),
-  rel_tol(rel_tol),
-  max_n_steps(max_n_steps),
-  outputs_period(outputs_period),
-  ic_type(ic_type),
-  is_initialized(false),
-  use_iterative(use_iterative),
-  provide_jac(provide_jac),
-  provide_jac_prec(provide_jac_prec)
-{
-
-  ida_mem = IDACreate();
-  is_initialized = true;
-
-}
-
-
-template <typename VEC>
 DAETimeIntegrator<VEC>::~DAETimeIntegrator()
 {
   if (ida_mem)
@@ -300,43 +265,59 @@ DAETimeIntegrator<VEC>::~DAETimeIntegrator()
 template <typename VEC>
 void DAETimeIntegrator<VEC>::declare_parameters(ParameterHandler &prm)
 {
-  prm.enter_subsection("IDA Solver Params");
-  {
-    prm.declare_entry("Use iterative algorithm", "false", Patterns::Bool());
-    prm.declare_entry("Provide jacobian product", "false", Patterns::Bool());
-    prm.declare_entry("Provide jacobian preconditioner", "false", Patterns::Bool());
-    prm.declare_entry("Initial step size", "1e-4", Patterns::Double());
-    prm.declare_entry("Min step size", "5e-5", Patterns::Double());
-    prm.declare_entry("Absolute error tolerance", "1e-4", Patterns::Double());
-    prm.declare_entry("Relative error tolerance", "1e-3", Patterns::Double());
-    prm.declare_entry("Initial time", "0", Patterns::Double());
-    prm.declare_entry("Final time", "100000", Patterns::Double());
-    prm.declare_entry("Seconds between each output", "1e-1", Patterns::Double());
-    prm.declare_entry("Initial condition type", "0", Patterns::Integer());
-  }
-  prm.leave_subsection();
-}
+  add_parameter(prm, &iterative_solver_type,
+                "Iterative algorithm", "gmres",
+                Patterns::Selection("gmres|bicgs|tfqmr"));
 
-template <typename VEC>
-void DAETimeIntegrator<VEC>::parse_parameters(ParameterHandler &prm)
-{
-  prm.enter_subsection("IDA Solver Params");
-  {
-    use_iterative = prm.get_bool("Use iterative algorithm");
-    provide_jac   = prm.get_bool("Provide jacobian product");
-    provide_jac_prec = prm.get_bool("Provide jacobian preconditioner");
-    initial_step_size = prm.get_double("Initial step size");
-    min_step_size     = prm.get_double("Min step size");
-    abs_tol = prm.get_double("Absolute error tolerance");
-    rel_tol = prm.get_double("Relative error tolerance");
-    initial_time = prm.get_double("Initial time");
-    final_time = prm.get_double("Final time");
-    outputs_period = prm.get_double("Seconds between each output");
-    ic_type = prm.get_integer("Initial condition type");
-  }
-  prm.leave_subsection();
-}
+  add_parameter(prm, &provide_jac,
+                "Provide jacobian product", "false", Patterns::Bool());
 
+  add_parameter(prm, &provide_jac_prec,
+                "Provide jacobian preconditioner", "false", Patterns::Bool());
+
+  add_parameter(prm, &initial_step_size,
+                "Initial step size", "1e-4", Patterns::Double());
+
+  add_parameter(prm, &min_step_size,
+                "Min step size", "5e-5", Patterns::Double());
+
+  add_parameter(prm, &abs_tol,
+                "Absolute error tolerance", "1e-4", Patterns::Double());
+
+  add_parameter(prm, &rel_tol,
+                "Relative error tolerance", "1e-3", Patterns::Double());
+
+  add_parameter(prm, &initial_time,
+                "Initial time", "0", Patterns::Double());
+
+  add_parameter(prm, &final_time,
+                "Final time", "100000", Patterns::Double());
+
+  add_parameter(prm, &outputs_period,
+                "Seconds between each output", "1e-1", Patterns::Double());
+
+  add_parameter(prm, &ic_type,
+                "Initial condition type", "use_diff_y",
+                Patterns::Selection("none|use_diff_y|use_y_dot"),
+                "This is one of the following thress options for the "
+                "initial condition calculation. \n"
+                " none: do not try to make initial conditions consistent. \n"
+                " use_diff_y: compute the algebraic components of y and differential\n"
+                "    components of y_dot, given the differential components of y. \n"
+                "    This option requires that the user specifies differential and \n"
+                "    algebraic components in the function get_differential_components.\n"
+                " use_y_dot: compute all components of y, given y_dot.");
+
+  add_parameter(prm, &ic_alpha,
+                "Initial condition Newton parameter", "0.33", Patterns::Double());
+
+
+  add_parameter(prm, &ic_max_iter,
+                "Initial condition Newton max iterations", "5", Patterns::Integer());
+
+  add_parameter(prm, &use_local_tolerances,
+                "Use local tolerances", "false", Patterns::Bool());
+}
 
 
 template <typename VEC>
@@ -458,17 +439,22 @@ void DAETimeIntegrator<VEC>::reset_ode(VEC &solution,
   copy(yp, solution_dot);
   copy(diff_id, solver.differential_components());
 
-  VEC &tolerances = solver.get_local_tolerances();
-  VEC abs_tolerances(tolerances);
-  abs_tolerances /= tolerances.linfty_norm();
-  abs_tolerances *= abs_tol;
-
-  copy(abs_tolls, abs_tolerances);
-
-
   status = IDAInit(ida_mem, t_dae_residual<VEC>, current_time, yy, yp);
-  // status += IDASStolerances(ida_mem, rel_tol, abs_tol);
-  status += IDASVtolerances(ida_mem, rel_tol, abs_tolls);
+
+  if (use_local_tolerances)
+    {
+      VEC &tolerances = solver.get_local_tolerances();
+      VEC abs_tolerances(tolerances);
+      abs_tolerances /= tolerances.linfty_norm();
+      abs_tolerances *= abs_tol;
+      copy(abs_tolls, abs_tolerances);
+      status += IDASVtolerances(ida_mem, rel_tol, abs_tolls);
+    }
+  else
+    {
+      status += IDASStolerances(ida_mem, rel_tol, abs_tol);
+    }
+
   status += IDASetInitStep(ida_mem, current_time_step);
   status += IDASetUserData(ida_mem, (void *) &solver);
 
@@ -480,7 +466,23 @@ void DAETimeIntegrator<VEC>::reset_ode(VEC &solution,
 
   status += IDASetMaxNonlinIters(ida_mem, 10);
 
-  status += IDASpgmr(ida_mem, solver.n_dofs());
+  if (iterative_solver_type == "gmres")
+    {
+      status += IDASpgmr(ida_mem, solver.n_dofs());
+    }
+  else if (iterative_solver_type == "bicgs")
+    {
+      status += IDASpbcg(ida_mem, solver.n_dofs());
+    }
+  else if (iterative_solver_type == "tfqmr")
+    {
+      status += IDASptfqmr(ida_mem, solver.n_dofs());
+    }
+  else
+    {
+      Assert(false, ExcInternalError("I don't know what solver you want to use!"));
+    }
+
   if (provide_jac)
     status += IDASpilsSetJacTimesVecFn(ida_mem, t_dae_jtimes<VEC>);
   if (provide_jac_prec)
@@ -491,7 +493,7 @@ void DAETimeIntegrator<VEC>::reset_ode(VEC &solution,
 
   AssertThrow(status == 0, ExcMessage("Error initializing IDA."));
   //std::cout<<"???1"<<std::endl;
-  if (ic_type == 2)
+  if (ic_type == "use_y_dot")
     {
       // (re)initialization of the vectors
       //solution_dot = 0;
@@ -499,23 +501,22 @@ void DAETimeIntegrator<VEC>::reset_ode(VEC &solution,
         IDACalcIC(ida_mem, IDA_Y_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
     }
-  else if (ic_type == 1)
+  else if (ic_type == "use_diff_y")
     {
       IDACalcIC(ida_mem, IDA_YA_YDP_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
     }
-  else if (ic_type == 3)
+  else if (ic_type == "none")
     {
       IDAGetConsistentIC(ida_mem, yy, yp);
-      std::cout << "Using consistent conditions type 3" << std::endl;
     }
   copy(solution, yy);
   copy(solution_dot, yp);
 
-//    shared_ptr<VEC> resid = solver.create_new_vector();
-//    solver.residual(current_time,*resid,solution,solution_dot);
-//    solution_dot -= *resid;
-//    solver.output_step(solution, solution_dot, 0, 0, current_time_step);
+  //    shared_ptr<VEC> resid = solver.create_new_vector();
+  //    solver.residual(current_time,*resid,solution,solution_dot);
+  //    solution_dot -= *resid;
+  //    solver.output_step(solution, solution_dot, 0, 0, current_time_step);
 
   //solution_dot.reinit(solver.n_dofs());
   //Vector<double> res(solver.n_dofs());
@@ -688,25 +689,28 @@ void DAETimeIntegrator<Vector<double> >::reset_ode(Vector<double> &solution,
   status += IDASetMaxNonlinIters(ida_mem, 10);
 
 
-  if (use_iterative == true)
-    {
-      status += IDASpgmr(ida_mem, solver.n_dofs());
-      if (provide_jac)
-        status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
-      if (provide_jac_prec)
-        status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
-    }
-  else
-    {
-      status += IDALapackDense(ida_mem, solver.n_dofs());
-    }
+//    if (use_iterative == true)
+//    {
+  status += IDASpgmr(ida_mem, solver.n_dofs());
+  if (provide_jac)
+    status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
+  if (provide_jac_prec)
+    status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
+//    }
+//    else
+//    {
+//        status += IDALapackDense(ida_mem, solver.n_dofs());
+//    }
 
   status += IDASetMaxOrd(ida_mem, 5);
   //std::cout<<"???1"<<std::endl;
 
   AssertThrow(status == 0, ExcMessage("Error initializing IDA."));
   //std::cout<<"???1"<<std::endl;
-  if (ic_type == 2)
+
+  status += IDASetNonlinConvCoefIC(ida_mem, ic_alpha);
+  status += IDASetMaxNumItersIC(ida_mem, ic_max_iter);
+  if (ic_type == "use_diff_y")
     {
       // (re)initialization of the vectors
       //solution_dot = 0;
@@ -714,18 +718,20 @@ void DAETimeIntegrator<Vector<double> >::reset_ode(Vector<double> &solution,
         IDACalcIC(ida_mem, IDA_Y_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
     }
-  else if (ic_type == 1)
+  else if (ic_type == "use_y_dot")
     {
       IDACalcIC(ida_mem, IDA_YA_YDP_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
     }
-  else if (ic_type == 3)
+  else if (ic_type == "none")
     {
       IDAGetConsistentIC(ida_mem, yy, yp);
       std::cout << "Using consistent conditions type 3" << std::endl;
     }
   Vector<double> resid(solver.n_dofs());
   solver.residual(current_time,resid,solution,solution_dot);
+
+  AssertThrow(status == 0, ExcMessage("Error computing IC."));
 
   //solution_dot.reinit(solver.n_dofs());
   //Vector<double> res(solver.n_dofs());
