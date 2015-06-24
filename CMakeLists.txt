@@ -49,6 +49,7 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 PROJECT(${TARGET})
 
 SET(DEAL_II_SAK "$ENV{DEAL_II_SAK}" CACHE PATH "Path to dealii-sak")
+SET(SUNDIALS_DIR "$ENV{SUNDIALS_DIR}" CACHE PATH "Path to sundials")
 
 # We one library and one target for each type of deal.II library
 # we found. If you compiled deal.II with both Release and Debug
@@ -85,7 +86,7 @@ FOREACH(_build_type ${_d2_build_types})
 	ENDIF()
 
 	FOREACH(_slib ${SUNDIALS_LIBS})
-	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS $ENV{SUNDIALS_DIR} PATH_SUFFIXES lib)
+	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS ${SUNDIALS_DIR} PATH_SUFFIXES lib)
 	    IF(NOT "${SUNDIALS_${_slib}}" STREQUAL "${_slib}-NOTFOUND")
 		TARGET_LINK_LIBRARIES(${_lib} ${SUNDIALS_${_slib}})
 		MESSAGE("-- Library ${_slib} found: ${SUNDIALS_${_slib}}")
