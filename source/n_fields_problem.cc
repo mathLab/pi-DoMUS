@@ -491,15 +491,16 @@ void NFieldsProblem<dim, spacedim, n_components>::solve ()
   distributed_solution (rhs);
   distributed_solution = solution;
 
-  const unsigned int
-  start = (distributed_solution.block(0).size() +
-           distributed_solution.block(1).local_range().first);
-  const unsigned int
-  end   = (distributed_solution.block(0).size() +
-           distributed_solution.block(1).local_range().second);
-  for (unsigned int i=start; i<end; ++i)
-    if (constraints.is_constrained (i))
-      distributed_solution(i) = 0;
+  // [TODO] make n_block independent
+//  const unsigned int
+//  start = (distributed_solution.block(0).size() +
+//           distributed_solution.block(1).local_range().first);
+//  const unsigned int
+//  end   = (distributed_solution.block(0).size() +
+//           distributed_solution.block(1).local_range().second);
+//  for (unsigned int i=start; i<end; ++i)
+//    if (constraints.is_constrained (i))
+//      distributed_solution(i) = 0;
 
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
