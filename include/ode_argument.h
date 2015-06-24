@@ -35,10 +35,9 @@ public :
    * the ode solver. Once again, the conversion between pointers and
    * other forms of vectors need to be done inside the inheriting
    * class. */
-  virtual void output_step(VEC &solution,
-                           VEC &solution_dot,
-                           const double t,
-                           const unsigned int step_number,
+  virtual void output_step(const double t,
+                           const VEC &solution,
+                           const VEC &solution_dot,                           const unsigned int step_number,
                            const double h) = 0;
 
   /** This function will check the behaviour of the solution. If it
@@ -46,26 +45,26 @@ public :
    * will be stopped. If the convergence is not achived the
    * calculation will be continued. If necessary, it can also reset
    * the time stepper. */
-  virtual bool solution_check(VEC &solution,
-                              VEC &solution_dot,
-                              const double t,
+  virtual bool solution_check(const double t,
+                              const VEC &solution,
+                              const VEC &solution_dot,
                               const unsigned int step_number,
-                              const double h) = 0;
+                              const double h) const;
 
   /** For dae problems, we need a
    residual function. */
   virtual int residual(const double t,
-                       VEC &dst,
                        const VEC &src_yy,
-                       const VEC &src_yp) = 0;
+                       const VEC &src_yp,
+                       VEC &dst) const = 0;
 
   /** Jacobian vector product. */
   virtual int jacobian(const double t,
-                       VEC &dst,
                        const VEC &src_yy,
                        const VEC &src_yp,
+                       const double alpha,
                        const VEC &src,
-                       const double alpha);
+                       VEC &dst);
 
   /** Setup Jacobian preconditioner. */
   virtual int setup_jacobian_prec(const double t,
@@ -76,11 +75,11 @@ public :
   /** Jacobian preconditioner
    vector product. */
   virtual int jacobian_prec(const double t,
-                            VEC &dst,
                             const VEC &src_yy,
                             const VEC &src_yp,
+                            const double alpha,
                             const VEC &src,
-                            const double alpha);
+                            VEC &dst) const;
 
   /** And an identification of the
    differential components. This
@@ -88,15 +87,9 @@ public :
    corresponding variable is a
    differential component, zero
    otherwise.  */
-  virtual VEC &differential_components();
+  virtual VEC &differential_components() const;
 
-  virtual VEC &get_local_tolerances();
-
-  virtual ~OdeArgument() {};
-
-  bool reset_time_integrator;
-
-  bool stop_time_integrator;
+  virtual VEC &get_local_tolerances() const;
 
   const MPI_Comm &communicator;
 

@@ -46,7 +46,7 @@ int t_dae_residual(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yy, yy);
   copy(*src_yp, yp);
 
-  int err = solver.residual(tt, *residual, *src_yy, *src_yp);
+  int err = solver.residual(tt, *src_yy, *src_yp, *residual);
 
   copy(rr, *residual);
 
@@ -70,7 +70,7 @@ int dae_residual(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> src_yy(solver.n_dofs(), NV_DATA_S(yy));
   const VectorView<double> src_yp(solver.n_dofs(), NV_DATA_S(yp));
   VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
-  return solver.residual(tt, residual, src_yy, src_yp);
+  return solver.residual(tt, src_yy, src_yp, residual);
 }
 
 
@@ -144,7 +144,7 @@ int t_dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yp, yp);
   copy(*src_v, src);
 
-  int err = solver.jacobian(tt, *dst_v, *src_yy, *src_yp, *src_v, alpha);
+  int err = solver.jacobian(tt, *src_yy, *src_yp, alpha, *src_v, *dst_v);
   copy(dst, *dst_v);
   return err;
 }
@@ -179,7 +179,8 @@ int dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   const VectorView<double> src_v(solver.n_dofs(), NV_DATA_S(src));
   VectorView<double> dst_v(solver.n_dofs(), NV_DATA_S(dst));
-  return solver.jacobian(tt, dst_v, src_yy, src_yp, src_v, alpha);
+  int err = solver.jacobian(tt, src_yy, src_yp, alpha, src_v, dst_v);
+  return err;
 }
 
 
@@ -205,7 +206,7 @@ int t_dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yp, yp);
   copy(*src_v, src);
 
-  int err = solver.jacobian_prec(tt, *dst_v, *src_yy, *src_yp, *src_v, alpha);
+  int err = solver.jacobian_prec(tt, *src_yy, *src_yp, alpha, *src_v, *dst_v);
   copy(dst, *dst_v);
   return err;
 }
@@ -234,7 +235,7 @@ int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   const VectorView<double> rhs(solver.n_dofs(), NV_DATA_S(rvec));
   VectorView<double> output(solver.n_dofs(), NV_DATA_S(zvec));
-  return solver.jacobian_prec(tt, output, src_yy, src_yp, rhs, alpha);
+  return solver.jacobian_prec(tt, src_yy, src_yp, alpha, rhs, output);
 }
 
 
@@ -344,14 +345,14 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
 
   IndexSet is = solution.locally_owned_elements();
 
-  reset_ode(solution, solution_dot, initial_time, initial_step_size, max_steps);
+  reset_ode(initial_time, solution, solution_dot, initial_step_size, max_steps);
 
   copy(yy, solution);
   copy(yp, solution_dot);
 
   double next_time = 0;
 
-  solver.output_step(solution, solution_dot, 0, 0, initial_step_size);
+  solver.output_step( 0, solution, solution_dot, 0, initial_step_size);
 
   while ((t<final_time) && (step_number < max_steps))
     {
@@ -370,10 +371,10 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
       copy(solution_dot, yp);
 
       // Check the solution
-      bool reset = solver.solution_check(solution, solution_dot, t, step_number, h);
+      bool reset = solver.solution_check(t, solution, solution_dot, step_number, h);
 
 
-      solver.output_step(solution, solution_dot, t, step_number, h);
+      solver.output_step(t, solution, solution_dot,  step_number, h);
 
       if ( reset == true )
         {
@@ -381,7 +382,7 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
           int k = 0;
           IDAGetLastOrder(ida_mem, &k);
           frac = std::pow((double)k,2.);
-          reset_ode(solution, solution_dot, t,
+          reset_ode(t, solution, solution_dot,
                     h/frac, max_steps);
         }
 
@@ -399,9 +400,9 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
 }
 
 template <typename VEC>
-void DAETimeIntegrator<VEC>::reset_ode(VEC &solution,
+void DAETimeIntegrator<VEC>::reset_ode(double current_time,
+                                       VEC &solution,
                                        VEC &solution_dot,
-                                       double current_time,
                                        double current_time_step,
                                        unsigned int max_steps)
 {
@@ -573,7 +574,7 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
   //    status += IDASetNonlinConvCoef(ida_mem, 10.0);
   //status += IDASetMaxOrd(ida_mem, 2);
 
-  reset_ode(solution, solution_dot, initial_time, initial_step_size, max_steps);
+  reset_ode(initial_time, solution, solution_dot, initial_step_size, max_steps);
 
   double next_time = 0;
   while ((t<final_time) && (step_number < max_steps))
@@ -590,10 +591,10 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
            << ", h = " << h << endl;
 
       // Check the solution
-      bool reset = solver.solution_check(solution, solution_dot, t, step_number, h);
+      bool reset = solver.solution_check(t, solution, solution_dot, step_number, h);
 
 
-      solver.output_step(solution, solution_dot, t, step_number, h);
+      solver.output_step(t, solution, solution_dot, step_number, h);
 
       if ( reset == true )
         {
@@ -606,7 +607,7 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
           int k = 0;
           IDAGetLastOrder(ida_mem, &k);
           frac = std::pow((double)k,2.);
-          reset_ode(solution, solution_dot, t,
+          reset_ode(t, solution, solution_dot,
                     h/frac, max_steps);
         }
 
@@ -624,10 +625,9 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
 }
 
 template <>
-void DAETimeIntegrator<Vector<double> >::reset_ode(Vector<double> &solution,
-                                                   Vector<double> &solution_dot,
-                                                   double current_time,
-                                                   double current_time_step,
+void DAETimeIntegrator<Vector<double> >::reset_ode(double current_time,
+                                                   Vector<double> &solution,
+                                                   Vector<double> &solution_dot,                                                   double current_time_step,
                                                    unsigned int max_steps)
 {
   if (ida_mem)

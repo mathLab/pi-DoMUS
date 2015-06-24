@@ -22,6 +22,8 @@
 #include "dae_time_integrator.h"
 #include "parameter_acceptor.h"
 
+#include <fstream>
+
 template <typename VEC>
 class Solver : public OdeArgument<VEC>, public ParameterAcceptor
 {
@@ -61,9 +63,9 @@ public:
     return SP(new TrilinosWrappers::MPI::BlockVector(all_is, this->get_comm()));
   }
 
-  virtual void output_step(VEC &solution,
-                           VEC &solution_dot,
-                           const double t,
+  virtual void output_step(const double t,
+                           const VEC &solution,
+                           const VEC &solution_dot,
                            const unsigned int step_number,
                            const double h)
   {
@@ -76,19 +78,19 @@ public:
       }
   };
 
-  virtual bool solution_check(VEC &solution,
-                              VEC &solution_dot,
-                              const double t,
+  virtual bool solution_check(const double t,
+                              const VEC &solution,
+                              const VEC &solution_dot,
                               const unsigned int step_number,
-                              const double h)
+                              const double h) const
   {
     return false;
   }
 
   virtual int residual(const double t,
-                       VEC &dst,
                        const VEC &src_yy,
-                       const VEC &src_yp)
+                       const VEC &src_yp,
+                       VEC &dst) const
   {
 
     auto &y = src_yy.block(0);
@@ -111,11 +113,11 @@ public:
 
   /** Jacobian vector product. */
   virtual int jacobian(const double t,
-                       VEC &dst,
                        const VEC &src_yy,
                        const VEC &src_yp,
+                       const double alpha,
                        const VEC &src,
-                       const double alpha)
+                       VEC &dst)
   {
 
     auto &y = src_yy.block(0);
@@ -135,7 +137,7 @@ public:
     return 0;
   }
 
-  virtual VEC &differential_components()
+  virtual VEC &differential_components() const
   {
     static shared_ptr<VEC> diff = create_new_vector();
     static bool initialized = false;
@@ -147,7 +149,7 @@ public:
     return *diff;
   }
 
-  virtual VEC &get_local_tolerances()
+  virtual VEC &get_local_tolerances() const
   {
     static shared_ptr<VEC> diff = create_new_vector();
     static bool initialized = false;

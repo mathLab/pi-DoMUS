@@ -2,6 +2,33 @@
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 
+#include "utilities.h"
+
+template<typename VEC>
+bool OdeArgument<VEC>::solution_check(const double,
+                                      const VEC &,
+                                      const VEC &,
+                                      const unsigned int,
+                                      const double) const
+{
+  return false;
+}
+
+
+
+template<typename VEC>
+int OdeArgument<VEC>::jacobian(double,
+                               VEC const &,
+                               VEC const &,
+                               const double,
+                               VEC const &,
+                               VEC &)
+{
+  Assert(false, ExcPureFunctionCalled());
+  return 0;
+}
+
+
 template<typename VEC>
 int OdeArgument<VEC>::setup_jacobian_prec(double,
                                           VEC const &,
@@ -13,42 +40,41 @@ int OdeArgument<VEC>::setup_jacobian_prec(double,
 }
 
 template<typename VEC>
-int OdeArgument<VEC>::jacobian_prec(double, VEC &,
+int OdeArgument<VEC>::jacobian_prec(double,
                                     VEC const &,
                                     VEC const &,
+                                    const double,
                                     VEC const &,
-                                    double)
+                                    VEC &) const
 {
   Assert(false, ExcPureFunctionCalled());
   return 0;
 }
 
 template<typename VEC>
-int OdeArgument<VEC>::jacobian(double,
-                               VEC &,
-                               VEC const &,
-                               VEC const &,
-                               VEC const &,
-                               double)
+VEC &OdeArgument<VEC>::differential_components() const
 {
-  Assert(false, ExcPureFunctionCalled());
-  return 0;
+  static shared_ptr<VEC> tmp = create_new_vector();
+  static bool init = true;
+  if (init == true)
+    {
+      tmp->add(1.0);
+      init = false;
+    }
+  return (*tmp);
 }
 
 template<typename VEC>
-VEC &OdeArgument<VEC>::differential_components()
+VEC &OdeArgument<VEC>::get_local_tolerances() const
 {
-  Assert(false, ExcPureFunctionCalled());
-  static VEC tmp;
-  return tmp;
-}
-
-template<typename VEC>
-VEC &OdeArgument<VEC>::get_local_tolerances()
-{
-  Assert(false, ExcPureFunctionCalled());
-  static VEC tmp;
-  return tmp;
+  static shared_ptr<VEC> tmp = create_new_vector();
+  static bool init = true;
+  if (init == true)
+    {
+      tmp->add(1.0);
+      init = false;
+    }
+  return *tmp;
 }
 
 template class OdeArgument<Vector<double> >;

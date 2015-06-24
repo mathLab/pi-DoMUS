@@ -45,8 +45,8 @@ public:
   objects. This is useful if
   you need to refine your
   mesh between stesp. */
-  void reset_ode(VEC &y, VEC &yp,
-                 double t, double h, unsigned int max_steps);
+  void reset_ode(const double t, VEC &y, VEC &yp,
+                 double h, unsigned int max_steps);
 
 
   /** Final time. */
@@ -126,10 +126,9 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
                                                            const unsigned int max_steps);
 
 template <>
-void DAETimeIntegrator<Vector<double> >::reset_ode(Vector<double> &solution,
-                                                   Vector<double> &solution_dot,
-                                                   double current_time,
-                                                   double current_time_step,
+void DAETimeIntegrator<Vector<double> >::reset_ode(double current_time,
+                                                   Vector<double> &solution,
+                                                   Vector<double> &solution_dot,                                                   double current_time_step,
                                                    unsigned int max_steps);
 
 #endif
