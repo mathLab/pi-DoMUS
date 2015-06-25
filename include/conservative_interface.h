@@ -1,5 +1,15 @@
 #ifndef __sak_conservative_interface_h
 #define __sak_conservative_interface_h
+/*
+ * Conservative Interface
+ *
+ * This class is a child of interface.h
+ *
+ * It is used to define a problem in the case whole the problem
+ * could be stated in terms of energy and this energy can be derived
+ * in ordert ot find a solution to the problem.
+ *
+ */
 
 #include "interface.h"
 
@@ -57,3 +67,5 @@ public:
 };
 
 #endif
+=======
+>>>>>>> init commit for the documentation of conservative interface
