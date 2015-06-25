@@ -1,8 +1,13 @@
-/*
+/**
  * Interface
  *
  * This class has two child: conservative_interface.h and
  *  non_conservative_interface.h
+ * Users should not derive directly from this class,
+ * but from its specialization classes.
+ * For istance, a stokes problem should consist in a
+ * interface class derived from conservative_interface.h.
+ * (see include/interfaces/ for some examples)
  *
  * Goal: provide a derivable interface to solve a particular
  *       PDEs problem (time depending, first-order, non linear).
@@ -24,6 +29,7 @@
  *    - coupling
  *  - Preconditioner:
  *    - preconditioner coupling
+ *  TODO: add flags
  */
 
 #ifndef _interface_h_
@@ -61,7 +67,7 @@ public:
     forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
   {};
 
-/*
+/**
  * @Brief applies Dirichlet boundary conditions
  *
  * This function is used to applies Dirichlet boundary conditions.
@@ -83,7 +89,7 @@ public:
   }
 
 
-/*
+/**
  * @Brief initialize all data required for the system
  *
  * This function is used to initialize the varibale SAKData @p d
@@ -93,6 +99,8 @@ public:
  * the number of quadrature points @p n_q_points, the number of
  * quadrature points per face @p n_face_q_points, the reference to
  * solutions vectors @p sol and the reference to the SAKData @p d.
+ *
+ * TODO: add current_time and current_alpha
  */
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
@@ -103,7 +111,7 @@ public:
                                const double alpha,
                                SAKData &d) const;
 
-/*
+/**
  * @Brief build the energy needed to get the preconditioner in the case
  * it is required just one derivative.
  *
@@ -123,7 +131,7 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  /*
+  /**
    * @Brief build the energy needed to get the preconditioner in the case
    * it is required two derivatives.
    *
@@ -143,7 +151,7 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  /*
+  /**
    * @Brief build the energy needed to get the system matrix in the case
    * it is required two derivatives.
    *
@@ -163,7 +171,7 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  /*
+  /**
    * @Brief build the energy needed to get the system matrix in the case
    * it is required two derivatives.
    *
@@ -183,7 +191,7 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
-  /*
+  /**
    * @Brief build the residual needed to get the system matrix in the case
    * it is required two derivatives.
    *
@@ -207,7 +215,7 @@ public:
       }
   }
 
-  /*
+  /**
    * @Brief build the residual needed to get the system matrix in the case
    * it is required just one derivative.
    *
@@ -231,7 +239,7 @@ public:
       }
   }
 
-  /*
+  /**
    * @Brief build the residual needed to get the preconditioner matrix in the case
    * it is required two derivatives.
    *
@@ -254,7 +262,7 @@ public:
         local_residual[i] = energy.dx(i);
       }
   }
-  /*
+  /**
    * @Brief compute linear operators needed by the problem
    *
    * This function is used to assemble linear operators related
