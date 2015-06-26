@@ -68,7 +68,7 @@ public:
   {};
 
 /**
- * @Brief applies Dirichlet boundary conditions
+ * Applies Dirichlet boundary conditions
  *
  * This function is used to applies Dirichlet boundary conditions.
  * It takes as argument a DoF handler @p dof_handler, a finite element
@@ -90,7 +90,7 @@ public:
 
 
 /**
- * @Brief initialize all data required for the system
+ * Initialize all data required for the system
  *
  * This function is used to initialize the varibale SAKData @p d
  * that contains all data of the problem (solutions, DoF, quadrature
@@ -112,7 +112,7 @@ public:
                                SAKData &d) const;
 
 /**
- * @Brief build the energy needed to get the preconditioner in the case
+ * Build the energy needed to get the preconditioner in the case
  * it is required just one derivative.
  *
  * This function is used to build the energy associated to the preconditioner
@@ -132,11 +132,11 @@ public:
   }
 
   /**
-   * @Brief build the energy needed to get the preconditioner in the case
+   * Build the energy needed to get the preconditioner in the case
    * it is required two derivatives.
    *
    * This function is used to build the energy associated to the preconditioner
-   * in the case it is required two derivatives.
+   *in the case the Jacobian is automatically constructed using the derivative of the residual.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
    * system  such as fe values, quadrature points, SAKData (Scratch),
@@ -152,11 +152,11 @@ public:
   }
 
   /**
-   * @Brief build the energy needed to get the system matrix in the case
+   * Build the energy needed to get the system matrix in the case
    * it is required two derivatives.
    *
    * This function is used to build the energy associated to the system matrix
-   * in the case it is required two derivatives.
+   *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
    * system  such as fe values, quadrature points, SAKData (Scratch),
@@ -172,11 +172,11 @@ public:
   }
 
   /**
-   * @Brief build the energy needed to get the system matrix in the case
+   * Build the energy needed to get the system matrix in the case
    * it is required two derivatives.
    *
    * This function is used to build the energy associated to the system matrix
-   * in the case it is required two derivatives.
+   *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
    * system  such as fe values, quadrature points, SAKData (Scratch),
@@ -192,11 +192,11 @@ public:
   }
 
   /**
-   * @Brief build the residual needed to get the system matrix in the case
+   * Build the residual needed to get the system matrix in the case
    * it is required two derivatives.
    *
    * This function is used to build the residual associated to the system
-   * in the case it is required two derivatives.
+   *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * @p cell, all the informations of the system @p scratch ( fe values,
    * quadrature points, SAKData ), all the informations related to the PDE
@@ -216,7 +216,7 @@ public:
   }
 
   /**
-   * @Brief build the residual needed to get the system matrix in the case
+   * Build the residual needed to get the system matrix in the case
    * it is required just one derivative.
    *
    * This function is used to build the residual associated to the system
@@ -240,8 +240,8 @@ public:
   }
 
   /**
-   * @Brief build the residual needed to get the preconditioner matrix in the case
-   * it is required two derivatives.
+   * Build the residual needed to get the preconditioner matrix in the case
+   * two derivatives are required.
    *
    * This function is used to build the residual associated to the preconditioner
    * in the case it is required just one derivatice.
@@ -263,7 +263,7 @@ public:
       }
   }
   /**
-   * @Brief compute linear operators needed by the problem
+   * Compute linear operators needed by the problem
    *
    * This function is used to assemble linear operators related
    * to the problem.
