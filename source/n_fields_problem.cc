@@ -79,37 +79,30 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Integer (0));
 
   add_parameter(  prm,
-                  &fixed_alpha,
-                  "Alpha for Newton's iterations",
-                  "1",
-                  Patterns::Double (0));
-
-  add_parameter(  prm,
-                  &max_newton_it,
-                  "Maximum number of Newton's iterations",
-                  "5",
+                  &max_time_iterations,
+                  "Maximum number of time steps",
+                  "10000",
                   Patterns::Integer (0));
+
+
 }
 
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
 template <int dim, int spacedim, int n_components>
-NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim, spacedim, n_components> &energy)
+NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim, spacedim, n_components> &energy,
+    const MPI_Comm &communicator)
   :
+  OdeArgument<VEC>(communicator),
+  comm(communicator),
   energy(energy),
   pcout (std::cout,
-         (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
+         (Utilities::MPI::this_mpi_process(comm)
           == 0)),
   tcout (timer_outfile,
-         (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
+         (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-
-  mapping (4),
-
-  rebuild_matrix (true),
-  rebuild_preconditioner (true),
-
-  computing_timer (MPI_COMM_WORLD,
+  computing_timer (comm,
                    tcout,
                    TimerOutput::summary,
                    TimerOutput::wall_times),
@@ -121,7 +114,8 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
 
   exact_solution("Exact solution"),
 
-  data_out("Output Parameters", "vtu")
+  data_out("Output Parameters", "vtu"),
+  dae(*this)
 
 {}
 
@@ -136,6 +130,7 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
 
+  mapping = energy.get_mapping(*dof_handler, solution);
 
   std::vector<types::global_dof_index> dofs_per_block (energy.n_blocks());
   DoFTools::count_dofs_per_block (*dof_handler, dofs_per_block,
@@ -185,15 +180,11 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   setup_matrix (partitioning, relevant_partitioning);
   setup_preconditioner (partitioning, relevant_partitioning);
 
-  rhs.reinit (partitioning, relevant_partitioning,
-              MPI_COMM_WORLD, true);
-
-  solution.reinit (relevant_partitioning, MPI_COMM_WORLD);
-  newton_update.reinit(solution);
-  old_solution.reinit (rhs);
-
-  rebuild_matrix              = true;
-  rebuild_preconditioner      = true;
+  //    solution.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
+  //    solution_dot.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
+  //
+  solution.reinit (partitioning, MPI_COMM_WORLD);
+  solution_dot.reinit (partitioning, MPI_COMM_WORLD);
 
   computing_timer.exit_section();
 }
@@ -253,7 +244,7 @@ void
 NFieldsProblem<dim, spacedim, n_components>::
 local_assemble_preconditioner (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                Assembly::Scratch::NFields<dim,spacedim> &scratch,
-                               Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> &data)
+                               PreconditionerCopyData &data)
 {
   const unsigned int   dofs_per_cell   = fe->dofs_per_cell;
   const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
@@ -277,17 +268,212 @@ local_assemble_preconditioner (const typename DoFHandler<dim,spacedim>::active_c
 template <int dim, int spacedim, int n_components>
 void
 NFieldsProblem<dim, spacedim, n_components>::
-copy_local_to_global_preconditioner (const Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> &data)
+copy_local_to_global_preconditioner (const PreconditionerCopyData &data)
 {
   constraints.distribute_local_to_global (  data.local_matrix,
                                             data.local_dof_indices,
                                             preconditioner_matrix);
 }
+//
+//template <int dim, int spacedim, int n_components>
+//void
+//NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
+//{
+//  preconditioner_matrix = 0;
+//
+//  const QGauss<dim> quadrature_formula(fe->degree+1);
+//  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
+//
+//  typedef
+//  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+//  CellFilter;
+//
+//  SAKData preconditioner_data;
+//
+//  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+//  sols.push_back(&solution);
+//  energy.initialize_data(fe->dofs_per_cell,
+//                         quadrature_formula.size(),
+//                         face_quadrature_formula.size(),
+//                         sols,preconditioner_data);
+//
+//  WorkStream::
+//  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+//                   dof_handler->begin_active()),
+//       CellFilter (IteratorFilters::LocallyOwnedCell(),
+//                   dof_handler->end()),
+//       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+//                        local_assemble_preconditioner,
+//                        this,
+//                        std_cxx11::_1,
+//                        std_cxx11::_2,
+//                        std_cxx11::_3),
+//       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+//                        copy_local_to_global_preconditioner,
+//                        this,
+//                        std_cxx11::_1),
+//       Assembly::Scratch::
+//       NFields<dim,spacedim> (preconditioner_data,
+//                              *fe, quadrature_formula,
+//                              mapping,
+//                              energy.get_jacobian_prec_flags(),
+//                              face_quadrature_formula,
+//                              UpdateFlags(0)),
+//       Assembly::CopyData::
+//       NFieldsPreconditioner<dim,spacedim> (*fe));
+//
+//  preconditioner_matrix.compress(VectorOperation::add);
+//}
+
+
+/* ------------------------ ASSEMBLE THE SYSTEM ------------------------ */
+//
+//template <int dim, int spacedim, int n_components>
+//void
+//NFieldsProblem<dim, spacedim, n_components>::
+//local_assemble_system (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+//                       Assembly::Scratch::NFields<dim,spacedim> &scratch,
+//                       SystemCopyData &data)
+//{
+//  const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
+//  scratch.fe_values.reinit (cell);
+//  cell->get_dof_indices (data.local_dof_indices);
+//
+//  data.local_rhs = 0;
+//
+//  if (rebuild_matrix == true)
+//    {
+//      data.local_matrix = 0;
+//      energy.get_system_residual(cell, scratch, data, data.sacado_residual);
+//
+//      for (unsigned int i=0; i<dofs_per_cell; ++i)
+//        {
+//          for (unsigned int j=0; j<dofs_per_cell; ++j)
+//            data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
+//
+//          data.local_rhs(i) -= data.sacado_residual[i].val();
+//        }
+//    }
+//  else
+//    {
+//      energy.get_system_residual(cell, scratch, data, data.double_residual);
+//
+//      for (unsigned int i=0; i<dofs_per_cell; ++i)
+//        data.local_rhs(i) -= data.double_residual[i];
+//    }
+//
+//
+//}
+//
+////
+//
+//template <int dim, int spacedim, int n_components>
+//void
+//NFieldsProblem<dim, spacedim, n_components>::
+//copy_local_to_global_system (const SystemCopyData &data)
+//{
+//  if (rebuild_matrix == true)
+//    constraints.distribute_local_to_global (data.local_matrix,
+//                                            data.local_rhs,
+//                                            data.local_dof_indices,
+//                                            matrix,
+//                                            rhs);
+//  else
+//    constraints.distribute_local_to_global (data.local_rhs,
+//                                            data.local_dof_indices,
+//                                            rhs);
+//}
+//
+//
 
 template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
+void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double t,
+    const VEC &solution,
+    const VEC &solution_dot,
+    const double alpha)
 {
+  computing_timer.enter_section ("   Assemble system");
+
+  matrix = 0;
+
+  const QGauss<dim> quadrature_formula(fe->degree+1);
+  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
+  SAKData system_data;
+  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+  sols.push_back(&solution);
+  sols.push_back(&solution_dot);
+
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         face_quadrature_formula.size(),
+                         solution, solution_dot, t, alpha, system_data);
+
+
+  auto local_copy = [ this ]
+                    (const SystemCopyData &data)
+  {
+    this->constraints.distribute_local_to_global (data.local_matrix,
+                                                  data.local_dof_indices,
+                                                  this->matrix);
+  };
+
+  auto local_assemble = [ this ]
+                        (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                         Scratch &scratch,
+                         SystemCopyData &data)
+  {
+
+    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
+    scratch.fe_values.reinit (cell);
+    cell->get_dof_indices (data.local_dof_indices);
+
+    data.local_matrix = 0;
+    this->energy.get_system_residual(cell, scratch, data, data.sacado_residual);
+
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      for (unsigned int j=0; j<dofs_per_cell; ++j)
+        data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
+  };
+
+  typedef
+  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+  CellFilter;
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       local_assemble,
+       local_copy,
+       Assembly::Scratch::
+       NFields<dim,spacedim> (system_data,
+                              *fe,
+                              quadrature_formula,
+                              *mapping,
+                              energy.get_jacobian_flags(),
+                              face_quadrature_formula,
+                              energy.get_face_flags()),
+       Assembly::CopyData::
+       NFieldsSystem<dim,spacedim> (*fe));
+
+  matrix.compress(VectorOperation::add);
+
+  pcout << std::endl;
+  computing_timer.exit_section();
+}
+
+
+
+
+template <int dim, int spacedim, int n_components>
+void NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner (const double t,
+    const VEC &solution,
+    const VEC &solution_dot,
+    const double alpha)
+{
+  computing_timer.enter_section ("   Build preconditioner");
+  pcout << "   Rebuilding preconditioner..." << std::flush;
+
   preconditioner_matrix = 0;
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
@@ -304,344 +490,205 @@ NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner ()
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
                          face_quadrature_formula.size(),
-                         sols,preconditioner_data);
+                         solution, solution_dot, t, alpha,
+                         preconditioner_data);
+
+
+  auto local_copy = [this]
+                    (const PreconditionerCopyData &data)
+  {
+    this->constraints.distribute_local_to_global (data.local_matrix,
+                                                  data.local_dof_indices,
+                                                  this->preconditioner_matrix);
+  };
+
+  auto local_assemble = [ this ]
+                        (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                         Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                         PreconditionerCopyData &data)
+  {
+
+    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
+    scratch.fe_values.reinit (cell);
+    cell->get_dof_indices (data.local_dof_indices);
+
+    data.local_matrix = 0;
+    this->energy.get_preconditioner_residual(cell, scratch, data, data.sacado_residual);
+
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      for (unsigned int j=0; j<dofs_per_cell; ++j)
+        data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
+  };
+
+
 
   WorkStream::
   run (CellFilter (IteratorFilters::LocallyOwnedCell(),
                    dof_handler->begin_active()),
        CellFilter (IteratorFilters::LocallyOwnedCell(),
                    dof_handler->end()),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        local_assemble_preconditioner,
-                        this,
-                        std_cxx11::_1,
-                        std_cxx11::_2,
-                        std_cxx11::_3),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        copy_local_to_global_preconditioner,
-                        this,
-                        std_cxx11::_1),
+       local_assemble,
+       local_copy,
        Assembly::Scratch::
        NFields<dim,spacedim> (preconditioner_data,
                               *fe, quadrature_formula,
-                              mapping,
-                              update_JxW_values |
-                              update_values |
-                              update_gradients,
+                              *mapping,
+                              energy.get_jacobian_prec_flags(),
                               face_quadrature_formula,
                               UpdateFlags(0)),
        Assembly::CopyData::
        NFieldsPreconditioner<dim,spacedim> (*fe));
 
   preconditioner_matrix.compress(VectorOperation::add);
-}
-
-
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::build_preconditioner ()
-{
-  if (rebuild_preconditioner == false)
-    return;
-
-  computing_timer.enter_section ("   Build preconditioner");
-  pcout << "   Rebuilding preconditioner..." << std::flush;
-
-  assemble_preconditioner ();
-
-  rebuild_preconditioner = false;
-
-  pcout << std::endl;
-  computing_timer.exit_section();
-}
-
-/* ------------------------ ASSEMBLE THE SYSTEM ------------------------ */
-
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::
-local_assemble_system (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                       Assembly::Scratch::NFields<dim,spacedim> &scratch,
-                       Assembly::CopyData::NFieldsSystem<dim,spacedim> &data)
-{
-  const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
-  scratch.fe_values.reinit (cell);
-  cell->get_dof_indices (data.local_dof_indices);
-
-  data.local_rhs = 0;
-
-  if (rebuild_matrix == true)
-    {
-      data.local_matrix = 0;
-      energy.get_system_residual(cell, scratch, data, data.sacado_residual);
-
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        {
-          for (unsigned int j=0; j<dofs_per_cell; ++j)
-            data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
-
-          data.local_rhs(i) -= data.sacado_residual[i].val();
-        }
-    }
-  else
-    {
-      energy.get_system_residual(cell, scratch, data, data.double_residual);
-
-      for (unsigned int i=0; i<dofs_per_cell; ++i)
-        data.local_rhs(i) -= data.double_residual[i];
-    }
-
-
-}
-
-
-
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::
-copy_local_to_global_system (const Assembly::CopyData::NFieldsSystem<dim,spacedim> &data)
-{
-  if (rebuild_matrix == true)
-    constraints.distribute_local_to_global (data.local_matrix,
-                                            data.local_rhs,
-                                            data.local_dof_indices,
-                                            matrix,
-                                            rhs);
-  else
-    constraints.distribute_local_to_global (data.local_rhs,
-                                            data.local_dof_indices,
-                                            rhs);
-}
-
-
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::assemble_system ()
-{
-  computing_timer.enter_section ("   Assemble system");
-
-  if (rebuild_matrix == true)
-    matrix=0;
-
-  rhs=0;
-
-  const QGauss<dim> quadrature_formula(fe->degree+1);
-  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
-  SAKData system_data;
-  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
-  sols.push_back(&solution);
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         sols, system_data);
-
-  typedef
-  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
-  CellFilter;
-  WorkStream::
-  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->begin_active()),
-       CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->end()),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        local_assemble_system,
-                        this,
-                        std_cxx11::_1,
-                        std_cxx11::_2,
-                        std_cxx11::_3),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        copy_local_to_global_system,
-                        this,
-                        std_cxx11::_1),
-       Assembly::Scratch::
-       NFields<dim,spacedim> (system_data,
-                              *fe,
-                              quadrature_formula,
-                              mapping,
-                              update_values    |
-                              update_quadrature_points  |
-                              update_JxW_values |
-                              update_gradients,
-                              face_quadrature_formula,
-                              update_values            |
-                              update_quadrature_points |
-                              update_JxW_values),
-       Assembly::CopyData::
-       NFieldsSystem<dim,spacedim> (*fe));
-
-  if (rebuild_matrix == true)
-    matrix.compress(VectorOperation::add);
-  rhs.compress(VectorOperation::add);
-
-  rebuild_matrix = false;
 
   pcout << std::endl;
   computing_timer.exit_section();
 }
 
 /* ------------------------ SOLVE ------------------------ */
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::solve ()
-{
-
-  pcout << "   Solving system... " << std::flush;
-
-  TrilinosWrappers::MPI::BlockVector
-  distributed_solution (rhs);
-  distributed_solution = solution;
-
-  // [TODO] make n_block independent
-//  const unsigned int
-//  start = (distributed_solution.block(0).size() +
-//           distributed_solution.block(1).local_range().first);
-//  const unsigned int
-//  end   = (distributed_solution.block(0).size() +
-//           distributed_solution.block(1).local_range().second);
-//  for (unsigned int i=start; i<end; ++i)
-//    if (constraints.is_constrained (i))
-//      distributed_solution(i) = 0;
-
-  unsigned int n_iterations = 0;
-  const double solver_tolerance = 1e-8;
-
-  energy.compute_system_operators(*dof_handler,
-                                  matrix, preconditioner_matrix,
-                                  system_op, preconditioner_op);
-
-  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
-  SolverControl solver_control (30, solver_tolerance);
-  SolverControl solver_control_refined (matrix.m(), solver_tolerance);
-
-  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
-  solver(solver_control, mem,
-         SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
-         AdditionalData(30, true));
-
-  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
-  solver_refined(solver_control_refined, mem,
-                 SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
-                 AdditionalData(50, true));
-
-  auto S_inv         = inverse_operator(system_op, solver, preconditioner_op);
-  auto S_inv_refined = inverse_operator(system_op, solver_refined, preconditioner_op);
-  try
-    {
-      S_inv.vmult(distributed_solution, rhs);
-      n_iterations = solver_control.last_step();
-    }
-  catch ( SolverControl::NoConvergence )
-    {
-      S_inv_refined.vmult(distributed_solution, rhs);
-      n_iterations = (solver_control.last_step() +
-                      solver_control_refined.last_step());
-    }
-
-
-  constraints.distribute (distributed_solution);
-  newton_update = distributed_solution;
-  TrilinosWrappers::MPI::BlockVector nwt (solution);
-  nwt = distributed_solution;
-  nwt *= fixed_alpha;
-  solution += nwt;
-
-
-  pcout << std::endl;
-  pcout << " iterations:                           " <<  n_iterations
-        << std::endl;
-  pcout << std::endl;
-
-}
+//
+//template <int dim, int spacedim, int n_components>
+//void NFieldsProblem<dim, spacedim, n_components>::solve ()
+//{
+//
+//  pcout << "   Solving system... " << std::flush;
+////
+////  TrilinosWrappers::MPI::BlockVector
+////  distributed_solution (rhs);
+////  distributed_solution = solution;
+//
+//  // [TODO] make n_block independent
+////  const unsigned int
+////  start = (distributed_solution.block(0).size() +
+////           distributed_solution.block(1).local_range().first);
+////  const unsigned int
+////  end   = (distributed_solution.block(0).size() +
+////           distributed_solution.block(1).local_range().second);
+////  for (unsigned int i=start; i<end; ++i)
+////    if (constraints.is_constrained (i))
+////      distributed_solution(i) = 0;
+//
+//  unsigned int n_iterations = 0;
+//  const double solver_tolerance = 1e-8;
+//
+//  energy.compute_system_operators(*dof_handler,
+//                                  matrix, preconditioner_matrix,
+//                                  system_op, preconditioner_op);
+//
+//  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
+//  SolverControl solver_control (30, solver_tolerance);
+//  SolverControl solver_control_refined (matrix.m(), solver_tolerance);
+//
+//  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+//  solver(solver_control, mem,
+//         SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+//         AdditionalData(30, true));
+//
+//  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+//  solver_refined(solver_control_refined, mem,
+//                 SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+//                 AdditionalData(50, true));
+//
+//  auto S_inv         = inverse_operator(system_op, solver, preconditioner_op);
+//  auto S_inv_refined = inverse_operator(system_op, solver_refined, preconditioner_op);
+//  try
+//    {
+//      S_inv.vmult(distributed_solution, rhs);
+//      n_iterations = solver_control.last_step();
+//    }
+//  catch ( SolverControl::NoConvergence )
+//    {
+//      S_inv_refined.vmult(distributed_solution, rhs);
+//      n_iterations = (solver_control.last_step() +
+//                      solver_control_refined.last_step());
+//    }
+//
+//
+//  constraints.distribute (distributed_solution);
+//  newton_update = distributed_solution;
+//  TrilinosWrappers::MPI::BlockVector nwt (solution);
+//  nwt = distributed_solution;
+//  nwt *= fixed_alpha;
+//  solution += nwt;
+//
+//
+//  pcout << std::endl;
+//  pcout << " iterations:                           " <<  n_iterations
+//        << std::endl;
+//  pcout << std::endl;
+//
+//}
 /* ------------------------ residual ----------------------- */
 
-template <int dim, int spacedim, int n_components>
-double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha)// const
-{
-  TrilinosWrappers::MPI::BlockVector evaluation_point (solution);
-  TrilinosWrappers::MPI::BlockVector nwt (solution);
-  nwt = newton_update;
-  if (alpha >1e-10)
-    {
-      nwt *= alpha;
-      evaluation_point += nwt;
-    }
-
-  const QGauss<dim> quadrature_formula(fe->degree+1);
-  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
-  SAKData residual_data;
-  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
-  sols.push_back(&evaluation_point);
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         sols, residual_data);
-
-  rhs=0;
-  typedef
-  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
-  CellFilter;
-  WorkStream::
-  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->begin_active()),
-       CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->end()),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        local_assemble_system,
-                        this,
-                        std_cxx11::_1,
-                        std_cxx11::_2,
-                        std_cxx11::_3),
-       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
-                        copy_local_to_global_system,
-                        this,
-                        std_cxx11::_1),
-       Assembly::Scratch::
-       NFields<dim,spacedim> (residual_data,
-                              *fe,
-                              quadrature_formula,
-                              mapping,
-                              update_values    |
-                              update_quadrature_points  |
-                              update_JxW_values |
-                              update_gradients,
-                              face_quadrature_formula,
-                              update_values            |
-                              update_quadrature_points |
-                              update_JxW_values),
-       Assembly::CopyData::
-       NFieldsSystem<dim,spacedim> (*fe));
-
-  rhs.compress(VectorOperation::add);
-
-  return rhs.l2_norm();
-
-}
-
-template <int dim, int spacedim, int n_components>
-double NFieldsProblem<dim, spacedim, n_components>::determine_step_length() const
-{
-  return 1.0;
-}
-/* ------------------------ OUTPUTS ------------------------ */
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::output_results ()
-{
-  computing_timer.enter_section ("Postprocessing");
-
-  std::stringstream suffix;
-  unsigned int cycle = 0;
-  suffix << "." << cycle;
-  data_out.prepare_data_output( *dof_handler,
-                                suffix.str());
-  data_out.add_data_vector (solution, energy.get_component_names());
-  //MappingQEulerian<dim,TrilinosWrappers::MPI::BlockVector> q_mapping(fe->degree, *dof_handler, solution);
-  //data_out.write_data_and_clear("",q_mapping);
-  data_out.write_data_and_clear();
-
-  computing_timer.exit_section ();
-}
-
+//template <int dim, int spacedim, int n_components>
+//double NFieldsProblem<dim, spacedim, n_components>::compute_residual(const double alpha)// const
+//{
+//  TrilinosWrappers::MPI::BlockVector evaluation_point (solution);
+//  TrilinosWrappers::MPI::BlockVector nwt (solution);
+//  nwt = newton_update;
+//  if (alpha >1e-10)
+//    {
+//      nwt *= alpha;
+//      evaluation_point += nwt;
+//    }
+//
+//  const QGauss<dim> quadrature_formula(fe->degree+1);
+//  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
+//  SAKData residual_data;
+//  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+//  sols.push_back(&evaluation_point);
+//  energy.initialize_data(fe->dofs_per_cell,
+//                         quadrature_formula.size(),
+//                         face_quadrature_formula.size(),
+//                         sols, residual_data);
+//
+//  rhs=0;
+//  typedef
+//  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+//  CellFilter;
+//  WorkStream::
+//  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+//                   dof_handler->begin_active()),
+//       CellFilter (IteratorFilters::LocallyOwnedCell(),
+//                   dof_handler->end()),
+//       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+//                        local_assemble_system,
+//                        this,
+//                        std_cxx11::_1,
+//                        std_cxx11::_2,
+//                        std_cxx11::_3),
+//       std_cxx11::bind (&NFieldsProblem<dim, spacedim, n_components>::
+//                        copy_local_to_global_system,
+//                        this,
+//                        std_cxx11::_1),
+//       Assembly::Scratch::
+//       NFields<dim,spacedim> (residual_data,
+//                              *fe,
+//                              quadrature_formula,
+//                              mapping,
+//                              update_values    |
+//                              update_quadrature_points  |
+//                              update_JxW_values |
+//                              update_gradients,
+//                              face_quadrature_formula,
+//                              update_values            |
+//                              update_quadrature_points |
+//                              update_JxW_values),
+//       Assembly::CopyData::
+//       NFieldsSystem<dim,spacedim> (*fe));
+//
+//  rhs.compress(VectorOperation::add);
+//
+//  return rhs.l2_norm();
+//
+//}
+//
+//template <int dim, int spacedim, int n_components>
+//double NFieldsProblem<dim, spacedim, n_components>::determine_step_length() const
+//{
+//  return 1.0;
+//}
+//
 /* ------------------------ MESH AND GRID ------------------------ */
 
 template <int dim, int spacedim, int n_components>
@@ -677,38 +724,43 @@ void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::run ()
 {
+  make_grid_fe();
+  setup_dofs();
 
-  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
-    {
-      if (cycle == 0)
-        {
-          make_grid_fe ();
-        }
-      else
-        refine_mesh ();
+  dae.start_ode(solution, solution_dot, max_time_iterations);
 
-      double residual = 10.;
-      setup_dofs ();
-
-      pcout << "Initial residual: "
-            << compute_residual(0.0)
-            << std::endl;
-      unsigned int it = 0;
-
-      while (residual > 1e-6 && it < max_newton_it)
-        {
-          it += 1;
-          assemble_system ();
-          build_preconditioner ();
-          solve ();
-          residual = compute_residual(0.0);
-          pcout << "Residual=           "
-                << residual
-                << std::endl;
-          output_results ();
-          process_solution ();
-        }
-    }
+  //
+  //  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
+  //    {
+  //      if (cycle == 0)
+  //        {
+  //          make_grid_fe ();
+  //        }
+  //      else
+  //        refine_mesh ();
+  //
+  //      double residual = 10.;
+  //      setup_dofs ();
+  //
+  //      pcout << "Initial residual: "
+  //            << compute_residual(0.0)
+  //            << std::endl;
+  //      unsigned int it = 0;
+  //
+  //      while (residual > 1e-6 && it < max_newton_it)
+  //        {
+  //          it += 1;
+  //          assemble_system ();
+  //          build_preconditioner ();
+  //          solve ();
+  //          residual = compute_residual(0.0);
+  //          pcout << "Residual=           "
+  //                << residual
+  //                << std::endl;
+  //          //          output_results ();
+  //          process_solution ();
+  //        }
+  //    }
 
   // std::ofstream f("errors.txt");
   computing_timer.print_summary();
@@ -716,6 +768,195 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
   // f.close();
 }
 
+/*** ODE Argument Interface ***/
+
+template <int dim, int spacedim, int n_components>
+shared_ptr<VEC>
+NFieldsProblem<dim, spacedim, n_components>::create_new_vector() const
+{
+  shared_ptr<VEC> ret = SP(new VEC(solution));
+  return ret;
+}
+
+
+template <int dim, int spacedim, int n_components>
+unsigned int
+NFieldsProblem<dim, spacedim, n_components>::n_dofs() const
+{
+  return dof_handler->n_dofs();
+}
+
+
+template <int dim, int spacedim, int n_components>
+void
+NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
+                                                         const VEC &solution,
+                                                         const VEC &solution_dot,                           const unsigned int step_number,
+                                                         const double /* h */ )
+{
+  computing_timer.enter_section ("Postprocessing");
+
+  std::stringstream suffix;
+  suffix << "." << step_number;
+  data_out.prepare_data_output( *dof_handler,
+                                suffix.str());
+  data_out.add_data_vector (solution, energy.get_component_names());
+  std::vector<std::string> sol_dot_names =
+    Utilities::split_string_list( energy.get_component_names());
+  for (auto &name : sol_dot_names)
+    {
+      name += "_dot";
+    }
+  data_out.add_data_vector (solution_dot, print(sol_dot_names,","));
+
+
+  //MappingQEulerian<dim,TrilinosWrappers::MPI::BlockVector> q_mapping(fe->degree, *dof_handler, solution);
+  data_out.write_data_and_clear("",*mapping);
+  // data_out.write_data_and_clear();
+
+  computing_timer.exit_section ();
+}
+
+
+
+template <int dim, int spacedim, int n_components>
+bool
+NFieldsProblem<dim, spacedim, n_components>::solution_check(const double t,
+                                                            const VEC &solution,
+                                                            const VEC &solution_dot,
+                                                            const unsigned int step_number,
+                                                            const double h) const
+{
+  return false;
+}
+
+
+template <int dim, int spacedim, int n_components>
+int
+NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
+                                                      const VEC &solution,
+                                                      const VEC &solution_dot,
+                                                      VEC &dst) const
+{
+  const QGauss<dim> quadrature_formula(fe->degree+1);
+  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
+
+  SAKData residual_data;
+
+  energy.initialize_data(fe->dofs_per_cell,
+                         quadrature_formula.size(),
+                         face_quadrature_formula.size(),
+                         solution, solution_dot, t, 0.0,
+                         residual_data);
+
+  dst = 0;
+
+  auto local_copy = [&dst, this] (const SystemCopyData &data)
+  {
+    this->constraints.distribute_local_to_global (data.local_rhs,
+                                                  data.local_dof_indices,
+                                                  dst);
+  };
+
+  auto local_assemble = [ this ]
+                        (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                         Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                         SystemCopyData &data)
+  {
+    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
+    scratch.fe_values.reinit (cell);
+    cell->get_dof_indices (data.local_dof_indices);
+
+    data.local_rhs = 0;
+    this->energy.get_system_residual(cell, scratch, data, data.double_residual);
+
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      data.local_rhs(i) -= data.double_residual[i];
+  };
+
+  typedef
+  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+  CellFilter;
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       local_assemble,
+       local_copy,
+       Scratch(residual_data,
+               *fe,
+               quadrature_formula,
+               *mapping,
+               energy.get_jacobian_flags(),
+               face_quadrature_formula,
+               energy.get_face_flags()),
+       SystemCopyData(*fe));
+
+  dst.compress(VectorOperation::add);
+  return 0;
+}
+
+
+template <int dim, int spacedim, int n_components>
+int
+NFieldsProblem<dim, spacedim, n_components>::jacobian(const double /* t */,
+                                                      const VEC & /* src_yy */,
+                                                      const VEC & /* src_yp */,
+                                                      const double /* alpha */,
+                                                      const VEC &src, VEC &dst)
+{
+  system_op.vmult(dst, src);
+  return 0;
+}
+
+
+template <int dim, int spacedim, int n_components>
+int
+NFieldsProblem<dim, spacedim, n_components>::jacobian_prec(const double /* t */,
+                                                           const VEC & /* src_yy */,
+                                                           const VEC & /* src_yp */,
+                                                           const double /* alpha */,
+                                                           const VEC &src, VEC &dst) const
+{
+  preconditioner_op.vmult(dst, src);
+  return 0;
+}
+
+
+template <int dim, int spacedim, int n_components>
+int
+NFieldsProblem<dim, spacedim, n_components>::setup_jacobian_prec(const double t,
+    const VEC &src_yy,
+    const VEC &src_yp,
+    const double alpha)
+{
+
+  assemble_system(t, src_yy, src_yp, alpha);
+  assemble_preconditioner(t, src_yy, src_yp, alpha);
+
+  energy.compute_system_operators(*dof_handler,
+                                  matrix, preconditioner_matrix,
+                                  system_op, preconditioner_op);
+
+  return 0;
+}
+
+
+
+template <int dim, int spacedim, int n_components>
+VEC &
+NFieldsProblem<dim, spacedim, n_components>::differential_components() const
+{
+  static VEC diff_comps(solution);
+  static bool done = false;
+  if (done == false)
+    {
+      done = true;
+      diff_comps.block(0)=1;
+    }
+  return diff_comps;
+}
 
 // template class NFieldsProblem<1>;
 

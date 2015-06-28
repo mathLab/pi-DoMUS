@@ -47,7 +47,10 @@ public:
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
                                const unsigned int &n_face_q_points,
-                               const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
+                               const TrilinosWrappers::MPI::BlockVector &solution,
+                               const TrilinosWrappers::MPI::BlockVector &solution_dot,
+                               const double t,
+                               const double alpha,
                                SAKData &d) const;
 
   virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
@@ -130,6 +133,41 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+
+  typedef TrilinosWrappers::MPI::BlockVector VEC;
+
+  virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
+                                                         const VEC &) const
+  {
+    return shared_ptr<Mapping<dim,spacedim> >(new MappingQ<dim,spacedim>(1));
+  }
+
+  virtual UpdateFlags get_jacobian_flags() const
+  {
+    return (update_quadrature_points |
+            update_JxW_values |
+            update_values |
+            update_gradients);
+  }
+
+  virtual UpdateFlags get_residual_flags() const
+  {
+    return get_jacobian_flags();
+  }
+
+  virtual UpdateFlags get_jacobian_prec_flags() const
+  {
+    return (update_JxW_values |
+            update_values |
+            update_gradients);
+  }
+
+  virtual UpdateFlags get_face_flags() const
+  {
+    return get_jacobian_flags();
+  }
+
+
 protected:
   ParsedFunction<spacedim, n_components> boundary_conditions;
 
@@ -140,19 +178,19 @@ template<int dim, int spacedim, int n_components>
 void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &dofs_per_cell,
                                                            const unsigned int &n_q_points,
                                                            const unsigned int &n_face_q_points,
-                                                           const std::vector<const TrilinosWrappers::MPI::BlockVector *> &sols,
+                                                           const TrilinosWrappers::MPI::BlockVector &solution,
+                                                           const TrilinosWrappers::MPI::BlockVector &solution_dot,
+                                                           const double t,
+                                                           const double alpha,
                                                            SAKData &d) const
 {
   d.add_copy(dofs_per_cell, "dofs_per_cell");
   d.add_copy(n_q_points, "n_q_points");
   d.add_copy(n_face_q_points, "n_face_q_points");
-  if (sols.size() > 1)
-    for (unsigned int i=0; i<sols.size(); ++i)
-      {
-        d.add_ref(*sols[i], "sol["+Utilities::int_to_string(i)+"]");
-      }
-  else
-    d.add_ref(*sols[0], "sol");
+  d.add_copy(alpha, "alpha");
+  d.add_copy(t, "t");
+  d.add_ref(solution, "solution");
+  d.add_ref(solution, "solution_dot");
 }
 
 #endif
