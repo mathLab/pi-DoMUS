@@ -909,10 +909,66 @@ NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) 
 
 template <int dim, int spacedim, int n_components>
 void
-NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, const VEC &src) const
+NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const
 {
-  AssertThrow(false, ExcNotImplemented());
+
+  pcout << "   Solving system... " << std::flush;
+  //
+  //  TrilinosWrappers::MPI::BlockVector
+  //  distributed_solution (rhs);
+  //  distributed_solution = solution;
+
+  // [TODO] make n_block independent
+  //  const unsigned int
+  //  start = (distributed_solution.block(0).size() +
+  //           distributed_solution.block(1).local_range().first);
+  //  const unsigned int
+  //  end   = (distributed_solution.block(0).size() +
+  //           distributed_solution.block(1).local_range().second);
+  //  for (unsigned int i=start; i<end; ++i)
+  //    if (constraints.is_constrained (i))
+  //      distributed_solution(i) = 0;
+
+  unsigned int n_iterations = 0;
+  const double solver_tolerance = tol;
+
+  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
+  SolverControl solver_control (30, solver_tolerance);
+  SolverControl solver_control_refined (matrix.m(), solver_tolerance);
+
+  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+  solver(solver_control, mem,
+         SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+         AdditionalData(30, true));
+
+  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
+  solver_refined(solver_control_refined, mem,
+                 SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
+                 AdditionalData(50, true));
+
+  auto S_inv         = inverse_operator(system_op, solver, preconditioner_op);
+  auto S_inv_refined = inverse_operator(system_op, solver_refined, preconditioner_op);
+  try
+    {
+      S_inv.vmult(dst, src);
+      n_iterations = solver_control.last_step();
+    }
+  catch ( SolverControl::NoConvergence )
+    {
+      S_inv_refined.vmult(dst, src);
+      n_iterations = (solver_control.last_step() +
+                      solver_control_refined.last_step());
+    }
+
+  constraints.distribute (dst);
+
+  pcout << std::endl;
+  pcout << " iterations:                           " <<  n_iterations
+        << std::endl;
+  pcout << std::endl;
+
 }
+
 
 template <int dim, int spacedim, int n_components>
 int

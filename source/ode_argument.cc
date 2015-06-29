@@ -25,7 +25,7 @@ void OdeArgument<VEC>::jacobian(VEC &, const VEC &) const
 
 
 template<typename VEC>
-void OdeArgument<VEC>::solve_jacobian_system(VEC &, const VEC &) const
+void OdeArgument<VEC>::solve_jacobian_system(VEC &, const VEC &, const double) const
 {
   Assert(false, ExcPureFunctionCalled());
 }

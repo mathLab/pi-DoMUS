@@ -187,10 +187,10 @@ void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &d
   d.add_copy(dofs_per_cell, "dofs_per_cell");
   d.add_copy(n_q_points, "n_q_points");
   d.add_copy(n_face_q_points, "n_face_q_points");
-  d.add_copy(alpha, "alpha");
-  d.add_copy(t, "t");
   d.add_ref(solution, "solution");
-  d.add_ref(solution, "solution_dot");
+  d.add_ref(solution_dot, "solution_dot");
+  d.add_copy(t, "t");
+  d.add_copy(alpha, "alpha");
 }
 
 #endif

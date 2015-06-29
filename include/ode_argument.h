@@ -47,7 +47,8 @@ public :
    * class. */
   virtual void output_step(const double t,
                            const VEC &solution,
-                           const VEC &solution_dot,                           const unsigned int step_number,
+                           const VEC &solution_dot,
+                           const unsigned int step_number,
                            const double h) = 0;
 
   /**
@@ -86,7 +87,7 @@ public :
    * where JF is the last computed Jacobian of F.
    *
    */
-  virtual void solve_jacobian_system(VEC &dst, const VEC &src) const;
+  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const;
 
 
   /** Setup Jacobian. Compute the Jacobian of the function

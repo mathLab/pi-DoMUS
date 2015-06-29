@@ -73,7 +73,8 @@ public:
    * class. */
   virtual void output_step(const double t,
                            const VEC &solution,
-                           const VEC &solution_dot,                           const unsigned int step_number,
+                           const VEC &solution_dot,
+                           const unsigned int step_number,
                            const double h);
 
   /** This function will check the behaviour of the solution. If it
@@ -94,18 +95,20 @@ public:
                        const VEC &src_yp,
                        VEC &dst) const;
 
-  /** Jacobian vector product. */
-  virtual void jacobian(VEC &dst, const VEC &src) const;
-
-
-  /** Inverse of the Jacobian vector product. */
-  virtual void solve_jacobian_system(VEC &dst, const VEC &src) const;
-
   /** Setup Jacobian preconditioner. */
   virtual int setup_jacobian(const double t,
                              const VEC &src_yy,
                              const VEC &src_yp,
                              const double alpha);
+
+
+  /** Jacobian vector product. */
+  virtual void jacobian(VEC &dst, const VEC &src) const;
+
+
+  /** Inverse of the Jacobian vector product. */
+  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const;
+
 
 
   /** And an identification of the

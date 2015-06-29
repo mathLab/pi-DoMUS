@@ -190,7 +190,7 @@ int t_dae_prec(realtype tt, N_Vector yy, N_Vector yp,
                N_Vector src, // right hand side to solve for
                N_Vector dst, // computed output
                realtype alpha, // J = dG/dyy + alpha dG/dyp
-               realtype /*delta*/, // input tolerance. The residual rr - Pz has to be smaller than delta
+               realtype delta, // input tolerance. The residual rr - Pz has to be smaller than delta
                void *user_data, // the pointer to the correct class
                N_Vector /*tmp*/) // Storage
 {
@@ -206,7 +206,7 @@ int t_dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yp, yp);
   copy(*src_v, src);
 
-  solver.solve_jacobian_system(*dst_v, *src_v);
+  solver.solve_jacobian_system(*dst_v, *src_v, delta);
   copy(dst, *dst_v);
   return 0;
 }
@@ -218,7 +218,7 @@ int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
              N_Vector rvec, // right hand side to solve for
              N_Vector zvec, // computed output
              realtype alpha, // J = dG/dyy + alpha dG/dyp
-             realtype /*delta*/, // input tolerance. The residual rr - Pz has to be smaller than delta
+             realtype delta, // input tolerance. The residual rr - Pz has to be smaller than delta
              void *user_data, // the pointer to the correct class
              N_Vector /*tmp*/) // Storage
 {
@@ -235,7 +235,7 @@ int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   const VectorView<double> rhs(solver.n_dofs(), NV_DATA_S(rvec));
   VectorView<double> output(solver.n_dofs(), NV_DATA_S(zvec));
-  solver.solve_jacobian_system(output, rhs);
+  solver.solve_jacobian_system(output, rhs, delta);
   return 0;
 }
 
