@@ -18,16 +18,6 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#define BOOST_SPIRIT_USE_PHOENIX_V3
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/phoenix/function.hpp>
-
-namespace qi    = boost::spirit::qi;
-namespace phx   = boost::phoenix;
-namespace ph    = std::placeholders;
-
-typedef boost::variant<int, std::string> value;
 
 template <int dim>
 class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >
@@ -243,32 +233,13 @@ void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandle
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      auto &p = ps[q]; // &p = var["p"][q];
+      const Number &p = ps[q];
       const Tensor <2, dim, Number> &grad_u = grad_us[q];
 
       energy += (eta*.5*scalar_product(grad_u,grad_u) +
                  (1./eta)*0.5*p*p)*scratch.fe_values.JxW(q);
     }
 }
-
-BOOST_PHOENIX_ADAPT_FUNCTION(double, scalar_product_, scalar_product, 2);
-
-template <typename It, typename Skipper = qi::space_type>
-    struct parser : qi::grammar<It, value(), Skipper>
-{
-    parser() : parser::base_type(expr_)
-    {
-        using namespace qi;
-
-        function_call_ =
-                 (lit("scalar_product")   > '(' > expr_ > ',' > expr_ > ')')
-                     [ _val = scalar_product_(ph::_1, ph::_2) ];
-
-    }
-
-  private:
-    qi::rule<It, value(), Skipper> value_, function_call_, expr_, string_;
-};
 
 template <int dim>
 template<typename Number>
