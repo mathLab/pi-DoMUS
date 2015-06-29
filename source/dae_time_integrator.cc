@@ -94,7 +94,7 @@ int t_dae_setup_prec(realtype tt, // time
   copy(*src_yy, yy);
   copy(*src_yp, yp);
 
-  return solver.setup_jacobian_prec(tt, *src_yy, *src_yp, alpha);
+  return solver.setup_jacobian(tt, *src_yy, *src_yp, alpha);
 }
 
 
@@ -120,7 +120,7 @@ int dae_setup_prec(realtype tt, // time
   const VectorView<double> src_yy(solver.n_dofs(), NV_DATA_S(yy));
   const VectorView<double> src_yp(solver.n_dofs(), NV_DATA_S(yp));
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
-  return solver.setup_jacobian_prec(tt, src_yy, src_yp, alpha);
+  return solver.setup_jacobian(tt, src_yy, src_yp, alpha);
 }
 
 template<typename VEC>
@@ -144,9 +144,9 @@ int t_dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yp, yp);
   copy(*src_v, src);
 
-  int err = solver.jacobian(tt, *src_yy, *src_yp, alpha, *src_v, *dst_v);
+  solver.jacobian(*dst_v, *src_v);
   copy(dst, *dst_v);
-  return err;
+  return 0;
 }
 
 
@@ -179,8 +179,8 @@ int dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   const VectorView<double> src_v(solver.n_dofs(), NV_DATA_S(src));
   VectorView<double> dst_v(solver.n_dofs(), NV_DATA_S(dst));
-  int err = solver.jacobian(tt, src_yy, src_yp, alpha, src_v, dst_v);
-  return err;
+  solver.jacobian(dst_v, src_v);
+  return 0;
 }
 
 
@@ -206,9 +206,9 @@ int t_dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   copy(*src_yp, yp);
   copy(*src_v, src);
 
-  int err = solver.jacobian_prec(tt, *src_yy, *src_yp, alpha, *src_v, *dst_v);
+  solver.solve_jacobian_system(*dst_v, *src_v);
   copy(dst, *dst_v);
-  return err;
+  return 0;
 }
 
 
@@ -235,7 +235,8 @@ int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   const VectorView<double> rhs(solver.n_dofs(), NV_DATA_S(rvec));
   VectorView<double> output(solver.n_dofs(), NV_DATA_S(zvec));
-  return solver.jacobian_prec(tt, src_yy, src_yp, alpha, rhs, output);
+  solver.solve_jacobian_system(output, rhs);
+  return 0;
 }
 
 
@@ -371,7 +372,7 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
       copy(solution_dot, yp);
 
       // Check the solution
-      bool reset = solver.solution_check(t, solution, solution_dot, step_number, h);
+      bool reset = solver.solver_should_restart(t, solution, solution_dot, step_number, h);
 
 
       solver.output_step(t, solution, solution_dot,  step_number, h);
@@ -591,7 +592,7 @@ unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solut
            << ", h = " << h << endl;
 
       // Check the solution
-      bool reset = solver.solution_check(t, solution, solution_dot, step_number, h);
+      bool reset = solver.solver_should_restart(t, solution, solution_dot, step_number, h);
 
 
       solver.output_step(t, solution, solution_dot, step_number, h);

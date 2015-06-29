@@ -821,11 +821,11 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
 
 template <int dim, int spacedim, int n_components>
 bool
-NFieldsProblem<dim, spacedim, n_components>::solution_check(const double t,
-                                                            const VEC &solution,
-                                                            const VEC &solution_dot,
-                                                            const unsigned int step_number,
-                                                            const double h) const
+NFieldsProblem<dim, spacedim, n_components>::solver_should_restart(const double t,
+    const VEC &solution,
+    const VEC &solution_dot,
+    const unsigned int step_number,
+    const double h)
 {
   return false;
 }
@@ -899,37 +899,27 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
 
 template <int dim, int spacedim, int n_components>
-int
-NFieldsProblem<dim, spacedim, n_components>::jacobian(const double /* t */,
-                                                      const VEC & /* src_yy */,
-                                                      const VEC & /* src_yp */,
-                                                      const double /* alpha */,
-                                                      const VEC &src, VEC &dst)
+void
+NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) const
 {
   system_op.vmult(dst, src);
-  return 0;
 }
 
 
+
 template <int dim, int spacedim, int n_components>
-int
-NFieldsProblem<dim, spacedim, n_components>::jacobian_prec(const double /* t */,
-                                                           const VEC & /* src_yy */,
-                                                           const VEC & /* src_yp */,
-                                                           const double /* alpha */,
-                                                           const VEC &src, VEC &dst) const
+void
+NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, const VEC &src) const
 {
-  preconditioner_op.vmult(dst, src);
-  return 0;
+  AssertThrow(false, ExcNotImplemented());
 }
-
 
 template <int dim, int spacedim, int n_components>
 int
-NFieldsProblem<dim, spacedim, n_components>::setup_jacobian_prec(const double t,
-    const VEC &src_yy,
-    const VEC &src_yp,
-    const double alpha)
+NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
+                                                            const VEC &src_yy,
+                                                            const VEC &src_yp,
+                                                            const double alpha)
 {
 
   assemble_system(t, src_yy, src_yp, alpha);

@@ -5,11 +5,11 @@
 #include "utilities.h"
 
 template<typename VEC>
-bool OdeArgument<VEC>::solution_check(const double,
-                                      const VEC &,
-                                      const VEC &,
-                                      const unsigned int,
-                                      const double) const
+bool OdeArgument<VEC>::solver_should_restart(const double,
+                                             const VEC &,
+                                             const VEC &,
+                                             const unsigned int,
+                                             const double)
 {
   return false;
 }
@@ -17,39 +17,30 @@ bool OdeArgument<VEC>::solution_check(const double,
 
 
 template<typename VEC>
-int OdeArgument<VEC>::jacobian(double,
-                               VEC const &,
-                               VEC const &,
-                               const double,
-                               VEC const &,
-                               VEC &)
+void OdeArgument<VEC>::jacobian(VEC &, const VEC &) const
 {
   Assert(false, ExcPureFunctionCalled());
-  return 0;
+}
+
+
+
+template<typename VEC>
+void OdeArgument<VEC>::solve_jacobian_system(VEC &, const VEC &) const
+{
+  Assert(false, ExcPureFunctionCalled());
 }
 
 
 template<typename VEC>
-int OdeArgument<VEC>::setup_jacobian_prec(double,
-                                          VEC const &,
-                                          VEC const &,
-                                          double)
+int OdeArgument<VEC>::setup_jacobian(const double,
+                                     const VEC &,
+                                     const VEC &,
+                                     const double)
 {
   Assert(false, ExcPureFunctionCalled());
   return 0;
 }
 
-template<typename VEC>
-int OdeArgument<VEC>::jacobian_prec(double,
-                                    VEC const &,
-                                    VEC const &,
-                                    const double,
-                                    VEC const &,
-                                    VEC &) const
-{
-  Assert(false, ExcPureFunctionCalled());
-  return 0;
-}
 
 template<typename VEC>
 VEC &OdeArgument<VEC>::differential_components() const

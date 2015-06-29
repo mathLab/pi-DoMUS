@@ -5,18 +5,25 @@
 #include <deal.II/lac/vector_view.h>
 
 #include "utilities.h"
+#include "mpi.h"
 
 using namespace dealii;
 
-/** Base class that needs to be inherited by any function that wants
- * to use the time integrator class. */
+/**
+ * Base class that needs to be inherited by any function that wants
+ * to use the DAE time integrator class.
+ *
+ * Interface for problems of type F(t, y, y_dot) = 0
+ *
+ * where differential components may be only a part of y.
+ */
 template<typename VEC=Vector<double> >
 class OdeArgument
 {
 
 public :
 
-  OdeArgument(const MPI_Comm &communicator) :
+  OdeArgument(const MPI_Comm &communicator=MPI_COMM_WORLD) :
     communicator(communicator) {};
 
   const MPI_Comm &get_comm() const
@@ -25,6 +32,9 @@ public :
   }
 
 
+  /**
+   * Create a compatible vector with the domain of F.
+   */
   virtual shared_ptr<VEC>
   create_new_vector() const = 0;
 
@@ -40,57 +50,67 @@ public :
                            const VEC &solution_dot,                           const unsigned int step_number,
                            const double h) = 0;
 
-  /** This function will check the behaviour of the solution. If it
-   * is converged or if it is becoming unstable the time integrator
-   * will be stopped. If the convergence is not achived the
-   * calculation will be continued. If necessary, it can also reset
-   * the time stepper. */
-  virtual bool solution_check(const double t,
-                              const VEC &solution,
-                              const VEC &solution_dot,
-                              const unsigned int step_number,
-                              const double h) const;
+  /**
+   * This function should analyze the solution, and decide wether the dae
+   * solver should be restarted.
+   *
+   * If the function returns true, then both @p solution and @solution_dot may
+   * be modified inside this function (also in terms of number of dofs) and the
+   * dae solver will use the new ones.
+   *
+   * Should this function return false, then both @p solution and @p solution_dot
+   * are assumed to be unchanged by this function.
+   */
+  virtual bool solver_should_restart(const double t,
+                                     const VEC &solution,
+                                     const VEC &solution_dot,
+                                     const unsigned int step_number,
+                                     const double h);
 
-  /** For dae problems, we need a
-   residual function. */
+  /** Compute the residual dst = F(t, y, y_dot). */
   virtual int residual(const double t,
-                       const VEC &src_yy,
-                       const VEC &src_yp,
+                       const VEC &y,
+                       const VEC &sy_dot,
                        VEC &dst) const = 0;
 
-  /** Jacobian vector product. */
-  virtual int jacobian(const double t,
-                       const VEC &src_yy,
-                       const VEC &src_yp,
-                       const double alpha,
-                       const VEC &src,
-                       VEC &dst);
+  /**
+   * Compute the product dst = J * src
+   * using the last computed Jacobian of F.
+   */
+  virtual void jacobian(VEC &dst, const VEC &src) const;
 
-  /** Setup Jacobian preconditioner. */
-  virtual int setup_jacobian_prec(const double t,
-                                  const VEC &src_yy,
-                                  const VEC &src_yp,
-                                  const double alpha);
+  /** Solve the linear system
+   *
+   * JF dst = src
+   *
+   * where JF is the last computed Jacobian of F.
+   *
+   */
+  virtual void solve_jacobian_system(VEC &dst, const VEC &src) const;
 
-  /** Jacobian preconditioner
-   vector product. */
-  virtual int jacobian_prec(const double t,
-                            const VEC &src_yy,
-                            const VEC &src_yp,
-                            const double alpha,
-                            const VEC &src,
-                            VEC &dst) const;
 
-  /** And an identification of the
-   differential components. This
-   has to be 1 if the
-   corresponding variable is a
-   differential component, zero
-   otherwise.  */
+  /** Setup Jacobian. Compute the Jacobian of the function
+   *
+   * JF = J F(t, y, alpha y + c) = D_y F + alpha D_y_dot F
+   *
+   */
+  virtual int setup_jacobian(const double t,
+                             const VEC &y,
+                             const VEC &y_dot,
+                             const double alpha);
+
+  /**
+   * Return a vector with 1 on the differential components, and 0 on the
+   * algebraic ones.
+   */
   virtual VEC &differential_components() const;
 
   virtual VEC &get_local_tolerances() const;
 
+private:
+  /**
+   * MPI communicator for parallel solver.
+   */
   const MPI_Comm &communicator;
 
 };

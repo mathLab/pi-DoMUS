@@ -112,16 +112,24 @@ public:
   }
 
   /** Jacobian vector product. */
-  virtual int jacobian(const double t,
-                       const VEC &src_yy,
-                       const VEC &src_yp,
-                       const double alpha,
-                       const VEC &src,
-                       VEC &dst)
+  virtual int setup_jacobian(const double t,
+                             const VEC &src_yy,
+                             const VEC &src_yp,
+                             const double alpha_in)
+  {
+    y = SP(new VEC(src_yy));
+    y_dot = SP(new VEC(src_yp));
+    alpha = alpha_in;
+    return 0;
+  }
+
+
+  /** Jacobian vector product. */
+  virtual void jacobian(VEC &dst, const VEC &src) const
   {
 
-    auto &y = src_yy.block(0);
-    auto &p = src_yy.block(1);
+    auto &y = this->y->block(0);
+    auto &p = this->y->block(1);
 
     auto &dy = dst.block(0);
     auto &dp = dst.block(1);
@@ -134,7 +142,6 @@ public:
     dp *=2;
     dp.add(-1);
     dp.scale(src.block(1));
-    return 0;
   }
 
   virtual VEC &differential_components() const
@@ -164,6 +171,10 @@ public:
 private:
   unsigned int n_dofs_;
   std::ofstream ofile;
+
+  shared_ptr<VEC> y;
+  shared_ptr<VEC> y_dot;
+  double alpha;
 
 };
 

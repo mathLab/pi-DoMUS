@@ -81,11 +81,11 @@ public:
    * will be stopped. If the convergence is not achived the
    * calculation will be continued. If necessary, it can also reset
    * the time stepper. */
-  virtual bool solution_check(const double t,
-                              const VEC &solution,
-                              const VEC &solution_dot,
-                              const unsigned int step_number,
-                              const double h) const;
+  virtual bool solver_should_restart(const double t,
+                                     const VEC &solution,
+                                     const VEC &solution_dot,
+                                     const unsigned int step_number,
+                                     const double h);
 
   /** For dae problems, we need a
    residual function. */
@@ -95,27 +95,18 @@ public:
                        VEC &dst) const;
 
   /** Jacobian vector product. */
-  virtual int jacobian(const double t,
-                       const VEC &src_yy,
-                       const VEC &src_yp,
-                       const double alpha,
-                       const VEC &src,
-                       VEC &dst);
+  virtual void jacobian(VEC &dst, const VEC &src) const;
+
+
+  /** Inverse of the Jacobian vector product. */
+  virtual void solve_jacobian_system(VEC &dst, const VEC &src) const;
 
   /** Setup Jacobian preconditioner. */
-  virtual int setup_jacobian_prec(const double t,
-                                  const VEC &src_yy,
-                                  const VEC &src_yp,
-                                  const double alpha);
+  virtual int setup_jacobian(const double t,
+                             const VEC &src_yy,
+                             const VEC &src_yp,
+                             const double alpha);
 
-  /** Jacobian preconditioner
-   vector product. */
-  virtual int jacobian_prec(const double t,
-                            const VEC &src_yy,
-                            const VEC &src_yp,
-                            const double alpha,
-                            const VEC &src,
-                            VEC &dst) const;
 
   /** And an identification of the
    differential components. This
