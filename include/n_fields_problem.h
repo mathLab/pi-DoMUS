@@ -172,13 +172,16 @@ private:
   TrilinosWrappers::MPI::BlockVector        solution;
   TrilinosWrappers::MPI::BlockVector        solution_dot;
 
-  TimerOutput                               computing_timer;
+  mutable TimerOutput                               computing_timer;
 
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim,spacedim>   pgg;
 
   ParsedFunction<spacedim, n_components>        exact_solution;
+
+  ParsedFunction<spacedim, n_components>        initial_solution;
+  ParsedFunction<spacedim, n_components>        initial_solution_dot;
 
   ParsedDataOut<dim, spacedim>                  data_out;
 

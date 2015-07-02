@@ -113,6 +113,8 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
   pgg("Domain"),
 
   exact_solution("Exact solution"),
+  initial_solution("Initial solution"),
+  initial_solution_dot("Initial solution_dot"),
 
   data_out("Output Parameters", "vtu"),
   dae(*this)
@@ -186,6 +188,9 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   solution.reinit (partitioning, MPI_COMM_WORLD);
   solution_dot.reinit (partitioning, MPI_COMM_WORLD);
 
+  VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
+  VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+
   computing_timer.exit_section();
 }
 
@@ -246,7 +251,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian (const doubl
     const VEC &solution_dot,
     const double alpha)
 {
-  computing_timer.enter_section ("   Assemble system");
+  computing_timer.enter_section ("   Assemble system jacobian");
 
   jacobian_matrix = 0;
 
@@ -303,6 +308,17 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian (const doubl
   jacobian_matrix.compress(VectorOperation::add);
 
   pcout << std::endl;
+
+
+  auto id = solution.locally_owned_elements();
+  for (unsigned int i=0; i<id.n_elements(); ++i)
+    {
+      auto j = id.nth_index_in_set(i);
+      if (constraints.is_constrained(j))
+        jacobian_matrix.set(j, j, 1.0);
+    }
+  jacobian_matrix.compress(VectorOperation::insert);
+
   computing_timer.exit_section();
 }
 
@@ -675,6 +691,8 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                                                       const VEC &solution_dot,
                                                       VEC &dst) const
 {
+  computing_timer.enter_section ("Residual");
+  pcout << "   Computing residual... " << std::flush;
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
@@ -730,7 +748,18 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
+  auto id = solution.locally_owned_elements();
+  for (unsigned int i=0; i<id.n_elements(); ++i)
+    {
+      auto j = id.nth_index_in_set(i);
+      if (constraints.is_constrained(j))
+        dst[j] -= constraints.get_inhomogeneity(j);
+    }
+
   dst.compress(VectorOperation::add);
+
+  pcout << "   Residual = " << dst.linfty_norm() << std::endl;
+  computing_timer.exit_section();
   return 0;
 }
 
@@ -839,8 +868,8 @@ NFieldsProblem<dim, spacedim, n_components>::differential_components() const
   for (unsigned int i=0; i<id.n_elements(); ++i)
     {
       auto j = id.nth_index_in_set(i);
-      if (constraints.is_constrained(i))
-        diff_comps[i] = 0;
+      if (constraints.is_constrained(j))
+        diff_comps[j] = 0;
     }
   return diff_comps;
 }
