@@ -32,7 +32,7 @@ public:
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
                                                         "FESystem[FE_Q(2)]",
                                                         "u", "1", "0"),
-    forcing_term ("Forcing function", "2.*pi^2*cos(pi*x)*cos(pi*y)")
+    forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
   {};
 
   virtual void declare_parameters (ParameterHandler &prm)
@@ -70,10 +70,17 @@ public:
     if (!d.have("us"+suffix))
       {
         d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values"+suffix);
+        d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us_dot"+suffix);
         d.add_copy(std::vector<Tensor <1, dim, Number> >(dofs_per_cell),"grad_us"+suffix);
         d.add_copy(std::vector<double>(n_q_points),"fs");
+
+        d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
+        d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
+        d.add_copy(std::vector<double>(n_q_points),"us"+suffix_double);
+        d.add_copy(std::vector<double>(n_q_points),"us_dot"+suffix_double);
+        d.add_copy(std::vector<Tensor <1, dim, double> >(dofs_per_cell),"grad_us"+suffix_double);
       }
 
     auto &sol = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
@@ -90,7 +97,7 @@ public:
     auto &us_dot = d.template get<std::vector <Number> >("us_dot"+suffix);
 
     auto &us_dot_double = d.template get<std::vector <double> >("us_dot"+suffix_double);
-    auto &us_double = d.template get<std::vector <Number> >("us"+suffix_double);
+    auto &us_double = d.template get<std::vector <double> >("us"+suffix_double);
 
     auto &grad_us = d.template get<std::vector <Tensor <1, dim, Number> > >("grad_us"+suffix);
     auto &fs =  d.template get<std::vector <double> >("fs");
@@ -129,7 +136,7 @@ public:
         const Tensor <1, dim, Number> &grad_u = grad_us[q];
         const double &F = fs[q];
 
-        Number psi = (u_dot*u + grad_u*grad_u - F*u)*scratch.fe_values.JxW(q);
+        energy += (u_dot*u + grad_u*grad_u - F*u)*scratch.fe_values.JxW(q);
       }
   };
 
@@ -169,7 +176,7 @@ public:
   };
 
 private:
-  ParsedFunction<dim,dim> forcing_term;
+  ParsedFunction<dim> forcing_term;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
 };

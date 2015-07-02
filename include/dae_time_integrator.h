@@ -74,6 +74,9 @@ private:
   /** Maximum number of time steps. */
   unsigned int max_n_steps;
 
+  /** Maximum order of BDF. */
+  unsigned int max_order;
+
   double outputs_period;
 
   /** Type of initial conditions. */
@@ -91,16 +94,6 @@ private:
   /** If true, we use
   preconditioned gmres. */
   std::string iterative_solver_type;
-
-  /** Provides the Jacobian vector
-  product. If this is false,
-  then finite difference is
-  used. */
-  bool provide_jac;
-  /** Provide preconditioning for
-  Jacobian. If not set, then no
-  preconditioning is used. */
-  bool provide_jac_prec;
 
   /** Use local tolerances when computing absolute tolerance. */
   bool use_local_tolerances;

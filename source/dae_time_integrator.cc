@@ -271,12 +271,6 @@ void DAETimeIntegrator<VEC>::declare_parameters(ParameterHandler &prm)
                 "Iterative algorithm", "gmres",
                 Patterns::Selection("gmres|bicgs|tfqmr"));
 
-  add_parameter(prm, &provide_jac,
-                "Provide jacobian product", "false", Patterns::Bool());
-
-  add_parameter(prm, &provide_jac_prec,
-                "Provide jacobian preconditioner", "false", Patterns::Bool());
-
   add_parameter(prm, &initial_step_size,
                 "Initial step size", "1e-4", Patterns::Double());
 
@@ -293,10 +287,15 @@ void DAETimeIntegrator<VEC>::declare_parameters(ParameterHandler &prm)
                 "Initial time", "0", Patterns::Double());
 
   add_parameter(prm, &final_time,
-                "Final time", "100000", Patterns::Double());
+                "Final time", "1", Patterns::Double());
 
   add_parameter(prm, &outputs_period,
                 "Seconds between each output", "1e-1", Patterns::Double());
+
+
+  add_parameter(prm, &max_order,
+                "Maximum order of BDF", "5", Patterns::Integer());
+
 
   add_parameter(prm, &ic_type,
                 "Initial condition type", "use_diff_y",
@@ -485,12 +484,12 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
       Assert(false, ExcInternalError("I don't know what solver you want to use!"));
     }
 
-  if (provide_jac)
-    status += IDASpilsSetJacTimesVecFn(ida_mem, t_dae_jtimes<VEC>);
-  if (provide_jac_prec)
-    status += IDASpilsSetPreconditioner(ida_mem, t_dae_setup_prec<VEC>, t_dae_prec<VEC>);
 
-  status += IDASetMaxOrd(ida_mem, 5);
+  status += IDASpilsSetJacTimesVecFn(ida_mem, t_dae_jtimes<VEC>);
+
+  status += IDASpilsSetPreconditioner(ida_mem, t_dae_setup_prec<VEC>, t_dae_prec<VEC>);
+
+  status += IDASetMaxOrd(ida_mem, max_order);
   //std::cout<<"???1"<<std::endl;
 
   AssertThrow(status == 0, ExcMessage("Error initializing IDA."));
@@ -693,10 +692,10 @@ void DAETimeIntegrator<Vector<double> >::reset_ode(double current_time,
 //    if (use_iterative == true)
 //    {
   status += IDASpgmr(ida_mem, solver.n_dofs());
-  if (provide_jac)
-    status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
-  if (provide_jac_prec)
-    status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
+
+  status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
+
+  status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
 //    }
 //    else
 //    {
