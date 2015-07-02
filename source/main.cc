@@ -1,4 +1,3 @@
-#include "interfaces/dynamic_stokes_derived_interface.h"
 #include "interfaces/heat_equation.h"
 #include "n_fields_problem.h"
 #include "mpi.h"
