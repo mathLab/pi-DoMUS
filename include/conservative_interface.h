@@ -1,3 +1,6 @@
+#ifndef __sak_conservative_interface_h
+#define __sak_conservative_interface_h
+
 #include "interface.h"
 
 template<int dim, int spacedim, int n_components, class Implementation>
@@ -53,3 +56,4 @@ public:
   }
 };
 
+#endif

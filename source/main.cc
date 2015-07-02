@@ -1,4 +1,5 @@
 #include "interfaces/dynamic_stokes_derived_interface.h"
+#include "interfaces/heat_equation.h"
 #include "n_fields_problem.h"
 #include "mpi.h"
 
@@ -37,8 +38,8 @@ int main (int argc, char *argv[])
       const int dim = 2;
       // BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
 
-      DynamicStokesDerivedInterface<dim> energy;
-      NFieldsProblem<dim,dim,dim+1> n_problem (energy);
+      HeatEquation<dim> energy;
+      NFieldsProblem<dim,dim,1> n_problem (energy);
       // NavierStokes<dim> flow_problem (NavierStokes<dim>::global_refinement);
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 

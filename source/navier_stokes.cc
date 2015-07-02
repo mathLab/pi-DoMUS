@@ -169,15 +169,15 @@ NavierStokes<dim>::NavierStokes (const RefinementMode refinement_mode)
 
 
 /*
-  template <int dim>
-  NavierStokes<dim>::~NavierStokes ()
-  {
-    // navier_stokes_dof_handler->clear ();
-    smart_delete(navier_stokes_dof_handler);
-    smart_delete(navier_stokes_fe);
-    smart_delete(triangulation);
-  }
-  */
+ template <int dim>
+ NavierStokes<dim>::~NavierStokes ()
+ {
+ // navier_stokes_dof_handler->clear ();
+ smart_delete(navier_stokes_dof_handler);
+ smart_delete(navier_stokes_fe);
+ smart_delete(triangulation);
+ }
+ */
 
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 

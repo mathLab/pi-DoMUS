@@ -177,8 +177,8 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
 
   constraints.close ();
 
-  setup_matrix (partitioning, relevant_partitioning);
-  setup_preconditioner (partitioning, relevant_partitioning);
+  setup_jacobian (partitioning, relevant_partitioning);
+  setup_jacobian_preconditioner (partitioning, relevant_partitioning);
 
   //    solution.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
   //    solution_dot.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
@@ -193,10 +193,10 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
 
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::
-setup_matrix (const std::vector<IndexSet> &partitioning,
-              const std::vector<IndexSet> &relevant_partitioning)
+setup_jacobian (const std::vector<IndexSet> &partitioning,
+                const std::vector<IndexSet> &relevant_partitioning)
 {
-  matrix.clear ();
+  jacobian_matrix.clear ();
 
   TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
                                             relevant_partitioning,
@@ -211,17 +211,17 @@ setup_matrix (const std::vector<IndexSet> &partitioning,
                                    this_mpi_process(MPI_COMM_WORLD));
   sp.compress();
 
-  matrix.reinit (sp);
+  jacobian_matrix.reinit (sp);
 }
 
 /* ------------------------ PRECONDITIONER ------------------------ */
 
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::
-setup_preconditioner (const std::vector<IndexSet> &partitioning,
-                      const std::vector<IndexSet> &relevant_partitioning)
+setup_jacobian_preconditioner (const std::vector<IndexSet> &partitioning,
+                               const std::vector<IndexSet> &relevant_partitioning)
 {
-  preconditioner_matrix.clear ();
+  jacobian_preconditioner_matrix.clear ();
 
   TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
                                             relevant_partitioning,
@@ -236,44 +236,19 @@ setup_preconditioner (const std::vector<IndexSet> &partitioning,
                                    this_mpi_process(MPI_COMM_WORLD));
   sp.compress();
 
-  preconditioner_matrix.reinit (sp);
+  jacobian_preconditioner_matrix.reinit (sp);
 }
 
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::
-local_assemble_preconditioner (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                               Assembly::Scratch::NFields<dim,spacedim> &scratch,
-                               PreconditionerCopyData &data)
-{
-  const unsigned int   dofs_per_cell   = fe->dofs_per_cell;
-  const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
 
-  const FEValuesExtractors::Vector velocities (0);
-  const FEValuesExtractors::Scalar pressure (dim);
-
-  scratch.fe_values.reinit (cell);
-  cell->get_dof_indices (data.local_dof_indices);
-
-  data.local_matrix = 0;
-
-  energy.get_preconditioner_residual(cell, scratch, data, data.sacado_residual);
-
-  for (unsigned int i=0; i<dofs_per_cell; ++i)
-    for (unsigned int j=0; j<dofs_per_cell; ++j)
-      data.local_matrix(i,j) = data.sacado_residual[i].dx(j);
-
-}
-
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::
-copy_local_to_global_preconditioner (const PreconditionerCopyData &data)
-{
-  constraints.distribute_local_to_global (  data.local_matrix,
-                                            data.local_dof_indices,
-                                            preconditioner_matrix);
-}
+// template <int dim, int spacedim, int n_components>
+// void
+// NFieldsProblem<dim, spacedim, n_components>::
+// copy_local_to_global_preconditioner (const PreconditionerCopyData &data)
+// {
+//   constraints.distribute_local_to_global (  data.local_matrix,
+//                                             data.local_dof_indices,
+//                                             preconditioner_matrix);
+// }
 //
 //template <int dim, int spacedim, int n_components>
 //void
@@ -387,14 +362,14 @@ copy_local_to_global_preconditioner (const PreconditionerCopyData &data)
 //
 
 template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double t,
+void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian (const double t,
     const VEC &solution,
     const VEC &solution_dot,
     const double alpha)
 {
   computing_timer.enter_section ("   Assemble system");
 
-  matrix = 0;
+  jacobian_matrix = 0;
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
@@ -414,7 +389,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double 
   {
     this->constraints.distribute_local_to_global (data.local_matrix,
                                                   data.local_dof_indices,
-                                                  this->matrix);
+                                                  this->jacobian_matrix);
   };
 
   auto local_assemble = [ this ]
@@ -422,17 +397,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double 
                          Scratch &scratch,
                          SystemCopyData &data)
   {
-
-    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
-    scratch.fe_values.reinit (cell);
-    cell->get_dof_indices (data.local_dof_indices);
-
-    data.local_matrix = 0;
-    this->energy.get_system_residual(cell, scratch, data, data.sacado_residual);
-
-    for (unsigned int i=0; i<dofs_per_cell; ++i)
-      for (unsigned int j=0; j<dofs_per_cell; ++j)
-        data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
+    this->energy.assemble_local_system(cell, scratch, data);
   };
 
   typedef
@@ -456,7 +421,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double 
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
-  matrix.compress(VectorOperation::add);
+  jacobian_matrix.compress(VectorOperation::add);
 
   pcout << std::endl;
   computing_timer.exit_section();
@@ -466,83 +431,76 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_system (const double 
 
 
 template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::assemble_preconditioner (const double t,
+void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_preconditioner (const double t,
     const VEC &solution,
     const VEC &solution_dot,
     const double alpha)
 {
-  computing_timer.enter_section ("   Build preconditioner");
-  pcout << "   Rebuilding preconditioner..." << std::flush;
+  if (energy.get_jacobian_preconditioner_flags() != update_default)
+    {
+      computing_timer.enter_section ("   Build preconditioner");
+      pcout << "   Rebuilding preconditioner..." << std::flush;
 
-  preconditioner_matrix = 0;
+      jacobian_preconditioner_matrix = 0;
 
-  const QGauss<dim> quadrature_formula(fe->degree+1);
-  const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
+      const QGauss<dim> quadrature_formula(fe->degree+1);
+      const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  typedef
-  FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
-  CellFilter;
+      typedef
+      FilteredIterator<typename DoFHandler<dim,spacedim>::active_cell_iterator>
+      CellFilter;
 
-  SAKData preconditioner_data;
+      SAKData preconditioner_data;
 
-  std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
-  sols.push_back(&solution);
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         solution, solution_dot, t, alpha,
-                         preconditioner_data);
+      std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
+      sols.push_back(&solution);
+      energy.initialize_data(fe->dofs_per_cell,
+                             quadrature_formula.size(),
+                             face_quadrature_formula.size(),
+                             solution, solution_dot, t, alpha,
+                             preconditioner_data);
 
 
-  auto local_copy = [this]
-                    (const PreconditionerCopyData &data)
-  {
-    this->constraints.distribute_local_to_global (data.local_matrix,
-                                                  data.local_dof_indices,
-                                                  this->preconditioner_matrix);
-  };
+      auto local_copy = [this]
+                        (const PreconditionerCopyData &data)
+      {
+        this->constraints.distribute_local_to_global (data.local_matrix,
+                                                      data.local_dof_indices,
+                                                      this->jacobian_preconditioner_matrix);
+      };
 
-  auto local_assemble = [ this ]
-                        (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                         Assembly::Scratch::NFields<dim,spacedim> &scratch,
-                         PreconditionerCopyData &data)
-  {
-
-    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
-    scratch.fe_values.reinit (cell);
-    cell->get_dof_indices (data.local_dof_indices);
-
-    data.local_matrix = 0;
-    this->energy.get_preconditioner_residual(cell, scratch, data, data.sacado_residual);
-
-    for (unsigned int i=0; i<dofs_per_cell; ++i)
-      for (unsigned int j=0; j<dofs_per_cell; ++j)
-        data.local_matrix(i,j) += data.sacado_residual[i].dx(j);
-  };
+      auto local_assemble = [ this ]
+                            (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                             Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                             PreconditionerCopyData &data)
+      {
+        this->energy.assemble_local_preconditioner(cell, scratch, data);
+      };
 
 
 
-  WorkStream::
-  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->begin_active()),
-       CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->end()),
-       local_assemble,
-       local_copy,
-       Assembly::Scratch::
-       NFields<dim,spacedim> (preconditioner_data,
-                              *fe, quadrature_formula,
-                              *mapping,
-                              energy.get_jacobian_prec_flags(),
-                              face_quadrature_formula,
-                              UpdateFlags(0)),
-       Assembly::CopyData::
-       NFieldsPreconditioner<dim,spacedim> (*fe));
+      WorkStream::
+      run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                       dof_handler->begin_active()),
+           CellFilter (IteratorFilters::LocallyOwnedCell(),
+                       dof_handler->end()),
+           local_assemble,
+           local_copy,
+           Assembly::Scratch::
+           NFields<dim,spacedim> (preconditioner_data,
+                                  *fe, quadrature_formula,
+                                  *mapping,
+                                  energy.get_jacobian_preconditioner_flags(),
+                                  face_quadrature_formula,
+                                  UpdateFlags(0)),
+           Assembly::CopyData::
+           NFieldsPreconditioner<dim,spacedim> (*fe));
 
-  preconditioner_matrix.compress(VectorOperation::add);
+      jacobian_preconditioner_matrix.compress(VectorOperation::add);
 
-  pcout << std::endl;
-  computing_timer.exit_section();
+      pcout << std::endl;
+      computing_timer.exit_section();
+    }
 }
 
 /* ------------------------ SOLVE ------------------------ */
@@ -902,7 +860,7 @@ template <int dim, int spacedim, int n_components>
 void
 NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) const
 {
-  system_op.vmult(dst, src);
+  jacobian_op.vmult(dst, src);
 }
 
 
@@ -934,7 +892,7 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, con
 
   PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
-  SolverControl solver_control_refined (matrix.m(), solver_tolerance);
+  SolverControl solver_control_refined (jacobian_matrix.m(), solver_tolerance);
 
   SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
   solver(solver_control, mem,
@@ -946,8 +904,8 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, con
                  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(50, true));
 
-  auto S_inv         = inverse_operator(system_op, solver, preconditioner_op);
-  auto S_inv_refined = inverse_operator(system_op, solver_refined, preconditioner_op);
+  auto S_inv         = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
+  auto S_inv_refined = inverse_operator(jacobian_op, solver_refined, jacobian_preconditioner_op);
   try
     {
       S_inv.vmult(dst, src);
@@ -978,12 +936,12 @@ NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
                                                             const double alpha)
 {
 
-  assemble_system(t, src_yy, src_yp, alpha);
-  assemble_preconditioner(t, src_yy, src_yp, alpha);
+  assemble_jacobian(t, src_yy, src_yp, alpha);
+  assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
 
   energy.compute_system_operators(*dof_handler,
-                                  matrix, preconditioner_matrix,
-                                  system_op, preconditioner_op);
+                                  jacobian_matrix, jacobian_preconditioner_matrix,
+                                  jacobian_op, jacobian_preconditioner_op);
 
   return 0;
 }
@@ -994,12 +952,16 @@ template <int dim, int spacedim, int n_components>
 VEC &
 NFieldsProblem<dim, spacedim, n_components>::differential_components() const
 {
-  static VEC diff_comps(solution);
-  static bool done = false;
-  if (done == false)
+  static VEC diff_comps;
+  diff_comps.reinit(solution);
+  diff_comps = 1;
+
+  auto id = diff_comps.locally_owned_elements();
+  for (unsigned int i=0; i<id.n_elements(); ++i)
     {
-      done = true;
-      diff_comps.block(0)=1;
+      auto j = id.nth_index_in_set(i);
+      if (constraints.is_constrained(i))
+        diff_comps[i] = 0;
     }
   return diff_comps;
 }

@@ -39,8 +39,8 @@ class NFieldsProblem : public ParameterAcceptor, public OdeArgument<VEC>
   typedef typename Assembly::Scratch::NFields<dim,spacedim> Scratch;
 
   // This is a class required to make tests
-  template<int fdim, int fspacedim>
-  friend void test(NFieldsProblem<fdim,fspacedim> &);
+  template<int fdim, int fspacedim, int fn_components>
+  friend void test(NFieldsProblem<fdim,fspacedim,fn_components> &);
 
 public:
 
@@ -122,27 +122,29 @@ public:
 private:
   void make_grid_fe();
   void setup_dofs ();
-  void assemble_preconditioner (const double t,
-                                const VEC &y,
-                                const VEC &y_dot,
-                                const double alpha);
 
-  void assemble_system (const double t,
-                        const VEC &y,
-                        const VEC &y_dot,
-                        const double alpha);
-  void solve ();
-  //void refine_mesh (const unsigned int max_grid_level);
+  void setup_jacobian (const std::vector<IndexSet> &partitioning,
+                       const std::vector<IndexSet> &relevant_partitioning);
+
+  void assemble_jacobian (const double t,
+                          const VEC &y,
+                          const VEC &y_dot,
+                          const double alpha);
+
+  void setup_jacobian_preconditioner (const std::vector<IndexSet> &partitioning,
+                                      const std::vector<IndexSet> &relevant_partitioning);
+
+  void assemble_jacobian_preconditioner (const double t,
+                                         const VEC &y,
+                                         const VEC &y_dot,
+                                         const double alpha);
   void refine_mesh ();
-  double compute_residual(const double alpha); // const;
-  double determine_step_length () const;
   void process_solution ();
+
+
 
   const MPI_Comm &comm;
   const Interface<dim,spacedim,n_components>    &energy;
-
-
-
 
   unsigned int n_cycles;
   unsigned int initial_global_refinement;
@@ -161,39 +163,17 @@ private:
 
   ConstraintMatrix                          constraints;
 
-  TrilinosWrappers::BlockSparseMatrix       matrix;
-  TrilinosWrappers::BlockSparseMatrix       preconditioner_matrix;
+  TrilinosWrappers::BlockSparseMatrix       jacobian_matrix;
+  TrilinosWrappers::BlockSparseMatrix       jacobian_preconditioner_matrix;
 
-  LinearOperator<TrilinosWrappers::MPI::BlockVector> preconditioner_op;
-  LinearOperator<TrilinosWrappers::MPI::BlockVector> system_op;
+  LinearOperator<TrilinosWrappers::MPI::BlockVector> jacobian_preconditioner_op;
+  LinearOperator<TrilinosWrappers::MPI::BlockVector> jacobian_op;
 
   TrilinosWrappers::MPI::BlockVector        solution;
   TrilinosWrappers::MPI::BlockVector        solution_dot;
 
   TimerOutput                               computing_timer;
 
-  void setup_matrix ( const std::vector<IndexSet> &partitioning,
-                      const std::vector<IndexSet> &relevant_partitioning);
-  void setup_preconditioner ( const std::vector<IndexSet> &partitioning,
-                              const std::vector<IndexSet> &relevant_partitioning);
-
-
-  void
-  local_assemble_preconditioner (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                 Assembly::Scratch::NFields<dim,spacedim> &scratch,
-                                 Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> &data);
-
-  void
-  copy_local_to_global_preconditioner (const Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> &data);
-
-
-  void
-  local_assemble_system (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                         Assembly::Scratch::NFields<dim,spacedim>  &scratch,
-                         Assembly::CopyData::NFieldsSystem<dim,spacedim> &data);
-
-  void
-  copy_local_to_global_system (const Assembly::CopyData::NFieldsSystem<dim,spacedim> &data);
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim,spacedim>   pgg;

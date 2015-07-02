@@ -134,6 +134,48 @@ public:
   }
 
 
+  virtual void assemble_local_system (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                      Scratch &scratch,
+                                      CopySystem &data) const
+  {
+
+    const unsigned int   dofs_per_cell   = scratch.fe_values.dofs_per_cell;
+    const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
+
+    scratch.fe_values.reinit (cell);
+    cell->get_dof_indices (data.local_dof_indices);
+
+    data.local_matrix = 0;
+
+    get_system_residual(cell, scratch, data, data.sacado_residual);
+
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      for (unsigned int j=0; j<dofs_per_cell; ++j)
+        data.local_matrix(i,j) = data.sacado_residual[i].dx(j);
+  }
+
+
+  virtual void assemble_local_preconditioner (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                              Scratch &scratch,
+                                              CopyPreconditioner &data) const
+  {
+
+    const unsigned int   dofs_per_cell   = scratch.fe_values.dofs_per_cell;
+    const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
+
+    scratch.fe_values.reinit (cell);
+    cell->get_dof_indices (data.local_dof_indices);
+
+    data.local_matrix = 0;
+
+    get_preconditioner_residual(cell, scratch, data, data.sacado_residual);
+
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      for (unsigned int j=0; j<dofs_per_cell; ++j)
+        data.local_matrix(i,j) = data.sacado_residual[i].dx(j);
+
+  }
+
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
@@ -155,7 +197,7 @@ public:
     return get_jacobian_flags();
   }
 
-  virtual UpdateFlags get_jacobian_prec_flags() const
+  virtual UpdateFlags get_jacobian_preconditioner_flags() const
   {
     return (update_JxW_values |
             update_values |
