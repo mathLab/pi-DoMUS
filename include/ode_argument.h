@@ -78,7 +78,7 @@ public :
    * Compute the product dst = J * src
    * using the last computed Jacobian of F.
    */
-  virtual void jacobian(VEC &dst, const VEC &src) const;
+  virtual void jacobian(VEC &dst, const VEC &src) const = 0;
 
   /** Solve the linear system
    *
@@ -87,7 +87,7 @@ public :
    * where JF is the last computed Jacobian of F.
    *
    */
-  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const;
+  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const = 0;
 
 
   /** Setup Jacobian. Compute the Jacobian of the function
@@ -98,7 +98,7 @@ public :
   virtual int setup_jacobian(const double t,
                              const VEC &y,
                              const VEC &y_dot,
-                             const double alpha);
+                             const double alpha) = 0;
 
   /**
    * Return a vector with 1 on the differential components, and 0 on the

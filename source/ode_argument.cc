@@ -15,33 +15,6 @@ bool OdeArgument<VEC>::solver_should_restart(const double,
 }
 
 
-
-template<typename VEC>
-void OdeArgument<VEC>::jacobian(VEC &, const VEC &) const
-{
-  Assert(false, ExcPureFunctionCalled());
-}
-
-
-
-template<typename VEC>
-void OdeArgument<VEC>::solve_jacobian_system(VEC &, const VEC &, const double) const
-{
-  Assert(false, ExcPureFunctionCalled());
-}
-
-
-template<typename VEC>
-int OdeArgument<VEC>::setup_jacobian(const double,
-                                     const VEC &,
-                                     const VEC &,
-                                     const double)
-{
-  Assert(false, ExcPureFunctionCalled());
-  return 0;
-}
-
-
 template<typename VEC>
 VEC &OdeArgument<VEC>::differential_components() const
 {
