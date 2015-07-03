@@ -1,0 +1,9 @@
+
+DEAL::differential components
+C0:0.000e+00 0.000e+00 0.000e+00 0.000e+00 
+DEAL::solution
+C0:0.000e+00 1.000e+00 0.000e+00 1.000e+00 
+DEAL::solution_dot
+C0:0.000e+00 0.000e+00 0.000e+00 0.000e+00 
+DEAL::residual  
+C0:0.000e+00 0.000e+00 0.000e+00 0.000e+00 
