@@ -160,7 +160,7 @@ public:
     Amg_data.aggregation_threshold = 0.02;
 
     // Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-    Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+    Amg_preconditioner->initialize (matrix.block(0,0),
                                     Amg_data);
 
     auto A = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );

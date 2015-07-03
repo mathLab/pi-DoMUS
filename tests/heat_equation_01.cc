@@ -33,6 +33,8 @@ int main (int argc, char *argv[])
   NFieldsProblem<dim,dim,1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/heat_equation_01.prm", "used_parameters.prm");
 
+  deallog << "All dofs on boundary, set BC => all zeros" << std::endl;
+
   test(n_problem);
 
   return 0;

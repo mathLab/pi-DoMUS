@@ -1,12 +1,13 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=parsed_mapped_functions.g
-# DEAL_II_SAK_GIT_SHORTREV=58290f0.g
-# DEAL_II_GIT_BRANCH=master
-# DEAL_II_GIT_SHORTREV=c66a97f
+# DEAL_II_SAK_GIT_BRANCH=master.g
+# DEAL_II_SAK_GIT_SHORTREV=7d470e4.g
+# DEAL_II_GIT_BRANCH=
+# DEAL_II_GIT_SHORTREV=
 subsection Dirichlet boundary conditions
-  set Function constants  = 
-  set Function expression = x^2
-  set Variable names      = x,y,t
+  set IDs and component masks = 0=0
+  set IDs and expressions     = 0=x^2
+  set Known component names   = u
+  set Used constants          = 
 end
 subsection Domain
   set Grid to generate           = rectangle
@@ -50,7 +51,7 @@ end
 subsection Heat Equation
   set Block coupling                 = 1
   set Blocking of the finite element = u
-  set Finite element space           = FESystem[FE_Q(1)]
+  set Finite element space           = FESystem[FE_Q(2)]
   set Preconditioner block coupling  = 0
 end
 subsection IDA Solver Parameters
@@ -79,7 +80,7 @@ subsection Initial solution_dot
   set Variable names      = x,y,t
 end
 subsection NFieldsProblem<2, 2, 1>
-  set Initial global refinement    = 0
+  set Initial global refinement    = 1
   set Maximum number of time steps = 10000
   set Number of cycles             = 3
 end

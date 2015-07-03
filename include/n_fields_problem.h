@@ -123,16 +123,19 @@ private:
   void make_grid_fe();
   void setup_dofs ();
 
-  void setup_jacobian (const std::vector<IndexSet> &partitioning,
-                       const std::vector<IndexSet> &relevant_partitioning);
+  void reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
+                               const std::vector<IndexSet> &relevant_partitioning);
 
-  void assemble_jacobian (const double t,
-                          const VEC &y,
-                          const VEC &y_dot,
-                          const double alpha);
 
-  void setup_jacobian_preconditioner (const std::vector<IndexSet> &partitioning,
-                                      const std::vector<IndexSet> &relevant_partitioning);
+  void assemble_jacobian_matrix (const double t,
+                                 const VEC &y,
+                                 const VEC &y_dot,
+                                 const double alpha);
+
+
+  void reinit_jacobian_preconditioner (const std::vector<IndexSet> &partitioning,
+                                       const std::vector<IndexSet> &relevant_partitioning);
+
 
   void assemble_jacobian_preconditioner (const double t,
                                          const VEC &y,
@@ -141,7 +144,7 @@ private:
   void refine_mesh ();
   void process_solution ();
 
-
+  void set_constrained_dofs_to_zero(VEC &v) const;
 
   const MPI_Comm &comm;
   const Interface<dim,spacedim,n_components>    &energy;
@@ -186,6 +189,8 @@ private:
   ParsedDataOut<dim, spacedim>                  data_out;
 
   DAETimeIntegrator<VEC>  dae;
+
+  IndexSet global_partioning;
 };
 
 #endif

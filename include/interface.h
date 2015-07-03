@@ -12,7 +12,7 @@
 #include "dof_utilities.h"
 #include "parsed_finite_element.h"
 #include "sak_data.h"
-#include "parsed_function.h"
+#include "parsed_dirichlet_bcs.h"
 #include "assembly.h"
 
 template <int dim,int spacedim=dim, int n_components=1>
@@ -29,17 +29,14 @@ public:
             const std::string &default_preconditioner_coupling="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
-    boundary_conditions("Dirichlet boundary conditions")
+    boundary_conditions("Dirichlet boundary conditions", "u", "0=0", "0=0.0")
   {};
 
   virtual void apply_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                          const FiniteElement<dim,spacedim> &fe,
                           ConstraintMatrix &constraints) const
   {
-    VectorTools::interpolate_boundary_values (dof_handler,
-                                              0,
-                                              boundary_conditions,
-                                              constraints);
+    boundary_conditions.interpolate_boundary_values (dof_handler,
+                                                     constraints);
 
   };
 
@@ -211,7 +208,7 @@ public:
 
 
 protected:
-  ParsedFunction<spacedim, n_components> boundary_conditions;
+  ParsedDirichletBCs<dim, spacedim, n_components> boundary_conditions;
 
 };
 

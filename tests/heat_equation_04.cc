@@ -13,21 +13,22 @@ void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
 
 
   VEC &d = pb.differential_components();
-  VEC *sol = &pb.solution;
-  VEC *sol_dot = &pb.solution_dot;
-  VEC residual = *sol;
+  VEC &sol = pb.solution;
+  VEC &sol_dot = pb.solution_dot;
+  VEC residual(sol);
 
   deallog << "differential components" <<std::endl;
   d.print(deallog.get_file_stream());
 
   deallog << "solution" <<std::endl;
-  sol->print(deallog.get_file_stream());
+  sol.print(deallog.get_file_stream());
+
   deallog << "solution_dot" <<std::endl;
-  sol_dot->print(deallog.get_file_stream());
-  pb.residual(0.0,*sol,*sol_dot,residual);
+  sol_dot.print(deallog.get_file_stream());
+
+  pb.residual(0.0,sol,sol_dot,residual);
   deallog << "residual  " <<std::endl;
   residual.print(deallog.get_file_stream());
-
 }
 
 
@@ -44,6 +45,10 @@ int main (int argc, char *argv[])
   HeatEquation<dim> energy;
   NFieldsProblem<dim,dim,1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/heat_equation_04.prm", "used_parameters.prm");
+
+  deallog << "##########################################"<<std::endl;
+  deallog << " BC = 0, sol = x^2, sol_dot = 0, F = -2" <<std::endl;
+  deallog << "##########################################"<<std::endl;
 
   test(n_problem);
 
