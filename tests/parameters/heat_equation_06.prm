@@ -5,7 +5,7 @@
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Dirichlet boundary conditions
   set Function constants  = 
-  set Function expression = x
+  set Function expression = x^2
   set Variable names      = x,y,t
 end
 subsection Domain
@@ -70,7 +70,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = x
+  set Function expression = x^2
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot

@@ -13,25 +13,24 @@ void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
 
 
   VEC &d = pb.differential_components();
-	VEC *sol = &pb.solution;
-	VEC *sol_dot = &pb.solution_dot;
-	VEC residual = *sol;
-	VEC new_sol = *sol;
+	VEC &sol = pb.solution;
+	VEC &sol_dot = pb.solution_dot;
+	VEC residual = sol;
+	VEC new_sol = sol;
 
   deallog << "differential components" <<std::endl;
   d.print(deallog.get_file_stream());
 
   deallog << "solution" <<std::endl;
-	sol->print(deallog.get_file_stream());
+	sol.print(deallog.get_file_stream());
   deallog << "solution_dot" <<std::endl;
-  sol_dot->print(deallog.get_file_stream());
-	pb.residual(0.0,*sol,*sol_dot,residual);
+  sol_dot.print(deallog.get_file_stream());
+	pb.residual(0.0,sol,sol_dot,residual);
   deallog << "residual  " <<std::endl;
   residual.print(deallog.get_file_stream());
 
 	deallog << "assemble preconditioner" <<std::endl;
-	pb.assemble_jacobian_preconditioner(0.0, *sol, *sol_dot, 0.33);
-	pb.assemble_jacobian(0.0, *sol, *sol_dot, 0.33);
+	pb.setup_jacobian(0.0, sol, sol_dot, 0.33);
 
 	pb.solve_jacobian_system(new_sol, residual, 1e-5);
 
