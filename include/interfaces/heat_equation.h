@@ -35,10 +35,6 @@ public:
     forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
   {};
 
-  virtual void declare_parameters (ParameterHandler &prm)
-  {
-
-  };
 
   virtual UpdateFlags get_preconditioner_flags() const
   {
@@ -136,7 +132,7 @@ public:
         const Tensor <1, dim, Number> &grad_u = grad_us[q];
         const double &F = fs[q];
 
-        energy += (u_dot*u + grad_u*grad_u - F*u)*scratch.fe_values.JxW(q);
+        energy += (u_dot*u  + 0.5*(grad_u*grad_u) - F*u)*scratch.fe_values.JxW(q);
       }
   };
 
