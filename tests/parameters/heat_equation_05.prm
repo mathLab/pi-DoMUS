@@ -5,7 +5,7 @@
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Dirichlet boundary conditions
   set Function constants  = 
-  set Function expression = 78
+  set Function expression = x^2
   set Variable names      = x,y,t
 end
 subsection Domain
@@ -70,7 +70,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = 78
+  set Function expression = x^2
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
@@ -79,7 +79,7 @@ subsection Initial solution_dot
   set Variable names      = x,y,t
 end
 subsection NFieldsProblem<2, 2, 1>
-  set Initial global refinement    = 0
+  set Initial global refinement    = 1
   set Maximum number of time steps = 10000
   set Number of cycles             = 3
 end

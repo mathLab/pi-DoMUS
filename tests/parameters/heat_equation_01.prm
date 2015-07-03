@@ -1,8 +1,8 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=master.g
-# DEAL_II_SAK_GIT_SHORTREV=e2258f7.g
-# DEAL_II_GIT_BRANCH=
-# DEAL_II_GIT_SHORTREV=
+# DEAL_II_SAK_GIT_BRANCH=parsed_mapped_functions.g
+# DEAL_II_SAK_GIT_SHORTREV=58290f0.g
+# DEAL_II_GIT_BRANCH=master
+# DEAL_II_GIT_SHORTREV=c66a97f
 subsection Dirichlet boundary conditions
   set Function constants  = 
   set Function expression = 0
@@ -58,7 +58,7 @@ subsection IDA Solver Parameters
   set Final time                              = 1
   set Initial condition Newton max iterations = 5
   set Initial condition Newton parameter      = 0.33
-  set Initial condition type                  = use_diff_y
+  set Initial condition type                  = use_y_dot
   set Initial step size                       = 1e-4
   set Initial time                            = 0
   set Iterative algorithm                     = gmres
@@ -70,7 +70,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = 0
+  set Function expression = 2.*pi^2*sin(pi*x)*sin(pi*y)
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot

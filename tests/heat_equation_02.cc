@@ -13,19 +13,19 @@ void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
 
 
   VEC &d = pb.differential_components();
-	VEC sol = pb.solution;
-	VEC sol_dot = pb.solution_dot;
-	VEC residual = sol;
+	VEC *sol = &pb.solution;
+	VEC *sol_dot = &pb.solution_dot;
+	VEC residual = *sol;
 
+  deallog << "differential components" <<std::endl;
   d.print(deallog.get_file_stream());
 
-	
-  deallog << "sol       ";
-	sol.print(deallog.get_file_stream());
-  deallog << "sol_dot   ";
-  sol_dot.print(deallog.get_file_stream());
-	pb.residual(0.0,sol,sol_dot,residual);
-  deallog << "residual  ";
+  deallog << "solution" <<std::endl;
+	sol->print(deallog.get_file_stream());
+  deallog << "solution_dot" <<std::endl;
+  sol_dot->print(deallog.get_file_stream());
+	pb.residual(0.0,*sol,*sol_dot,residual);
+  deallog << "residual  " <<std::endl;
   residual.print(deallog.get_file_stream());
 
 }
