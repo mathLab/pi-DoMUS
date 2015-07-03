@@ -748,6 +748,8 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
+  constraints.distribute(dst);
+
   auto id = solution.locally_owned_elements();
   for (unsigned int i=0; i<id.n_elements(); ++i)
     {

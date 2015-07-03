@@ -110,6 +110,7 @@ public:
     const FEValuesExtractors::Scalar scalar(0);
 
     DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, scalar, us);
+    DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_double, scalar, us_double);
     DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_dot_double, scalar, us_dot_double);
 
 
