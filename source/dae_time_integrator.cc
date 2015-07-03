@@ -345,6 +345,12 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
 
   IndexSet is = solution.locally_owned_elements();
 
+
+  yy        = N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+  yp        = N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+  diff_id   = N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+  abs_tolls = N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+
   reset_ode(initial_time, solution, solution_dot, initial_step_size, max_steps);
 
   copy(yy, solution);

@@ -654,6 +654,8 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, con
   //    if (constraints.is_constrained (i))
   //      distributed_solution(i) = 0;
 
+  set_constrained_dofs_to_zero(dst);
+
   unsigned int n_iterations = 0;
   const double solver_tolerance = tol;
 
