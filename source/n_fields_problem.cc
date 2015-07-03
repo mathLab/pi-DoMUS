@@ -550,6 +550,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 {
   computing_timer.enter_section ("Residual");
   pcout << "   Computing residual... " << std::flush;
+  energy.set_time(t);
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
@@ -583,7 +584,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
 
     for (unsigned int i=0; i<dofs_per_cell; ++i)
-      data.local_rhs(i) -= data.double_residual[i];
+      data.local_rhs(i) += data.double_residual[i];
   };
 
   typedef

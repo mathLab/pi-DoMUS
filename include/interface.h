@@ -29,7 +29,8 @@ public:
             const std::string &default_preconditioner_coupling="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
-    boundary_conditions("Dirichlet boundary conditions", "u", "0=0", "0=0.0")
+    boundary_conditions("Dirichlet boundary conditions", "u", "0=0", "0=0.0"),
+    forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
   {};
 
   virtual void apply_bcs (const DoFHandler<dim,spacedim> &dof_handler,
@@ -39,6 +40,12 @@ public:
                                                      constraints);
 
   };
+
+  virtual void set_time(const double t) const
+  {
+    // boundary_conditions.set_time(t);
+    forcing_term.set_time(t);
+  }
 
 
   virtual void initialize_data(const unsigned int &dofs_per_cell,
@@ -208,7 +215,9 @@ public:
 
 
 protected:
-  ParsedDirichletBCs<dim, spacedim, n_components> boundary_conditions;
+  mutable ParsedDirichletBCs<dim, spacedim, n_components> boundary_conditions;
+
+  mutable ParsedFunction<dim> forcing_term;
 
 };
 

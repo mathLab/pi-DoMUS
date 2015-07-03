@@ -31,8 +31,7 @@ public:
   HeatEquation() :
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
                                                         "FESystem[FE_Q(2)]",
-                                                        "u", "1", "0"),
-    forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
+                                                        "u", "1", "0")
   {};
 
 
@@ -123,7 +122,7 @@ public:
 
     DOFUtilities::get_grad_values(scratch.fe_values, independent_local_dof_values, scalar, grad_us);
 
-    forcing_term.value_list(scratch.fe_values.get_quadrature_points(), fs);
+    this->forcing_term.value_list(scratch.fe_values.get_quadrature_points(), fs);
 
     energy = 0;
     for (unsigned int q=0; q<n_q_points; ++q)
@@ -173,7 +172,6 @@ public:
   };
 
 private:
-  ParsedFunction<dim> forcing_term;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
 };
