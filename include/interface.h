@@ -46,6 +46,8 @@
 #include "dof_utilities.h"
 #include "parsed_finite_element.h"
 #include "sak_data.h"
+#include "parsed_function.h"
+#include "parsed_mapped_functions.h"
 #include "parsed_dirichlet_bcs.h"
 #include "assembly.h"
 
@@ -63,23 +65,35 @@ public:
             const std::string &default_preconditioner_coupling="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
-    boundary_conditions("Dirichlet boundary conditions", "u", "0=0", "0=0.0"),
-    forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
+    forcing_terms("Forcing terms", default_component_names, "0=ALL"),
+    neumann_bcs("Neumann boundary conditions", default_component_names, "0=ALL"),
+    dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL")
   {};
 
-/**
- * Applies Dirichlet boundary conditions
- *
- * This function is used to applies Dirichlet boundary conditions.
- * It takes as argument a DoF handler @p dof_handler, a finite element
- * @p fe, and a constrain matrix @p constraints.
- */
-  virtual void apply_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                          ConstraintMatrix &constraints) const
+  /**
+   * Applies Dirichlet boundary conditions
+   *
+   * This function is used to applies Dirichlet boundary conditions.
+   * It takes as argument a DoF handler @p dof_handler and a constraint 
+	 * matrix @p constraints.
+   */
+  virtual void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                                    ConstraintMatrix &constraints) const
   {
-    boundary_conditions.interpolate_boundary_values (dof_handler,
-                                                     constraints);
+    dirichlet_bcs.interpolate_boundary_values(dof_handler,constraints);
+  };
 
+  /**
+   * Applies Neumann boundary conditions
+   *
+   * This function is used to applies Neumann boundary conditions.
+   * It takes as argument a DoF handler @p dof_handler and a constraint 
+	 * matrix @p constraints.
+   */
+  virtual void apply_neumann_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                                    ConstraintMatrix &constraints) const
+  {
+    Assert(false, ExcPureFunctionCalled ());
   };
 
   virtual void set_time(const double t) const
@@ -102,6 +116,22 @@ public:
  *
  * TODO: add current_time and current_alpha
  */
+=======
+
+  /**
+   * Initialize all data required for the system
+   *
+   * This function is used to initialize the varibale SAKData @p d
+   * that contains all data of the problem (solutions, DoF, quadrature
+   * points, solutions vector, etc ).
+   * It takes as argument the number of DoF per cell @p dofs_per_cell,
+   * the number of quadrature points @p n_q_points, the number of
+   * quadrature points per face @p n_face_q_points, the reference to
+   * solutions vectors @p sol and the reference to the SAKData @p d.
+   *
+   * TODO: add current_time and current_alpha
+   */
+>>>>>>> first version of parsed BC and forcing terms
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
                                const unsigned int &n_face_q_points,
@@ -111,18 +141,18 @@ public:
                                const double alpha,
                                SAKData &d) const;
 
-/**
- * Build the energy needed to get the preconditioner in the case
- * it is required just one derivative.
- *
- * This function is used to build the energy associated to the preconditioner
- * in the case it is required just one derivative.
- * It takes as argument a reference to the active cell
- * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
- * system  such as fe values, quadrature points, SAKData (Scratch),
- * all the informations related to the PDE (CopySystem) and the energy
- * (Sdouble)
- */
+  /**
+   * Build the energy needed to get the preconditioner in the case
+   * it is required just one derivative.
+   *
+   * This function is used to build the energy associated to the preconditioner
+   * in the case it is required just one derivative.
+   * It takes as argument a reference to the active cell
+   * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * all the informations related to the PDE (CopySystem) and the energy
+   * (Sdouble)
+   */
   virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                          Scratch &,
                                          CopySystem &,
@@ -358,9 +388,11 @@ public:
 
 
 protected:
-  mutable ParsedDirichletBCs<dim, spacedim, n_components> boundary_conditions;
+  ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
+  ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
+private:
+  ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
 
-  mutable ParsedFunction<dim> forcing_term;
 
 };
 

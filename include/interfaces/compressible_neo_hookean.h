@@ -81,8 +81,6 @@ private:
   double mu;
   double lambda;
 
-  ParsedFunction<dim,spacedim> traction;
-  ParsedFunction<dim,spacedim> volume_load;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -94,9 +92,7 @@ template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::CompressibleNeoHookeanInterface() :
   ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
       "FESystem[FE_Q(1)^d]",
-      "u,u,u", "1", "1"),
-  traction ("Applied traction", "1. ; 0.; 0."),
-  volume_load ("Bulk load", "0. ; 0.; 0.")
+      "u,u,u", "1", "1")
 {};
 
 
@@ -223,22 +219,26 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
   prepare_system_data<Number>(cell, scratch, data);
 
   bool add_traction = false;
+  unsigned int face_id = 100000;
 
   if (cell->at_boundary())
     {
       auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
-      unsigned int id = 1;
       for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-        if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == id )
-          {
-            add_traction = true;
-            scratch.fe_face_values.reinit(cell,face);
-            auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-            DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-            const FEValuesExtractors::Vector displacement(0);
-            DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, displacement, us_face);
-          }
+        {
+          unsigned int id = cell->face(face)->boundary_id();
+          if (cell->face(face)->at_boundary() && this->surface_forces.acts_on_id(id))
+            {
+              add_traction = true;
+              face_id = id;
+              scratch.fe_face_values.reinit(cell,face);
+              auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+              auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+              DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+              const FEValuesExtractors::Vector displacement(0);
+              DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, displacement, us_face);
+            }
+        }
     }
 
 
@@ -264,12 +264,16 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 
       energy += psi*scratch.fe_values.JxW(q);
 
-      for (unsigned int d=0; d < dim; ++d)
-        {
-          B[d] =volume_load.value(scratch.fe_values.quadrature_point(q),d);
-          energy -= B[d]*u[d]*scratch.fe_values.JxW(q);
-        }
+			unsigned cell_id = cell->material_id();
+
+      if (this->volume_forces.acts_on_id(cell_id))
+        for (unsigned int d=0; d < dim; ++d)
+          {
+            B[d] = this->volume_forces.get_mapped_function(cell_id)->value(scratch.fe_values.quadrature_point(q),d);
+            energy -= B[d]*u[d]*scratch.fe_values.JxW(q);
+          }
     }
+	// this->apply_forcing_terms(scratch.fe_values,cell,energy)
   if (add_traction) // traction term
     {
       auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
@@ -278,13 +282,14 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
           Tensor <1, dim, double> T;
           for (unsigned int d=0; d < dim; ++d)
             {
-              T[d] = traction.value(scratch.fe_face_values.quadrature_point(qf),d);
+              T[d] = this->surface_forces.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),d);
               const Tensor <1, dim, Number> &u_face = us_face[qf];
 
               energy -= (T[d]*u_face[d])*scratch.fe_face_values.JxW(qf);
             }
         }
     }
+	//this->apply_neumann_bcs(scratch.fe_face_values,cell,energy)
 }
 
 

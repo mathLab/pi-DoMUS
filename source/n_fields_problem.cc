@@ -190,7 +190,7 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  energy.apply_bcs(*dof_handler, constraints);
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
 
   constraints.close ();
 

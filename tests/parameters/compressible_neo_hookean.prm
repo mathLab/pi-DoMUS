@@ -1,18 +1,8 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=master.g
-# DEAL_II_SAK_GIT_SHORTREV=e7a6881.g
+# DEAL_II_SAK_GIT_BRANCH=parsed_mapped_functions.g
+# DEAL_II_SAK_GIT_SHORTREV=58290f0.g
 # DEAL_II_GIT_BRANCH=master
-# DEAL_II_GIT_SHORTREV=3d508ed
-subsection Applied traction
-  set Function constants  = 
-  set Function expression = 1. ; 0.; 0.
-  set Variable names      = x,y,z,t
-end
-subsection Bulk load
-  set Function constants  = 
-  set Function expression = 0. ; 0.; 0.
-  set Variable names      = x,y,z,t
-end
+# DEAL_II_GIT_SHORTREV=c66a97f
 subsection Compressible NeoHookean Interface
   set Block coupling                 = 1
   set Blocking of the finite element = u,u,u
@@ -22,9 +12,10 @@ subsection Compressible NeoHookean Interface
   set Young's modulus                = 10.0
 end
 subsection Dirichlet boundary conditions
-  set Function constants  = 
-  set Function expression = 0; 0; 0
-  set Variable names      = x,y,z,t
+  set IDs and component masks = 0=ALL
+  set IDs and expressions     = 
+  set Known component names   = u,u,u
+  set Used constants          = 
 end
 subsection Domain
   set Grid to generate           = rectangle
@@ -113,4 +104,16 @@ subsection Output Parameters
     subsection deal.II intermediate output parameters
     end
   end
+end
+subsection Surface forces
+  set IDs and component masks = 0=u % 1=u % 2=u % 3=u % 4=u % 5=u
+  set IDs and expressions     = 0= 1.;0;0 % 1=1.0;0;0 % 2=1.0;0;0 % 3=1.0;0;0 % 4=1.0;0;0 % 5=1.0;0;0
+  set Known component names   = u,u,u
+  set Used constants          = 
+end
+subsection Volume forces
+  set IDs and component masks = 0=ALL
+  set IDs and expressions     = 0=0;-0.5;-0.5
+  set Known component names   = u,u,u
+  set Used constants          = 
 end
