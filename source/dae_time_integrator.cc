@@ -297,6 +297,16 @@ void DAETimeIntegrator<VEC>::declare_parameters(ParameterHandler &prm)
                 "Maximum order of BDF", "5", Patterns::Integer());
 
 
+  add_parameter(prm, &max_non_linear_iterations,
+                "Maximum number of nonlinear iterations", "10", Patterns::Integer());
+
+
+  add_parameter(prm, &ignore_algebraic_terms_for_errors,
+                "Ignore algebraic terms for error computations", "false",
+                Patterns::Bool(),
+                "Indicate whether or not to suppress algebraic variables "
+                "in the local error test.");
+
   add_parameter(prm, &ic_type,
                 "Initial condition type", "use_diff_y",
                 Patterns::Selection("none|use_diff_y|use_y_dot"),
@@ -353,12 +363,15 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
 
   reset_ode(initial_time, solution, solution_dot, initial_step_size, max_steps);
 
-  copy(yy, solution);
-  copy(yp, solution_dot);
-
   double next_time = 0;
 
-  solver.output_step( 0, solution, solution_dot, 0, initial_step_size);
+  if (ic_type != "none")
+    {
+      copy(yy, solution);
+      copy(yp, solution_dot);
+
+      solver.output_step( 0, solution, solution_dot, 0, initial_step_size);
+    }
 
   while ((t<final_time) && (step_number < max_steps))
     {
@@ -466,12 +479,12 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
   status += IDASetUserData(ida_mem, (void *) &solver);
 
   status += IDASetId(ida_mem, diff_id);
-  status += IDASetSuppressAlg(ida_mem, TRUE);
+  status += IDASetSuppressAlg(ida_mem, ignore_algebraic_terms_for_errors);
 
   status += IDASetMaxNumSteps(ida_mem, max_steps);
   status += IDASetStopTime(ida_mem, final_time);
 
-  status += IDASetMaxNonlinIters(ida_mem, 10);
+  status += IDASetMaxNonlinIters(ida_mem, max_non_linear_iterations);
 
   if (iterative_solver_type == "gmres")
     {
@@ -503,22 +516,20 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
   if (ic_type == "use_y_dot")
     {
       // (re)initialization of the vectors
-      //solution_dot = 0;
-      if (current_time !=0)
-        IDACalcIC(ida_mem, IDA_Y_INIT, current_time+current_time_step);
+      IDACalcIC(ida_mem, IDA_Y_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
+
+      copy(solution, yy);
+      copy(solution_dot, yp);
     }
   else if (ic_type == "use_diff_y")
     {
       IDACalcIC(ida_mem, IDA_YA_YDP_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
+
+      copy(solution, yy);
+      copy(solution_dot, yp);
     }
-  else if (ic_type == "none")
-    {
-      IDAGetConsistentIC(ida_mem, yy, yp);
-    }
-  copy(solution, yy);
-  copy(solution_dot, yp);
 
   //    shared_ptr<VEC> resid = solver.create_new_vector();
   //    solver.residual(current_time,*resid,solution,solution_dot);

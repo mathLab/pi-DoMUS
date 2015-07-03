@@ -312,16 +312,15 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   jacobian_matrix.compress(VectorOperation::add);
 
   pcout << std::endl;
-//
-//
-//  auto id = solution.locally_owned_elements();
-//  for (unsigned int i=0; i<id.n_elements(); ++i)
-//    {
-//      auto j = id.nth_index_in_set(i);
-//      if (constraints.is_constrained(j))
-//        jacobian_matrix.set(j, j, 1.0);
-//    }
-//  jacobian_matrix.compress(VectorOperation::insert);
+
+  auto id = solution.locally_owned_elements();
+  for (unsigned int i=0; i<id.n_elements(); ++i)
+    {
+      auto j = id.nth_index_in_set(i);
+      if (constraints.is_constrained(j))
+        jacobian_matrix.set(j, j, 1.0);
+    }
+  jacobian_matrix.compress(VectorOperation::insert);
 
   computing_timer.exit_section();
 }
@@ -613,7 +612,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
     {
       auto j = id.nth_index_in_set(i);
       if (constraints.is_constrained(j))
-        dst[j] -= solution(j);
+        dst[j] = solution(j)-constraints.get_inhomogeneity(j);
     }
 
   dst.compress(VectorOperation::add);
@@ -629,6 +628,7 @@ void
 NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) const
 {
   jacobian_op.vmult(dst, src);
+  set_constrained_dofs_to_zero(dst);
 }
 
 

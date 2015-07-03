@@ -77,7 +77,11 @@ private:
   /** Maximum order of BDF. */
   unsigned int max_order;
 
+  /** Seconds between each output. */
   double outputs_period;
+
+  /** Ignore algebraic terms for errors. */
+  bool ignore_algebraic_terms_for_errors;
 
   /** Type of initial conditions. */
   std::string ic_type;
@@ -87,6 +91,9 @@ private:
 
   /** Maximum number of iterations for Newton method in IC calculation. */
   unsigned ic_max_iter;
+
+  /** Maximum number of iterations for Newton method during time advancement. */
+  unsigned int max_non_linear_iterations;
 
   /** Initialization flag.*/
   bool is_initialized;
