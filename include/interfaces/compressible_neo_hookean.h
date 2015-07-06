@@ -124,8 +124,8 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::initialize_system_data(SAKDa
 
   std::vector<Number> independent_local_dof_values (dofs_per_cell);
   std::vector <Tensor <1, dim, Number> > us(n_q_points);
-  std::vector <Tensor <1, dim, Number> > vars(n_q_points);
-  std::vector <Tensor <1, dim, Number> > vars_face(n_face_q_points);
+  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim));
+  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim));
   std::vector <Tensor <1, spacedim, Number> > us_face(n_face_q_points);
   std::vector <Tensor <2, spacedim, Number> > Fs(n_q_points);
 
@@ -145,7 +145,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::prepare_preconditioner_data(
     CopyPreconditioner    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
 
@@ -166,7 +166,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::prepare_system_data(const ty
     CopySystem    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
   auto &Fs = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);

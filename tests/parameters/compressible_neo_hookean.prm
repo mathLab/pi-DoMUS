@@ -1,6 +1,6 @@
 # Parameter file generated with 
 # DEAL_II_SAK_GIT_BRANCH=dof_utilities.g
-# DEAL_II_SAK_GIT_SHORTREV=e6105c2.g
+# DEAL_II_SAK_GIT_SHORTREV=42bac76.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Compressible NeoHookean Interface
@@ -57,11 +57,37 @@ subsection Forcing terms
   set Known component names   = u,u,u
   set Used constants          = 
 end
+subsection IDA Solver Parameters
+  set Absolute error tolerance                      = 1e-4
+  set Final time                                    = 1
+  set Ignore algebraic terms for error computations = false
+  set Initial condition Newton max iterations       = 5
+  set Initial condition Newton parameter            = 0.33
+  set Initial condition type                        = use_diff_y
+  set Initial step size                             = 1e-4
+  set Initial time                                  = 0
+  set Iterative algorithm                           = gmres
+  set Maximum number of nonlinear iterations        = 10
+  set Maximum order of BDF                          = 5
+  set Min step size                                 = 5e-5
+  set Relative error tolerance                      = 1e-3
+  set Seconds between each output                   = 1e-1
+  set Use local tolerances                          = false
+end
+subsection Initial solution
+  set Function constants  = 
+  set Function expression = x^2; 0; 0
+  set Variable names      = x,y,z,t
+end
+subsection Initial solution_dot
+  set Function constants  = 
+  set Function expression = 0; 0; 0
+  set Variable names      = x,y,z,t
+end
 subsection NFieldsProblem<3, 3, 3>
-  set Alpha for Newton's iterations         = 0.5
-  set Initial global refinement             = 1
-  set Maximum number of Newton's iterations = 5
-  set Number of cycles                      = 3
+  set Initial global refinement    = 1
+  set Maximum number of time steps = 10000
+  set Number of cycles             = 3
 end
 subsection Neumann boundary conditions
   set IDs and component masks = 1=0 % 2=0

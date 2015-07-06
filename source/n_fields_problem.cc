@@ -111,16 +111,11 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
   computing_timer (comm,
-
-  mapping (4),
-
-
-  computing_timer (MPI_COMM_WORLD,
                    tcout,
                    TimerOutput::summary,
                    TimerOutput::wall_times),
 
-  eh("Error Tables", energy.get_component_names(), //TODO
+  eh("Error Tables", energy.get_component_names(),
      print(std::vector<std::string>(n_components, "L2,H1"), ";")),
 
   pgg("Domain"),

@@ -124,8 +124,8 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData 
   auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
 
   std::vector<Number> independent_local_dof_values (dofs_per_cell);
-  std::vector <Tensor <1, dim+1, Number> > vars(n_q_points);
-  std::vector <Tensor <1, dim+1, Number> > vars_face(n_face_q_points);
+  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim+1));
+  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim+1));
   std::vector <Tensor <1, dim, Number> > us(n_q_points);
   std::vector <Tensor <1, spacedim, Number> > us_face(n_face_q_points);
   std::vector <Tensor <2, spacedim, Number> > Fs(n_q_points);

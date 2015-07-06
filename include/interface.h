@@ -70,6 +70,16 @@ public:
     dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL")
   {};
 
+	/**
+	 * update time il all parsed mapped functions
+	 */
+	virtual void set_time (const double &t) const
+	{
+		dirichlet_bcs.set_time(t);
+		forcing_terms.set_time(t);
+		neumann_bcs.set_time(t);
+	}
+
   /**
    * Applies Dirichlet boundary conditions
    *
@@ -99,7 +109,7 @@ public:
         if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
           {
             std::string suffix = typeid(Number).name();
-            auto &vars_face = scratch.anydata.template get<std::vector <Tensor <1, n_components, Number> > >("vars_face"+suffix);
+            auto &vars_face = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars_face"+suffix);
             auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
 
             scratch.fe_face_values.reinit(cell,face);
@@ -113,7 +123,7 @@ public:
                   if (neumann_bcs.get_mapped_mask(face_id)[i])
                     {
                       T[i] = neumann_bcs.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),i);
-                      const Tensor <1, n_components, Number> &var_face = vars_face[qf];
+                      const std::vector<Number> &var_face = vars_face[qf];
 
                       energy -= (T[i]*var_face[i])*scratch.fe_face_values.JxW(qf);
                     }
@@ -142,7 +152,7 @@ public:
         if (forcing_terms.acts_on_id(cell_id))
           {
             std::string suffix = typeid(Number).name();
-            auto &vars = scratch.anydata.template get<std::vector <Tensor <1, n_components, Number> > >("vars"+suffix);
+            auto &vars = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars"+suffix);
             auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
 
             //scratch.fe_values.reinit(cell);
@@ -150,7 +160,7 @@ public:
             //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
             DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, vars);
             Tensor <1, n_components, double> B;
-            const Tensor <1, n_components, Number> var = vars[q]; // u,u,u
+            const std::vector<Number> var = vars[q]; // u,u,u
             for (unsigned int i=0; i < n_components; ++i)
               if (forcing_terms.get_mapped_mask(cell_id)[i])
                 {

@@ -125,8 +125,8 @@ void StokesDerivedInterface<dim>::initialize_system_data(SAKData &d) const
   std::vector <Tensor <2, dim, Number> > sym_grad_us(n_q_points);
   std::vector <Number> div_us(n_q_points);
   std::vector <Number> ps(n_q_points);
-  std::vector <Tensor <1, dim+1, Number> > vars(n_q_points);
-  std::vector <Tensor <1, dim+1, Number> > vars_face(n_face_q_points);
+  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim+1));
+  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim+1));
 
   d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
   d.add_copy(us, "us"+suffix);

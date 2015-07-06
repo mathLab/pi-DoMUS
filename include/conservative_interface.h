@@ -67,5 +67,3 @@ public:
 };
 
 #endif
-=======
->>>>>>> init commit for the documentation of conservative interface
