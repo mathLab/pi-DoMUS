@@ -124,6 +124,8 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData 
   auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
 
   std::vector<Number> independent_local_dof_values (dofs_per_cell);
+  std::vector <Tensor <1, dim+1, Number> > vars(n_q_points);
+  std::vector <Tensor <1, dim+1, Number> > vars_face(n_face_q_points);
   std::vector <Tensor <1, dim, Number> > us(n_q_points);
   std::vector <Tensor <1, spacedim, Number> > us_face(n_face_q_points);
   std::vector <Tensor <2, spacedim, Number> > Fs(n_q_points);
@@ -134,6 +136,8 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData 
   d.add_copy(us_face, "us_face"+suffix);
   d.add_copy(ps, "ps"+suffix);
   d.add_copy(Fs, "Fs"+suffix);
+  d.add_copy(vars, "vars"+suffix);
+  d.add_copy(vars_face, "vars_face"+suffix);
 
 }
 
@@ -231,28 +235,6 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
 
   prepare_system_data<Number>(cell, scratch, data);
 
-  bool add_traction = false;
-	unsigned int face_id = 100000;
-
-  if (cell->at_boundary())
-    {
-      auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
-      for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-        {
-          unsigned int id = cell->face(face)->boundary_id();
-          if (cell->face(face)->at_boundary() && this->surface_forces.acts_on_id(id))
-            {
-              add_traction = true;
-              face_id = id;
-              scratch.fe_face_values.reinit(cell,face);
-              auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-              auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-              DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-              const FEValuesExtractors::Vector displacement(0);
-              DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, displacement, us_face);
-            }
-        }
-    }
 
 
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
@@ -277,29 +259,6 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
       Number psi = (mu/2.)*(Ic-dim) +p*(J-1.);
       energy += psi*scratch.fe_values.JxW(q);
 
-			unsigned cell_id = cell->material_id();
-
-      if (this->volume_forces.acts_on_id(cell_id))
-        for (unsigned int d=0; d < dim; ++d)
-          {
-            B[d] = this->volume_forces.get_mapped_function(cell_id)->value(scratch.fe_values.quadrature_point(q),d);
-            energy -= B[d]*u[d]*scratch.fe_values.JxW(q);
-          }
-    }
-  if (add_traction) // traction term
-    {
-      auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
-      for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
-        {
-          Tensor <1, dim, double> T;
-          for (unsigned int d=0; d < dim; ++d)
-            {
-              T[d] = this->surface_forces.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),d);
-              const Tensor <1, dim, Number> &u_face = us_face[qf];
-
-              energy -= (T[d]*u_face[d])*scratch.fe_face_values.JxW(qf);
-            }
-        }
     }
 }
 

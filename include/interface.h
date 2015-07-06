@@ -86,37 +86,80 @@ public:
   /**
    * Applies Neumann boundary conditions
    *
-   * This function is used to applies Neumann boundary conditions.
-   * It takes as argument a DoF handler @p dof_handler and a constraint 
-	 * matrix @p constraints.
    */
-  virtual void apply_neumann_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                                    ConstraintMatrix &constraints) const
+	template<typename Number>
+	void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+			                            Scratch &scratch,
+																	CopySystem &data,
+                                  Number &energy) const
   {
-    Assert(false, ExcPureFunctionCalled ());
-  };
+		for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+		{
+			unsigned int face_id = cell->face(face)->boundary_id();
+			if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
+			{
+				std::string suffix = typeid(Number).name();
+				auto &vars_face = scratch.anydata.template get<std::vector <Tensor <1, n_components, Number> > >("vars_face"+suffix);
+				auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
 
-  virtual void set_time(const double t) const
-  {
-    // boundary_conditions.set_time(t);
-    forcing_term.set_time(t);
+				scratch.fe_face_values.reinit(cell,face);
+				//auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+				//DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+				DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, vars_face);
+				for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
+				{
+					Tensor <1, n_components, double> T;
+					for (unsigned int i=0; i < n_components; ++i)
+						if(neumann_bcs.get_mapped_mask(face_id)[i])
+						{
+							T[i] = neumann_bcs.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),i);
+							const Tensor <1, n_components, Number> &var_face = vars_face[qf];
+
+							energy -= (T[i]*var_face[i])*scratch.fe_face_values.JxW(qf);
+						}
+				}
+				break;
+			}
+		}
   }
 
 
-/**
- * Initialize all data required for the system
- *
- * This function is used to initialize the varibale SAKData @p d
- * that contains all data of the problem (solutions, DoF, quadrature
- * points, solutions vector, etc ).
- * It takes as argument the number of DoF per cell @p dofs_per_cell,
- * the number of quadrature points @p n_q_points, the number of
- * quadrature points per face @p n_face_q_points, the reference to
- * solutions vectors @p sol and the reference to the SAKData @p d.
- *
- * TODO: add current_time and current_alpha
- */
-=======
+  /**
+   * Applies Forcing terms
+   *
+   */
+	template<typename Number>
+  void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+			                            Scratch &scratch,
+																	CopySystem &data,
+                                  Number &energy) const
+  {
+				const unsigned int n_q_points = scratch.anydata.template get<const unsigned int>("n_q_points");
+
+		for (unsigned int q=0; q<n_q_points; ++q)
+		{
+			unsigned cell_id = cell->material_id();
+      if (forcing_terms.acts_on_id(cell_id))
+			{
+				std::string suffix = typeid(Number).name();
+				auto &vars = scratch.anydata.template get<std::vector <Tensor <1, n_components, Number> > >("vars"+suffix);
+				auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+
+				//scratch.fe_values.reinit(cell);
+				//auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+				//DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+				DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, vars);
+				Tensor <1, n_components, double> B;
+				const Tensor <1, n_components, Number> var = vars[q]; // u,u,u
+        for (unsigned int i=0; i < n_components; ++i)
+					if(forcing_terms.get_mapped_mask(cell_id)[i])
+					{
+						B[i] = forcing_terms.get_mapped_function(cell_id)->value(scratch.fe_values.quadrature_point(q),i);
+						energy -= B[i]*var[i]*scratch.fe_values.JxW(q);
+					}
+			}
+		}
+	}
 
   /**
    * Initialize all data required for the system
@@ -131,7 +174,6 @@ public:
    *
    * TODO: add current_time and current_alpha
    */
->>>>>>> first version of parsed BC and forcing terms
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
                                const unsigned int &n_face_q_points,
@@ -208,7 +250,7 @@ public:
    * This function is used to build the energy associated to the system matrix
    *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
-   * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * (DFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
    * system  such as fe values, quadrature points, SAKData (Scratch),
    * all the informations related to the PDE (CopySystem) and the energy
    * (SSdouble)
@@ -239,6 +281,11 @@ public:
   {
     SSdouble energy;
     get_system_energy(cell, scratch, data, energy);
+
+		apply_forcing_terms(cell,scratch,data,energy);
+		if (cell->at_boundary())
+			apply_neumann_bcs(cell,scratch, data, energy);
+
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
@@ -263,6 +310,11 @@ public:
   {
     Sdouble energy;
     get_system_energy(cell, scratch, data, energy);
+
+		apply_forcing_terms(cell,scratch,data,energy);
+		if (cell->at_boundary())
+			apply_neumann_bcs(cell,scratch, data, energy);
+
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
@@ -388,10 +440,9 @@ public:
 
 
 protected:
-  ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
-  ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
-private:
-  ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
+  mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
+  mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
+  mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
 
 
 };

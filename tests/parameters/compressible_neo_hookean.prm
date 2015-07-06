@@ -1,6 +1,6 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=parsed_mapped_functions.g
-# DEAL_II_SAK_GIT_SHORTREV=58290f0.g
+# DEAL_II_SAK_GIT_BRANCH=dof_utilities.g
+# DEAL_II_SAK_GIT_SHORTREV=e6105c2.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Compressible NeoHookean Interface
@@ -51,11 +51,23 @@ subsection Exact solution
   set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end
+subsection Forcing terms
+  set IDs and component masks = 0=1;2
+  set IDs and expressions     = 0=0;-0.5.;-0.5
+  set Known component names   = u,u,u
+  set Used constants          = 
+end
 subsection NFieldsProblem<3, 3, 3>
-  set Alpha for Newton's iterations         = 1
+  set Alpha for Newton's iterations         = 0.5
   set Initial global refinement             = 1
   set Maximum number of Newton's iterations = 5
   set Number of cycles                      = 3
+end
+subsection Neumann boundary conditions
+  set IDs and component masks = 1=0 % 2=0
+  set IDs and expressions     = 1=1.0;0.;0. % 2=0;1;0
+  set Known component names   = u,u,u
+  set Used constants          = 
 end
 subsection Output Parameters
   set Incremental run prefix = 
@@ -104,16 +116,4 @@ subsection Output Parameters
     subsection deal.II intermediate output parameters
     end
   end
-end
-subsection Surface forces
-  set IDs and component masks = 0=u % 1=u % 2=u % 3=u % 4=u % 5=u
-  set IDs and expressions     = 0= 1.;0;0 % 1=1.0;0;0 % 2=1.0;0;0 % 3=1.0;0;0 % 4=1.0;0;0 % 5=1.0;0;0
-  set Known component names   = u,u,u
-  set Used constants          = 
-end
-subsection Volume forces
-  set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=0;-0.5;-0.5
-  set Known component names   = u,u,u
-  set Used constants          = 
 end
