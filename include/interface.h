@@ -70,15 +70,15 @@ public:
     dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL")
   {};
 
-	/**
-	 * update time il all parsed mapped functions
-	 */
-	virtual void set_time (const double &t) const
-	{
-		dirichlet_bcs.set_time(t);
-		forcing_terms.set_time(t);
-		neumann_bcs.set_time(t);
-	}
+  /**
+   * update time il all parsed mapped functions
+   */
+  virtual void set_time (const double &t) const
+  {
+    dirichlet_bcs.set_time(t);
+    forcing_terms.set_time(t);
+    neumann_bcs.set_time(t);
+  }
 
   /**
    * Applies Dirichlet boundary conditions
@@ -118,7 +118,7 @@ public:
             DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, vars_face);
             for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
               {
-                Tensor <1, n_components, double> T;
+                std::vector<double> T(n_components);
                 for (unsigned int i=0; i < n_components; ++i)
                   if (neumann_bcs.get_mapped_mask(face_id)[i])
                     {
@@ -159,7 +159,7 @@ public:
             //auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
             //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
             DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, vars);
-            Tensor <1, n_components, double> B;
+            std::vector<double> B(n_components);
             const std::vector<Number> var = vars[q]; // u,u,u
             for (unsigned int i=0; i < n_components; ++i)
               if (forcing_terms.get_mapped_mask(cell_id)[i])

@@ -69,8 +69,8 @@ public:
         d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us_dot"+suffix);
-				d.add_copy(std::vector <std::vector<Number> >(n_q_points,std::vector<Number>(1)), "vars"+suffix);
-				d.add_copy(std::vector <std::vector<Number> >(n_face_q_points,std::vector<Number>(1)),"vars_face"+suffix);
+        d.add_copy(std::vector <std::vector<Number> >(n_q_points,std::vector<Number>(1)), "vars"+suffix);
+        d.add_copy(std::vector <std::vector<Number> >(n_face_q_points,std::vector<Number>(1)),"vars_face"+suffix);
         d.add_copy(std::vector<Tensor <1, dim, Number> >(n_q_points),"grad_us"+suffix);
         d.add_copy(std::vector<double>(n_q_points),"fs");
 
