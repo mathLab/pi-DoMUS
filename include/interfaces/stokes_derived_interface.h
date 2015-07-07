@@ -26,10 +26,6 @@ class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, Stoke
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
 public:
-  /* override the apply_bcs function */
-  void apply_bcs (const DoFHandler<dim> &dof_handler,
-                  const FiniteElement<dim> &fe,
-                  ConstraintMatrix &constraints) const;
 
   /* specific and useful functions for this very problem */
   StokesDerivedInterface();
@@ -81,7 +77,6 @@ private:
   double eta;
   double rho;
   double nu;
-  ParsedFunction<dim,dim> forcing_term;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -93,23 +88,8 @@ template<int dim>
 StokesDerivedInterface<dim>::StokesDerivedInterface() :
   ConservativeInterface<dim,dim,dim+1,StokesDerivedInterface<dim> >("Stokes Interface",
       "FESystem[FE_Q(2)^d-FE_Q(1)]",
-      "u,u,p", "1,1; 1,0", "1,0; 0,1"),
-  forcing_term ("Forcing function", "2.*pi^3*cos(pi*x)*cos(pi*y); 2*pi^3*sin(pi*x)*sin(pi*y)")
+      "u,u,p", "1,1; 1,0", "1,0; 0,1")
 {};
-
-
-template <int dim>
-void StokesDerivedInterface<dim>::apply_bcs (const DoFHandler<dim> &dof_handler,
-                                             const FiniteElement<dim> &fe,
-                                             ConstraintMatrix &constraints) const
-{
-  FEValuesExtractors::Vector velocities(0);
-  VectorTools::interpolate_boundary_values (dof_handler,
-                                            0,
-                                            this->boundary_conditions,
-                                            constraints,
-                                            fe.component_mask(velocities));
-}
 
 
 template<int dim>
@@ -137,6 +117,7 @@ void StokesDerivedInterface<dim>::initialize_system_data(SAKData &d) const
 {
   std::string suffix = typeid(Number).name();
   auto &n_q_points = d.get<unsigned int >("n_q_points");
+  auto &n_face_q_points = d.get<unsigned int >("n_face_q_points");
   auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
 
   std::vector<Number> independent_local_dof_values (dofs_per_cell);
@@ -144,12 +125,16 @@ void StokesDerivedInterface<dim>::initialize_system_data(SAKData &d) const
   std::vector <Tensor <2, dim, Number> > sym_grad_us(n_q_points);
   std::vector <Number> div_us(n_q_points);
   std::vector <Number> ps(n_q_points);
+  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim+1));
+  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim+1));
 
   d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
   d.add_copy(us, "us"+suffix);
   d.add_copy(ps, "ps"+suffix);
   d.add_copy(div_us, "div_us"+suffix);
   d.add_copy(sym_grad_us, "sym_grad_us"+suffix);
+  d.add_copy(vars, "vars"+suffix);
+  d.add_copy(vars_face, "vars_face"+suffix);
 
 }
 
@@ -265,11 +250,6 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      Tensor <1, dim, Number> F;
-      for (unsigned int d=0; d < dim; ++d)
-        {
-          F[d] = forcing_term.value(scratch.fe_values.quadrature_point(q),d);
-        }
 
       const Tensor <1, dim, Number> &u = us[q];
       const Number &div_u = div_us[q];
@@ -277,7 +257,7 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
       Number psi = (eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u);
-      energy += (psi - (F*u))*scratch.fe_values.JxW(q);
+      energy += psi*scratch.fe_values.JxW(q);
     }
 }
 

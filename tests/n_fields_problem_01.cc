@@ -1,5 +1,5 @@
 #include "n_fields_problem.h"
-#include "stokes_derived_interface.h"
+#include "interfaces/stokes_derived_interface.h"
 #include "tests.h"
 
 using namespace dealii;

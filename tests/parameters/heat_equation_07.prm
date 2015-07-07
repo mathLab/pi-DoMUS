@@ -1,11 +1,11 @@
 # Parameter file generated with 
 # DEAL_II_SAK_GIT_BRANCH=dof_utilities.g
-# DEAL_II_SAK_GIT_SHORTREV=e6105c2.g
+# DEAL_II_SAK_GIT_SHORTREV=42bac76.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=x^2
+  set IDs and expressions     = 
   set Known component names   = u
   set Used constants          = 
 end
@@ -45,14 +45,14 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=-2
+  set IDs and expressions     = 0=2.*pi^2*sin(pi*x)*sin(pi*y)
   set Known component names   = u
   set Used constants          = 
 end
 subsection Heat Equation
   set Block coupling                 = 1
   set Blocking of the finite element = u
-  set Finite element space           = FESystem[FE_Q(2)]
+  set Finite element space           = FESystem[FE_Q(1)]
   set Preconditioner block coupling  = 0
 end
 subsection IDA Solver Parameters
@@ -74,7 +74,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = x^2
+  set Function expression = 2.*pi^2*sin(pi*x)*sin(pi*y)
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
@@ -83,7 +83,7 @@ subsection Initial solution_dot
   set Variable names      = x,y,t
 end
 subsection NFieldsProblem<2, 2, 1>
-  set Initial global refinement    = 1
+  set Initial global refinement    = 4
   set Maximum number of time steps = 10000
   set Number of cycles             = 3
 end

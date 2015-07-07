@@ -1,8 +1,14 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=master.g
-# DEAL_II_SAK_GIT_SHORTREV=81dcea0.g
-# DEAL_II_GIT_BRANCH=
-# DEAL_II_GIT_SHORTREV=
+# DEAL_II_SAK_GIT_BRANCH=dof_utilities.g
+# DEAL_II_SAK_GIT_SHORTREV=e6105c2.g
+# DEAL_II_GIT_BRANCH=master
+# DEAL_II_GIT_SHORTREV=c66a97f
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=y*(1-y); 0; 0 
+  set Known component names   = u,u,p
+  set Used constants          = 
+end
 subsection Domain
   set Grid to generate           = rectangle
   set Input grid file name       = 
@@ -16,11 +22,6 @@ subsection Domain
   set Optional vector of dim int = 1,1
   set Output grid file name      = 
 end
-subsection Dirichlet boundary conditions
-  set Function constants  = 
-  set Function expression = y*(1-y); 0; 0
-  set Variable names      = x,y,t
-end
 subsection Error Tables
   set Compute error            = true
   set Error file format        = tex
@@ -33,7 +34,7 @@ subsection Error Tables
     set Add convergence rates          = true
     set Extra terms                    = cells,dofs
     set Latex table caption            = error
-    set List of error norms to compute = L2,H1;AddUp;L2
+    set List of error norms to compute = L2,H1;L2,H1;L2,H1
     set Rate key                       = 
   end
 end
@@ -42,14 +43,23 @@ subsection Exact solution
   set Function expression = y*(1-y); 0; 0
   set Variable names      = x,y,t
 end
-subsection Forcing function
-  set Function constants  = 
-  set Function expression = 0; 0
-  set Variable names      = x,y,t
+subsection Forcing terms
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 
+  set Known component names   = u,u,p
+  set Used constants          = 
 end
 subsection NFieldsProblem<2, 2, 3>
-  set Initial global refinement               = 1
-  set Number of cycles			      = 3
+  set Alpha for Newton's iterations         = 1
+  set Initial global refinement             = 1
+  set Maximum number of Newton's iterations = 5
+  set Number of cycles                      = 3
+end
+subsection Neumann boundary conditions
+  set IDs and component masks = 0=ALL
+  set IDs and expressions     = 
+  set Known component names   = u,u,p
+  set Used constants          = 
 end
 subsection Output Parameters
   set Incremental run prefix = 
@@ -98,11 +108,6 @@ subsection Output Parameters
     subsection deal.II intermediate output parameters
     end
   end
-end
-subsection Right-hand side force
-  set Function constants  = 
-  set Function expression = 0; 0; 0
-  set Variable names      = x,y,t
 end
 subsection Stokes Interface
   set Block coupling                 = 1,1; 1,0

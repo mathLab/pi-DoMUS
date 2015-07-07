@@ -60,6 +60,7 @@ public:
     std::string suffix = typeid(Number).name();
     std::string suffix_double = typeid(double).name();
     auto &n_q_points = d.template get<unsigned int >("n_q_points");
+    auto &n_face_q_points = d.template get<unsigned int >("n_face_q_points");
     auto &dofs_per_cell = d.template get<unsigned int >("dofs_per_cell");
 
     if (!d.have("us"+suffix))
@@ -68,14 +69,16 @@ public:
         d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us"+suffix);
         d.add_copy(std::vector<Number>(n_q_points),"us_dot"+suffix);
-        d.add_copy(std::vector<Tensor <1, dim, Number> >(dofs_per_cell),"grad_us"+suffix);
+        d.add_copy(std::vector <std::vector<Number> >(n_q_points,std::vector<Number>(1)), "vars"+suffix);
+        d.add_copy(std::vector <std::vector<Number> >(n_face_q_points,std::vector<Number>(1)),"vars_face"+suffix);
+        d.add_copy(std::vector<Tensor <1, dim, Number> >(n_q_points),"grad_us"+suffix);
         d.add_copy(std::vector<double>(n_q_points),"fs");
 
         d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
         d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
         d.add_copy(std::vector<double>(n_q_points),"us"+suffix_double);
         d.add_copy(std::vector<double>(n_q_points),"us_dot"+suffix_double);
-        d.add_copy(std::vector<Tensor <1, dim, double> >(dofs_per_cell),"grad_us"+suffix_double);
+        d.add_copy(std::vector<Tensor <1, dim, double> >(n_q_points),"grad_us"+suffix_double);
       }
 
     auto &sol = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
@@ -122,17 +125,14 @@ public:
 
     DOFUtilities::get_grad_values(scratch.fe_values, independent_local_dof_values, scalar, grad_us);
 
-    this->forcing_term.value_list(scratch.fe_values.get_quadrature_points(), fs);
-
     energy = 0;
     for (unsigned int q=0; q<n_q_points; ++q)
       {
         const Number &u = us[q];
         const Number &u_dot = us_dot[q];
         const Tensor <1, dim, Number> &grad_u = grad_us[q];
-        const double &F = fs[q];
 
-        energy += (u_dot*u  + 0.5*(grad_u*grad_u) - F*u)*scratch.fe_values.JxW(q);
+        energy += (u_dot*u  + 0.5*(grad_u*grad_u))*scratch.fe_values.JxW(q);
       }
   };
 

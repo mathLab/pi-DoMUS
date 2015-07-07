@@ -1,3 +1,37 @@
+/**
+ * Interface
+ *
+ * This class has two child: conservative_interface.h and
+ *  non_conservative_interface.h
+ * Users should not derive directly from this class,
+ * but from its specialization classes.
+ * For istance, a stokes problem should consist in a
+ * interface class derived from conservative_interface.h.
+ * (see include/interfaces/ for some examples)
+ *
+ * Goal: provide a derivable interface to solve a particular
+ *       PDEs problem (time depending, first-order, non linear).
+ *
+ * Usage: This class requires some arguments related to the setting
+ *        of the problem: finite elements, boundary conditions,
+ *        and initial conditions.
+ *        Moreover, it helps to write the system matrix and
+ *        the preconditioner matrix.
+ *        (see conservative_interface.h and
+ *        non_conservative_interface.h)
+ *
+ * Varibles:
+ *  - General:
+ *    - Finite Elements
+ *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
+ *    - Initial conditions ( y(0) and d/dt y (0) )
+ *  - System Matrix:
+ *    - coupling
+ *  - Preconditioner:
+ *    - preconditioner coupling
+ *  TODO: add flags
+ */
+
 #ifndef _interface_h_
 #define _interface_h_
 
@@ -12,6 +46,8 @@
 #include "dof_utilities.h"
 #include "parsed_finite_element.h"
 #include "sak_data.h"
+#include "parsed_function.h"
+#include "parsed_mapped_functions.h"
 #include "parsed_dirichlet_bcs.h"
 #include "assembly.h"
 
@@ -29,25 +65,125 @@ public:
             const std::string &default_preconditioner_coupling="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
-    boundary_conditions("Dirichlet boundary conditions", "u", "0=0", "0=0.0"),
-    forcing_term ("Forcing function", "2.*pi^2*sin(pi*x)*sin(pi*y)")
+    forcing_terms("Forcing terms", default_component_names, "0=ALL"),
+    neumann_bcs("Neumann boundary conditions", default_component_names, "0=ALL"),
+    dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL")
   {};
 
-  virtual void apply_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                          ConstraintMatrix &constraints) const
+  /**
+   * update time il all parsed mapped functions
+   */
+  virtual void set_time (const double &t) const
   {
-    boundary_conditions.interpolate_boundary_values (dof_handler,
-                                                     constraints);
+    dirichlet_bcs.set_time(t);
+    forcing_terms.set_time(t);
+    neumann_bcs.set_time(t);
+  }
 
+  /**
+   * Applies Dirichlet boundary conditions
+   *
+   * This function is used to applies Dirichlet boundary conditions.
+   * It takes as argument a DoF handler @p dof_handler and a constraint
+   * matrix @p constraints.
+   */
+  virtual void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                                    ConstraintMatrix &constraints) const
+  {
+    dirichlet_bcs.interpolate_boundary_values(dof_handler,constraints);
   };
 
-  virtual void set_time(const double t) const
+  /**
+   * Applies Neumann boundary conditions
+   *
+   */
+  template<typename Number>
+  void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                          Scratch &scratch,
+                          CopySystem &data,
+                          Number &energy) const
   {
-    // boundary_conditions.set_time(t);
-    forcing_term.set_time(t);
+    for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+      {
+        unsigned int face_id = cell->face(face)->boundary_id();
+        if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
+          {
+            std::string suffix = typeid(Number).name();
+            auto &vars_face = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars_face"+suffix);
+            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+
+            scratch.fe_face_values.reinit(cell,face);
+            //auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+            //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+            DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, vars_face);
+            for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
+              {
+                std::vector<double> T(n_components);
+                for (unsigned int i=0; i < n_components; ++i)
+                  if (neumann_bcs.get_mapped_mask(face_id)[i])
+                    {
+                      T[i] = neumann_bcs.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),i);
+                      const std::vector<Number> &var_face = vars_face[qf];
+
+                      energy -= (T[i]*var_face[i])*scratch.fe_face_values.JxW(qf);
+                    }
+              }
+            break;
+          }
+      }
   }
 
 
+  /**
+   * Applies Forcing terms
+   *
+   */
+  template<typename Number>
+  void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                            Scratch &scratch,
+                            CopySystem &data,
+                            Number &energy) const
+  {
+    const unsigned int n_q_points = scratch.anydata.template get<const unsigned int>("n_q_points");
+
+    for (unsigned int q=0; q<n_q_points; ++q)
+      {
+        unsigned cell_id = cell->material_id();
+        if (forcing_terms.acts_on_id(cell_id))
+          {
+            std::string suffix = typeid(Number).name();
+            auto &vars = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars"+suffix);
+            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+
+            //scratch.fe_values.reinit(cell);
+            //auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+            //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+            DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, vars);
+            std::vector<double> B(n_components);
+            const std::vector<Number> var = vars[q]; // u,u,u
+            for (unsigned int i=0; i < n_components; ++i)
+              if (forcing_terms.get_mapped_mask(cell_id)[i])
+                {
+                  B[i] = forcing_terms.get_mapped_function(cell_id)->value(scratch.fe_values.quadrature_point(q),i);
+                  energy -= B[i]*var[i]*scratch.fe_values.JxW(q);
+                }
+          }
+      }
+  }
+
+  /**
+   * Initialize all data required for the system
+   *
+   * This function is used to initialize the varibale SAKData @p d
+   * that contains all data of the problem (solutions, DoF, quadrature
+   * points, solutions vector, etc ).
+   * It takes as argument the number of DoF per cell @p dofs_per_cell,
+   * the number of quadrature points @p n_q_points, the number of
+   * quadrature points per face @p n_face_q_points, the reference to
+   * solutions vectors @p sol and the reference to the SAKData @p d.
+   *
+   * TODO: add current_time and current_alpha
+   */
   virtual void initialize_data(const unsigned int &dofs_per_cell,
                                const unsigned int &n_q_points,
                                const unsigned int &n_face_q_points,
@@ -57,6 +193,18 @@ public:
                                const double alpha,
                                SAKData &d) const;
 
+  /**
+   * Build the energy needed to get the preconditioner in the case
+   * it is required just one derivative.
+   *
+   * This function is used to build the energy associated to the preconditioner
+   * in the case it is required just one derivative.
+   * It takes as argument a reference to the active cell
+   * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * all the informations related to the PDE (CopySystem) and the energy
+   * (Sdouble)
+   */
   virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                          Scratch &,
                                          CopySystem &,
@@ -65,6 +213,18 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+  /**
+   * Build the energy needed to get the preconditioner in the case
+   * it is required two derivatives.
+   *
+   * This function is used to build the energy associated to the preconditioner
+   *in the case the Jacobian is automatically constructed using the derivative of the residual.
+   * It takes as argument a reference to the active cell
+   * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * all the informations related to the PDE (CopySystem) and the energy
+   * (SSdouble)
+   */
   virtual void get_preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                          Scratch &,
                                          CopyPreconditioner &,
@@ -73,6 +233,18 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+  /**
+   * Build the energy needed to get the system matrix in the case
+   * it is required two derivatives.
+   *
+   * This function is used to build the energy associated to the system matrix
+   *in the case two derivatives are required.
+   * It takes as argument a reference to the active cell
+   * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * all the informations related to the PDE (CopySystem) and the energy
+   * (SSdouble)
+   */
   virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                  Scratch &,
                                  CopySystem &,
@@ -81,6 +253,18 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+  /**
+   * Build the energy needed to get the system matrix in the case
+   * it is required two derivatives.
+   *
+   * This function is used to build the energy associated to the system matrix
+   *in the case two derivatives are required.
+   * It takes as argument a reference to the active cell
+   * (DFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
+   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * all the informations related to the PDE (CopySystem) and the energy
+   * (SSdouble)
+   */
   virtual void get_system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                  Scratch &,
                                  CopySystem &,
@@ -89,6 +273,17 @@ public:
     Assert(false, ExcPureFunctionCalled ());
   }
 
+  /**
+   * Build the residual needed to get the system matrix in the case
+   * it is required two derivatives.
+   *
+   * This function is used to build the residual associated to the system
+   *in the case two derivatives are required.
+   * It takes as argument a reference to the active cell
+   * @p cell, all the informations of the system @p scratch ( fe values,
+   * quadrature points, SAKData ), all the informations related to the PDE
+   * @p data and a reference to the local residual @p local_residual.
+   */
   virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                     Scratch &scratch,
                                     CopySystem &data,
@@ -96,12 +291,28 @@ public:
   {
     SSdouble energy;
     get_system_energy(cell, scratch, data, energy);
+
+    apply_forcing_terms(cell,scratch,data,energy);
+    if (cell->at_boundary())
+      apply_neumann_bcs(cell,scratch, data, energy);
+
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
       }
   }
 
+  /**
+   * Build the residual needed to get the system matrix in the case
+   * it is required just one derivative.
+   *
+   * This function is used to build the residual associated to the system
+   * in the case it is required just one derivatice.
+   * It takes as argument a reference to the active cell
+   * @p cell, all the informations of the system @p scratch ( fe values,
+   * quadrature points, SAKData ), all the informations related to the PDE
+   * @p data and a reference to the local residual @p local_residual.
+   */
   virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                     Scratch &scratch,
                                     CopySystem &data,
@@ -109,25 +320,49 @@ public:
   {
     Sdouble energy;
     get_system_energy(cell, scratch, data, energy);
+
+    apply_forcing_terms(cell,scratch,data,energy);
+    if (cell->at_boundary())
+      apply_neumann_bcs(cell,scratch, data, energy);
+
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
       }
   }
 
+  /**
+   * Build the residual needed to get the preconditioner matrix in the case
+   * two derivatives are required.
+   *
+   * This function is used to build the residual associated to the preconditioner
+   * in the case it is required just one derivatice.
+   * It takes as argument a reference to the active cell
+   * @p cell, all the informations of the system @p scratch ( fe values,
+   * quadrature points, SAKData ), all the informations related to the PDE
+   * @p data and a reference to the local residual @p local_residual.
+   */
   virtual void get_preconditioner_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                             Scratch &scratch,
                                             CopyPreconditioner &data,
                                             std::vector<Sdouble> &local_residual) const
   {
     SSdouble energy;
-    get_preconditioner_energy(cell, scratch, data,energy);
+    get_preconditioner_energy(cell, scratch, data, energy);
     for (unsigned int i=0; i<local_residual.size(); ++i)
       {
         local_residual[i] = energy.dx(i);
       }
   }
-
+  /**
+   * Compute linear operators needed by the problem
+   *
+   * This function is used to assemble linear operators related
+   * to the problem.
+   * It takes a reference to DoF Handler, two references
+   * to block sparse matrices representing the system matrix and
+   * the preconditioner, and two references to LinearOperator.
+   */
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
@@ -215,9 +450,10 @@ public:
 
 
 protected:
-  mutable ParsedDirichletBCs<dim, spacedim, n_components> boundary_conditions;
+  mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
+  mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
+  mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
 
-  mutable ParsedFunction<dim> forcing_term;
 
 };
 

@@ -1,3 +1,12 @@
+/**
+ * Assembly
+ *
+ * This namespace contains two sub namespaces: Scratch and CopyData.
+ *
+ * Goal: provide two structs data required in comunication process
+ *       like WorkStream.
+ */
+
 #ifndef _ASSEMBLY_
 #define _ASSEMBLY_
 
@@ -156,6 +165,7 @@ namespace Assembly
   }
 }
 
+/* ---- NFields Problem ----- */
 
 namespace Assembly
 {
@@ -165,31 +175,32 @@ namespace Assembly
     struct NFields
     {
       NFields     (const SAKData &anydata,
-                   const FiniteElement<dim, spacedim> &fe,
-                   const Quadrature<dim>    &quadrature,
-                   const Mapping<dim, spacedim>       &mapping,
-                   const UpdateFlags         update_flags,
-                   const Quadrature<dim-1>    &face_quadrature,
-                   const UpdateFlags         face_update_flags);
+                   const FiniteElement<dim, spacedim>   &fe,
+                   const Quadrature<dim>                &quadrature,
+                   const Mapping<dim, spacedim>         &mapping,
+                   const UpdateFlags                    update_flags,
+                   const Quadrature<dim-1>              &face_quadrature,
+                   const UpdateFlags                    face_update_flags);
 
       NFields     (const NFields &scratch);
 
-      SAKData                     anydata;
-      FEValues<dim, spacedim>     fe_values;
-      FEFaceValues<dim, spacedim>     fe_face_values;
+      SAKData                                           anydata;
+      FEValues<dim, spacedim>                           fe_values;
+      FEFaceValues<dim, spacedim>                       fe_face_values;
     };
+
     template <int dim, int spacedim>
     NFields<dim,spacedim>::NFields (const SAKData &data,
-                                    const FiniteElement<dim, spacedim> &fe,
-                                    const Quadrature<dim>    &quadrature,
-                                    const Mapping<dim, spacedim>       &mapping,
-                                    const UpdateFlags         update_flags,
-                                    const Quadrature<dim-1>    &face_quadrature,
-                                    const UpdateFlags         face_update_flags)
+                                    const FiniteElement<dim, spacedim>  &fe,
+                                    const Quadrature<dim>               &quadrature,
+                                    const Mapping<dim, spacedim>        &mapping,
+                                    const UpdateFlags                   update_flags,
+                                    const Quadrature<dim-1>             &face_quadrature,
+                                    const UpdateFlags                   face_update_flags)
       :
       anydata         (data),
       fe_values       (mapping, fe, quadrature, update_flags),
-      fe_face_values   (mapping, fe, face_quadrature, face_update_flags)
+      fe_face_values  (mapping, fe, face_quadrature, face_update_flags)
     {}
 
     template <int dim, int spacedim>
@@ -205,11 +216,7 @@ namespace Assembly
                        scratch.fe_face_values.get_quadrature(),
                        scratch.fe_face_values.get_update_flags())
     {}
-
-
   }
-
-
 
   namespace CopyData
   {
@@ -219,31 +226,31 @@ namespace Assembly
       NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe);
       NFieldsPreconditioner (const NFieldsPreconditioner &data);
 
-      FullMatrix<double>          local_matrix;
-      std::vector<types::global_dof_index> local_dof_indices;
-      std::vector<Sdouble> sacado_residual;
-      std::vector<double> double_residual;
+      FullMatrix<double>                    local_matrix;
+      std::vector<types::global_dof_index>  local_dof_indices;
+      std::vector<Sdouble>                  sacado_residual;
+      std::vector<double>                   double_residual;
     };
 
     template <int dim, int spacedim>
     NFieldsPreconditioner<dim, spacedim>::
     NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe)
       :
-      local_matrix (fe.dofs_per_cell,
-                    fe.dofs_per_cell),
-      local_dof_indices (fe.dofs_per_cell),
-      sacado_residual (fe.dofs_per_cell),
-      double_residual (fe.dofs_per_cell)
+      local_matrix (      fe.dofs_per_cell,
+                          fe.dofs_per_cell),
+      local_dof_indices ( fe.dofs_per_cell),
+      sacado_residual (   fe.dofs_per_cell),
+      double_residual (   fe.dofs_per_cell)
     {}
 
     template <int dim, int spacedim>
     NFieldsPreconditioner<dim, spacedim>::
     NFieldsPreconditioner (const NFieldsPreconditioner &data)
       :
-      local_matrix (data.local_matrix),
-      local_dof_indices (data.local_dof_indices),
-      sacado_residual (data.sacado_residual),
-      double_residual (data.double_residual)
+      local_matrix (      data.local_matrix),
+      local_dof_indices ( data.local_dof_indices),
+      sacado_residual (   data.sacado_residual),
+      double_residual (   data.double_residual)
     {}
 
     template <int dim, int spacedim>

@@ -81,8 +81,6 @@ private:
   double mu;
   double lambda;
 
-  ParsedFunction<dim,spacedim> traction;
-  ParsedFunction<dim,spacedim> volume_load;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -94,9 +92,7 @@ template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::CompressibleNeoHookeanInterface() :
   ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
       "FESystem[FE_Q(1)^d]",
-      "u,u,u", "1", "1"),
-  traction ("Applied traction", "1. ; 0.; 0."),
-  volume_load ("Bulk load", "0. ; 0.; 0.")
+      "u,u,u", "1", "1")
 {};
 
 
@@ -122,12 +118,15 @@ template<typename Number>
 void CompressibleNeoHookeanInterface<dim,spacedim>::initialize_system_data(SAKData &d) const
 {
   std::string suffix = typeid(Number).name();
+	std::string suffix_double = typeid(double).name();
   auto &n_q_points = d.get<unsigned int >("n_q_points");
   auto &n_face_q_points = d.get<unsigned int >("n_face_q_points");
   auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
 
   std::vector<Number> independent_local_dof_values (dofs_per_cell);
   std::vector <Tensor <1, dim, Number> > us(n_q_points);
+  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim));
+  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim));
   std::vector <Tensor <1, spacedim, Number> > us_face(n_face_q_points);
   std::vector <Tensor <2, spacedim, Number> > Fs(n_q_points);
 
@@ -135,6 +134,14 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::initialize_system_data(SAKDa
   d.add_copy(us, "us"+suffix);
   d.add_copy(us_face, "us_face"+suffix);
   d.add_copy(Fs, "Fs"+suffix);
+  d.add_copy(vars, "vars"+suffix);
+  d.add_copy(vars_face, "vars_face"+suffix);
+	d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
+	d.add_copy(std::vector <Tensor <1, dim, Number> >(n_q_points),"us_dot"+suffix);
+	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
+	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
+	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us"+suffix_double);
+	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us_dot"+suffix_double);
 
 }
 
@@ -145,7 +152,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::prepare_preconditioner_data(
     CopyPreconditioner    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
 
@@ -166,18 +173,45 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::prepare_system_data(const ty
     CopySystem    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-  auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-  auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
-  auto &Fs = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);
+	std::string suffix_double = typeid(double).name();
+	auto &d = scratch.anydata;
+  auto &sol = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
+	auto &sol_dot = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution_dot");
+	auto &alpha = d.template get<const double> ("alpha");
+	auto &t = d.template get<const double> ("t");
+	auto &independent_local_dof_values = d.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+	auto &independent_local_dof_values_dot_double = d.template get<std::vector<double> >("independent_local_dof_values_dot"+suffix_double);
+	auto &independent_local_dof_values_double = d.template get<std::vector<double> >("independent_local_dof_values"+suffix_double);
+
+	auto &us = d.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
+	auto &us_dot = d.template get<std::vector <Tensor <1, dim, Number> > >("us_dot"+suffix);
+
+	auto &us_dot_double = d.template get<std::vector <Tensor <1, dim, double> > >("us_dot"+suffix_double);
+	auto &us_double = d.template get<std::vector <Tensor <1, dim, double> > >("us"+suffix_double);
+
+  auto &Fs = d.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);
 
   scratch.fe_values.reinit (cell);
 
   DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
+	if (suffix != suffix_double)
+	{
+		DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values_double);
+	}
+	DOFUtilities::extract_local_dofs(sol_dot, data.local_dof_indices, independent_local_dof_values_dot_double);
+
+
+
   const FEValuesExtractors::Vector displacement(0);
 
   DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, displacement, us);
+  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_double, displacement, us_double);
+  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_dot_double, displacement, us_dot_double);
   DOFUtilities::get_F_values(scratch.fe_values, independent_local_dof_values, displacement, Fs);
+	if (suffix != suffix_double) // Otherwise us_dot_double and us_dot are the same object
+		for (unsigned int i=0; i<us.size(); ++i)
+			for (unsigned int d=0; d<dim; ++d)
+				us_dot[i][d] = alpha*us[i][d] + (us_dot_double[i][d]- alpha*us_double[i][d]);
 
 }
 
@@ -222,27 +256,10 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 
   prepare_system_data<Number>(cell, scratch, data);
 
-  bool add_traction = false;
-
-  if (cell->at_boundary())
-    {
-      auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
-      unsigned int id = 1;
-      for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-        if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == id )
-          {
-            add_traction = true;
-            scratch.fe_face_values.reinit(cell,face);
-            auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-            DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-            const FEValuesExtractors::Vector displacement(0);
-            DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, displacement, us_face);
-          }
-    }
 
 
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
+  auto &us_dot = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_dot"+suffix);
   auto &Fs = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);
 
   const unsigned int n_q_points = us.size();
@@ -250,9 +267,9 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      Tensor <1, dim, double> B;
 
       const Tensor <1, dim, Number> &u = us[q];
+      const Tensor <1, dim, Number> &u_dot = us[q];
       const Tensor <2, dim, Number> &F = Fs[q];
       const Tensor<2, dim, Number> C = transpose(F)*F;
 
@@ -262,29 +279,10 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 
       Number psi = (mu/2.)*(Ic-dim) - mu*lnJ + (lambda/2.)*(lnJ)*(lnJ);
 
-      energy += psi*scratch.fe_values.JxW(q);
+      energy += (u*u_dot + psi)*scratch.fe_values.JxW(q);
 
-      for (unsigned int d=0; d < dim; ++d)
-        {
-          B[d] =volume_load.value(scratch.fe_values.quadrature_point(q),d);
-          energy -= B[d]*u[d]*scratch.fe_values.JxW(q);
-        }
     }
-  if (add_traction) // traction term
-    {
-      auto &us_face = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us_face"+suffix);
-      for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
-        {
-          Tensor <1, dim, double> T;
-          for (unsigned int d=0; d < dim; ++d)
-            {
-              T[d] = traction.value(scratch.fe_face_values.quadrature_point(qf),d);
-              const Tensor <1, dim, Number> &u_face = us_face[qf];
 
-              energy -= (T[d]*u_face[d])*scratch.fe_face_values.JxW(qf);
-            }
-        }
-    }
 }
 
 

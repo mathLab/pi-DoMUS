@@ -1,3 +1,17 @@
+/**
+ * Solve time-dependent non-linear n-fields problem
+ * in parallel.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 #ifndef _N_FIELDS_LINEAR_PROBLEM_
 #define _N_FIELDS_LINEAR_PROBLEM_
 
