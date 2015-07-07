@@ -1,6 +1,6 @@
 # Parameter file generated with 
 # DEAL_II_SAK_GIT_BRANCH=dof_utilities.g
-# DEAL_II_SAK_GIT_SHORTREV=e6105c2.g
+# DEAL_II_SAK_GIT_SHORTREV=42bac76.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=c66a97f
 subsection Dirichlet boundary conditions
@@ -61,7 +61,7 @@ subsection IDA Solver Parameters
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_diff_y
+  set Initial condition type                        = use_y_dot
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Iterative algorithm                           = gmres
@@ -83,7 +83,7 @@ subsection Initial solution_dot
   set Variable names      = x,y,t
 end
 subsection NFieldsProblem<2, 2, 1>
-  set Initial global refinement    = 1
+  set Initial global refinement    = 2
   set Maximum number of time steps = 10000
   set Number of cycles             = 3
 end

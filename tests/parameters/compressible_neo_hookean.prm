@@ -52,8 +52,8 @@ subsection Exact solution
   set Variable names      = x,y,z,t
 end
 subsection Forcing terms
-  set IDs and component masks = 0=1;2
-  set IDs and expressions     = 0=0;-0.5.;-0.5
+  set IDs and component masks = 
+  set IDs and expressions     = 
   set Known component names   = u,u,u
   set Used constants          = 
 end
@@ -61,13 +61,13 @@ subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
   set Final time                                    = 1
   set Ignore algebraic terms for error computations = false
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_diff_y
+  set Initial condition Newton max iterations       = 20
+  set Initial condition Newton parameter            = 0.9
+  set Initial condition type                        = use_y_dot
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Iterative algorithm                           = gmres
-  set Maximum number of nonlinear iterations        = 10
+  set Maximum number of nonlinear iterations        = 20
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
@@ -76,7 +76,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = x^2; 0; 0
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
@@ -90,8 +90,8 @@ subsection NFieldsProblem<3, 3, 3>
   set Number of cycles             = 3
 end
 subsection Neumann boundary conditions
-  set IDs and component masks = 1=0 % 2=0
-  set IDs and expressions     = 1=1.0;0.;0. % 2=0;1;0
+  set IDs and component masks = 
+  set IDs and expressions     = 
   set Known component names   = u,u,u
   set Used constants          = 
 end
