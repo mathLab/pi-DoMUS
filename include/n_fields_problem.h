@@ -154,6 +154,8 @@ private:
   unsigned int max_time_iterations;
   double fixed_alpha;
 
+  std::string timer_file_name;
+
   ConditionalOStream        pcout;
   std::ofstream         timer_outfile;
   ConditionalOStream        tcout;
@@ -175,6 +177,10 @@ private:
   TrilinosWrappers::MPI::BlockVector        solution;
   TrilinosWrappers::MPI::BlockVector        solution_dot;
 
+  mutable TrilinosWrappers::MPI::BlockVector        distributed_solution;
+  mutable TrilinosWrappers::MPI::BlockVector        distributed_solution_dot;
+
+
   mutable TimerOutput                               computing_timer;
 
 
@@ -191,6 +197,8 @@ private:
   DAETimeIntegrator<VEC>  dae;
 
   IndexSet global_partioning;
+  std::vector<IndexSet> partitioning;
+  std::vector<IndexSet> relevant_partitioning;
 };
 
 #endif

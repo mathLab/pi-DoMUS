@@ -365,13 +365,7 @@ unsigned int DAETimeIntegrator<VEC>::start_ode(VEC &solution,
 
   double next_time = 0;
 
-  if (ic_type != "none")
-    {
-      copy(yy, solution);
-      copy(yp, solution_dot);
-
-      solver.output_step( 0, solution, solution_dot, 0, initial_step_size);
-    }
+  solver.output_step( 0, solution, solution_dot, 0, initial_step_size);
 
   while ((t<final_time) && (step_number < max_steps))
     {

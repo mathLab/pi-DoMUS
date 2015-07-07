@@ -84,6 +84,13 @@ declare_parameters (ParameterHandler &prm)
                   "10000",
                   Patterns::Integer (0));
 
+  add_parameter(  prm,
+                  &timer_file_name,
+                  "Timer output file",
+                  "timer.txt",
+                  Patterns::FileName());
+
+
 
 }
 
@@ -99,6 +106,7 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
+  timer_outfile("timer.txt"),
   tcout (timer_outfile,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
@@ -154,7 +162,9 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   pcout.get_stream().imbue(s);
 
 
-  std::vector<IndexSet> partitioning, relevant_partitioning;
+  partitioning.resize(0);
+  relevant_partitioning.resize(0);
+
   IndexSet relevant_set;
   {
     IndexSet index_set = dof_handler->locally_owned_dofs();
@@ -182,17 +192,17 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   reinit_jacobian_matrix (partitioning, relevant_partitioning);
   reinit_jacobian_preconditioner (partitioning, relevant_partitioning);
 
-  //    solution.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
-  //    solution_dot.reinit (partitioning, relevant_partitioning, MPI_COMM_WORLD);
-  //
-  solution.reinit (partitioning, MPI_COMM_WORLD);
-  solution_dot.reinit (partitioning, MPI_COMM_WORLD);
+  solution.reinit (partitioning, comm);
+  solution_dot.reinit (partitioning, comm);
+
+  distributed_solution.reinit (partitioning, relevant_partitioning, comm);
+  distributed_solution_dot.reinit (partitioning, relevant_partitioning, comm);
 
   VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
   VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
 
   // Store a global partitioning to be used anywhere we need to know
-  // what global dofs we own.
+  // what global dofs we own. This is the sum of partitioning[i].
   global_partioning = solution.locally_owned_elements();
 
   computing_timer.exit_section();
@@ -209,7 +219,7 @@ reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
 
   TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
                                             relevant_partitioning,
-                                            MPI_COMM_WORLD);
+                                            comm);
 
   Table<2,DoFTools::Coupling> coupling = energy.get_coupling();
 
@@ -217,7 +227,7 @@ reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
                                    coupling, sp,
                                    constraints, false,
                                    Utilities::MPI::
-                                   this_mpi_process(MPI_COMM_WORLD));
+                                   this_mpi_process(comm));
   sp.compress();
 
   jacobian_matrix.reinit (sp);
@@ -236,7 +246,7 @@ reinit_jacobian_preconditioner(const std::vector<IndexSet> &partitioning,
 
       TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
                                                 relevant_partitioning,
-                                                MPI_COMM_WORLD);
+                                                comm);
 
       Table<2,DoFTools::Coupling> coupling = energy.get_preconditioner_coupling();
 
@@ -244,7 +254,7 @@ reinit_jacobian_preconditioner(const std::vector<IndexSet> &partitioning,
                                        coupling, sp,
                                        constraints, false,
                                        Utilities::MPI::
-                                       this_mpi_process(MPI_COMM_WORLD));
+                                       this_mpi_process(comm));
       sp.compress();
 
       jacobian_preconditioner_matrix.reinit (sp);
@@ -266,10 +276,15 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
 
+  distributed_solution = solution;
+  distributed_solution_dot = solution_dot;
+
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
                          face_quadrature_formula.size(),
-                         solution, solution_dot, t, alpha, system_data);
+                         distributed_solution,
+                         distributed_solution_dot, t, alpha,
+                         system_data);
 
 
   auto local_copy = [ this ]
@@ -311,7 +326,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
 
   jacobian_matrix.compress(VectorOperation::add);
 
-  pcout << std::endl;
+//  pcout << std::endl;
 
   auto id = solution.locally_owned_elements();
   for (unsigned int i=0; i<id.n_elements(); ++i)
@@ -337,8 +352,6 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
   if (energy.get_jacobian_preconditioner_flags() != update_default)
     {
       computing_timer.enter_section ("   Build preconditioner");
-      pcout << "   Rebuilding preconditioner..." << std::flush;
-
       jacobian_preconditioner_matrix = 0;
 
       const QGauss<dim> quadrature_formula(fe->degree+1);
@@ -350,12 +363,14 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
 
       SAKData preconditioner_data;
 
-      std::vector<const TrilinosWrappers::MPI::BlockVector *> sols;
-      sols.push_back(&solution);
+      distributed_solution = solution;
+      distributed_solution_dot = solution_dot;
+
       energy.initialize_data(fe->dofs_per_cell,
                              quadrature_formula.size(),
                              face_quadrature_formula.size(),
-                             solution, solution_dot, t, alpha,
+                             distributed_solution,
+                             distributed_solution_dot, t, alpha,
                              preconditioner_data);
 
 
@@ -395,8 +410,6 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
            NFieldsPreconditioner<dim,spacedim> (*fe));
 
       jacobian_preconditioner_matrix.compress(VectorOperation::add);
-
-      pcout << std::endl;
       computing_timer.exit_section();
     }
 }
@@ -416,7 +429,7 @@ void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::make_grid_fe()
 {
-  triangulation = SP(pgg.distributed(MPI_COMM_WORLD));
+  triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim,spacedim>(*triangulation));
   fe=SP(energy());
   triangulation->refine_global (initial_global_refinement);
@@ -436,6 +449,11 @@ void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::run ()
 {
+//  if(timer_file_name != "")
+//    timer_outfile.open(timer_file_name.c_str());
+//  else
+//    timer_outfile.open("/dev/null");
+//
   make_grid_fe();
   setup_dofs();
 
@@ -508,18 +526,21 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
 {
   computing_timer.enter_section ("Postprocessing");
 
+  distributed_solution = solution;
+  distributed_solution_dot = solution_dot;
+
   std::stringstream suffix;
   suffix << "." << step_number;
   data_out.prepare_data_output( *dof_handler,
                                 suffix.str());
-  data_out.add_data_vector (solution, energy.get_component_names());
+  data_out.add_data_vector (distributed_solution, energy.get_component_names());
   std::vector<std::string> sol_dot_names =
     Utilities::split_string_list( energy.get_component_names());
   for (auto &name : sol_dot_names)
     {
       name += "_dot";
     }
-  data_out.add_data_vector (solution_dot, print(sol_dot_names,","));
+  data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names,","));
 
   data_out.write_data_and_clear("",*mapping);
 
@@ -548,17 +569,20 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                                                       VEC &dst) const
 {
   computing_timer.enter_section ("Residual");
-  pcout << "   Computing residual... " << std::flush;
   energy.set_time(t);
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
   SAKData residual_data;
 
+  distributed_solution = solution;
+  distributed_solution_dot = solution_dot;
+
   energy.initialize_data(fe->dofs_per_cell,
                          quadrature_formula.size(),
                          face_quadrature_formula.size(),
-                         solution, solution_dot, t, 0.0,
+                         distributed_solution,
+                         distributed_solution_dot, t, 0.0,
                          residual_data);
 
   dst = 0;
@@ -605,7 +629,9 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
-  constraints.distribute(dst);
+  // constraints.distribute(dst);
+
+  dst.compress(VectorOperation::add);
 
   auto id = solution.locally_owned_elements();
   for (unsigned int i=0; i<id.n_elements(); ++i)
@@ -615,9 +641,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
         dst[j] = solution(j)-constraints.get_inhomogeneity(j);
     }
 
-  dst.compress(VectorOperation::add);
-
-  pcout << "   Residual = " << dst.linfty_norm() << std::endl;
+  dst.compress(VectorOperation::insert);
   computing_timer.exit_section();
   return 0;
 }
@@ -627,8 +651,10 @@ template <int dim, int spacedim, int n_components>
 void
 NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) const
 {
+  computing_timer.enter_section ("   Apply jacobian");
   jacobian_op.vmult(dst, src);
   set_constrained_dofs_to_zero(dst);
+  computing_timer.exit_section();
 }
 
 
@@ -637,9 +663,7 @@ template <int dim, int spacedim, int n_components>
 void
 NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const
 {
-
-  pcout << "   Solving system... " << std::flush;
-  //
+  computing_timer.enter_section ("   Solve system");
   //  TrilinosWrappers::MPI::BlockVector
   //  distributed_solution (rhs);
   //  distributed_solution = solution;
@@ -691,11 +715,11 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, con
   set_constrained_dofs_to_zero(dst);
   // constraints.distribute (dst);
 
-  pcout << std::endl;
-  pcout << " iterations:                           " <<  n_iterations
-        << std::endl;
-  pcout << std::endl;
-
+//  pcout << std::endl;
+//  pcout << " iterations:                           " <<  n_iterations
+//        << std::endl;
+//  pcout << std::endl;
+  computing_timer.exit_section();
 }
 
 
@@ -706,13 +730,14 @@ NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
                                                             const VEC &src_yp,
                                                             const double alpha)
 {
-
+  computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
   assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
 
   energy.compute_system_operators(*dof_handler,
                                   jacobian_matrix, jacobian_preconditioner_matrix,
                                   jacobian_op, jacobian_preconditioner_op);
+  computing_timer.exit_section();
 
   return 0;
 }
