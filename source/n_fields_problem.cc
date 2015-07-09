@@ -6,7 +6,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/utilities.h>
-// #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/work_stream.h>
 #include <deal.II/fe/mapping_q_eulerian.h>
 
@@ -39,11 +39,12 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/solution_transfer.h>
+#include <deal.II/numerics/error_estimator.h>
 
 #include <deal.II/distributed/solution_transfer.h>
-// #include <deal.II/base/index_set.h>
+//#include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
-// #include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/distributed/grid_refinement.h>
 
 #include <typeinfo>
 #include <fstream>
@@ -91,6 +92,13 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::FileName());
 
 
+  add_parameter(  prm,
+                  &adaptive_refinement,
+                  "Adaptive refinement",
+                  "true",
+                  Patterns::Bool());
+
+
 
 }
 
@@ -133,7 +141,7 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
 template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
+void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_run)
 {
   computing_timer.enter_section("Setup dof systems");
   std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
@@ -192,14 +200,17 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs ()
   reinit_jacobian_matrix (partitioning, relevant_partitioning);
   reinit_jacobian_preconditioner (partitioning, relevant_partitioning);
 
-  solution.reinit (partitioning, comm);
-  solution_dot.reinit (partitioning, comm);
 
   distributed_solution.reinit (partitioning, relevant_partitioning, comm);
   distributed_solution_dot.reinit (partitioning, relevant_partitioning, comm);
+  solution.reinit (partitioning, comm);
+  solution_dot.reinit (partitioning, comm);
 
-  VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
-  VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+  if (first_run)
+    {
+      VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
+      VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+    }
 
   // Store a global partitioning to be used anywhere we need to know
   // what global dofs we own. This is the sum of partitioning[i].
@@ -419,10 +430,54 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
 {
-  triangulation->refine_global (1);
-  //dof_handler->distribute_dofs(*fe);
-  //TrilinosWrappers::MPI::BlockVector tmp(dof_handler->n_dofs());
-  //solution_transfer.interpolate(solution, tmp);
+  computing_timer.enter_section ("   Mesh refinement");
+	if(adaptive_refinement)
+	{
+		Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
+		KellyErrorEstimator<dim>::estimate (*dof_handler,
+		                                		QGauss<dim-1>(fe->degree+1),
+																				typename FunctionMap<dim>::type(),
+																				distributed_solution,
+																				estimated_error_per_cell,
+																				ComponentMask(),
+																				0,
+																				0,
+																				triangulation->locally_owned_subdomain());
+
+		parallel::distributed::GridRefinement::
+		refine_and_coarsen_fixed_fraction (*triangulation,
+		                                   estimated_error_per_cell,
+                                       0.3, 0.1);
+
+
+	}
+
+  parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_tr(*dof_handler);
+  parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_dot_tr(*dof_handler);
+  TrilinosWrappers::MPI::BlockVector sol (distributed_solution);
+  TrilinosWrappers::MPI::BlockVector sol_dot (distributed_solution_dot);
+  sol = solution;
+  sol_dot = solution_dot;
+
+  triangulation->prepare_coarsening_and_refinement();
+  sol_tr.prepare_for_coarsening_and_refinement (sol);
+  sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
+	if(adaptive_refinement)
+		triangulation->execute_coarsening_and_refinement ();
+	else
+		triangulation->refine_global (1);
+
+  setup_dofs(false);
+
+  TrilinosWrappers::MPI::BlockVector tmp (solution);
+  TrilinosWrappers::MPI::BlockVector tmp_dot (solution_dot);
+
+  sol_tr.interpolate (tmp);
+  sol_dot_tr.interpolate (tmp_dot);
+  solution = tmp;
+  solution_dot = tmp_dot;
+
+	computing_timer.exit_section();
 }
 
 
@@ -454,43 +509,20 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
 //  else
 //    timer_outfile.open("/dev/null");
 //
-  make_grid_fe();
-  setup_dofs();
 
-  dae.start_ode(solution, solution_dot, max_time_iterations);
+  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
+    {
+      if (cycle == 0)
+        {
+          make_grid_fe();
+          setup_dofs(true);
+        }
+      else
+          refine_mesh();
 
-  //
-  //  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
-  //    {
-  //      if (cycle == 0)
-  //        {
-  //          make_grid_fe ();
-  //        }
-  //      else
-  //        refine_mesh ();
-  //
-  //      double residual = 10.;
-  //      setup_dofs ();
-  //
-  //      pcout << "Initial residual: "
-  //            << compute_residual(0.0)
-  //            << std::endl;
-  //      unsigned int it = 0;
-  //
-  //      while (residual > 1e-6 && it < max_newton_it)
-  //        {
-  //          it += 1;
-  //          assemble_system ();
-  //          build_preconditioner ();
-  //          solve ();
-  //          residual = compute_residual(0.0);
-  //          pcout << "Residual=           "
-  //                << residual
-  //                << std::endl;
-  //          //          output_results ();
-  //          process_solution ();
-  //        }
-  //    }
+      dae.start_ode(solution, solution_dot, max_time_iterations);
+    }
+
 
   // std::ofstream f("errors.txt");
   computing_timer.print_summary();
@@ -771,10 +803,10 @@ NFieldsProblem<dim, spacedim, n_components>::set_constrained_dofs_to_zero(VEC &v
 
 // template class NFieldsProblem<1>;
 
-template class NFieldsProblem<1,1,1>;
-template class NFieldsProblem<1,1,2>;
-template class NFieldsProblem<1,1,3>;
-template class NFieldsProblem<1,1,4>;
+//template class NFieldsProblem<1,1,1>;
+//template class NFieldsProblem<1,1,2>;
+//template class NFieldsProblem<1,1,3>;
+//template class NFieldsProblem<1,1,4>;
 
 // template class NFieldsProblem<1,2,1>;
 // template class NFieldsProblem<1,2,2>;

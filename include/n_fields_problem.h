@@ -58,11 +58,6 @@ class NFieldsProblem : public ParameterAcceptor, public OdeArgument<VEC>
 
 public:
 
-  enum RefinementMode
-  {
-    global_refinement=0,
-    adaptive_refinement=1
-  };
 
   NFieldsProblem (const Interface<dim,spacedim,n_components> &energy,
                   const MPI_Comm &comm=MPI_COMM_WORLD);
@@ -135,7 +130,7 @@ public:
 
 private:
   void make_grid_fe();
-  void setup_dofs ();
+  void setup_dofs (const bool &first_run=true);
 
   void reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
                                const std::vector<IndexSet> &relevant_partitioning);
@@ -213,6 +208,8 @@ private:
   IndexSet global_partioning;
   std::vector<IndexSet> partitioning;
   std::vector<IndexSet> relevant_partitioning;
+
+	bool adaptive_refinement;
 };
 
 #endif
