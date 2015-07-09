@@ -431,26 +431,26 @@ template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
-	if(adaptive_refinement)
-	{
-		Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-		KellyErrorEstimator<dim>::estimate (*dof_handler,
-		                                		QGauss<dim-1>(fe->degree+1),
-																				typename FunctionMap<dim>::type(),
-																				distributed_solution,
-																				estimated_error_per_cell,
-																				ComponentMask(),
-																				0,
-																				0,
-																				triangulation->locally_owned_subdomain());
+  if (adaptive_refinement)
+    {
+      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
+      KellyErrorEstimator<dim>::estimate (*dof_handler,
+                                          QGauss<dim-1>(fe->degree+1),
+                                          typename FunctionMap<dim>::type(),
+                                          distributed_solution,
+                                          estimated_error_per_cell,
+                                          ComponentMask(),
+                                          0,
+                                          0,
+                                          triangulation->locally_owned_subdomain());
 
-		parallel::distributed::GridRefinement::
-		refine_and_coarsen_fixed_fraction (*triangulation,
-		                                   estimated_error_per_cell,
-                                       0.3, 0.1);
+      parallel::distributed::GridRefinement::
+      refine_and_coarsen_fixed_fraction (*triangulation,
+                                         estimated_error_per_cell,
+                                         0.3, 0.1);
 
 
-	}
+    }
 
   parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_tr(*dof_handler);
   parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_dot_tr(*dof_handler);
@@ -462,10 +462,10 @@ void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
   triangulation->prepare_coarsening_and_refinement();
   sol_tr.prepare_for_coarsening_and_refinement (sol);
   sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
-	if(adaptive_refinement)
-		triangulation->execute_coarsening_and_refinement ();
-	else
-		triangulation->refine_global (1);
+  if (adaptive_refinement)
+    triangulation->execute_coarsening_and_refinement ();
+  else
+    triangulation->refine_global (1);
 
   setup_dofs(false);
 
@@ -477,7 +477,7 @@ void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
   solution = tmp;
   solution_dot = tmp_dot;
 
-	computing_timer.exit_section();
+  computing_timer.exit_section();
 }
 
 
@@ -518,7 +518,7 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
           setup_dofs(true);
         }
       else
-          refine_mesh();
+        refine_mesh();
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
     }

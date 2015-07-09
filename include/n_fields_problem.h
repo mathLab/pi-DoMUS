@@ -209,7 +209,7 @@ private:
   std::vector<IndexSet> partitioning;
   std::vector<IndexSet> relevant_partitioning;
 
-	bool adaptive_refinement;
+  bool adaptive_refinement;
 };
 
 #endif
