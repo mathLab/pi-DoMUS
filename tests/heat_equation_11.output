@@ -1,0 +1,56 @@
+
+DEAL:FGMRES::Starting value 10.7363
+DEAL:FGMRES::Convergence step 1 value 2.38462e-15
+DEAL:FGMRES::Starting value 3.66921e-15
+DEAL:FGMRES::Convergence step 0 value 3.66921e-15
+DEAL:FGMRES::Starting value 3.66921e-15
+DEAL:FGMRES::Convergence step 0 value 3.66921e-15
+DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
+DEAL:AddingData::Added data: u
+DEAL:AddingData::Added data: u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 5.20918
+DEAL:FGMRES::Convergence step 1 value 1.42793e-12
+DEAL:FGMRES::Starting value 5.65969
+DEAL:FGMRES::Convergence step 1 value 1.80896e-12
+DEAL:FGMRES::Starting value 5.65969
+DEAL:FGMRES::Convergence step 1 value 1.80896e-12
+DEAL:PrepareOutput::Will write on file: ./solution.1.0.vtu
+DEAL:AddingData::Added data: u
+DEAL:AddingData::Added data: u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 2.70770
+DEAL:FGMRES::Convergence step 1 value 3.31209e-12
+DEAL:FGMRES::Starting value 2.67690
+DEAL:FGMRES::Convergence step 1 value 3.16204e-12
+DEAL:FGMRES::Starting value 2.67690
+DEAL:FGMRES::Convergence step 1 value 3.16204e-12
+DEAL:PrepareOutput::Will write on file: ./solution.2.0.vtu
+DEAL:AddingData::Added data: u
+DEAL:AddingData::Added data: u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 1.36655
+DEAL:FGMRES::Convergence step 1 value 6.88708e-12
+DEAL:FGMRES::Starting value 1.36093
+DEAL:FGMRES::Convergence step 1 value 6.76538e-12
+DEAL:FGMRES::Starting value 1.36093
+DEAL:FGMRES::Convergence step 1 value 6.76538e-12
+DEAL:PrepareOutput::Will write on file: ./solution.3.0.vtu
+DEAL:AddingData::Added data: u
+DEAL:AddingData::Added data: u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.684861
+DEAL:FGMRES::Convergence step 16 value 2.94190e-09
+DEAL:FGMRES::Starting value 0.684091
+DEAL:FGMRES::Convergence step 16 value 2.93951e-09
+DEAL:FGMRES::Starting value 0.684091
+DEAL:FGMRES::Convergence step 16 value 2.93730e-09
+DEAL:PrepareOutput::Will write on file: ./solution.4.0.vtu
+DEAL:AddingData::Added data: u
+DEAL:AddingData::Added data: u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.

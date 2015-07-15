@@ -82,13 +82,13 @@ public :
    * where JF is the last computed Jacobian of F.
    *
    */
-  virtual void solve_jacobian_system(const double t,
-                                     const VEC &y,
-                                     const VEC &y_dot,
-                                     const VEC &residual,
-                                     const double alpha,
-                                     const VEC &src,
-                                     VEC & dst) const = 0;
+  virtual int solve_jacobian_system(const double t,
+                                    const VEC &y,
+                                    const VEC &y_dot,
+                                    const VEC &residual,
+                                    const double alpha,
+                                    const VEC &src,
+                                    VEC &dst) const = 0;
 
 
   /** Setup Jacobian. Compute the Jacobian of the function

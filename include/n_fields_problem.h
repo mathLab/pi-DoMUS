@@ -104,19 +104,22 @@ public:
                        const VEC &src_yp,
                        VEC &dst) const;
 
-  /** Setup Jacobian preconditioner. */
+  /** Setup Jacobian system and preconditioner. */
   virtual int setup_jacobian(const double t,
                              const VEC &src_yy,
                              const VEC &src_yp,
+                             const VEC &residual,
                              const double alpha);
 
 
-  /** Jacobian vector product. */
-  virtual void jacobian(VEC &dst, const VEC &src) const;
-
-
   /** Inverse of the Jacobian vector product. */
-  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const;
+  virtual int solve_jacobian_system(const double t,
+                                    const VEC &y,
+                                    const VEC &y_dot,
+                                    const VEC &residual,
+                                    const double alpha,
+                                    const VEC &src,
+                                    VEC &dst) const;
 
 
 
@@ -159,6 +162,7 @@ private:
   const Interface<dim,spacedim,n_components>    &energy;
 
   unsigned int n_cycles;
+  unsigned int current_cycle;
   unsigned int initial_global_refinement;
   unsigned int max_time_iterations;
   double fixed_alpha;

@@ -510,9 +510,9 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
 //    timer_outfile.open("/dev/null");
 //
 
-  for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
+  for (current_cycle=0; current_cycle<n_cycles; ++current_cycle)
     {
-      if (cycle == 0)
+      if (current_cycle == 0)
         {
           make_grid_fe();
           setup_dofs(true);
@@ -521,8 +521,11 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
         refine_mesh();
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
+      distributed_solution = solution;
+      eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
     }
 
+  eh.output_table(pcout);
 
   // std::ofstream f("errors.txt");
   computing_timer.print_summary();
@@ -553,7 +556,8 @@ template <int dim, int spacedim, int n_components>
 void
 NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const VEC &solution,
-                                                         const VEC &solution_dot,                           const unsigned int step_number,
+                                                         const VEC &solution_dot,
+                                                         const unsigned int step_number,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
@@ -562,7 +566,7 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
   distributed_solution_dot = solution_dot;
 
   std::stringstream suffix;
-  suffix << "." << step_number;
+  suffix << "." << current_cycle << "." << step_number;
   data_out.prepare_data_output( *dof_handler,
                                 suffix.str());
   data_out.add_data_vector (distributed_solution, energy.get_component_names());
@@ -680,41 +684,20 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
 
 template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::jacobian(VEC &dst, const VEC &src) const
-{
-  computing_timer.enter_section ("   Apply jacobian");
-  jacobian_op.vmult(dst, src);
-  set_constrained_dofs_to_zero(dst);
-  computing_timer.exit_section();
-}
-
-
-
-template <int dim, int spacedim, int n_components>
-void
-NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const
+int
+NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double t,
+    const VEC &y,
+    const VEC &y_dot,
+    const VEC &,
+    const double alpha,
+    const VEC &src,
+    VEC &dst) const
 {
   computing_timer.enter_section ("   Solve system");
-  //  TrilinosWrappers::MPI::BlockVector
-  //  distributed_solution (rhs);
-  //  distributed_solution = solution;
-
-  // [TODO] make n_block independent
-  //  const unsigned int
-  //  start = (distributed_solution.block(0).size() +
-  //           distributed_solution.block(1).local_range().first);
-  //  const unsigned int
-  //  end   = (distributed_solution.block(0).size() +
-  //           distributed_solution.block(1).local_range().second);
-  //  for (unsigned int i=start; i<end; ++i)
-  //    if (constraints.is_constrained (i))
-  //      distributed_solution(i) = 0;
-
   set_constrained_dofs_to_zero(dst);
 
   unsigned int n_iterations = 0;
-  const double solver_tolerance = tol;
+  const double solver_tolerance = 1e-8;
 
   PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
   SolverControl solver_control (30, solver_tolerance);
@@ -752,6 +735,7 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(VEC &dst, con
 //        << std::endl;
 //  pcout << std::endl;
   computing_timer.exit_section();
+  return 0;
 }
 
 
@@ -760,6 +744,7 @@ int
 NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
                                                             const VEC &src_yy,
                                                             const VEC &src_yp,
+                                                            const VEC &,
                                                             const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");

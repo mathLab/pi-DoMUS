@@ -398,26 +398,9 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
   status += IDASetStopTime(ida_mem, final_time);
 
   status += IDASetMaxNonlinIters(ida_mem, max_non_linear_iterations);
-//
-//  if (iterative_solver_type == "gmres")
-//    {
-//      status += IDASpgmr(ida_mem, solver.n_dofs());
-//    }
-//  else if (iterative_solver_type == "bicgs")
-//    {
-//      status += IDASpbcg(ida_mem, solver.n_dofs());
-//    }
-//  else if (iterative_solver_type == "tfqmr")
-//    {
-//      status += IDASptfqmr(ida_mem, solver.n_dofs());
-//    }
-//  else
-//    {
-//      Assert(false, ExcInternalError("I don't know what solver you want to use!"));
-//    }
-//
+
+  // Initialize solver
   IDAMem IDA_mem;
-//
   IDA_mem = (IDAMem) ida_mem;
 
   IDA_mem->ida_lsetup = t_dae_lsetup<VEC>;
@@ -426,10 +409,9 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
 
 
   status += IDASetMaxOrd(ida_mem, max_order);
-  //std::cout<<"???1"<<std::endl;
 
   AssertThrow(status == 0, ExcMessage("Error initializing IDA."));
-  //std::cout<<"???1"<<std::endl;
+
   if (ic_type == "use_y_dot")
     {
       // (re)initialization of the vectors
@@ -439,7 +421,7 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
       copy(solution, yy);
       copy(solution_dot, yp);
     }
-  else if (ic_type == "use_diff_y")
+  else if (ic_type == "use_y_diff")
     {
       IDACalcIC(ida_mem, IDA_YA_YDP_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);

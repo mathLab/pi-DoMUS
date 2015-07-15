@@ -98,10 +98,6 @@ private:
   /** Initialization flag.*/
   bool is_initialized;
 
-  /** If true, we use
-  preconditioned gmres. */
-  std::string iterative_solver_type;
-
   /** Use local tolerances when computing absolute tolerance. */
   bool use_local_tolerances;
 
