@@ -6,6 +6,7 @@
 
 #include "utilities.h"
 #include "mpi.h"
+#include <ida/ida_impl.h>
 
 using namespace dealii;
 
@@ -74,12 +75,6 @@ public :
                        const VEC &sy_dot,
                        VEC &dst) const = 0;
 
-  /**
-   * Compute the product dst = J * src
-   * using the last computed Jacobian of F.
-   */
-  virtual void jacobian(VEC &dst, const VEC &src) const = 0;
-
   /** Solve the linear system
    *
    * JF dst = src
@@ -87,7 +82,13 @@ public :
    * where JF is the last computed Jacobian of F.
    *
    */
-  virtual void solve_jacobian_system(VEC &dst, const VEC &src, const double tol) const = 0;
+  virtual void solve_jacobian_system(const double t,
+                                     const VEC &y,
+                                     const VEC &y_dot,
+                                     const VEC &residual,
+                                     const double alpha,
+                                     const VEC &src,
+                                     VEC & dst) const = 0;
 
 
   /** Setup Jacobian. Compute the Jacobian of the function
@@ -98,6 +99,7 @@ public :
   virtual int setup_jacobian(const double t,
                              const VEC &y,
                              const VEC &y_dot,
+                             const VEC &residual,
                              const double alpha) = 0;
 
   /**

@@ -33,6 +33,7 @@ void copy(N_Vector &dst, const TrilinosWrappers::MPI::BlockVector &src)
     }
 }
 
+
 template<typename VEC>
 int t_dae_residual(realtype tt, N_Vector yy, N_Vector yp,
                    N_Vector rr, void *user_data)
@@ -53,6 +54,71 @@ int t_dae_residual(realtype tt, N_Vector yy, N_Vector yp,
   return err;
 }
 
+
+
+template<typename VEC>
+int t_dae_lsetup(IDAMem IDA_mem,
+                 N_Vector yy,
+                 N_Vector yp,
+                 N_Vector resp,
+                 N_Vector tmp1,
+                 N_Vector tmp2,
+                 N_Vector tmp3)
+{
+
+  OdeArgument<VEC> &solver = *static_cast<OdeArgument<VEC> *>(IDA_mem->ida_user_data);
+
+  shared_ptr<VEC> src_yy = solver.create_new_vector();
+  shared_ptr<VEC> src_yp = solver.create_new_vector();
+  shared_ptr<VEC> residual = solver.create_new_vector();
+
+  copy(*src_yy, yy);
+  copy(*src_yp, yp);
+  copy(*residual, resp);
+
+  int err = solver.setup_jacobian(IDA_mem->ida_tn,
+                                  *src_yy,
+                                  *src_yp,
+                                  *residual,
+                                  IDA_mem->ida_cj);
+  return err;
+}
+
+
+template<typename VEC>
+int t_dae_solve(IDAMem IDA_mem,
+                N_Vector b,
+                N_Vector weight,
+                N_Vector yy,
+                N_Vector yp,
+                N_Vector resp)
+{
+  OdeArgument<VEC> &solver = *static_cast<OdeArgument<VEC> *>(IDA_mem->ida_user_data);
+
+  shared_ptr<VEC> src_yy = solver.create_new_vector();
+  shared_ptr<VEC> src_yp = solver.create_new_vector();
+  shared_ptr<VEC> residual = solver.create_new_vector();
+  shared_ptr<VEC> dst = solver.create_new_vector();
+  shared_ptr<VEC> src = solver.create_new_vector();
+
+  copy(*src_yy, yy);
+  copy(*src_yp, yp);
+  copy(*residual, resp);
+  copy(*src, b);
+
+  int err = solver.solve_jacobian_system(IDA_mem->ida_tn,
+                                         *src_yy,
+                                         *src_yp,
+                                         *residual,
+                                         IDA_mem->ida_cj,
+                                         *src,
+                                         *dst);
+  copy(b, *dst);
+  return err;
+}
+
+
+
 int dae_residual(realtype tt, N_Vector yy, N_Vector yp,
                  N_Vector rr, void *user_data)
 {
@@ -72,32 +138,6 @@ int dae_residual(realtype tt, N_Vector yy, N_Vector yp,
   VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
   return solver.residual(tt, src_yy, src_yp, residual);
 }
-
-
-template<typename VEC>
-int t_dae_setup_prec(realtype tt, // time
-                     N_Vector yy,
-                     N_Vector yp,
-                     N_Vector rr, // Current residual
-                     realtype alpha, // J = dG/dyy + alpha dG/dyp
-                     void *user_data, // the pointer to the correct class
-                     N_Vector /*tmp1*/, // temporary storage
-                     N_Vector /*tmp2*/,
-                     N_Vector /*tmp3*/)
-{
-  OdeArgument<VEC > &solver = *static_cast<OdeArgument<VEC > *>(user_data);
-  // A previous call to residual has already been done.
-
-  shared_ptr<VEC> src_yy = solver.create_new_vector();
-  shared_ptr<VEC> src_yp = solver.create_new_vector();
-
-  copy(*src_yy, yy);
-  copy(*src_yp, yp);
-
-  return solver.setup_jacobian(tt, *src_yy, *src_yp, alpha);
-}
-
-
 
 int dae_setup_prec(realtype tt, // time
                    N_Vector yy,
@@ -120,125 +160,8 @@ int dae_setup_prec(realtype tt, // time
   const VectorView<double> src_yy(solver.n_dofs(), NV_DATA_S(yy));
   const VectorView<double> src_yp(solver.n_dofs(), NV_DATA_S(yp));
   const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
-  return solver.setup_jacobian(tt, src_yy, src_yp, alpha);
+  return solver.setup_jacobian(tt, src_yy, src_yp, residual, alpha);
 }
-
-template<typename VEC>
-int t_dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
-                 N_Vector rr, // Current residual
-                 N_Vector src, // right hand side to solve for
-                 N_Vector dst, // computed output
-                 realtype alpha, // J = dG/dyy + alpha dG/dyp
-                 void *user_data, // the pointer to the correct class
-                 N_Vector /*tmp*/,
-                 N_Vector /*tmp2*/) // Storage
-{
-  OdeArgument<VEC> &solver = *static_cast<OdeArgument<VEC>*>(user_data);
-
-  shared_ptr<VEC> src_yy = solver.create_new_vector();
-  shared_ptr<VEC> src_yp = solver.create_new_vector();
-  shared_ptr<VEC> src_v = solver.create_new_vector();
-  shared_ptr<VEC> dst_v = solver.create_new_vector();
-
-  copy(*src_yy, yy);
-  copy(*src_yp, yp);
-  copy(*src_v, src);
-
-  solver.jacobian(*dst_v, *src_v);
-  copy(dst, *dst_v);
-  return 0;
-}
-
-
-int dae_jtimes(realtype tt, N_Vector yy, N_Vector yp,
-               N_Vector rr, // Current residual
-               N_Vector src, // right hand side to solve for
-               N_Vector dst, // computed output
-               realtype alpha, // J = dG/dyy + alpha dG/dyp
-               void *user_data, // the pointer to the correct class
-               N_Vector /*tmp*/,
-               N_Vector /*tmp2*/) // Storage
-{
-  //double* a = NV_DATA_S(src);
-  //for (unsigned int i=0; i<NV_LENGTH_S(src); ++i)
-  //    if (!(numbers::is_finite(a[i])))
-  //       cout<<i<<endl;
-  OdeArgument<Vector<double> > &solver = *static_cast<OdeArgument<Vector<double> >*>(user_data);
-  Assert(NV_LENGTH_S(yy) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(yy), solver.n_dofs()));
-  Assert(NV_LENGTH_S(yp) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(yp), solver.n_dofs()));
-  Assert(NV_LENGTH_S(src) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(src), solver.n_dofs()));
-  Assert(NV_LENGTH_S(dst) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(dst), solver.n_dofs()));
-
-  // A previous call to residual has already been done.
-  const VectorView<double> src_yy(solver.n_dofs(), NV_DATA_S(yy));
-  const VectorView<double> src_yp(solver.n_dofs(), NV_DATA_S(yp));
-  const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
-  const VectorView<double> src_v(solver.n_dofs(), NV_DATA_S(src));
-  VectorView<double> dst_v(solver.n_dofs(), NV_DATA_S(dst));
-  solver.jacobian(dst_v, src_v);
-  return 0;
-}
-
-
-template<typename VEC>
-int t_dae_prec(realtype tt, N_Vector yy, N_Vector yp,
-               N_Vector rr, // Current residual
-               N_Vector src, // right hand side to solve for
-               N_Vector dst, // computed output
-               realtype alpha, // J = dG/dyy + alpha dG/dyp
-               realtype delta, // input tolerance. The residual rr - Pz has to be smaller than delta
-               void *user_data, // the pointer to the correct class
-               N_Vector /*tmp*/) // Storage
-{
-  OdeArgument<VEC > &solver = *static_cast<OdeArgument<VEC>*>(user_data);
-  // A previous call to residual has already been done.
-
-  shared_ptr<VEC> src_yy = solver.create_new_vector();
-  shared_ptr<VEC> src_yp = solver.create_new_vector();
-  shared_ptr<VEC> src_v = solver.create_new_vector();
-  shared_ptr<VEC> dst_v = solver.create_new_vector();
-
-  copy(*src_yy, yy);
-  copy(*src_yp, yp);
-  copy(*src_v, src);
-
-  solver.solve_jacobian_system(*dst_v, *src_v, delta);
-  copy(dst, *dst_v);
-  return 0;
-}
-
-
-
-int dae_prec(realtype tt, N_Vector yy, N_Vector yp,
-             N_Vector rr, // Current residual
-             N_Vector rvec, // right hand side to solve for
-             N_Vector zvec, // computed output
-             realtype alpha, // J = dG/dyy + alpha dG/dyp
-             realtype delta, // input tolerance. The residual rr - Pz has to be smaller than delta
-             void *user_data, // the pointer to the correct class
-             N_Vector /*tmp*/) // Storage
-{
-  OdeArgument<Vector<double> > &solver = *static_cast<OdeArgument<Vector<double> >*>(user_data);
-  Assert(NV_LENGTH_S(yy) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(yy), solver.n_dofs()));
-  Assert(NV_LENGTH_S(yp) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(yp), solver.n_dofs()));
-  Assert(NV_LENGTH_S(rr) == solver.n_dofs(),
-         ExcDimensionMismatch(NV_LENGTH_S(rr), solver.n_dofs()));
-  // A previous call to residual has already been done.
-  const VectorView<double> src_yy(solver.n_dofs(), NV_DATA_S(yy));
-  const VectorView<double> src_yp(solver.n_dofs(), NV_DATA_S(yp));
-  const VectorView<double> residual(solver.n_dofs(), NV_DATA_S(rr));
-  const VectorView<double> rhs(solver.n_dofs(), NV_DATA_S(rvec));
-  VectorView<double> output(solver.n_dofs(), NV_DATA_S(zvec));
-  solver.solve_jacobian_system(output, rhs, delta);
-  return 0;
-}
-
 
 template <typename VEC>
 DAETimeIntegrator<VEC>::DAETimeIntegrator(OdeArgument<VEC> &bubble) :
@@ -267,10 +190,6 @@ DAETimeIntegrator<VEC>::~DAETimeIntegrator()
 template <typename VEC>
 void DAETimeIntegrator<VEC>::declare_parameters(ParameterHandler &prm)
 {
-  add_parameter(prm, &iterative_solver_type,
-                "Iterative algorithm", "gmres",
-                Patterns::Selection("gmres|bicgs|tfqmr"));
-
   add_parameter(prm, &initial_step_size,
                 "Initial step size", "1e-4", Patterns::Double());
 
@@ -479,28 +398,32 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
   status += IDASetStopTime(ida_mem, final_time);
 
   status += IDASetMaxNonlinIters(ida_mem, max_non_linear_iterations);
+//
+//  if (iterative_solver_type == "gmres")
+//    {
+//      status += IDASpgmr(ida_mem, solver.n_dofs());
+//    }
+//  else if (iterative_solver_type == "bicgs")
+//    {
+//      status += IDASpbcg(ida_mem, solver.n_dofs());
+//    }
+//  else if (iterative_solver_type == "tfqmr")
+//    {
+//      status += IDASptfqmr(ida_mem, solver.n_dofs());
+//    }
+//  else
+//    {
+//      Assert(false, ExcInternalError("I don't know what solver you want to use!"));
+//    }
+//
+  IDAMem IDA_mem;
+//
+  IDA_mem = (IDAMem) ida_mem;
 
-  if (iterative_solver_type == "gmres")
-    {
-      status += IDASpgmr(ida_mem, solver.n_dofs());
-    }
-  else if (iterative_solver_type == "bicgs")
-    {
-      status += IDASpbcg(ida_mem, solver.n_dofs());
-    }
-  else if (iterative_solver_type == "tfqmr")
-    {
-      status += IDASptfqmr(ida_mem, solver.n_dofs());
-    }
-  else
-    {
-      Assert(false, ExcInternalError("I don't know what solver you want to use!"));
-    }
+  IDA_mem->ida_lsetup = t_dae_lsetup<VEC>;
+  IDA_mem->ida_lsolve = t_dae_solve<VEC>;
+  IDA_mem->ida_setupNonNull = true;
 
-
-  status += IDASpilsSetJacTimesVecFn(ida_mem, t_dae_jtimes<VEC>);
-
-  status += IDASpilsSetPreconditioner(ida_mem, t_dae_setup_prec<VEC>, t_dae_prec<VEC>);
 
   status += IDASetMaxOrd(ida_mem, max_order);
   //std::cout<<"???1"<<std::endl;
@@ -702,11 +625,11 @@ void DAETimeIntegrator<Vector<double> >::reset_ode(double current_time,
 
 //    if (use_iterative == true)
 //    {
-  status += IDASpgmr(ida_mem, solver.n_dofs());
+//  status += IDASpgmr(ida_mem, solver.n_dofs());
 
-  status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
-
-  status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
+//  status += IDASpilsSetJacTimesVecFn(ida_mem, dae_jtimes);
+//
+//  status += IDASpilsSetPreconditioner(ida_mem, dae_setup_prec, dae_prec);
 //    }
 //    else
 //    {
