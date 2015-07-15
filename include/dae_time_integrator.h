@@ -116,15 +116,4 @@ private:
 
 };
 
-template <>
-unsigned int DAETimeIntegrator<Vector<double> >::start_ode(Vector<double> &solution,
-                                                           Vector<double> &solution_dot,
-                                                           const unsigned int max_steps);
-
-template <>
-void DAETimeIntegrator<Vector<double> >::reset_ode(double current_time,
-                                                   Vector<double> &solution,
-                                                   Vector<double> &solution_dot,                                                   double current_time_step,
-                                                   unsigned int max_steps);
-
 #endif
