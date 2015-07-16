@@ -22,6 +22,8 @@ class ConservativeInterface : public Interface<dim,spacedim,n_components>
   typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
 public:
 
+  virtual ~ConservativeInterface() {};
+
   ConservativeInterface(const std::string &name="",
                         const std::string &default_fe="FE_Q(1)",
                         const std::string &default_component_names="u",

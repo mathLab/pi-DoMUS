@@ -17,6 +17,7 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include "assembly.h"
 
 
 typedef TrilinosWrappers::MPI::BlockVector VEC;
@@ -29,6 +30,7 @@ class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim> >
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
 public:
 
+
   /* specific and useful functions for this very problem */
   HeatEquation() :
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
@@ -37,7 +39,7 @@ public:
   {};
 
 
-  virtual UpdateFlags get_preconditioner_flags() const
+  UpdateFlags get_preconditioner_flags() const
   {
     return update_default;
   };
@@ -90,11 +92,11 @@ public:
       }
   };
 
-  virtual void compute_system_operators(const DoFHandler<dim> &dh,
-                                        const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                        const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
+  void compute_system_operators(const DoFHandler<dim> &dh,
+                                const TrilinosWrappers::BlockSparseMatrix &matrix,
+                                const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
+                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
   {
 
     // std::vector<std::vector<bool> > constant_modes;

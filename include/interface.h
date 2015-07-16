@@ -58,6 +58,8 @@ class Interface : public ParsedFiniteElement<dim,spacedim>
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
 public:
+  virtual ~Interface() {};
+
   Interface(const std::string &name="",
             const std::string &default_fe="FE_Q(1)",
             const std::string &default_component_names="u",

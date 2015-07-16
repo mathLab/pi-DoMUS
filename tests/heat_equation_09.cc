@@ -14,7 +14,7 @@ void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
 //  VEC &d = pb.differential_components();
 //
 //  d.print(deallog.get_file_stream());
-	pb.run();
+  pb.run();
 
 }
 
