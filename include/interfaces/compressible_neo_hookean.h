@@ -136,7 +136,6 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::initialize_system_data(SAKDa
   d.add_copy(Fs, "Fs"+suffix);
   d.add_copy(vars, "vars"+suffix);
   d.add_copy(vars_face, "vars_face"+suffix);
-	d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
 	d.add_copy(std::vector <Tensor <1, dim, Number> >(n_q_points),"us_dot"+suffix);
 	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
 	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
