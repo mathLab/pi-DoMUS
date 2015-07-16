@@ -103,29 +103,35 @@ public:
                           CopySystem &data,
                           Number &energy) const
   {
+
+    Number dummy = 0.0;
+
+    auto &solution = scratch.anydata.template get<const VEC>("solution");
+
     for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
       {
         unsigned int face_id = cell->face(face)->boundary_id();
         if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
           {
-            std::string suffix = typeid(Number).name();
-            auto &vars_face = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars_face"+suffix);
-            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
 
-            scratch.fe_face_values.reinit(cell,face);
-            //auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-            //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-            DOFUtilities::get_values(scratch.fe_face_values, independent_local_dof_values, vars_face);
-            for (unsigned int qf=0; qf<scratch.fe_face_values.n_quadrature_points; ++qf)
+            scratch.fe_cache.reinit(cell, face);
+            scratch.fe_cache.set_solution_vector("solution", solution, dummy);
+
+            auto &vars = scratch.fe_cache.get_values("solution", dummy);
+            auto &q_points = scratch.fe_cache.get_quadrature_points();
+            auto &JxW = scratch.fe_cache.get_JxW_values();
+
+            for (unsigned int q=0; q<q_points.size(); ++q)
               {
-                std::vector<double> T(n_components);
+                Vector<double> T(n_components);
+                neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
+
                 for (unsigned int i=0; i < n_components; ++i)
                   if (neumann_bcs.get_mapped_mask(face_id)[i])
                     {
-                      T[i] = neumann_bcs.get_mapped_function(face_id)->value(scratch.fe_face_values.quadrature_point(qf),i);
-                      const std::vector<Number> &var_face = vars_face[qf];
+                      const std::vector<Number> &var_face = vars[q];
 
-                      energy -= (T[i]*var_face[i])*scratch.fe_face_values.JxW(qf);
+                      energy -= (T[i]*var_face[i])*JxW[q];
                     }
               }
             break;
@@ -144,28 +150,28 @@ public:
                             CopySystem &data,
                             Number &energy) const
   {
-    const unsigned int n_q_points = scratch.anydata.template get<const unsigned int>("n_q_points");
-
-    for (unsigned int q=0; q<n_q_points; ++q)
+    unsigned cell_id = cell->material_id();
+    if (forcing_terms.acts_on_id(cell_id))
       {
-        unsigned cell_id = cell->material_id();
-        if (forcing_terms.acts_on_id(cell_id))
-          {
-            std::string suffix = typeid(Number).name();
-            auto &vars = scratch.anydata.template get<std::vector <std::vector< Number> > >("vars"+suffix);
-            auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
+        Number dummy = 0.0;
 
-            //scratch.fe_values.reinit(cell);
-            //auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
-            //DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-            DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, vars);
-            std::vector<double> B(n_components);
-            const std::vector<Number> var = vars[q]; // u,u,u
+        auto &solution = scratch.anydata.template get<const VEC>("solution");
+
+        // scratch.fe_cache.reinit(cell); // It is always called outside
+        scratch.fe_cache.set_solution_vector("solution", solution, dummy);
+
+        auto &vars = scratch.fe_cache.get_values("solution", dummy);
+        auto &q_points = scratch.fe_cache.get_quadrature_points();
+        auto &JxW = scratch.fe_cache.get_JxW_values();
+
+        for (unsigned int q=0; q<q_points.size(); ++q)
+          {
+            const std::vector<Number> &var = vars[q]; // u,u,u
             for (unsigned int i=0; i < n_components; ++i)
               if (forcing_terms.get_mapped_mask(cell_id)[i])
                 {
-                  B[i] = forcing_terms.get_mapped_function(cell_id)->value(scratch.fe_values.quadrature_point(q),i);
-                  energy -= B[i]*var[i]*scratch.fe_values.JxW(q);
+                  double B = forcing_terms.get_mapped_function(cell_id)->value(q_points[q],i);
+                  energy -= B*var[i]*JxW[q];
                 }
           }
       }
@@ -293,6 +299,7 @@ public:
     get_system_energy(cell, scratch, data, energy);
 
     apply_forcing_terms(cell,scratch,data,energy);
+
     if (cell->at_boundary())
       apply_neumann_bcs(cell,scratch, data, energy);
 
@@ -377,13 +384,9 @@ public:
                                       Scratch &scratch,
                                       CopySystem &data) const
   {
+    const unsigned dofs_per_cell = data.local_dof_indices.size();
 
-    const unsigned int   dofs_per_cell   = scratch.fe_values.dofs_per_cell;
-    const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
-
-    scratch.fe_values.reinit (cell);
     cell->get_dof_indices (data.local_dof_indices);
-
     data.local_matrix = 0;
 
     get_system_residual(cell, scratch, data, data.sacado_residual);
@@ -398,11 +401,7 @@ public:
                                               Scratch &scratch,
                                               CopyPreconditioner &data) const
   {
-
-    const unsigned int   dofs_per_cell   = scratch.fe_values.dofs_per_cell;
-    const unsigned int   n_q_points      = scratch.fe_values.n_quadrature_points;
-
-    scratch.fe_values.reinit (cell);
+    const unsigned dofs_per_cell = data.local_dof_indices.size();
     cell->get_dof_indices (data.local_dof_indices);
 
     data.local_matrix = 0;
@@ -448,6 +447,32 @@ public:
     return get_jacobian_flags();
   }
 
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const
+  {
+    return;
+  }
+
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, Sdouble alpha) const
+  {
+    auto &sol = fe_cache.get_current_independent_local_dofs("solution", alpha);
+    auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
+
+    for (unsigned int i=0; i<sol.size(); ++i)
+      sol_dot[i] = alpha.val()*sol[i] + (sol_dot[i].val() - alpha.val()*sol[i].val());
+
+    return;
+  }
+
+
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, SSdouble alpha) const
+  {
+    auto &sol = fe_cache.get_current_independent_local_dofs("solution", alpha);
+    auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
+
+    for (unsigned int i=0; i<sol.size(); ++i)
+      sol_dot[i] = (alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
+    return;
+  }
 
 protected:
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume

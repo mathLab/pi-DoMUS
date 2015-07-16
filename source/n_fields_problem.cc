@@ -625,7 +625,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_copy = [&dst, this] (const SystemCopyData &data)
   {
-    this->constraints.distribute_local_to_global (data.local_rhs,
+    this->constraints.distribute_local_to_global (data.double_residual, //data.local_rhs,
                                                   data.local_dof_indices,
                                                   dst);
   };
@@ -635,15 +635,9 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                          Assembly::Scratch::NFields<dim,spacedim> &scratch,
                          SystemCopyData &data)
   {
-    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
-    scratch.fe_values.reinit (cell);
     cell->get_dof_indices (data.local_dof_indices);
-
     data.local_rhs = 0;
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
-
-    for (unsigned int i=0; i<dofs_per_cell; ++i)
-      data.local_rhs(i) += data.double_residual[i];
   };
 
   typedef

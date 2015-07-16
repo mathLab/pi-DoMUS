@@ -13,6 +13,7 @@
 #include <deal.II/fe/fe_values.h>
 #include "sak_data.h"
 #include "Sacado.hpp"
+#include "fe_values_cache.h"
 
 using namespace dealii;
 typedef Sacado::Fad::DFad<double> Sdouble;
@@ -180,42 +181,21 @@ namespace Assembly
                    const Mapping<dim, spacedim>         &mapping,
                    const UpdateFlags                    update_flags,
                    const Quadrature<dim-1>              &face_quadrature,
-                   const UpdateFlags                    face_update_flags);
+                   const UpdateFlags                    face_update_flags)
+        :
+        anydata         (anydata),
+        fe_cache       (mapping, fe, quadrature, update_flags, face_quadrature, face_update_flags)
+      {};
 
-      NFields     (const NFields &scratch);
+      NFields     (const NFields &scratch):
+        anydata   (scratch.anydata),
+        fe_cache(scratch.fe_cache)
+      {}
+      ;
 
       SAKData                                           anydata;
-      FEValues<dim, spacedim>                           fe_values;
-      FEFaceValues<dim, spacedim>                       fe_face_values;
+      FEValuesCache<dim, spacedim>                      fe_cache;
     };
-
-    template <int dim, int spacedim>
-    NFields<dim,spacedim>::NFields (const SAKData &data,
-                                    const FiniteElement<dim, spacedim>  &fe,
-                                    const Quadrature<dim>               &quadrature,
-                                    const Mapping<dim, spacedim>        &mapping,
-                                    const UpdateFlags                   update_flags,
-                                    const Quadrature<dim-1>             &face_quadrature,
-                                    const UpdateFlags                   face_update_flags)
-      :
-      anydata         (data),
-      fe_values       (mapping, fe, quadrature, update_flags),
-      fe_face_values  (mapping, fe, face_quadrature, face_update_flags)
-    {}
-
-    template <int dim, int spacedim>
-    NFields<dim,spacedim>::NFields (const NFields &scratch)
-      :
-      anydata   (scratch.anydata),
-      fe_values ( scratch.fe_values.get_mapping(),
-                  scratch.fe_values.get_fe(),
-                  scratch.fe_values.get_quadrature(),
-                  scratch.fe_values.get_update_flags()),
-      fe_face_values ( scratch.fe_values.get_mapping(),
-                       scratch.fe_values.get_fe(),
-                       scratch.fe_face_values.get_quadrature(),
-                       scratch.fe_face_values.get_update_flags())
-    {}
   }
 
   namespace CopyData
