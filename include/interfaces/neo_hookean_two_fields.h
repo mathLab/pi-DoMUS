@@ -119,6 +119,7 @@ template<typename Number>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData &d) const
 {
   std::string suffix = typeid(Number).name();
+	std::string suffix_double = typeid(double).name();
   auto &n_q_points = d.get<unsigned int >("n_q_points");
   auto &n_face_q_points = d.get<unsigned int >("n_face_q_points");
   auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
@@ -138,6 +139,11 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData 
   d.add_copy(Fs, "Fs"+suffix);
   d.add_copy(vars, "vars"+suffix);
   d.add_copy(vars_face, "vars_face"+suffix);
+	d.add_copy(std::vector <Tensor <1, dim, Number> >(n_q_points),"us_dot"+suffix);
+	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
+	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
+	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us"+suffix_double);
+	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us_dot"+suffix_double);
 
 }
 
@@ -148,7 +154,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::prepare_preconditioner_data(con
     CopyPreconditioner    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
 
   auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
@@ -173,7 +179,8 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::prepare_system_data(const typen
     CopySystem    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("sol");
+	std::string suffix_double = typeid(double).name();
+  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
   auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
   auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
@@ -322,7 +329,7 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHa
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  auto P01 = null_operator(Bt.reinit_range_vector);
+  auto P01 = null_operator(Bt);
   auto P10 = Schur_inv * B * A_inv;
   auto P11 = -1 * Schur_inv;
 
