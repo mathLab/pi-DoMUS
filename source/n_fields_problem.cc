@@ -300,12 +300,8 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         distributed_solution,
-                         distributed_solution_dot, t, alpha,
-                         system_data);
+  energy.initialize_data(distributed_solution,
+                         distributed_solution_dot, t, alpha);
 
 
   auto local_copy = [ this ]
@@ -334,14 +330,12 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Assembly::Scratch::
-       NFields<dim,spacedim> (system_data,
-                              *fe,
-                              quadrature_formula,
-                              *mapping,
-                              energy.get_jacobian_flags(),
-                              face_quadrature_formula,
-                              energy.get_face_flags()),
+       Scratch(*mapping,
+               *fe,
+               quadrature_formula,
+               energy.get_jacobian_flags(),
+               face_quadrature_formula,
+               energy.get_face_flags()),
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
@@ -387,12 +381,8 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
       distributed_solution = solution;
       distributed_solution_dot = solution_dot;
 
-      energy.initialize_data(fe->dofs_per_cell,
-                             quadrature_formula.size(),
-                             face_quadrature_formula.size(),
-                             distributed_solution,
-                             distributed_solution_dot, t, alpha,
-                             preconditioner_data);
+      energy.initialize_data(distributed_solution,
+                             distributed_solution_dot, t, alpha);
 
 
       auto local_copy = [this]
@@ -405,7 +395,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
 
       auto local_assemble = [ this ]
                             (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                             Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                             Scratch &scratch,
                              PreconditionerCopyData &data)
       {
         this->energy.assemble_local_preconditioner(cell, scratch, data);
@@ -420,13 +410,11 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
                        dof_handler->end()),
            local_assemble,
            local_copy,
-           Assembly::Scratch::
-           NFields<dim,spacedim> (preconditioner_data,
-                                  *fe, quadrature_formula,
-                                  *mapping,
-                                  energy.get_jacobian_preconditioner_flags(),
-                                  face_quadrature_formula,
-                                  UpdateFlags(0)),
+           Scratch (*mapping,
+                    *fe, quadrature_formula,
+                    energy.get_jacobian_preconditioner_flags(),
+                    face_quadrature_formula,
+                    UpdateFlags(0)),
            Assembly::CopyData::
            NFieldsPreconditioner<dim,spacedim> (*fe));
 
@@ -624,12 +612,8 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         distributed_solution,
-                         distributed_solution_dot, t, 0.0,
-                         residual_data);
+  energy.initialize_data(distributed_solution,
+                         distributed_solution_dot, t, 0.0);
 
   dst = 0;
 
@@ -642,7 +626,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                         Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                         Scratch &scratch,
                          SystemCopyData &data)
   {
     cell->get_dof_indices (data.local_dof_indices);
@@ -660,10 +644,9 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Scratch(residual_data,
+       Scratch(*mapping,
                *fe,
                quadrature_formula,
-               *mapping,
                energy.get_jacobian_flags(),
                face_quadrature_formula,
                energy.get_face_flags()),

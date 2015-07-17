@@ -18,14 +18,16 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include "fe_values_cache.h"
 
 template <int dim>
 class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >
 {
-  typedef Assembly::Scratch::NFields<dim,dim> Scratch;
+public:
+  typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
-public:
+  typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
   StokesDerivedInterface();
@@ -70,8 +72,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &) const;
+                                        LinearOperator<VEC> &,
+                                        LinearOperator<VEC> &) const;
 
 private:
   double eta;
@@ -145,8 +147,8 @@ void StokesDerivedInterface<dim>::prepare_preconditioner_data(const typename DoF
     CopyPreconditioner    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
-  auto &sol_dot = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution_dot");
+  auto &sol = scratch.anydata.template get<const VEC> ("solution");
+  auto &sol_dot = scratch.anydata.template get<const VEC> ("solution_dot");
   auto &t = scratch.anydata.template get<double> ("t");
   auto &alpha = scratch.anydata.template get<double> ("alpha");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
@@ -173,8 +175,8 @@ void StokesDerivedInterface<dim>::prepare_system_data(const typename DoFHandler<
                                                       CopySystem    &data) const
 {
   std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
-  auto &sol_dot = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution_dot");
+  auto &sol = scratch.anydata.template get<const VEC> ("solution");
+  auto &sol_dot = scratch.anydata.template get<const VEC> ("solution_dot");
   auto &alpha = scratch.anydata.template get<const double> ("alpha");
   auto &t = scratch.anydata.template get<const double> ("t");
   auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
@@ -275,8 +277,8 @@ void
 StokesDerivedInterface<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                                       const TrilinosWrappers::BlockSparseMatrix &matrix,
                                                       const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                                      LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
-                                                      LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
+                                                      LinearOperator<VEC> &system_op,
+                                                      LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -319,16 +321,16 @@ StokesDerivedInterface<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+  system_op  = block_operator<2, 2, VEC >({{
       {{ A, Bt }} ,
       {{ B, ZeroP }}
     }
   });
 
 
-  //const auto S = linear_operator<TrilinosWrappers::MPI::BlockVector>(matrix);
+  //const auto S = linear_operator<VEC>(matrix);
 
-  prec_op = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+  prec_op = block_operator<2, 2, VEC >({{
       {{ P00, P01 }} ,
       {{ P10, P11 }}
     }

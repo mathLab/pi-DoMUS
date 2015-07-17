@@ -22,10 +22,12 @@
 template <int dim, int spacedim>
 class NeoHookeanTwoFieldsInterface : public ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >
 {
-  typedef Assembly::Scratch::NFields<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
 public:
+
+  typedef FEValuesCache<dim,spacedim> Scratch;
+  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
   NeoHookeanTwoFieldsInterface();
@@ -51,8 +53,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &) const;
+                                        LinearOperator<VEC> &,
+                                        LinearOperator<VEC> &) const;
 
 private:
   double E;
@@ -79,20 +81,17 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::NeoHookeanTwoFieldsInterface() :
 template <int dim, int spacedim>
 template<typename Number>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &scratch,
+    Scratch &fe_cache,
     CopyPreconditioner &data,
     Number &energy) const
 {
-  auto &d = scratch.anydata;
-  auto &sol = d.template get<const VEC> ("solution");
-  Number alpha = d.template get<const double> ("alpha");
-
-  auto &fe_cache = scratch.fe_cache;
+  Number alpha = this->alpha;
 
   fe_cache.reinit(cell);
-  auto &JxW = fe_cache.get_JxW_values();
 
-  fe_cache.cache_local_solution_vector("solution", sol, alpha);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+
+  auto &JxW = fe_cache.get_JxW_values();
 
   const FEValuesExtractors::Vector displacement(0);
   const FEValuesExtractors::Scalar pressure(dim);
@@ -115,23 +114,16 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typ
 template <int dim, int spacedim>
 template<typename Number>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &scratch,
+    Scratch &fe_cache,
     CopySystem &data,
     Number &energy) const
 {
-  auto &d = scratch.anydata;
-  auto &sol = d.template get<const VEC> ("solution");
-  auto &sol_dot = d.template get<const VEC> ("solution_dot");
-  Number alpha = d.template get<const double> ("alpha");
-  auto &t = d.template get<const double> ("t");
-
-  auto &fe_cache = scratch.fe_cache;
+  Number alpha = this->alpha;
 
   fe_cache.reinit(cell);
-  auto &JxW = fe_cache.get_JxW_values();
 
-  fe_cache.cache_local_solution_vector("solution", sol, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
 
   const FEValuesExtractors::Vector displacement(0);
@@ -141,6 +133,8 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
 
   const FEValuesExtractors::Scalar pressure(dim);
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
+
+  auto &JxW = fe_cache.get_JxW_values();
 
   const unsigned int n_q_points = ps.size();
 
@@ -160,7 +154,6 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
 
       Number psi = (mu/2.)*(Ic-dim) +p*(J-1.);
       energy += (u*u_dot + psi)*JxW[q];
-
     }
 }
 
@@ -186,8 +179,8 @@ void
 NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
     const TrilinosWrappers::BlockSparseMatrix &matrix,
     const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-    LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
-    LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
+    LinearOperator<VEC> &system_op,
+    LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -230,16 +223,16 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHa
   auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+  system_op  = block_operator<2, 2, VEC >({{
       {{ A, Bt }} ,
       {{ B, ZeroP }}
     }
   });
 
 
-  //const auto S = linear_operator<TrilinosWrappers::MPI::BlockVector>(matrix);
+  //const auto S = linear_operator<VEC>(matrix);
 
-  prec_op = block_operator<2, 2, TrilinosWrappers::MPI::BlockVector >({{
+  prec_op = block_operator<2, 2, VEC >({{
       {{ P00, P01 }} ,
       {{ P10, P11 }}
     }

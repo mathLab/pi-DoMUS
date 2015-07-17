@@ -52,7 +52,7 @@ class NFieldsProblem : public ParameterAcceptor, public OdeArgument<VEC>
 
   typedef typename Assembly::CopyData::NFieldsSystem<dim,spacedim> SystemCopyData;
   typedef typename Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> PreconditionerCopyData;
-  typedef typename Assembly::Scratch::NFields<dim,spacedim> Scratch;
+  typedef FEValuesCache<dim,spacedim> Scratch;
 
   // This is a class required to make tests
   template<int fdim, int fspacedim, int fn_components>
