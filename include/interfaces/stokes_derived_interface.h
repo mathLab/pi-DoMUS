@@ -144,7 +144,7 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
       Number psi = (eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u);
-      energy += psi*JxW[q];
+      energy += (u*us_dot[q] + psi)*JxW[q];
     }
 }
 

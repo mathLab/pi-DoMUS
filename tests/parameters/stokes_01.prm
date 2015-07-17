@@ -45,7 +45,7 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=2*pi^3*cos(pi*x)*cos(pi*y)*t; 2*pi^3*sin(pi*x)*sin(pi*y)*t; 0
+  set IDs and expressions     = 0=2*pi^3*cos(pi*x)*cos(pi*y); 2*pi^3*sin(pi*x)*sin(pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
