@@ -75,7 +75,7 @@ template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::CompressibleNeoHookeanInterface() :
   ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
       "FESystem[FE_Q(1)^d]",
-      "u,u,u", "1", "1")
+      "u,u,u", "1", "1","1")
 {};
 
 
@@ -195,7 +195,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::preconditioner_energy(const 
 
   fe_cache.reinit(cell);
 
-  fe_cache.set_solution_vector("solution", sol, alpha);
+  fe_cache.cache_local_solution_vector("solution", sol, alpha);
 
   const FEValuesExtractors::Vector displacement(0);
   auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
@@ -229,14 +229,14 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 
   fe_cache.reinit(cell);
 
-  fe_cache.set_solution_vector("solution", sol, alpha);
-  fe_cache.set_solution_vector("solution_dot", sol_dot, alpha);
+  fe_cache.cache_local_solution_vector("solution", sol, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
 
   const FEValuesExtractors::Vector displacement(0);
   auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", displacement, alpha);
-  auto &Fs = fe_cache.get_F_values("solution", "Fu", displacement, alpha);
+  auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   const unsigned int n_q_points = us.size();
 
@@ -246,7 +246,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
     {
 
       const Tensor <1, dim, Number> &u = us[q];
-      const Tensor <1, dim, Number> &u_dot = us[q];
+      const Tensor <1, dim, Number> &u_dot = us_dot[q];
       const Tensor <2, dim, Number> &F = Fs[q];
       const Tensor<2, dim, Number> C = transpose(F)*F;
 
@@ -266,7 +266,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
 {
-  ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }
@@ -274,6 +274,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (Paramete
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::parse_parameters_call_back ()
 {
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::parse_parameters_call_back();
   mu = E/(2.0*(1.+nu));
   lambda = (E *nu)/((1.+nu)*(1.-2.*nu));
 }

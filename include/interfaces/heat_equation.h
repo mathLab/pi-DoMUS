@@ -69,8 +69,8 @@ public:
 
     fe_cache.reinit(cell);
 
-    fe_cache.set_solution_vector("solution", sol, alpha);
-    fe_cache.set_solution_vector("solution_dot", sol_dot, alpha);
+    fe_cache.cache_local_solution_vector("solution", sol, alpha);
+    fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
     this->fix_solution_dot_derivative(fe_cache, alpha);
 
     auto &JxW = fe_cache.get_JxW_values();
@@ -79,7 +79,7 @@ public:
 
     auto &us = fe_cache.get_values("solution", "u", scalar, alpha);
     auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", scalar, alpha);
-    auto &grad_us = fe_cache.get_grad_values("solution", "gradu", scalar, alpha);
+    auto &grad_us = fe_cache.get_gradients("solution", "gradu", scalar, alpha);
 
     energy = 0;
     for (unsigned int q=0; q<us.size(); ++q)

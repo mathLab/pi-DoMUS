@@ -50,6 +50,7 @@
 #include "parsed_mapped_functions.h"
 #include "parsed_dirichlet_bcs.h"
 #include "assembly.h"
+#include "utilities.h"
 
 template <int dim,int spacedim=dim, int n_components=1>
 class Interface : public ParsedFiniteElement<dim,spacedim>
@@ -64,16 +65,22 @@ public:
             const std::string &default_fe="FE_Q(1)",
             const std::string &default_component_names="u",
             const std::string &default_coupling="",
-            const std::string &default_preconditioner_coupling="") :
+            const std::string &default_preconditioner_coupling="",
+            const std::string &default_differential_components="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
     forcing_terms("Forcing terms", default_component_names, "0=ALL"),
     neumann_bcs("Neumann boundary conditions", default_component_names, "0=ALL"),
-    dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL")
+    dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
+    str_diff_comp(default_differential_components)
   {};
 
+  virtual void declare_parameters (ParameterHandler &prm);
+  virtual void parse_parameters_call_back ();
+  const std::vector<unsigned int> get_differential_blocks() const;
+
   /**
-   * update time il all parsed mapped functions
+   * update time of all parsed mapped functions
    */
   virtual void set_time (const double &t) const
   {
@@ -92,7 +99,13 @@ public:
   virtual void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                                     ConstraintMatrix &constraints) const
   {
-    dirichlet_bcs.interpolate_boundary_values(dof_handler,constraints);
+    if (this->operator()()->has_support_points())
+      dirichlet_bcs.interpolate_boundary_values(dof_handler,constraints);
+    else
+      {
+        const QGauss<dim-1> quad(this->operator()()->degree+1);
+        dirichlet_bcs.project_boundary_values(dof_handler,quad,constraints);
+      }
   };
 
   /**
@@ -117,7 +130,7 @@ public:
           {
 
             scratch.fe_cache.reinit(cell, face);
-            scratch.fe_cache.set_solution_vector("solution", solution, dummy);
+            scratch.fe_cache.cache_local_solution_vector("solution", solution, dummy);
 
             auto &vars = scratch.fe_cache.get_values("solution", dummy);
             auto &q_points = scratch.fe_cache.get_quadrature_points();
@@ -160,7 +173,7 @@ public:
         auto &solution = scratch.anydata.template get<const VEC>("solution");
 
         // scratch.fe_cache.reinit(cell); // It is always called outside
-        scratch.fe_cache.set_solution_vector("solution", solution, dummy);
+        scratch.fe_cache.cache_local_solution_vector("solution", solution, dummy);
 
         auto &vars = scratch.fe_cache.get_values("solution", dummy);
         auto &q_points = scratch.fe_cache.get_quadrature_points();
@@ -480,6 +493,8 @@ protected:
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
   mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
   mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
+  std::string str_diff_comp;
+  std::vector<unsigned int> _diff_comp;
 
 
 };
@@ -502,6 +517,28 @@ void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &d
   d.add_ref(solution_dot, "solution_dot");
   d.add_copy(t, "t");
   d.add_copy(alpha, "alpha");
+}
+
+template<int dim, int spacedim, int n_components>
+void Interface<dim,spacedim,n_components>::declare_parameters(ParameterHandler &prm)
+{
+  ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
+  this->add_parameter(prm, &_diff_comp, "Block of differential components", str_diff_comp,
+                      Patterns::List(Patterns::Integer(0,1),this->n_blocks(),this->n_blocks(),";"),
+                      "Set the blocks of differential components to 1"
+                      "0 for algebraic");
+}
+
+template<int dim, int spacedim, int n_components>
+void Interface<dim,spacedim,n_components>::parse_parameters_call_back()
+{
+  ParsedFiniteElement<dim,spacedim>::parse_parameters_call_back();
+}
+
+template<int dim, int spacedim, int n_components>
+const std::vector<unsigned int> Interface<dim,spacedim,n_components>::get_differential_blocks() const
+{
+  return _diff_comp;
 }
 
 #endif

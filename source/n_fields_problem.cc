@@ -208,8 +208,18 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
 
   if (first_run)
     {
-      VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
-      VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+      if (fe->has_support_points())
+        {
+          VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
+          VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+        }
+      else
+        {
+          const QGauss<dim> quadrature_formula(fe->degree+1);
+          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+        }
+
     }
 
   // Store a global partitioning to be used anywhere we need to know
@@ -761,7 +771,10 @@ NFieldsProblem<dim, spacedim, n_components>::differential_components() const
 {
   static VEC diff_comps;
   diff_comps.reinit(solution);
-  diff_comps = 1;
+  std::vector<unsigned int> block_diff = energy.get_differential_blocks();
+  for (unsigned int i=0; i<block_diff.size(); ++i)
+    diff_comps.block(i) = block_diff[i];
+
   set_constrained_dofs_to_zero(diff_comps);
   return diff_comps;
 }
