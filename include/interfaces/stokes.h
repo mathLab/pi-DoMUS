@@ -1,5 +1,5 @@
-#ifndef _stokes_derived_interface_h_
-#define _stokes_derived_interface_h_
+#ifndef _stokes_h_
+#define _stokes_h_
 
 #include "conservative_interface.h"
 #include "parsed_function.h"
@@ -21,7 +21,7 @@
 #include "fe_values_cache.h"
 
 template <int dim>
-class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >
+class Stokes : public ConservativeInterface<dim,dim,dim+1, Stokes<dim> >
 {
 public:
   typedef FEValuesCache<dim,dim> Scratch;
@@ -30,7 +30,7 @@ public:
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
-  StokesDerivedInterface();
+  Stokes();
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -59,8 +59,6 @@ public:
 
 private:
   double eta;
-  double rho;
-  double nu;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -69,22 +67,22 @@ private:
 };
 
 template<int dim>
-StokesDerivedInterface<dim>::StokesDerivedInterface() :
-  ConservativeInterface<dim,dim,dim+1,StokesDerivedInterface<dim> >("Stokes Interface",
-      "FESystem[FE_Q(2)^d-FE_Q(1)]",
-      "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
+Stokes<dim>::Stokes() :
+  ConservativeInterface<dim,dim,dim+1,Stokes<dim> >("Stokes",
+                                                    "FESystem[FE_Q(2)^d-FE_Q(1)]",
+                                                    "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
 {};
 
 
 template <int dim>
 template<typename Number>
-void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                        Scratch &fe_cache,
-                                                        CopyPreconditioner &data,
-                                                        Number &energy) const
+void Stokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                        Scratch &fe_cache,
+                                        CopyPreconditioner &data,
+                                        Number &energy) const
 {
-	Number alpha = this->alpha;
-	fe_cache.reinit(cell);
+  Number alpha = this->alpha;
+  fe_cache.reinit(cell);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
 
   const FEValuesExtractors::Vector velocity(0);
@@ -108,10 +106,10 @@ void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandle
 
 template <int dim>
 template<typename Number>
-void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                Scratch &fe_cache,
-                                                CopySystem &data,
-                                                Number &energy) const
+void Stokes<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                Scratch &fe_cache,
+                                CopySystem &data,
+                                Number &energy) const
 {
   Number alpha = this->alpha;
 
@@ -139,37 +137,38 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
     {
 
       const Tensor <1, dim, Number> &u = us[q];
+      const Tensor <1, dim, Number> &u_dot = us_dot[q];
       const Number &div_u = div_us[q];
       const Number &p = ps[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
-      Number psi = (eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u);
+      Number psi = u_dot*u+eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u;
       energy += psi*JxW[q];
     }
 }
 
 
 template <int dim>
-void StokesDerivedInterface<dim>::declare_parameters (ParameterHandler &prm)
+void Stokes<dim>::declare_parameters (ParameterHandler &prm)
 {
-  ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >::declare_parameters(prm);
+  ConservativeInterface<dim,dim,dim+1, Stokes<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
 }
 
 template <int dim>
-void StokesDerivedInterface<dim>::parse_parameters_call_back ()
+void Stokes<dim>::parse_parameters_call_back ()
 {
-  ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >::parse_parameters_call_back();
+  ConservativeInterface<dim,dim,dim+1, Stokes<dim> >::parse_parameters_call_back();
 }
 
 
 template <int dim>
 void
-StokesDerivedInterface<dim>::compute_system_operators(const DoFHandler<dim> &dh,
-                                                      const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                                      const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                                      LinearOperator<VEC> &system_op,
-                                                      LinearOperator<VEC> &prec_op) const
+Stokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
+                                      const TrilinosWrappers::BlockSparseMatrix &matrix,
+                                      const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                      LinearOperator<VEC> &system_op,
+                                      LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -229,6 +228,6 @@ StokesDerivedInterface<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 }
 
 
-template class StokesDerivedInterface <2>;
+template class Stokes <2>;
 
 #endif
