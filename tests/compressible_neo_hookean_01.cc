@@ -10,6 +10,7 @@ int main (int argc, char *argv[])
                                                       numbers::invalid_unsigned_int);
 
   initlog();
+  deallog.threshold_double(1.e-2);
 
   const int dim = 3;
   const int spacedim = 3;

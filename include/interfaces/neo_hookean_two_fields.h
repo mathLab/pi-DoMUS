@@ -73,7 +73,7 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::NeoHookeanTwoFieldsInterface() :
   ConservativeInterface<dim,spacedim,dim+1,NeoHookeanTwoFieldsInterface<dim,spacedim> >("NeoHookean Interface",
       "FESystem[FE_Q(2)^d-FE_DGP(1)]",
       "u,u,u,p", "1,1; 1,0", "1,0; 0,1",
-      "1;0")
+      "1,0")
 {};
 
 
@@ -114,9 +114,9 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typ
 template <int dim, int spacedim>
 template<typename Number>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &fe_cache,
-    CopySystem &data,
-    Number &energy) const
+                                                               Scratch &fe_cache,
+																															 CopySystem &data,
+																															 Number &energy) const
 {
   Number alpha = this->alpha;
 

@@ -24,7 +24,7 @@ template <int dim>
 class StokesDerivedInterface : public ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >
 {
 public:
-  typedef FEValuesCache<dim,spacedim> Scratch;
+  typedef FEValuesCache<dim,dim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
@@ -32,30 +32,12 @@ public:
   /* specific and useful functions for this very problem */
   StokesDerivedInterface();
 
-  virtual void declare_parameters (ParameterHandler &prm);
-
-  template <typename Number>
-  void initialize_preconditioner_data(SAKData &d) const;
-
-
-  template <typename Number>
-  void initialize_system_data(SAKData &d) const;
-
+  void declare_parameters (ParameterHandler &prm);
+  void parse_parameters_call_back ();
 
   /* these functions MUST have the follwowing names
    *  because they are called by the ConservativeInterface class
    */
-  template <typename Number>
-  void prepare_preconditioner_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
-                                   Scratch &scratch,
-                                   CopyPreconditioner    &data) const;
-
-  template <typename Number>
-  void prepare_system_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
-                           Scratch &scratch,
-                           CopySystem    &data) const;
-
-
 
   template<typename Number>
   void preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &,
@@ -90,133 +72,29 @@ template<int dim>
 StokesDerivedInterface<dim>::StokesDerivedInterface() :
   ConservativeInterface<dim,dim,dim+1,StokesDerivedInterface<dim> >("Stokes Interface",
       "FESystem[FE_Q(2)^d-FE_Q(1)]",
-      "u,u,p", "1,1; 1,0", "1,0; 0,1")
+      "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
 {};
 
-
-template<int dim>
-template<typename Number>
-void StokesDerivedInterface<dim>::initialize_preconditioner_data(SAKData &d) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &n_q_points = d.get<unsigned int >("n_q_points");
-  auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
-
-  std::vector<Number> independent_local_dof_values (dofs_per_cell);
-  std::vector <Number> ps(n_q_points);
-  std::vector <Tensor <2, dim, Number> > grad_us(n_q_points);
-
-  d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
-
-  d.add_copy(grad_us, "grad_us"+suffix);
-  d.add_copy(ps, "ps"+suffix);
-
-}
-
-template <int dim>
-template<typename Number>
-void StokesDerivedInterface<dim>::initialize_system_data(SAKData &d) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &n_q_points = d.get<unsigned int >("n_q_points");
-  auto &n_face_q_points = d.get<unsigned int >("n_face_q_points");
-  auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
-
-  std::vector<Number> independent_local_dof_values (dofs_per_cell);
-  std::vector <Tensor <1, dim, Number> > us(n_q_points);
-  std::vector <Tensor <2, dim, Number> > sym_grad_us(n_q_points);
-  std::vector <Number> div_us(n_q_points);
-  std::vector <Number> ps(n_q_points);
-  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim+1));
-  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim+1));
-
-  d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
-  d.add_copy(us, "us"+suffix);
-  d.add_copy(ps, "ps"+suffix);
-  d.add_copy(div_us, "div_us"+suffix);
-  d.add_copy(sym_grad_us, "sym_grad_us"+suffix);
-  d.add_copy(vars, "vars"+suffix);
-  d.add_copy(vars_face, "vars_face"+suffix);
-
-}
-
-template <int dim>
-template <typename Number>
-void StokesDerivedInterface<dim>::prepare_preconditioner_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
-    Scratch &scratch,
-    CopyPreconditioner    &data) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const VEC> ("solution");
-  auto &sol_dot = scratch.anydata.template get<const VEC> ("solution_dot");
-  auto &t = scratch.anydata.template get<double> ("t");
-  auto &alpha = scratch.anydata.template get<double> ("alpha");
-  auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("grad_us"+suffix);
-
-  scratch.fe_values.reinit (cell);
-
-  DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-  const FEValuesExtractors::Vector velocities(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-
-  DOFUtilities::get_grad_values(scratch.fe_values, independent_local_dof_values, velocities, grad_us);
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, pressure, ps);
-
-}
-
-
-template <int dim>
-template <typename Number>
-void StokesDerivedInterface<dim>::prepare_system_data(const typename DoFHandler<dim,dim>::active_cell_iterator &cell,
-                                                      Scratch &scratch,
-                                                      CopySystem    &data) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const VEC> ("solution");
-  auto &sol_dot = scratch.anydata.template get<const VEC> ("solution_dot");
-  auto &alpha = scratch.anydata.template get<const double> ("alpha");
-  auto &t = scratch.anydata.template get<const double> ("t");
-  auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-  auto &div_us = scratch.anydata.template get<std::vector <Number> >("div_us"+suffix);
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
-  auto &sym_grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("sym_grad_us"+suffix);
-
-  scratch.fe_values.reinit (cell);
-
-  DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-  const FEValuesExtractors::Vector velocities(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, velocities, us);
-  DOFUtilities::get_div_values(scratch.fe_values, independent_local_dof_values, velocities, div_us);
-  DOFUtilities::get_sym_grad_values(scratch.fe_values, independent_local_dof_values, velocities, sym_grad_us);
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, pressure, ps);
-
-}
 
 template <int dim>
 template<typename Number>
 void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                        Scratch &scratch,
+                                                        Scratch &fe_cache,
                                                         CopyPreconditioner &data,
                                                         Number &energy) const
 {
-  std::string suffix = typeid(Number).name();
+	Number alpha = this->alpha;
+	fe_cache.reinit(cell);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
 
-  if (scratch.anydata.have("ps"+suffix) == false)
-    initialize_preconditioner_data<Number>(scratch.anydata);
-
-  prepare_preconditioner_data<Number>(cell, scratch, data);
-
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("grad_us"+suffix);
+  const FEValuesExtractors::Vector velocity(0);
+  const FEValuesExtractors::Scalar pressure(dim);
+  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
+  auto &grad_us = fe_cache.get_gradients("solution","grad_u", velocity, alpha);
 
   const unsigned int n_q_points = ps.size();
 
+  auto &JxW = fe_cache.get_JxW_values();
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
@@ -224,28 +102,35 @@ void StokesDerivedInterface<dim>::preconditioner_energy(const typename DoFHandle
       const Tensor <2, dim, Number> &grad_u = grad_us[q];
 
       energy += (eta*.5*scalar_product(grad_u,grad_u) +
-                 (1./eta)*0.5*p*p)*scratch.fe_values.JxW(q);
+                 (1./eta)*0.5*p*p)*JxW[q];
     }
 }
 
 template <int dim>
 template<typename Number>
 void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                Scratch &scratch,
+                                                Scratch &fe_cache,
                                                 CopySystem &data,
                                                 Number &energy) const
 {
-  std::string suffix = typeid(Number).name();
+  Number alpha = this->alpha;
 
-  if (scratch.anydata.have("ps"+suffix) == false)
-    initialize_system_data<Number>(scratch.anydata);
+  fe_cache.reinit(cell);
 
-  prepare_system_data<Number>(cell, scratch, data);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+  this->fix_solution_dot_derivative(fe_cache, alpha);
 
-  auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
-  auto &div_us = scratch.anydata.template get<std::vector <Number> > ("div_us"+suffix);
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &sym_grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("sym_grad_us"+suffix);
+  const FEValuesExtractors::Vector velocity(0);
+  auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
+  auto &div_us = fe_cache.get_divergences("solution", "u", velocity, alpha);
+  auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "u", velocity, alpha);
+
+  const FEValuesExtractors::Scalar pressure(dim);
+  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
+
+  auto &JxW = fe_cache.get_JxW_values();
 
   const unsigned int n_q_points = ps.size();
 
@@ -259,7 +144,7 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
       Number psi = (eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u);
-      energy += psi*scratch.fe_values.JxW(q);
+      energy += psi*JxW[q];
     }
 }
 
@@ -267,8 +152,14 @@ void StokesDerivedInterface<dim>::system_energy(const typename DoFHandler<dim>::
 template <int dim>
 void StokesDerivedInterface<dim>::declare_parameters (ParameterHandler &prm)
 {
-  ParsedFiniteElement<dim,dim>::declare_parameters(prm);
+  ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
+}
+
+template <int dim>
+void StokesDerivedInterface<dim>::parse_parameters_call_back ()
+{
+  ConservativeInterface<dim,dim,dim+1, StokesDerivedInterface<dim> >::parse_parameters_call_back();
 }
 
 
@@ -316,7 +207,7 @@ StokesDerivedInterface<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  auto P01 = null_operator(Bt.reinit_range_vector);
+  auto P01 = null_operator(Bt);
   auto P10 = Schur_inv * B * A_inv;
   auto P11 = -1 * Schur_inv;
 

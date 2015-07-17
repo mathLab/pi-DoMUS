@@ -69,7 +69,7 @@ public:
             const std::string &default_component_names="u",
             const std::string &default_coupling="",
             const std::string &default_preconditioner_coupling="",
-            const std::string &default_differential_components="1") :
+            const std::string &default_differential_components="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components, default_coupling, default_preconditioner_coupling),
     forcing_terms("Forcing terms", default_component_names, "0=ALL"),
@@ -520,7 +520,7 @@ void Interface<dim,spacedim,n_components>::declare_parameters(ParameterHandler &
 {
   ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
   this->add_parameter(prm, &_diff_comp, "Block of differential components", str_diff_comp,
-                      Patterns::List(Patterns::Integer(0,1),this->n_blocks(),this->n_blocks(),";"),
+                      Patterns::List(Patterns::Integer(0,1),this->n_blocks(),this->n_blocks(),","),
                       "Set the blocks of differential components to 1"
                       "0 for algebraic");
 }

@@ -37,7 +37,7 @@ public:
   HeatEquation() :
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
                                                         "FESystem[FE_Q(2)]",
-                                                        "u", "1", "0")
+                                                        "u", "1", "0","1")
   {};
 
 
