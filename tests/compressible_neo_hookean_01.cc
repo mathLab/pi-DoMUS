@@ -16,7 +16,7 @@ int main (int argc, char *argv[])
 
   CompressibleNeoHookeanInterface<dim,spacedim> energy;
   NFieldsProblem<dim,spacedim,dim> n_problem (energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_01.prm", "used_parameters.prm");
 
 
   n_problem.run ();

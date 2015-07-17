@@ -1,0 +1,886 @@
+
+DEAL:FGMRES::Starting value 0.375000
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00386925
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00526578
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00666197
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00410490
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00822592
+DEAL:FGMRES::Convergence step 4 value 9.42918e-11
+DEAL:FGMRES::Starting value 0.0351371
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00551946
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00369201
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00280696
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00366019
+DEAL:FGMRES::Convergence step 3 value 1.00907e-09
+DEAL:FGMRES::Starting value 0.00451667
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 6 value 0.00717315
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00347092
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00164876
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00231957
+DEAL:FGMRES::Convergence step 3 value 1.29191e-10
+DEAL:FGMRES::Starting value 0.000698026
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 6 value 0.00762419
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 6 value 0.00805288
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00541087
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00576440
+DEAL:FGMRES::Convergence step 3 value 1.55712e-10
+DEAL:FGMRES::Starting value 0.000103180
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00686357
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 6 value 0.00492470
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00554754
+DEAL:FGMRES::Convergence step 2 value 3.18642e-09
+DEAL:FGMRES::Starting value 1.56416e-05
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00953388
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 6 value 0.00906099
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00985135
+DEAL:FGMRES::Convergence step 2 value 1.16792e-09
+DEAL:FGMRES::Starting value 2.34586e-06
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00359775
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00903891
+DEAL:FGMRES::Convergence step 1 value 8.43549e-09
+DEAL:FGMRES::Starting value 2.34586e-06
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00503956
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00672530
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00230840
+DEAL:FGMRES::Convergence step 2 value 7.48999e-11
+DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.344270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450952
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00558070
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00599799
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00401198
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00603743
+DEAL:FGMRES::Convergence step 4 value 1.09198e-10
+DEAL:FGMRES::Starting value 0.344266
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450943
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00397860
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00945854
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00874827
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00742780
+DEAL:FGMRES::Convergence step 4 value 3.18179e-10
+DEAL:FGMRES::Starting value 0.344274
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450960
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00509833
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00962409
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.000858542
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00488820
+DEAL:FGMRES::Convergence step 4 value 4.29605e-11
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00352125
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00411851
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00250515
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00405360
+DEAL:FGMRES::Convergence step 4 value 3.46520e-11
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00358287
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00462742
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00359550
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00969826
+DEAL:FGMRES::Convergence step 4 value 4.37063e-11
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00347489
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00341285
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00278940
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00897033
+DEAL:FGMRES::Convergence step 4 value 3.38925e-11
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00341294
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00272917
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00415510
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00173893
+DEAL:FGMRES::Convergence step 4 value 3.77440e-11
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00339999
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00965100
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00457664
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00830661
+DEAL:FGMRES::Convergence step 4 value 1.56412e-10
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00364356
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00620265
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00929765
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00747309
+DEAL:FGMRES::Convergence step 4 value 1.69203e-10
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450946
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00349688
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00413370
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00951806
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00298004
+DEAL:FGMRES::Convergence step 4 value 1.47293e-10
+DEAL:FGMRES::Starting value 0.344268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450947
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00333879
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00809199
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00250543
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00719330
+DEAL:FGMRES::Convergence step 4 value 7.24659e-11
+DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.344270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450951
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00827956
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00894268
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00503815
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00675892
+DEAL:FGMRES::Convergence step 4 value 3.38997e-10
+DEAL:PrepareOutput::Will write on file: ./solution.0.1.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.344270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450951
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00324655
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00321270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00505142
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00786013
+DEAL:FGMRES::Convergence step 4 value 6.50050e-11
+DEAL:PrepareOutput::Will write on file: ./solution.0.2.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.3.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.344270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450952
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00327739
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00890849
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.000901801
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 9 value 0.00646723
+DEAL:FGMRES::Convergence step 4 value 2.69753e-11
+DEAL:PrepareOutput::Will write on file: ./solution.0.4.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.5.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.6.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.7.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.344270
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 7 value 0.00450951
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00556720
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 8 value 0.00590238
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00416434
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 10 value 0.00457992
+DEAL:FGMRES::Convergence step 4 value 1.14921e-10
+DEAL:PrepareOutput::Will write on file: ./solution.0.8.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.9.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.271334
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00871137
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00921327
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00914745
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00927863
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00781366
+DEAL:FGMRES::Convergence step 4 value 1.49407e-09
+DEAL:FGMRES::Starting value 0.269326
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00818857
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00980935
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00550351
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00772032
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00659707
+DEAL:FGMRES::Convergence step 4 value 7.52780e-10
+DEAL:FGMRES::Starting value 0.269321
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00815006
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00902503
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00687029
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00854766
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00850646
+DEAL:FGMRES::Convergence step 4 value 9.20917e-10
+DEAL:FGMRES::Starting value 0.269320
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00814653
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00945806
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00532665
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00957138
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00751080
+DEAL:FGMRES::Convergence step 4 value 8.26700e-10
+DEAL:FGMRES::Starting value 0.269320
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00814523
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00919799
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00618152
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00571238
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00768948
+DEAL:FGMRES::Convergence step 4 value 6.59390e-10
+DEAL:FGMRES::Starting value 0.269019
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00807171
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00859702
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00607627
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00840612
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00886904
+DEAL:FGMRES::Convergence step 4 value 7.81773e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862569
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00936502
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00825002
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00947150
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00700984
+DEAL:FGMRES::Convergence step 4 value 1.28845e-09
+DEAL:FGMRES::Starting value 0.270989
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862882
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00896343
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00493979
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00651358
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00825345
+DEAL:FGMRES::Convergence step 4 value 4.40949e-10
+DEAL:FGMRES::Starting value 0.270989
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00864373
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00888080
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00432126
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00788611
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00516649
+DEAL:FGMRES::Convergence step 4 value 4.16834e-10
+DEAL:FGMRES::Starting value 0.270992
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00939165
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00991154
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00865002
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00934599
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00997625
+DEAL:FGMRES::Convergence step 4 value 1.73247e-09
+DEAL:FGMRES::Starting value 0.270995
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00869564
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00866691
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00521181
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00906277
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00903611
+DEAL:FGMRES::Convergence step 4 value 6.42950e-10
+DEAL:FGMRES::Starting value 0.270991
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00863082
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00906260
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00531651
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00812571
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00792332
+DEAL:FGMRES::Convergence step 4 value 6.80301e-10
+DEAL:FGMRES::Starting value 0.270989
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00863483
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00905148
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00542862
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00851335
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00989318
+DEAL:FGMRES::Convergence step 4 value 7.03619e-10
+DEAL:FGMRES::Starting value 0.270988
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00866245
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00887323
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00519214
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00645627
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00637657
+DEAL:FGMRES::Convergence step 4 value 4.87411e-10
+DEAL:FGMRES::Starting value 0.270988
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862795
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00902895
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00501713
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00844512
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00919391
+DEAL:FGMRES::Convergence step 4 value 6.67459e-10
+DEAL:FGMRES::Starting value 0.270989
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00933444
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00829957
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00899185
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00588925
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00998078
+DEAL:FGMRES::Convergence step 4 value 1.03254e-09
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00916508
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00882149
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00669903
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00845324
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00658648
+DEAL:FGMRES::Convergence step 4 value 1.06572e-09
+DEAL:FGMRES::Starting value 0.270989
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00881822
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00998473
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00978155
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00362914
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00751354
+DEAL:FGMRES::Convergence step 4 value 7.00705e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00872055
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00885215
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00572646
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00818660
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00600286
+DEAL:FGMRES::Convergence step 4 value 7.39036e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.1.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862595
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00903936
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00498354
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00881239
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00683798
+DEAL:FGMRES::Convergence step 4 value 6.91229e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.2.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.1.3.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00864312
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00896578
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00508098
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00974915
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00968548
+DEAL:FGMRES::Convergence step 4 value 7.75624e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.4.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.1.5.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.1.6.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.1.7.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862580
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00910697
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00506501
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862589
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00749841
+DEAL:FGMRES::Convergence step 4 value 6.99887e-10
+DEAL:PrepareOutput::Will write on file: ./solution.1.8.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.1.9.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862544
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00919776
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00390056
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00976341
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00962592
+DEAL:FGMRES::Convergence step 4 value 6.29913e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862544
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00919776
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00390056
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00976341
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00962592
+DEAL:FGMRES::Convergence step 4 value 6.29913e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862544
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00918985
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00471150
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00577256
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00802042
+DEAL:FGMRES::Convergence step 4 value 5.00225e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862779
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00906533
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00562099
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00910583
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00945723
+DEAL:FGMRES::Convergence step 4 value 7.98229e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00864831
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00902490
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00489747
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00633152
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00757747
+DEAL:FGMRES::Convergence step 4 value 4.44652e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00977916
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00829397
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00707232
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00490913
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00702993
+DEAL:FGMRES::Convergence step 4 value 6.40118e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00967560
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 16 value 0.00727430
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00896432
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 12 value 0.00924817
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00473088
+DEAL:FGMRES::Convergence step 4 value 1.09172e-09
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00864432
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00901629
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00562221
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00912955
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00717079
+DEAL:FGMRES::Convergence step 4 value 7.84810e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00863045
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00898663
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00511888
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00923695
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00592153
+DEAL:FGMRES::Convergence step 4 value 7.30109e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00863055
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00907327
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00559570
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00868013
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00988192
+DEAL:FGMRES::Convergence step 4 value 7.70438e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00864660
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00902954
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00551988
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00966483
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00906188
+DEAL:FGMRES::Convergence step 4 value 8.62353e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00863758
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00896245
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00503097
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 18 value 0.00596655
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 19 value 0.00597336
+DEAL:FGMRES::Convergence step 4 value 4.32855e-10
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862646
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00903072
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00514093
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00840998
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00836520
+DEAL:FGMRES::Convergence step 4 value 6.67415e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.0.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862578
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00910204
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00519219
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00890768
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00789722
+DEAL:FGMRES::Convergence step 4 value 7.45309e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.1.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862674
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00908609
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00544384
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00903724
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00960861
+DEAL:FGMRES::Convergence step 4 value 7.85543e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.2.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.2.3.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862962
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00909220
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00549760
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00936374
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00752468
+DEAL:FGMRES::Convergence step 4 value 8.30643e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.4.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.2.5.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.2.6.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.2.7.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:FGMRES::Starting value 0.270990
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00862564
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00909187
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 21 value 0.00530912
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 17 value 0.00874326
+DEAL:FGMRES:cg::Starting value 1.00000
+DEAL:FGMRES:cg::Convergence step 20 value 0.00830837
+DEAL:FGMRES::Convergence step 4 value 7.47257e-10
+DEAL:PrepareOutput::Will write on file: ./solution.2.8.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.2.9.vtu
+DEAL:AddingData::Added data: u,u,u
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
