@@ -17,7 +17,10 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include "assembly.h"
 
+
+typedef TrilinosWrappers::MPI::BlockVector VEC;
 
 template <int dim>
 class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim> >
@@ -27,6 +30,7 @@ class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim> >
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
 public:
 
+
   /* specific and useful functions for this very problem */
   HeatEquation() :
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
@@ -35,7 +39,7 @@ public:
   {};
 
 
-  virtual UpdateFlags get_preconditioner_flags() const
+  UpdateFlags get_preconditioner_flags() const
   {
     return update_default;
   };
@@ -56,91 +60,43 @@ public:
                      Number &energy) const
   {
     auto &d = scratch.anydata;
-
-    std::string suffix = typeid(Number).name();
-    std::string suffix_double = typeid(double).name();
-    auto &n_q_points = d.template get<unsigned int >("n_q_points");
-    auto &n_face_q_points = d.template get<unsigned int >("n_face_q_points");
-    auto &dofs_per_cell = d.template get<unsigned int >("dofs_per_cell");
-
-    if (!d.have("us"+suffix))
-      {
-        d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values"+suffix);
-        d.add_copy(std::vector<Number>(dofs_per_cell),"independent_local_dof_values_dot"+suffix);
-        d.add_copy(std::vector<Number>(n_q_points),"us"+suffix);
-        d.add_copy(std::vector<Number>(n_q_points),"us_dot"+suffix);
-        d.add_copy(std::vector <std::vector<Number> >(n_q_points,std::vector<Number>(1)), "vars"+suffix);
-        d.add_copy(std::vector <std::vector<Number> >(n_face_q_points,std::vector<Number>(1)),"vars_face"+suffix);
-        d.add_copy(std::vector<Tensor <1, dim, Number> >(n_q_points),"grad_us"+suffix);
-        d.add_copy(std::vector<double>(n_q_points),"fs");
-
-        d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
-        d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
-        d.add_copy(std::vector<double>(n_q_points),"us"+suffix_double);
-        d.add_copy(std::vector<double>(n_q_points),"us_dot"+suffix_double);
-        d.add_copy(std::vector<Tensor <1, dim, double> >(n_q_points),"grad_us"+suffix_double);
-      }
-
-    auto &sol = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
-    auto &sol_dot = d.template get<const TrilinosWrappers::MPI::BlockVector> ("solution_dot");
-    auto &alpha = d.template get<const double> ("alpha");
+    auto &sol = d.template get<const VEC> ("solution");
+    auto &sol_dot = d.template get<const VEC> ("solution_dot");
+    Number alpha = d.template get<const double> ("alpha");
     auto &t = d.template get<const double> ("t");
 
-    auto &independent_local_dof_values = d.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-    auto &independent_local_dof_values_dot_double = d.template get<std::vector<double> >("independent_local_dof_values_dot"+suffix_double);
-    auto &independent_local_dof_values_double = d.template get<std::vector<double> >("independent_local_dof_values"+suffix_double);
+    auto &fe_cache = scratch.fe_cache;
 
+    fe_cache.reinit(cell);
 
-    auto &us = d.template get<std::vector <Number> >("us"+suffix);
-    auto &us_dot = d.template get<std::vector <Number> >("us_dot"+suffix);
+    fe_cache.cache_local_solution_vector("solution", sol, alpha);
+    fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
+    this->fix_solution_dot_derivative(fe_cache, alpha);
 
-    auto &us_dot_double = d.template get<std::vector <double> >("us_dot"+suffix_double);
-    auto &us_double = d.template get<std::vector <double> >("us"+suffix_double);
-
-    auto &grad_us = d.template get<std::vector <Tensor <1, dim, Number> > >("grad_us"+suffix);
-    auto &fs =  d.template get<std::vector <double> >("fs");
-
-    scratch.fe_values.reinit (cell);
-
-    DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-    if (suffix != suffix_double)
-      {
-        DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values_double);
-      }
-    DOFUtilities::extract_local_dofs(sol_dot, data.local_dof_indices, independent_local_dof_values_dot_double);
+    auto &JxW = fe_cache.get_JxW_values();
 
     const FEValuesExtractors::Scalar scalar(0);
 
-    DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, scalar, us);
-    DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_double, scalar, us_double);
-    DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values_dot_double, scalar, us_dot_double);
-
-
-
-    if (suffix != suffix_double) // Otherwise us_dot_double and us_dot are the same object
-      for (unsigned int i=0; i<us.size(); ++i)
-        {
-          us_dot[i] = alpha*us[i] + (us_dot_double[i] - alpha*us_double[i]);
-        }
-
-    DOFUtilities::get_grad_values(scratch.fe_values, independent_local_dof_values, scalar, grad_us);
+    auto &us = fe_cache.get_values("solution", "u", scalar, alpha);
+    auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", scalar, alpha);
+    auto &grad_us = fe_cache.get_gradients("solution", "gradu", scalar, alpha);
 
     energy = 0;
-    for (unsigned int q=0; q<n_q_points; ++q)
+    for (unsigned int q=0; q<us.size(); ++q)
       {
         const Number &u = us[q];
         const Number &u_dot = us_dot[q];
         const Tensor <1, dim, Number> &grad_u = grad_us[q];
 
-        energy += (u_dot*u  + 0.5*(grad_u*grad_u))*scratch.fe_values.JxW(q);
+        energy += (u_dot*u  + 0.5*(grad_u*grad_u))*JxW[q];
       }
   };
 
-  virtual void compute_system_operators(const DoFHandler<dim> &dh,
-                                        const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                        const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
+  void compute_system_operators(const DoFHandler<dim> &dh,
+                                const TrilinosWrappers::BlockSparseMatrix &matrix,
+                                const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
+                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
   {
 
     // std::vector<std::vector<bool> > constant_modes;

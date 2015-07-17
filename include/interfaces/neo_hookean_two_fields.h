@@ -33,29 +33,9 @@ public:
   virtual void declare_parameters (ParameterHandler &prm);
   virtual void parse_parameters_call_back ();
 
-  template <typename Number>
-  void initialize_preconditioner_data(SAKData &d) const;
-
-
-  template <typename Number>
-  void initialize_system_data(SAKData &d) const;
-
-
   /* these functions MUST have the follwowing names
    *  because they are called by the ConservativeInterface class
    */
-  template <typename Number>
-  void prepare_preconditioner_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                   Scratch &scratch,
-                                   CopyPreconditioner    &data) const;
-
-  template <typename Number>
-  void prepare_system_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                           Scratch &scratch,
-                           CopySystem    &data) const;
-
-
-
   template<typename Number>
   void preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                              Scratch &,
@@ -90,113 +70,11 @@ template <int dim, int spacedim>
 NeoHookeanTwoFieldsInterface<dim,spacedim>::NeoHookeanTwoFieldsInterface() :
   ConservativeInterface<dim,spacedim,dim+1,NeoHookeanTwoFieldsInterface<dim,spacedim> >("NeoHookean Interface",
       "FESystem[FE_Q(2)^d-FE_DGP(1)]",
-      "u,u,u,p", "1,1; 1,0", "1,0; 0,1")
+      "u,u,u,p", "1,1; 1,0", "1,0; 0,1",
+      "1;0")
 {};
 
 
-
-template <int dim, int spacedim>
-template<typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_preconditioner_data(SAKData &d) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &n_q_points = d.get<unsigned int >("n_q_points");
-  auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
-
-  std::vector<Number> independent_local_dof_values (dofs_per_cell);
-  std::vector <Number> ps(n_q_points);
-  std::vector <Tensor <2, dim, Number> > grad_us(n_q_points);
-
-  d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
-
-  d.add_copy(grad_us, "grad_us"+suffix);
-  d.add_copy(ps, "ps"+suffix);
-
-}
-
-template <int dim, int spacedim>
-template<typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::initialize_system_data(SAKData &d) const
-{
-  std::string suffix = typeid(Number).name();
-	std::string suffix_double = typeid(double).name();
-  auto &n_q_points = d.get<unsigned int >("n_q_points");
-  auto &n_face_q_points = d.get<unsigned int >("n_face_q_points");
-  auto &dofs_per_cell = d.get<unsigned int >("dofs_per_cell");
-
-  std::vector<Number> independent_local_dof_values (dofs_per_cell);
-  std::vector <std::vector<Number> > vars(n_q_points,std::vector<Number>(dim+1));
-  std::vector <std::vector<Number> > vars_face(n_face_q_points,std::vector<Number>(dim+1));
-  std::vector <Tensor <1, dim, Number> > us(n_q_points);
-  std::vector <Tensor <1, spacedim, Number> > us_face(n_face_q_points);
-  std::vector <Tensor <2, spacedim, Number> > Fs(n_q_points);
-  std::vector <Number> ps(n_q_points);
-
-  d.add_copy(independent_local_dof_values, "independent_local_dof_values"+suffix);
-  d.add_copy(us, "us"+suffix);
-  d.add_copy(us_face, "us_face"+suffix);
-  d.add_copy(ps, "ps"+suffix);
-  d.add_copy(Fs, "Fs"+suffix);
-  d.add_copy(vars, "vars"+suffix);
-  d.add_copy(vars_face, "vars_face"+suffix);
-	d.add_copy(std::vector <Tensor <1, dim, Number> >(n_q_points),"us_dot"+suffix);
-	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values"+suffix_double);
-	d.add_copy(std::vector<double>(dofs_per_cell),"independent_local_dof_values_dot"+suffix_double);
-	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us"+suffix_double);
-	d.add_copy(std::vector <Tensor <1, dim, double> >(n_q_points),"us_dot"+suffix_double);
-
-}
-
-template <int dim, int spacedim>
-template <typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::prepare_preconditioner_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &scratch,
-    CopyPreconditioner    &data) const
-{
-  std::string suffix = typeid(Number).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
-  auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("grad_us"+suffix);
-
-  scratch.fe_values.reinit (cell);
-
-  DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-  const FEValuesExtractors::Vector displacement(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-
-  DOFUtilities::get_grad_values(scratch.fe_values, independent_local_dof_values, displacement, grad_us);
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, pressure, ps);
-
-}
-
-
-template <int dim, int spacedim>
-template <typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::prepare_system_data(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &scratch,
-    CopySystem    &data) const
-{
-  std::string suffix = typeid(Number).name();
-	std::string suffix_double = typeid(double).name();
-  auto &sol = scratch.anydata.template get<const TrilinosWrappers::MPI::BlockVector> ("solution");
-  auto &independent_local_dof_values = scratch.anydata.template get<std::vector<Number> >("independent_local_dof_values"+suffix);
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
-  auto &Fs = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);
-
-  scratch.fe_values.reinit (cell);
-
-  DOFUtilities::extract_local_dofs(sol, data.local_dof_indices, independent_local_dof_values);
-  const FEValuesExtractors::Vector displacement(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, displacement, us);
-  DOFUtilities::get_F_values(scratch.fe_values, independent_local_dof_values, displacement, Fs);
-  DOFUtilities::get_values(scratch.fe_values, independent_local_dof_values, pressure, ps);
-
-}
 
 template <int dim, int spacedim>
 template<typename Number>
@@ -205,15 +83,21 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typ
     CopyPreconditioner &data,
     Number &energy) const
 {
-  std::string suffix = typeid(Number).name();
+  auto &d = scratch.anydata;
+  auto &sol = d.template get<const VEC> ("solution");
+  Number alpha = d.template get<const double> ("alpha");
 
-  if (scratch.anydata.have("ps"+suffix) == false)
-    initialize_preconditioner_data<Number>(scratch.anydata);
+  auto &fe_cache = scratch.fe_cache;
 
-  prepare_preconditioner_data<Number>(cell, scratch, data);
+  fe_cache.reinit(cell);
+  auto &JxW = fe_cache.get_JxW_values();
 
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &grad_us = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("grad_us"+suffix);
+  fe_cache.cache_local_solution_vector("solution", sol, alpha);
+
+  const FEValuesExtractors::Vector displacement(0);
+  const FEValuesExtractors::Scalar pressure(dim);
+  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
+  auto &grad_us = fe_cache.get_gradients("solution","grad_u",displacement, alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -224,7 +108,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typ
       const Tensor <2, dim, Number> &grad_u = grad_us[q];
 
       energy += (scalar_product(grad_u,grad_u) +
-                 0.5*p*p)*scratch.fe_values.JxW(q);
+                 0.5*p*p)*JxW[q];
     }
 }
 
@@ -235,18 +119,28 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
     CopySystem &data,
     Number &energy) const
 {
-  std::string suffix = typeid(Number).name();
+  auto &d = scratch.anydata;
+  auto &sol = d.template get<const VEC> ("solution");
+  auto &sol_dot = d.template get<const VEC> ("solution_dot");
+  Number alpha = d.template get<const double> ("alpha");
+  auto &t = d.template get<const double> ("t");
 
-  if (scratch.anydata.have("ps"+suffix) == false)
-    initialize_system_data<Number>(scratch.anydata);
+  auto &fe_cache = scratch.fe_cache;
 
-  prepare_system_data<Number>(cell, scratch, data);
+  fe_cache.reinit(cell);
+  auto &JxW = fe_cache.get_JxW_values();
 
+  fe_cache.cache_local_solution_vector("solution", sol, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
+  this->fix_solution_dot_derivative(fe_cache, alpha);
 
+  const FEValuesExtractors::Vector displacement(0);
+  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
+  auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", displacement, alpha);
+  auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
-  auto &us = scratch.anydata.template get<std::vector <Tensor <1, dim, Number> > >("us"+suffix);
-  auto &ps = scratch.anydata.template get<std::vector <Number> >("ps"+suffix);
-  auto &Fs = scratch.anydata.template get<std::vector <Tensor <2, dim, Number> > >("Fs"+suffix);
+  const FEValuesExtractors::Scalar pressure(dim);
+  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -256,6 +150,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
       Tensor <1, dim, double> B;
 
       const Tensor <1, dim, Number> &u = us[q];
+      const Tensor <1, dim, Number> &u_dot = us_dot[q];
       const Number &p = ps[q];
       const Tensor <2, dim, Number> &F = Fs[q];
       const Tensor<2, dim, Number> C = transpose(F)*F;
@@ -264,7 +159,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
       Number J = determinant(F);
 
       Number psi = (mu/2.)*(Ic-dim) +p*(J-1.);
-      energy += psi*scratch.fe_values.JxW(q);
+      energy += (u*u_dot + psi)*JxW[q];
 
     }
 }
@@ -273,7 +168,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
 template <int dim, int spacedim>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
 {
-  ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
+  ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }
@@ -281,6 +176,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::declare_parameters (ParameterHa
 template <int dim, int spacedim>
 void NeoHookeanTwoFieldsInterface<dim,spacedim>::parse_parameters_call_back ()
 {
+  ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >::parse_parameters_call_back();
   mu = E/(2.0*(1.+nu));
   lambda = (E *nu)/((1.+nu)*(1.-2.*nu));
 }

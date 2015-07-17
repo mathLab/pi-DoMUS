@@ -1,15 +1,16 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=master.g
-# DEAL_II_SAK_GIT_SHORTREV=cffe762.g
+# DEAL_II_SAK_GIT_BRANCH=cosmesis.g
+# DEAL_II_SAK_GIT_SHORTREV=9e9713e.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=61ba897
 subsection Compressible NeoHookean Interface
-  set Block coupling                 = 1
-  set Blocking of the finite element = u,u,u
-  set Finite element space           = FESystem[FE_Q(1)^d]
-  set Poisson's ratio                = 0.3
-  set Preconditioner block coupling  = 1
-  set Young's modulus                = 10.0
+  set Block coupling                   = 1
+  set Block of differential components = 1
+  set Blocking of the finite element   = u,u,u
+  set Finite element space             = FESystem[FE_Q(1)^d]
+  set Poisson's ratio                  = 0.3
+  set Preconditioner block coupling    = 1
+  set Young's modulus                  = 10.0
 end
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=ALL

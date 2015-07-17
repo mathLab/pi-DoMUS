@@ -13,9 +13,11 @@ public:
                            const std::string &default_fe="FE_Q(1)",
                            const std::string &default_component_names="u",
                            const std::string &default_coupling="",
-                           const std::string &default_preconditioner_coupling="") :
+                           const std::string &default_preconditioner_coupling="",
+                           const std::string &default_differential_components="") :
     Interface<dim,spacedim,n_components>(name, default_fe, default_component_names,
-                                         default_coupling, default_preconditioner_coupling) {};
+                                         default_coupling, default_preconditioner_coupling,
+                                         default_differential_components) {};
 
   virtual void get_system_residual (const Scratch &scratch,
                                     const CopySystem &data,

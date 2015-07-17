@@ -208,8 +208,18 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
 
   if (first_run)
     {
-      VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
-      VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+      if (fe->has_support_points())
+        {
+          VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
+          VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+        }
+      else
+        {
+          const QGauss<dim> quadrature_formula(fe->degree+1);
+          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+        }
+
     }
 
   // Store a global partitioning to be used anywhere we need to know
@@ -625,7 +635,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_copy = [&dst, this] (const SystemCopyData &data)
   {
-    this->constraints.distribute_local_to_global (data.local_rhs,
+    this->constraints.distribute_local_to_global (data.double_residual, //data.local_rhs,
                                                   data.local_dof_indices,
                                                   dst);
   };
@@ -635,15 +645,9 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                          Assembly::Scratch::NFields<dim,spacedim> &scratch,
                          SystemCopyData &data)
   {
-    const unsigned int dofs_per_cell = scratch.fe_values.get_fe().dofs_per_cell;
-    scratch.fe_values.reinit (cell);
     cell->get_dof_indices (data.local_dof_indices);
-
     data.local_rhs = 0;
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
-
-    for (unsigned int i=0; i<dofs_per_cell; ++i)
-      data.local_rhs(i) += data.double_residual[i];
   };
 
   typedef
@@ -767,7 +771,10 @@ NFieldsProblem<dim, spacedim, n_components>::differential_components() const
 {
   static VEC diff_comps;
   diff_comps.reinit(solution);
-  diff_comps = 1;
+  std::vector<unsigned int> block_diff = energy.get_differential_blocks();
+  for (unsigned int i=0; i<block_diff.size(); ++i)
+    diff_comps.block(i) = block_diff[i];
+
   set_constrained_dofs_to_zero(diff_comps);
   return diff_comps;
 }

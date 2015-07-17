@@ -38,6 +38,8 @@
 
 #include "sak_data.h"
 
+#include "fe_values_cache.h"
+
 #include "mpi.h"
 
 using namespace dealii;

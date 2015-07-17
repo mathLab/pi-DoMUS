@@ -1,5 +1,6 @@
 #include "n_fields_problem.h"
 #include "interfaces/heat_equation.h"
+#include <deal.II/fe/component_mask.h>
 #include "tests.h"
 
 typedef TrilinosWrappers::MPI::BlockVector VEC;
@@ -11,9 +12,15 @@ void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
   pb.make_grid_fe();
   pb.setup_dofs();
 
+  std::vector<bool> m(1,true);
+  ComponentMask mask(m);
+
   VEC &d = pb.differential_components();
 
+
+  d.block(0) = 11;
   d.print(deallog.get_file_stream());
+
 
 }
 
