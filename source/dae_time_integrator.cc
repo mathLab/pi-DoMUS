@@ -372,6 +372,21 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
       // (re)initialization of the vectors
       IDACalcIC(ida_mem, IDA_Y_INIT, current_time+current_time_step);
       IDAGetConsistentIC(ida_mem, yy, yp);
+			//IndexSet is = solution.locally_owned_elements();
+			//N_Vector rrr;
+			//N_Vector tmp1;
+			//N_Vector tmp2;
+			//N_Vector tmp3;
+			//N_Vector bb;
+			//rrr =  N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+			//tmp1 =  N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+			//tmp2 =  N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+			//tmp3 =  N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+			//bb =  N_VNew_Parallel(solver.get_comm(), is.n_elements(), solver.n_dofs());
+
+
+			//status += t_dae_lsetup<VEC>(IDA_mem,yy,yp,rrr,tmp1,tmp2,tmp3);
+			//status += t_dae_solve<VEC>(IDA_mem,bb,tmp1,yy,yp,rrr);
 
       copy(solution, yy);
       copy(solution_dot, yp);

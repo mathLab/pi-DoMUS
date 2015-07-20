@@ -519,7 +519,21 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh();
 
+		//	VEC res(solution);
+
+		//	setup_jacobian(0,solution,solution_dot,res,0.33);
+		//	residual(0,solution,solution_dot,res);
+		//	for (unsigned int i=0; i<res.size(); ++i)
+		//		std::cout << res[i] << std::endl;
+		//	solve_jacobian_system(0,solution,solution_dot, solution,0.33,res,distributed_solution);
+
+		//	solution = distributed_solution;
+			constraints.distribute(solution);
+		//	for (unsigned int i=0; i<solution.size(); ++i)
+		//		std::cout << solution[i] << std::endl;
+
       dae.start_ode(solution, solution_dot, max_time_iterations);
+			constraints.distribute(solution);
       distributed_solution = solution;
       eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
     }
@@ -652,19 +666,19 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
-   constraints.distribute(dst);
+//   constraints.distribute(dst);
 
   dst.compress(VectorOperation::add);
 
-//  auto id = solution.locally_owned_elements();
-//  for (unsigned int i=0; i<id.n_elements(); ++i)
-//    {
-//      auto j = id.nth_index_in_set(i);
-//      if (constraints.is_constrained(j))
-//        ;//dst[j] = solution(j)-constraints.get_inhomogeneity(j);
-//    }
-//
-//  dst.compress(VectorOperation::insert);
+  auto id = solution.locally_owned_elements();
+  for (unsigned int i=0; i<id.n_elements(); ++i)
+    {
+      auto j = id.nth_index_in_set(i);
+      if (constraints.is_constrained(j))
+        ;//dst[j] = solution(j)-constraints.get_inhomogeneity(j);
+    }
+
+  dst.compress(VectorOperation::insert);
   computing_timer.exit_section();
   return 0;
 }

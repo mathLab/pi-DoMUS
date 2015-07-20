@@ -76,7 +76,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = y*(1-y); 0; 0
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
@@ -86,7 +86,7 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 3
+  set Initial global refinement    = 1
   set Maximum number of time steps = 10000
   set Number of cycles             = 1
   set Timer output file            = timer.txt

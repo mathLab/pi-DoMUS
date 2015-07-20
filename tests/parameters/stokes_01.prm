@@ -60,7 +60,7 @@ subsection Forcing terms
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0
+  set Final time                                    = 1
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -86,9 +86,9 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 2
+  set Initial global refinement    = 1
   set Maximum number of time steps = 10000
-  set Number of cycles             = 1
+  set Number of cycles             = 3
   set Timer output file            = timer.txt
 end
 subsection Neumann boundary conditions
