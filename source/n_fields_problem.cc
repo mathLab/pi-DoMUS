@@ -560,10 +560,6 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-  TrilinosWrappers::MPI::BlockVector        tmp(solution);
-
-	tmp = solution;
-	constraints.distribute(tmp);
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
@@ -656,19 +652,19 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
-  // constraints.distribute(dst);
+   constraints.distribute(dst);
 
   dst.compress(VectorOperation::add);
 
-  auto id = solution.locally_owned_elements();
-  for (unsigned int i=0; i<id.n_elements(); ++i)
-    {
-      auto j = id.nth_index_in_set(i);
-      if (constraints.is_constrained(j))
-        dst[j] = solution(j)-constraints.get_inhomogeneity(j);
-    }
-
-  dst.compress(VectorOperation::insert);
+//  auto id = solution.locally_owned_elements();
+//  for (unsigned int i=0; i<id.n_elements(); ++i)
+//    {
+//      auto j = id.nth_index_in_set(i);
+//      if (constraints.is_constrained(j))
+//        ;//dst[j] = solution(j)-constraints.get_inhomogeneity(j);
+//    }
+//
+//  dst.compress(VectorOperation::insert);
   computing_timer.exit_section();
   return 0;
 }
@@ -686,7 +682,8 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
 {
   computing_timer.enter_section ("   Solve system");
 	dst=solution;
-  set_constrained_dofs_to_zero(dst);
+  //set_constrained_dofs_to_zero(dst);
+	constraints.distribute(dst);
 
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
