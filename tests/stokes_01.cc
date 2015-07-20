@@ -1,5 +1,5 @@
 #include "n_fields_problem.h"
-#include "interfaces/stokes_derived_interface.h"
+#include "interfaces/dynamic_stokes.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
   const int dim = 2;
   const int spacedim = 2;
 
-  StokesDerivedInterface<dim> energy;
+  DynamicStokes<dim> energy;
   NFieldsProblem<dim,spacedim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/stokes_01.prm", "used_parameters.prm");
 

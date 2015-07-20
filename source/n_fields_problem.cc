@@ -493,6 +493,7 @@ void NFieldsProblem<dim, spacedim, n_components>::make_grid_fe()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 {
+	//constraints.distribute(solution);
   eh.error_from_exact(*dof_handler, solution, exact_solution);
   eh.output_table(pcout);
 }
@@ -559,7 +560,10 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
+  TrilinosWrappers::MPI::BlockVector        tmp(solution);
 
+	tmp = solution;
+	constraints.distribute(tmp);
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
@@ -681,6 +685,7 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
     VEC &dst) const
 {
   computing_timer.enter_section ("   Solve system");
+	dst=solution;
   set_constrained_dofs_to_zero(dst);
 
   unsigned int n_iterations = 0;
@@ -715,7 +720,7 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
     }
 
   set_constrained_dofs_to_zero(dst);
-  // constraints.distribute (dst);
+//   constraints.distribute (dst);
 
 //  pcout << std::endl;
 //  pcout << " iterations:                           " <<  n_iterations

@@ -5,7 +5,7 @@
 # DEAL_II_GIT_SHORTREV=61ba897
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set IDs and expressions     = 0=2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -21,6 +21,15 @@ subsection Domain
   set Optional int 1             = 1
   set Optional vector of dim int = 1,1
   set Output grid file name      = 
+end
+subsection Dynamic Stokes
+  set Block coupling                   = 1,1; 1,0
+  set Block of differential components = 1,0
+  set Blocking of the finite element   = u,u,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
+  set Preconditioner block coupling    = 1,0; 0,1
+  set eta [Pa s]                       = 1.0
+  set rho [Kg m^-d]                    = 1.0
 end
 subsection Error Tables
   set Compute error            = true
@@ -45,13 +54,13 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=2*pi^3*cos(pi*x)*cos(pi*y); 2*pi^3*sin(pi*x)*sin(pi*y); 0
+  set IDs and expressions     = 0=2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0 
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0
+  set Final time                                    = 1
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -77,9 +86,9 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 0
+  set Initial global refinement    = 3
   set Maximum number of time steps = 10000
-  set Number of cycles             = 4
+  set Number of cycles             = 1
   set Timer output file            = timer.txt
 end
 subsection Neumann boundary conditions
@@ -135,12 +144,4 @@ subsection Output Parameters
     subsection deal.II intermediate output parameters
     end
   end
-end
-subsection Stokes Interface
-  set Block coupling                   = 1,1; 1,0
-  set Block of differential components = 1,0
-  set Blocking of the finite element   = u,u,p
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,0; 0,1
-  set eta [Pa s]                       = 1.0
 end

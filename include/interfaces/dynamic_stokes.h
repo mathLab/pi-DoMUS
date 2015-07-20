@@ -108,7 +108,7 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
       const Tensor<1, dim, Number> &u_dot = us_dot[q];
       const Tensor<2, dim, Number> &grad_u = grad_us[q];
 
-      energy += (rho*u*u_dot +
+      energy += (rho*(u*u_dot) +
                  eta*.5*scalar_product(grad_u,grad_u) +
                  (1./eta)*0.5*p*p)*JxW[q];
     }
@@ -152,7 +152,7 @@ void DynamicStokes<dim>::system_energy(const typename DoFHandler<dim>::active_ce
       const Number &p = ps[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
-      energy += (+ rho*u_dot*u
+      energy += (rho*(u_dot*u)
                  + .5*eta*scalar_product(sym_grad_u,sym_grad_u)
                  - p*div_u )*JxW[q];
     }
