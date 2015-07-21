@@ -518,7 +518,7 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh();
 
-			constraints.distribute(solution);
+      constraints.distribute(solution);
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
       eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
@@ -661,7 +661,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
     {
       auto j = id.nth_index_in_set(i);
       if (constraints.is_constrained(j))
-        ;//dst[j] = solution(j)-constraints.get_inhomogeneity(j);
+        dst[j] = solution(j)-constraints.get_inhomogeneity(j);
     }
 
   dst.compress(VectorOperation::insert);
@@ -681,9 +681,7 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
     VEC &dst) const
 {
   computing_timer.enter_section ("   Solve system");
-	dst=solution;
-  //set_constrained_dofs_to_zero(dst);
-	constraints.distribute(dst);
+  set_constrained_dofs_to_zero(dst);
 
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
@@ -717,7 +715,6 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
     }
 
   set_constrained_dofs_to_zero(dst);
-//   constraints.distribute (dst);
 
 //  pcout << std::endl;
 //  pcout << " iterations:                           " <<  n_iterations
