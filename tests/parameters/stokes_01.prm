@@ -59,7 +59,7 @@ subsection Forcing terms
   set Used constants          = k=1
 end
 subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
+  set Absolute error tolerance                      = 1e-7
   set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
@@ -70,13 +70,13 @@ subsection IDA Solver Parameters
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-3
+  set Relative error tolerance                      = 1e-7
   set Seconds between each output                   = 1e-1
   set Use local tolerances                          = false
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set Function expression = 0;0;0
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
