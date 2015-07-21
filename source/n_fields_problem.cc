@@ -300,12 +300,8 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         distributed_solution,
-                         distributed_solution_dot, t, alpha,
-                         system_data);
+  energy.initialize_data(distributed_solution,
+                         distributed_solution_dot, t, alpha);
 
 
   auto local_copy = [ this ]
@@ -334,14 +330,12 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Assembly::Scratch::
-       NFields<dim,spacedim> (system_data,
-                              *fe,
-                              quadrature_formula,
-                              *mapping,
-                              energy.get_jacobian_flags(),
-                              face_quadrature_formula,
-                              energy.get_face_flags()),
+       Scratch(*mapping,
+               *fe,
+               quadrature_formula,
+               energy.get_jacobian_flags(),
+               face_quadrature_formula,
+               energy.get_face_flags()),
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
@@ -387,12 +381,8 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
       distributed_solution = solution;
       distributed_solution_dot = solution_dot;
 
-      energy.initialize_data(fe->dofs_per_cell,
-                             quadrature_formula.size(),
-                             face_quadrature_formula.size(),
-                             distributed_solution,
-                             distributed_solution_dot, t, alpha,
-                             preconditioner_data);
+      energy.initialize_data(distributed_solution,
+                             distributed_solution_dot, t, alpha);
 
 
       auto local_copy = [this]
@@ -405,7 +395,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
 
       auto local_assemble = [ this ]
                             (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                             Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                             Scratch &scratch,
                              PreconditionerCopyData &data)
       {
         this->energy.assemble_local_preconditioner(cell, scratch, data);
@@ -420,13 +410,11 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
                        dof_handler->end()),
            local_assemble,
            local_copy,
-           Assembly::Scratch::
-           NFields<dim,spacedim> (preconditioner_data,
-                                  *fe, quadrature_formula,
-                                  *mapping,
-                                  energy.get_jacobian_preconditioner_flags(),
-                                  face_quadrature_formula,
-                                  UpdateFlags(0)),
+           Scratch (*mapping,
+                    *fe, quadrature_formula,
+                    energy.get_jacobian_preconditioner_flags(),
+                    face_quadrature_formula,
+                    UpdateFlags(0)),
            Assembly::CopyData::
            NFieldsPreconditioner<dim,spacedim> (*fe));
 
@@ -530,8 +518,9 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh();
 
+      constraints.distribute(solution);
+
       dae.start_ode(solution, solution_dot, max_time_iterations);
-      distributed_solution = solution;
       eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
     }
 
@@ -571,7 +560,6 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
@@ -624,12 +612,8 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
 
-  energy.initialize_data(fe->dofs_per_cell,
-                         quadrature_formula.size(),
-                         face_quadrature_formula.size(),
-                         distributed_solution,
-                         distributed_solution_dot, t, 0.0,
-                         residual_data);
+  energy.initialize_data(distributed_solution,
+                         distributed_solution_dot, t, 0.0);
 
   dst = 0;
 
@@ -642,11 +626,10 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                         Assembly::Scratch::NFields<dim,spacedim> &scratch,
+                         Scratch &scratch,
                          SystemCopyData &data)
   {
     cell->get_dof_indices (data.local_dof_indices);
-    data.local_rhs = 0;
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
   };
 
@@ -660,16 +643,15 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Scratch(residual_data,
+       Scratch(*mapping,
                *fe,
                quadrature_formula,
-               *mapping,
                energy.get_jacobian_flags(),
                face_quadrature_formula,
                energy.get_face_flags()),
        SystemCopyData(*fe));
 
-  // constraints.distribute(dst);
+//   constraints.distribute(dst);
 
   dst.compress(VectorOperation::add);
 
@@ -732,7 +714,6 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
     }
 
   set_constrained_dofs_to_zero(dst);
-  // constraints.distribute (dst);
 
 //  pcout << std::endl;
 //  pcout << " iterations:                           " <<  n_iterations

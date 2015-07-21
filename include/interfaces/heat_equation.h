@@ -25,9 +25,11 @@ typedef TrilinosWrappers::MPI::BlockVector VEC;
 template <int dim>
 class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim> >
 {
-  typedef Assembly::Scratch::NFields<dim,dim> Scratch;
+  typedef FEValuesCache<dim,dim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef TrilinosWrappers::MPI::BlockVector VEC;
+
 public:
 
 
@@ -35,7 +37,7 @@ public:
   HeatEquation() :
     ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
                                                         "FESystem[FE_Q(2)]",
-                                                        "u", "1", "0")
+                                                        "u", "1", "0","1")
   {};
 
 
@@ -55,22 +57,16 @@ public:
 
   template<typename Number>
   void system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                     Scratch &scratch,
+                     Scratch &fe_cache,
                      CopySystem &data,
                      Number &energy) const
   {
-    auto &d = scratch.anydata;
-    auto &sol = d.template get<const VEC> ("solution");
-    auto &sol_dot = d.template get<const VEC> ("solution_dot");
-    Number alpha = d.template get<const double> ("alpha");
-    auto &t = d.template get<const double> ("t");
-
-    auto &fe_cache = scratch.fe_cache;
+    Number alpha = this->alpha;
 
     fe_cache.reinit(cell);
 
-    fe_cache.cache_local_solution_vector("solution", sol, alpha);
-    fe_cache.cache_local_solution_vector("solution_dot", sol_dot, alpha);
+    fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+    fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
     this->fix_solution_dot_derivative(fe_cache, alpha);
 
     auto &JxW = fe_cache.get_JxW_values();

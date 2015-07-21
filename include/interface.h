@@ -55,10 +55,13 @@
 template <int dim,int spacedim=dim, int n_components=1>
 class Interface : public ParsedFiniteElement<dim,spacedim>
 {
-  typedef Assembly::Scratch::NFields<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
+  typedef FEValuesCache<dim,spacedim> Scratch;
+  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef TrilinosWrappers::MPI::BlockVector VEC;
+
 public:
+
   virtual ~Interface() {};
 
   Interface(const std::string &name="",
@@ -121,20 +124,18 @@ public:
 
     Number dummy = 0.0;
 
-    auto &solution = scratch.anydata.template get<const VEC>("solution");
-
     for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
       {
         unsigned int face_id = cell->face(face)->boundary_id();
         if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
           {
 
-            scratch.fe_cache.reinit(cell, face);
-            scratch.fe_cache.cache_local_solution_vector("solution", solution, dummy);
+            scratch.reinit(cell, face);
+            scratch.cache_local_solution_vector("solution", *solution, dummy);
 
-            auto &vars = scratch.fe_cache.get_values("solution", dummy);
-            auto &q_points = scratch.fe_cache.get_quadrature_points();
-            auto &JxW = scratch.fe_cache.get_JxW_values();
+            auto &vars = scratch.get_values("solution", dummy);
+            auto &q_points = scratch.get_quadrature_points();
+            auto &JxW = scratch.get_JxW_values();
 
             for (unsigned int q=0; q<q_points.size(); ++q)
               {
@@ -170,14 +171,12 @@ public:
       {
         Number dummy = 0.0;
 
-        auto &solution = scratch.anydata.template get<const VEC>("solution");
-
         // scratch.fe_cache.reinit(cell); // It is always called outside
-        scratch.fe_cache.cache_local_solution_vector("solution", solution, dummy);
+        scratch.cache_local_solution_vector("solution", *solution, dummy);
 
-        auto &vars = scratch.fe_cache.get_values("solution", dummy);
-        auto &q_points = scratch.fe_cache.get_quadrature_points();
-        auto &JxW = scratch.fe_cache.get_JxW_values();
+        auto &vars = scratch.get_values("solution", dummy);
+        auto &q_points = scratch.get_quadrature_points();
+        auto &JxW = scratch.get_JxW_values();
 
         for (unsigned int q=0; q<q_points.size(); ++q)
           {
@@ -205,14 +204,11 @@ public:
    *
    * TODO: add current_time and current_alpha
    */
-  virtual void initialize_data(const unsigned int &dofs_per_cell,
-                               const unsigned int &n_q_points,
-                               const unsigned int &n_face_q_points,
-                               const TrilinosWrappers::MPI::BlockVector &solution,
-                               const TrilinosWrappers::MPI::BlockVector &solution_dot,
+  virtual void initialize_data(const VEC &solution,
+                               const VEC &solution_dot,
                                const double t,
-                               const double alpha,
-                               SAKData &d) const;
+                               const double alpha) const;
+
 
   /**
    * Build the energy needed to get the preconditioner in the case
@@ -388,8 +384,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &,
-                                        LinearOperator<TrilinosWrappers::MPI::BlockVector> &) const
+                                        LinearOperator<VEC> &,
+                                        LinearOperator<VEC> &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
@@ -429,7 +425,6 @@ public:
 
   }
 
-  typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
                                                          const VEC &) const
@@ -496,27 +491,28 @@ protected:
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
+  mutable const VEC *solution;
+  mutable const VEC *solution_dot;
+
+  mutable double alpha;
+  mutable double t;
+  mutable unsigned int dofs_per_cell;
+  mutable unsigned int n_q_points;
+  mutable unsigned int n_face_q_points;
 
 };
 
 
 template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::initialize_data(const unsigned int &dofs_per_cell,
-                                                           const unsigned int &n_q_points,
-                                                           const unsigned int &n_face_q_points,
-                                                           const TrilinosWrappers::MPI::BlockVector &solution,
-                                                           const TrilinosWrappers::MPI::BlockVector &solution_dot,
+void Interface<dim,spacedim,n_components>::initialize_data(const VEC &solution,
+                                                           const VEC &solution_dot,
                                                            const double t,
-                                                           const double alpha,
-                                                           SAKData &d) const
+                                                           const double alpha) const
 {
-  d.add_copy(dofs_per_cell, "dofs_per_cell");
-  d.add_copy(n_q_points, "n_q_points");
-  d.add_copy(n_face_q_points, "n_face_q_points");
-  d.add_ref(solution, "solution");
-  d.add_ref(solution_dot, "solution_dot");
-  d.add_copy(t, "t");
-  d.add_copy(alpha, "alpha");
+  this->solution = &solution;
+  this->solution_dot = &solution_dot;
+  this->alpha = alpha;
+  this->t = t;
 }
 
 template<int dim, int spacedim, int n_components>
@@ -524,7 +520,7 @@ void Interface<dim,spacedim,n_components>::declare_parameters(ParameterHandler &
 {
   ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
   this->add_parameter(prm, &_diff_comp, "Block of differential components", str_diff_comp,
-                      Patterns::List(Patterns::Integer(0,1),this->n_blocks(),this->n_blocks(),";"),
+                      Patterns::List(Patterns::Integer(0,1),this->n_blocks(),this->n_blocks(),","),
                       "Set the blocks of differential components to 1"
                       "0 for algebraic");
 }
