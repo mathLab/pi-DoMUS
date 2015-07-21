@@ -493,7 +493,6 @@ void NFieldsProblem<dim, spacedim, n_components>::make_grid_fe()
 template <int dim, int spacedim, int n_components>
 void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 {
-	//constraints.distribute(solution);
   eh.error_from_exact(*dof_handler, solution, exact_solution);
   eh.output_table(pcout);
 }
@@ -519,22 +518,9 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
       else
         refine_mesh();
 
-		//	VEC res(solution);
-
-		//	setup_jacobian(0,solution,solution_dot,res,0.33);
-		//	residual(0,solution,solution_dot,res);
-		//	for (unsigned int i=0; i<res.size(); ++i)
-		//		std::cout << res[i] << std::endl;
-		//	solve_jacobian_system(0,solution,solution_dot, solution,0.33,res,distributed_solution);
-
-		//	solution = distributed_solution;
 			constraints.distribute(solution);
-		//	for (unsigned int i=0; i<solution.size(); ++i)
-		//		std::cout << solution[i] << std::endl;
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
-			constraints.distribute(solution);
-      distributed_solution = solution;
       eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
     }
 

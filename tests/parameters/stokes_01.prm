@@ -5,7 +5,7 @@
 # DEAL_II_GIT_SHORTREV=61ba897
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
+  set IDs and expressions     = 0=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -60,7 +60,7 @@ subsection Forcing terms
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -76,7 +76,7 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  = 
-  set Function expression = 0; 0; 0
+  set Function expression = pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
@@ -86,9 +86,9 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 1
+  set Initial global refinement    = 4
   set Maximum number of time steps = 10000
-  set Number of cycles             = 3
+  set Number of cycles             = 1
   set Timer output file            = timer.txt
 end
 subsection Neumann boundary conditions
