@@ -607,10 +607,10 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  SAKData residual_data;
-
   distributed_solution = solution;
   distributed_solution_dot = solution_dot;
+
+  constraints.distribute(distributed_solution);
 
   energy.initialize_data(distributed_solution,
                          distributed_solution_dot, t, 0.0);
@@ -619,7 +619,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_copy = [&dst, this] (const SystemCopyData &data)
   {
-    this->constraints.distribute_local_to_global (data.double_residual, //data.local_rhs,
+    this->constraints.distribute_local_to_global (data.double_residual,
                                                   data.local_dof_indices,
                                                   dst);
   };
@@ -660,7 +660,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
     {
       auto j = id.nth_index_in_set(i);
       if (constraints.is_constrained(j))
-        dst[j] = solution(j)-constraints.get_inhomogeneity(j);
+        dst[j] = solution(j)-distributed_solution(j);
     }
 
   dst.compress(VectorOperation::insert);

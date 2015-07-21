@@ -70,7 +70,7 @@ template<int dim>
 Stokes<dim>::Stokes() :
   ConservativeInterface<dim,dim,dim+1,Stokes<dim> >("Stokes",
                                                     "FESystem[FE_Q(2)^d-FE_Q(1)]",
-                                                    "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
+                                                    "u,u,p", "1,1; 1,0", "1,0; 0,1","0,0")
 {};
 
 
