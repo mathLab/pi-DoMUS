@@ -630,7 +630,6 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                          SystemCopyData &data)
   {
     cell->get_dof_indices (data.local_dof_indices);
-    data.local_rhs = 0;
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
   };
 

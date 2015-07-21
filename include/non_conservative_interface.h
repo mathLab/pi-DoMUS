@@ -9,6 +9,8 @@ class NonConservativeInterface : public Interface<dim,spacedim,n_components>
   typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
 public:
 
+	virtual ~NonConservativeInterface() {};
+
   NonConservativeInterface(const std::string &name="",
                            const std::string &default_fe="FE_Q(1)",
                            const std::string &default_component_names="u",
@@ -18,6 +20,15 @@ public:
     Interface<dim,spacedim,n_components>(name, default_fe, default_component_names,
                                          default_coupling, default_preconditioner_coupling,
                                          default_differential_components) {};
+
+  virtual void declare_parameters(ParameterHandler &prm)
+  {
+    Interface<dim,spacedim,n_components>::declare_parameters(prm);
+  }
+  virtual void parse_parameters_call_back()
+  {
+    Interface<dim,spacedim,n_components>::parse_parameters_call_back();
+  }
 
   virtual void get_system_residual (const Scratch &scratch,
                                     const CopySystem &data,
