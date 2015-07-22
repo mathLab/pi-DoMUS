@@ -43,7 +43,7 @@ subsection Error Tables
     set Add convergence rates          = true
     set Extra terms                    = cells,dofs
     set Latex table caption            = error
-    set List of error norms to compute = L2,H1;AddUp;L2
+    set List of error norms to compute = L2, Linfty, H1; AddUp; L2
     set Rate key                       = 
   end
 end
