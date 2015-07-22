@@ -607,10 +607,11 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  distributed_solution = solution;
-  distributed_solution_dot = solution_dot;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
 
-  constraints.distribute(distributed_solution);
+  distributed_solution = tmp;
+  distributed_solution_dot = solution_dot;
 
   energy.initialize_data(distributed_solution,
                          distributed_solution_dot, t, 0.0);
