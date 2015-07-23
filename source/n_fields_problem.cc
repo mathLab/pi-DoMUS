@@ -293,11 +293,20 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
 
   jacobian_matrix = 0;
 
+  energy.set_time(t);
+  ConstraintMatrix cnew(constraints);
+  energy.apply_dirichlet_bcs(*dof_handler, cnew);
+  cnew.close();
+
+  constraints.merge(cnew,ConstraintMatrix::right_object_wins);
+
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
 
-  distributed_solution = solution;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
+  distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
 
   energy.initialize_data(distributed_solution,
@@ -368,6 +377,13 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
     {
       computing_timer.enter_section ("   Build preconditioner");
       jacobian_preconditioner_matrix = 0;
+
+      energy.set_time(t);
+      ConstraintMatrix cnew(constraints);
+      energy.apply_dirichlet_bcs(*dof_handler, cnew);
+      cnew.close();
+
+      constraints.merge(cnew,ConstraintMatrix::right_object_wins);
 
       const QGauss<dim> quadrature_formula(fe->degree+1);
       const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
@@ -600,10 +616,15 @@ int
 NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                                                       const VEC &solution,
                                                       const VEC &solution_dot,
-                                                      VEC &dst) const
+                                                      VEC &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
+  ConstraintMatrix cnew(constraints);
+  energy.apply_dirichlet_bcs(*dof_handler, cnew);
+  cnew.close();
+
+  constraints.merge(cnew,ConstraintMatrix::right_object_wins);
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 

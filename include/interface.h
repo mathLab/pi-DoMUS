@@ -458,9 +458,7 @@ public:
   }
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const
-  {
-    return;
-  }
+  {}
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, Sdouble alpha) const
   {
@@ -469,8 +467,6 @@ public:
 
     for (unsigned int i=0; i<sol.size(); ++i)
       sol_dot[i] = alpha.val()*sol[i] + (sol_dot[i].val() - alpha.val()*sol[i].val());
-
-    return;
   }
 
 
@@ -481,7 +477,6 @@ public:
 
     for (unsigned int i=0; i<sol.size(); ++i)
       sol_dot[i] = (alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
-    return;
   }
 
 protected:

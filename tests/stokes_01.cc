@@ -22,6 +22,7 @@ void test(NFieldsProblem<dim,spacedim,n_components> &pb)
 
       pb.residual(0.0, pb.solution, pb.solution_dot, *rhs);
       pb.setup_jacobian(0.0,pb.solution,pb.solution_dot, *rhs,1.0);
+      *rhs *= -1.0;
       pb.solve_jacobian_system(0.0, pb.solution, pb.solution_dot, *rhs,
                                1.0, *rhs, *du);
 

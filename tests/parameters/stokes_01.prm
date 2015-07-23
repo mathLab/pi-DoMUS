@@ -1,6 +1,6 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=dof_tools.g
-# DEAL_II_SAK_GIT_SHORTREV=bb20d07.g
+# DEAL_II_SAK_GIT_BRANCH=master.g
+# DEAL_II_SAK_GIT_SHORTREV=897a55c.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=61ba897
 subsection Dirichlet boundary conditions
@@ -88,7 +88,7 @@ subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
   set Initial global refinement    = 1
   set Maximum number of time steps = 10000
-  set Number of cycles             = 1
+  set Number of cycles             = 3
   set Timer output file            = timer.txt
 end
 subsection Neumann boundary conditions

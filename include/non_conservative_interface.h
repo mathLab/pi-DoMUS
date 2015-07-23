@@ -30,25 +30,28 @@ public:
     Interface<dim,spacedim,n_components>::parse_parameters_call_back();
   }
 
-  virtual void get_system_residual (const Scratch &scratch,
-                                    const CopySystem &data,
-                                    const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                    Scratch &scratch,
+                                    CopySystem &data,
                                     std::vector<double> &local_residual) const
   {
-    static_cast<const Implementation *>(this)->system_residual(scratch, data, cell, local_residual);
+    static_cast<const Implementation *>(this)->system_residual(cell, scratch, data, local_residual);
   }
 
-  virtual void get_system_residual (const Scratch &scratch,
-                                    const CopySystem &data,
-                                    const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                    Scratch &scratch,
+                                    CopySystem &data,
                                     std::vector<Sdouble> &local_residual) const
   {
-    static_cast<const Implementation *>(this)->system_residual(scratch, data, cell, local_residual);
+    static_cast<const Implementation *>(this)->system_residual(cell, scratch, data, local_residual);
   }
 
-  virtual void get_preconditioner_residual(const Scratch &d, std::vector<Sdouble> &local_residual) const
+  virtual void get_preconditioner_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                            Scratch &scratch,
+                                            CopyPreconditioner &data,
+                                            std::vector<Sdouble> &local_residual) const
   {
-    static_cast<const Implementation *>(this)->preconditioner_residual(d, local_residual);
+    static_cast<const Implementation *>(this)->preconditioner_residual(cell, scratch, data, local_residual);
   }
 };
 
