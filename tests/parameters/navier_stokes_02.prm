@@ -22,15 +22,6 @@ subsection Domain
   set Optional vector of dim int = 1,1
   set Output grid file name      = 
 end
-subsection Dynamic Stokes
-  set Block coupling                   = 1,1; 1,0
-  set Block of differential components = 1,0
-  set Blocking of the finite element   = u,u,p
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,0; 0,1
-  set eta [Pa s]                       = 1.0
-  set rho [Kg m^-d]                    = 1.0
-end
 subsection Error Tables
   set Compute error            = false
   set Error file format        = tex
@@ -90,6 +81,15 @@ subsection NFieldsProblem<2, 2, 3>
   set Maximum number of time steps = 10000
   set Number of cycles             = 1
   set Timer output file            = timer.txt
+end
+subsection Navier Stokes
+  set Block coupling                   = 1,1; 1,0
+  set Block of differential components = 1,0
+  set Blocking of the finite element   = u,u,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
+  set Preconditioner block coupling    = 1,0; 0,1
+  set eta [Pa s]                       = 1.0
+  set rho [Kg m^-d]                    = 1.0
 end
 subsection Neumann boundary conditions
   set IDs and component masks = 

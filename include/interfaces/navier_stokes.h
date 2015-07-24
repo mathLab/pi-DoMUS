@@ -69,7 +69,7 @@ private:
 
 template<int dim>
 NavierStokes<dim>::NavierStokes() :
-  NonConservativeInterface<dim,dim,dim+1,NavierStokes<dim> >("Dynamic Stokes",
+  NonConservativeInterface<dim,dim,dim+1,NavierStokes<dim> >("Navier Stokes",
                                                              "FESystem[FE_Q(2)^d-FE_Q(1)]",
                                                              "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
 {};
@@ -115,7 +115,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           const Tensor<1, dim, Number> &u_dot = us_dot[q];
           const Tensor<2, dim, Number> &grad_u = grad_us[q];
 
-          local_residual[i] += (DOFUtilities::inner(u_dot,v)  +
+          local_residual[i] += (rho*DOFUtilities::inner(u_dot,v)  +
                                 eta*DOFUtilities::inner(grad_u,grad_v) +
                                 (1./eta)*p*m)*JxW[q];
         }
@@ -170,7 +170,7 @@ void NavierStokes<dim>::system_residual(const typename DoFHandler<dim>::active_c
           const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
           const Tensor <2, dim, Number> &grad_u = grad_us[q];
 
-          local_residual[i] += (rho*(DOFUtilities::inner(u_dot,v))
+          local_residual[i] += (rho*DOFUtilities::inner(u_dot,v)
                                 + eta*DOFUtilities::inner(grad_u,grad_v)
                                 + DOFUtilities::inner((grad_u*u),v)
                                 - m*div_u -p*div_v)*JxW[q];
