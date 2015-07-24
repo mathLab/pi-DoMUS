@@ -294,11 +294,13 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   jacobian_matrix = 0;
 
   energy.set_time(t);
-  ConstraintMatrix cnew(constraints);
-  energy.apply_dirichlet_bcs(*dof_handler, cnew);
-  cnew.close();
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
 
-  constraints.merge(cnew,ConstraintMatrix::right_object_wins);
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
 
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
@@ -379,11 +381,14 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
       jacobian_preconditioner_matrix = 0;
 
       energy.set_time(t);
-      ConstraintMatrix cnew(constraints);
-      energy.apply_dirichlet_bcs(*dof_handler, cnew);
-      cnew.close();
+      constraints.clear();
+      DoFTools::make_hanging_node_constraints (*dof_handler,
+                                               constraints);
 
-      constraints.merge(cnew,ConstraintMatrix::right_object_wins);
+      energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+      constraints.close ();
+
 
       const QGauss<dim> quadrature_formula(fe->degree+1);
       const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
@@ -576,7 +581,9 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-  distributed_solution = solution;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
+  distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
 
   std::stringstream suffix;
@@ -620,11 +627,14 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
-  ConstraintMatrix cnew(constraints);
-  energy.apply_dirichlet_bcs(*dof_handler, cnew);
-  cnew.close();
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
 
-  constraints.merge(cnew,ConstraintMatrix::right_object_wins);
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
+
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
