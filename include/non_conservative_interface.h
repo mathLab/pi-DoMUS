@@ -4,7 +4,7 @@ template<int dim, int spacedim, int n_components, class Implementation>
 class NonConservativeInterface : public Interface<dim,spacedim,n_components>
 {
 
-  typedef Assembly::Scratch::NFields<dim,spacedim> Scratch;
+  typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
 public:
