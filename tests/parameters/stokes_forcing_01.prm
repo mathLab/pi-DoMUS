@@ -54,7 +54,7 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
+  set IDs and expressions     = 0=k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -86,7 +86,7 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 1
+  set Initial global refinement    = 2
   set Maximum number of time steps = 10000
   set Number of cycles             = 3
   set Timer output file            = timer.txt

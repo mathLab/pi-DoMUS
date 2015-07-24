@@ -783,7 +783,7 @@ template <int dim>
 void NavierStokes<dim>::run ()
 {
 
-  const unsigned int n_cycles = (refinement_mode==global_refinement)?5:9;
+  const unsigned int n_cycles = (refinement_mode==global_refinement)?3:9;
   for (unsigned int cycle=0; cycle<n_cycles; ++cycle)
     {
       if (cycle == 0)

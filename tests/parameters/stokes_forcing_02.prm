@@ -1,11 +1,11 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=master.g
-# DEAL_II_SAK_GIT_SHORTREV=897a55c.g
+# DEAL_II_SAK_GIT_BRANCH=inner.g
+# DEAL_II_SAK_GIT_SHORTREV=ed8a729.g
 # DEAL_II_GIT_BRANCH=master
 # DEAL_II_GIT_SHORTREV=61ba897
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set IDs and expressions     = 0=t*pi*cos(pi*x)*cos(pi*y); t*pi*sin(pi*x)*sin(pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -32,7 +32,7 @@ subsection Dynamic Stokes
   set rho [Kg m^-d]                    = 1.0
 end
 subsection Error Tables
-  set Compute error            = true
+  set Compute error            = false
   set Error file format        = tex
   set Output error tables      = true
   set Solution names           = u,u,p
@@ -54,14 +54,14 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=2*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
+  set IDs and expressions     = 0=t*k^3*pi^3*cos(k*pi*x)*cos(k*pi*y);t*k^3*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0
-  set Ignore algebraic terms for error computations = false
+  set Final time                                    = 10
+  set Ignore algebraic terms for error computations = true
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_dot
@@ -86,9 +86,9 @@ subsection Initial solution_dot
 end
 subsection NFieldsProblem<2, 2, 3>
   set Adaptive refinement          = false
-  set Initial global refinement    = 1
+  set Initial global refinement    = 3
   set Maximum number of time steps = 10000
-  set Number of cycles             = 3
+  set Number of cycles             = 1
   set Timer output file            = timer.txt
 end
 subsection Neumann boundary conditions

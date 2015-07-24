@@ -104,7 +104,7 @@ public:
   virtual int residual(const double t,
                        const VEC &src_yy,
                        const VEC &src_yp,
-                       VEC &dst) const;
+                       VEC &dst);
 
   /** Setup Jacobian system and preconditioner. */
   virtual int setup_jacobian(const double t,

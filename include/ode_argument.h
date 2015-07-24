@@ -73,7 +73,7 @@ public :
   virtual int residual(const double t,
                        const VEC &y,
                        const VEC &sy_dot,
-                       VEC &dst) const = 0;
+                       VEC &dst) = 0;
 
   /** Solve the linear system
    *

@@ -293,11 +293,22 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
 
   jacobian_matrix = 0;
 
+  energy.set_time(t);
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
+
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
+
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
 
-  distributed_solution = solution;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
+  distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
 
   energy.initialize_data(distributed_solution,
@@ -368,6 +379,16 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
     {
       computing_timer.enter_section ("   Build preconditioner");
       jacobian_preconditioner_matrix = 0;
+
+      energy.set_time(t);
+      constraints.clear();
+      DoFTools::make_hanging_node_constraints (*dof_handler,
+                                               constraints);
+
+      energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+      constraints.close ();
+
 
       const QGauss<dim> quadrature_formula(fe->degree+1);
       const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
@@ -560,7 +581,9 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
                                                          const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-  distributed_solution = solution;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
+  distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
 
   std::stringstream suffix;
@@ -600,16 +623,25 @@ int
 NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
                                                       const VEC &solution,
                                                       const VEC &solution_dot,
-                                                      VEC &dst) const
+                                                      VEC &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
+
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
+
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  SAKData residual_data;
+  VEC tmp(solution);
+  constraints.distribute(tmp);
 
-  distributed_solution = solution;
+  distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
 
   energy.initialize_data(distributed_solution,
@@ -619,7 +651,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 
   auto local_copy = [&dst, this] (const SystemCopyData &data)
   {
-    this->constraints.distribute_local_to_global (data.double_residual, //data.local_rhs,
+    this->constraints.distribute_local_to_global (data.double_residual,
                                                   data.local_dof_indices,
                                                   dst);
   };
@@ -660,7 +692,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
     {
       auto j = id.nth_index_in_set(i);
       if (constraints.is_constrained(j))
-        dst[j] = solution(j)-constraints.get_inhomogeneity(j);
+        dst[j] = solution(j)-distributed_solution(j);
     }
 
   dst.compress(VectorOperation::insert);
