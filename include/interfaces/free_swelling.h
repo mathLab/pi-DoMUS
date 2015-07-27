@@ -161,6 +161,7 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
 
   auto &JxW = fe_cache.get_JxW_values();
   energy = 0;
+  std::cout << "mu_0 = " << mu0 << std::endl;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
 
@@ -182,7 +183,7 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
                      (l0_3*R*T/Omega)*((Omega*c)*std::log((Omega*c)/(1.+Omega*c)) +
                                        chi*((Omega*c)/(1.+Omega*c)) ) -
 
-                     mu0*c*l0_3 - p*(J-l0_3-Omega*c)) ;
+                     (mu0)*c*l0_3 - p*(J-l0_3-Omega*c)) ;
 
       energy += (u*u_dot + psi)*JxW[q];
     }
