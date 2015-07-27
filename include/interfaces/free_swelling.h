@@ -24,7 +24,7 @@ class FreeSwellingThreeField : public ConservativeInterface<dim,spacedim,dim+2, 
 {
   typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,spcedim> CopySystem;
+  typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
 public:
@@ -76,17 +76,17 @@ private:
   const double R=8.314;
 
 
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> U_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
 
 };
 
 template <int dim, int spacedim>
 FreeSwellingThreeField<dim,spacedim>::FreeSwellingThreeField() :
   ConservativeInterface<dim,spacedim,dim+2,FreeSwellingThreeField<dim,spacedim> >("Free Swelling Three Fields",
-      "FESystem[FE_Q(2)^d-FE_Q(2)-FE_Q(1)]",
-      "u,u,u,c,p", "1,0,1;0,1,1;1,1,0", "1,0,0;0,1,0;0,0,1","1,0,0")
+      "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]",
+      "u,u,u,p,c", "1,1,0;1,0,1;0,1,1", "1,0,0;0,1,0;0,0,1","1,0,0")
 {};
 
 
@@ -108,11 +108,11 @@ void FreeSwellingThreeField<dim,spacedim>::preconditioner_energy(const typename 
   auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u", displacement, alpha);
 
-	const FEValuesExtractors::Scalar concentration(dim);
-	const FEValuesExtractors::Scalar pressure(dim+1);
+  const FEValuesExtractors::Scalar pressure(dim);
+  const FEValuesExtractors::Scalar concentration(dim+1);
 
-	auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
-	auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
   const unsigned int n_q_points = us.size();
 
@@ -121,21 +121,22 @@ void FreeSwellingThreeField<dim,spacedim>::preconditioner_energy(const typename 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       const Tensor <1, dim, Number> &u = us[q];
-			auto &c = cs[q];
-			auto &p = ps[q];
+      const Tensor <1, dim, Number> &u_dot = us_dot[q];
+      auto &c = cs[q];
+      auto &p = ps[q];
 
-      energy += 0.5*(u*u_dot
-					          +p*p
-										+c*c)*JxW[q];
+      energy += 0.5*(u*u
+                     +p*p
+                     +c*c)*JxW[q];
     }
 }
 
 template <int dim, int spacedim>
 template<typename Number>
 void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-    Scratch &fe_cache,
-    CopySystem &data,
-    Number &energy) const
+                                                         Scratch &fe_cache,
+                                                         CopySystem &data,
+                                                         Number &energy) const
 {
   Number alpha = this->alpha;
 
@@ -150,11 +151,11 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
-	const FEValuesExtractors::Scalar concentration(dim);
-	const FEValuesExtractors::Scalar pressure(dim+1);
+  const FEValuesExtractors::Scalar pressure(dim);
+  const FEValuesExtractors::Scalar concentration(dim+1);
 
-	auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
-	auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
   const unsigned int n_q_points = us.size();
 
@@ -163,19 +164,25 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
   for (unsigned int q=0; q<n_q_points; ++q)
     {
 
-			auto &u = us[q];
+      auto &u = us[q];
       const Tensor <1, dim, Number> &u_dot = us_dot[q];
       const Tensor <2, dim, Number> &F = Fs[q];
       const Tensor<2, dim, Number> C = transpose(F)*F;
-			auto &c = cs[q];
-			auto &p = ps[q];
+      auto &c = cs[q];
+      auto &p = ps[q];
 
       Number I = trace(C);
       Number J = determinant(F);
 
 
-//			Number psi = 0.5*G*l0_3*(l02*I - dim) + (l0_3*R*T/Omega)*((l03*J-1.)*std::log(1.-1./(l03*J)) + chi*(1.-1./(l03*J)) ) - mu*(l03*J -1.)/(l03*Omega);
-			Number psi = 0.5*G*l0_3*(l02*I - dim) + (l0_3*R*T/Omega)*((Omega*c)*std::log((Omega*c)/(1.+Omega*c)) + chi*((Omega*c)/(1.+Omega*c)) ) - mu*c*l0_3 - p*(J-l0_3-Omega*c);
+//      Number psi = 0.5*G*l0_3*(l02*I - dim) + (l0_3*R*T/Omega)*((l03*J-1.)*std::log(1.-1./(l03*J)) + chi*(1.-1./(l03*J)) ) - mu*(l03*J -1.)/(l03*Omega);
+
+      Number psi = ( 0.5*G*l0_3*(l02*I - dim) +
+
+                     (l0_3*R*T/Omega)*((Omega*c)*std::log((Omega*c)/(1.+Omega*c)) +
+                                       chi*((Omega*c)/(1.+Omega*c)) ) -
+
+                     mu0*c*l0_3 - p*(J-l0_3-Omega*c)) ;
 
       energy += (u*u_dot + psi)*JxW[q];
     }
@@ -221,69 +228,70 @@ FreeSwellingThreeField<dim,spacedim>::compute_system_operators(const DoFHandler<
   DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
                                     constant_modes);
 
-  Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  Mf_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+  p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  U_prec.reset (new TrilinosWrappers::PreconditionJacobi());
 
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
-  Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
+//  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+//  Amg_data.constant_modes = constant_modes;
+//  Amg_data.elliptic = true;
+//  Amg_data.higher_order_elements = true;
+//  Amg_data.smoother_sweeps = 2;
+//  Amg_data.aggregation_threshold = 0.02;
+//
 
-  Mc_preconditioner->initialize (preconditioner_matrix.block(1,1));
-  Mp_preconditioner->initialize (preconditioner_matrix.block(2,2));
-  Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                  Amg_data);
+  U_prec->initialize (preconditioner_matrix.block(0,0));
+  p_prec->initialize (preconditioner_matrix.block(1,1));
+  c_prec->initialize (preconditioner_matrix.block(2,2));
 
 
   // SYSTEM MATRIX:
-  auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-  auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  //  auto B =  transpose_operator(Bt);
-  auto B     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-  auto C     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,0) );
-  auto D     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,2) );
+  auto A   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
+  auto Bt  =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
   auto Z02 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,2) );
+
+  auto B   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
   auto Z11 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
-  auto Z12 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,2) );
-  auto Z21 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,1) );
-	
-  // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<3, 3, VEC >({{
-      {{ A, Bt   , Z02 }},
-      {{ B, Z11  , Z12 }},
-			{{ C, Z21  , D   }}
-    }
-  });
+  auto C   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,2) );
 
-
-
-  auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >( preconditioner_matrix.block(1,1) );
-  auto Mf    = linear_operator< TrilinosWrappers::MPI::Vector >( preconditioner_matrix.block(2,2) );
-
-  static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-  auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
-  auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-	auto Phi_inv   = inverse_operator( Mf,solver_CG, *Mf_preconditioner);
-
-  auto P00 = A_inv;
-  auto P01 = null_operator(Bt);
-  auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
   auto Z20 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,0) );
+  auto D   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,1) );
+  auto E   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,2) );
+
+  auto P0  =  linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(0,0));
+  auto P1  =  linear_operator< TrilinosWrappers::MPI::Vector >(preconditioner_matrix.block(1,1));
+  auto P2  =  linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(2,2));
 
 
-  //const auto S = linear_operator<VEC>(matrix);
+  static ReductionControl solver_control_pre(5000, 1e-4);
+  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
 
-  prec_op = block_operator<3, 3, VEC >({{
-      {{ P00, P01, Z02 }} ,
-      {{ P10, P11, Z12 }},
-			{{ Z20, Z21, Phi_inv}}
+  auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
+  auto P1_inv = inverse_operator( P1, solver_CG, *p_prec);
+  auto P2_inv = inverse_operator( P2, solver_CG, *c_prec);
+
+
+//  auto P0_inv = linear_operator( matrix.block(0,0), *U_prec);
+//  auto P1_inv = linear_operator( matrix.block(1,1), *p_prec);
+//  auto P2_inv = linear_operator( matrix.block(2,2), *c_prec);
+
+
+  // ASSEMBLE THE PROBLEM:
+  const std::array<std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 3 >, 3 > matrix_array = {{
+      {{ A,   Bt   , Z02 }},
+      {{ B,   Z11  , C   }},
+      {{ Z20, D    , E   }}
     }
-  });
+  };
+
+  system_op  = block_operator<3, 3, VEC >(matrix_array);
+
+  const std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 3 > diagonal_array = {{ P0_inv, P1_inv, P2_inv }};
+
+  // system_op = linear_operator<VEC, VEC>(matrix);
+
+  prec_op = block_back_substitution<3, VEC>(matrix_array, diagonal_array);
+
 }
 
 

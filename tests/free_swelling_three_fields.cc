@@ -1,5 +1,5 @@
 #include "n_fields_problem.h"
-#include "interfaces/navier_stokes.h"
+#include "interfaces/free_swelling.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -9,14 +9,14 @@ int main (int argc, char *argv[])
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
                                                       numbers::invalid_unsigned_int);
 
-  initlog();
+  initlog(true);
 
-  const int dim = 2;
-  const int spacedim = 2;
+  const int dim = 3;
+  const int spacedim = 3;
 
-  NavierStokes<dim> energy;
-  NFieldsProblem<dim,spacedim,dim+1> n_problem (energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/navier_stokes_01.prm", "used_parameters.prm");
+  FreeSwellingThreeField<dim,spacedim> energy;
+  NFieldsProblem<dim,spacedim,dim+2> n_problem (energy);
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/free_swelling_01.prm", "used_parameters.prm");
 
 
   n_problem.run ();
