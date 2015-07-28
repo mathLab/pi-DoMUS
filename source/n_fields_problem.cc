@@ -46,6 +46,7 @@
 //#include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/distributed/grid_refinement.h>
+#include <deal2lkit/utilities.h>
 
 #include <typeinfo>
 #include <fstream>
@@ -104,7 +105,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &use_direct_solver,
                   "Use direct solver if available",
-                  "true",
+                  "false",
                   Patterns::Bool());
 
 
@@ -722,6 +723,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
     const typename LAC::VectorType &src,
     typename LAC::VectorType &dst) const
 {
+  OverWriteStream<>         fixed_out(1,std::cout);
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
 
@@ -770,10 +772,10 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
           n_iterations = (solver_control.last_step() +
                           solver_control_refined.last_step());
         }
-      pcout << std::endl;
-      pcout << " iterations:                           " <<  n_iterations
-            << std::endl;
-      pcout << std::endl;
+      fixed_out << std::endl;
+      fixed_out << " iterations:                           " <<  n_iterations
+                << std::endl;
+      // fixed_out << std::endl;
 
     }
 
@@ -794,7 +796,6 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
 {
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
-
   if (use_direct_solver == false)
     {
       assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
@@ -856,6 +857,7 @@ template class NFieldsProblem<2,2,2>;
 template class NFieldsProblem<2,2,3>;
 template class NFieldsProblem<2,2,4>;
 template class NFieldsProblem<2,2,5>;
+
 template class NFieldsProblem<2,2,6>;
 template class NFieldsProblem<2,2,7>;
 template class NFieldsProblem<2,2,8>;

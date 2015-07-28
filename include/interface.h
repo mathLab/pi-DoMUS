@@ -26,9 +26,13 @@
  *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
  *    - Initial conditions ( y(0) and d/dt y (0) )
  *  - System Matrix:
- *    - coupling
+ *    - coupling (coupling variable is a matrix of zeroes and ones: if the row
+ *      and the coloumn are indipendent there will be 0, otherwise 1)
  *  - Preconditioner:
- *    - preconditioner coupling
+ *    - preconditioner coupling (same as above)
+ *  - @p default_differential_components : this variable is a list of ones and
+ *    zeroes. 1 in the case the corresponding variable should be differentiable
+ *    and 0 otherwise.
  *  TODO: add flags
  */
 
@@ -382,8 +386,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const typename LAC::BlockMatrix &,
                                         const typename LAC::BlockMatrix &,
-                                        BlockLinearOperator<typename LAC::VectorType> &,
-                                        BlockLinearOperator<typename LAC::VectorType> &) const
+                                        LinearOperator<typename LAC::VectorType> &,
+                                        LinearOperator<typename LAC::VectorType> &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }

@@ -57,8 +57,8 @@ public:
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const TrilinosWrappers::BlockSparseMatrix &,
                                 const TrilinosWrappers::BlockSparseMatrix &,
-                                BlockLinearOperator<VEC> &,
-                                BlockLinearOperator<VEC> &) const;
+                                LinearOperator<VEC> &,
+                                LinearOperator<VEC> &) const;
 
 private:
   double E;
@@ -167,8 +167,8 @@ void
 CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
     const TrilinosWrappers::BlockSparseMatrix &matrix,
     const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-    BlockLinearOperator<VEC> &system_op,
-    BlockLinearOperator<VEC> &prec_op) const
+    LinearOperator<VEC> &system_op,
+    LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;

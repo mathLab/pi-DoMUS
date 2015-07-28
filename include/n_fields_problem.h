@@ -161,7 +161,7 @@ private:
   std::string timer_file_name;
 
   ConditionalOStream        pcout;
-  std::ofstream         timer_outfile;
+  std::ofstream             timer_outfile;
   ConditionalOStream        tcout;
 
   shared_ptr<Mapping<dim,spacedim> >             mapping;
@@ -178,8 +178,8 @@ private:
   typename LAC::BlockMatrix       jacobian_matrix;
   typename LAC::BlockMatrix       jacobian_preconditioner_matrix;
 
-  BlockLinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
-  BlockLinearOperator<typename LAC::VectorType> jacobian_op;
+  LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
+  LinearOperator<typename LAC::VectorType> jacobian_op;
 
   typename LAC::VectorType        solution;
   typename LAC::VectorType        solution_dot;
