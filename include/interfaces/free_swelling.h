@@ -161,7 +161,6 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
 
   auto &JxW = fe_cache.get_JxW_values();
   energy = 0;
-  std::cout << "mu_0 = " << mu0 << std::endl;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
 
@@ -176,14 +175,12 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
       Number J = determinant(F);
 
 
-//      Number psi = 0.5*G*l0_3*(l02*I - dim) + (l0_3*R*T/Omega)*((l03*J-1.)*std::log(1.-1./(l03*J)) + chi*(1.-1./(l03*J)) ) - mu*(l03*J -1.)/(l03*Omega);
+      Number psi = ( 0.5*G*l0_3*(l02*I - dim)
 
-      Number psi = ( 0.5*G*l0_3*(l02*I - dim) +
+                    + (l0_3*R*T/Omega)*((Omega*l03*c)*std::log((Omega*l03*c)/(1.+Omega*l03*c))
+                                     + chi*((Omega*l03*c)/(1.+Omega*l03*c)) )
 
-                     (l0_3*R*T/Omega)*((Omega*c)*std::log((Omega*c)/(1.+Omega*c)) +
-                                       chi*((Omega*c)/(1.+Omega*c)) ) -
-
-                     (mu0)*c*l0_3 - p*(J-l0_3-Omega*c)) ;
+                    - (mu0)*c - p*(J-l0_3-Omega*c)) ;
 
       energy += (u*u_dot + psi)*JxW[q];
     }
@@ -264,7 +261,7 @@ FreeSwellingThreeField<dim,spacedim>::compute_system_operators(const DoFHandler<
   auto P2  =  linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(2,2));
 
 
-  static ReductionControl solver_control_pre(5000, 1e-4);
+  static ReductionControl solver_control_pre(5000, 1e-7);
   static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
 
   auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);

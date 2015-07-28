@@ -6,10 +6,10 @@ using namespace dealii;
 int main (int argc, char *argv[])
 {
 
-  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
-                                                      numbers::invalid_unsigned_int);
+  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+//                                                      numbers::invalid_unsigned_int);
 
-  initlog(true);
+  initlog();
 
   const int dim = 3;
   const int spacedim = 3;
