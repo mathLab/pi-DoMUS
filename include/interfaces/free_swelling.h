@@ -177,10 +177,10 @@ void FreeSwellingThreeField<dim,spacedim>::system_energy(const typename DoFHandl
 
       Number psi = ( 0.5*G*l0_3*(l02*I - dim)
 
-                    + (l0_3*R*T/Omega)*((Omega*l03*c)*std::log((Omega*l03*c)/(1.+Omega*l03*c))
-                                     + chi*((Omega*l03*c)/(1.+Omega*l03*c)) )
+                     + (l0_3*R*T/Omega)*((Omega*l03*c)*std::log((Omega*l03*c)/(1.+Omega*l03*c))
+                                         + chi*((Omega*l03*c)/(1.+Omega*l03*c)) )
 
-                    - (mu0)*c - p*(J-l0_3-Omega*c)) ;
+                     - (mu0)*c - p*(J-l0_3-Omega*c)) ;
 
       energy += (u*u_dot + psi)*JxW[q];
     }

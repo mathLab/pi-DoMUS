@@ -770,14 +770,14 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
           n_iterations = (solver_control.last_step() +
                           solver_control_refined.last_step());
         }
+      pcout << std::endl;
+      pcout << " iterations:                           " <<  n_iterations
+      << std::endl;
+      pcout << std::endl;
+
     }
 
   set_constrained_dofs_to_zero(dst);
-
-//  pcout << std::endl;
-//  pcout << " iterations:                           " <<  n_iterations
-//        << std::endl;
-//  pcout << std::endl;
 
   computing_timer.exit_section();
   return 0;
