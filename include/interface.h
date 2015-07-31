@@ -109,6 +109,7 @@ public:
         const QGauss<dim-1> quad(this->operator()()->degree+1);
         dirichlet_bcs.project_boundary_values(dof_handler,quad,constraints);
       }
+    dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,constraints);
   };
 
   /**
