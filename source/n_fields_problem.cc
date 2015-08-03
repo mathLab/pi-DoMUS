@@ -13,6 +13,7 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/trilinos_block_vector.h>
@@ -57,14 +58,15 @@
 #include <math.h>
 
 #include "equation_data.h"
+#include "lac_initializer.h"
 
 using namespace dealii;
 
 /* ------------------------ PARAMETERS ------------------------ */
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components>::
+NFieldsProblem<dim, spacedim, n_components, LAC>::
 declare_parameters (ParameterHandler &prm)
 {
   add_parameter(  prm,
@@ -99,16 +101,23 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Bool());
 
 
+  add_parameter(  prm,
+                  &use_direct_solver,
+                  "Use direct solver if available",
+                  "true",
+                  Patterns::Bool());
+
+
 
 }
 
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
-template <int dim, int spacedim, int n_components>
-NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim, spacedim, n_components> &energy,
+template <int dim, int spacedim, int n_components, typename LAC>
+NFieldsProblem<dim, spacedim, n_components, LAC>::NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
     const MPI_Comm &communicator)
   :
-  OdeArgument<VEC>(communicator),
+  OdeArgument<typename LAC::BlockVector>(communicator),
   comm(communicator),
   energy(energy),
   pcout (std::cout,
@@ -133,15 +142,15 @@ NFieldsProblem<dim, spacedim, n_components>::NFieldsProblem (const Interface<dim
   initial_solution_dot("Initial solution_dot"),
 
   data_out("Output Parameters", "vtu"),
-  dae(*this)
-
+  dae(*this),
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
 {}
 
 
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_run)
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_run)
 {
   computing_timer.enter_section("Setup dof systems");
   std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
@@ -150,7 +159,9 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
 
   mapping = energy.get_mapping(*dof_handler, solution);
 
-  std::vector<types::global_dof_index> dofs_per_block (energy.n_blocks());
+  dofs_per_block.clear();
+  dofs_per_block.resize(energy.n_blocks());
+
   DoFTools::count_dofs_per_block (*dof_handler, dofs_per_block,
                                   sub_blocks);
 
@@ -175,10 +186,10 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
 
   IndexSet relevant_set;
   {
-    IndexSet index_set = dof_handler->locally_owned_dofs();
+    global_partitioning = dof_handler->locally_owned_dofs();
     for (unsigned int i=0; i<energy.n_blocks(); ++i)
-      partitioning.push_back(index_set.get_view( std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i, 0),
-                                                 std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i+1, 0)));
+      partitioning.push_back(global_partitioning.get_view( std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i, 0),
+                                                           std::accumulate(dofs_per_block.begin(), dofs_per_block.begin()+i+1, 0)));
 
     DoFTools::extract_locally_relevant_dofs (*dof_handler,
                                              relevant_set);
@@ -194,17 +205,40 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
                                            constraints);
 
   energy.apply_dirichlet_bcs(*dof_handler, constraints);
-
   constraints.close ();
 
-  reinit_jacobian_matrix (partitioning, relevant_partitioning);
-  reinit_jacobian_preconditioner (partitioning, relevant_partitioning);
+  ScopedLACInitializer initializer(dofs_per_block,
+                                   partitioning,
+                                   relevant_partitioning,
+                                   comm);
 
+  initializer(solution);
+  initializer(solution_dot);
+  if (we_are_parallel)
+    {
+      initializer.ghosted(distributed_solution);
+      initializer.ghosted(distributed_solution_dot);
+    }
 
-  distributed_solution.reinit (partitioning, relevant_partitioning, comm);
-  distributed_solution_dot.reinit (partitioning, relevant_partitioning, comm);
-  solution.reinit (partitioning, comm);
-  solution_dot.reinit (partitioning, comm);
+  jacobian_matrix.clear();
+  initializer(jacobian_matrix_sp,
+              *dof_handler,
+              constraints,
+              energy.get_coupling());
+
+  jacobian_matrix.reinit(jacobian_matrix_sp);
+
+  if (energy.get_jacobian_preconditioner_flags() != update_default)
+    {
+      jacobian_preconditioner_matrix.clear();
+
+      initializer(jacobian_preconditioner_matrix_sp,
+                  *dof_handler,
+                  constraints,
+                  energy.get_preconditioner_coupling());
+
+      jacobian_preconditioner_matrix.reinit(jacobian_preconditioner_matrix_sp);
+    }
 
   if (first_run)
     {
@@ -221,72 +255,13 @@ void NFieldsProblem<dim, spacedim, n_components>::setup_dofs (const bool &first_
         }
 
     }
-
-  // Store a global partitioning to be used anywhere we need to know
-  // what global dofs we own. This is the sum of partitioning[i].
-  global_partioning = solution.locally_owned_elements();
-
   computing_timer.exit_section();
 }
 
-/* ------------------------ SETUP MATRIX ------------------------ */
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::
-reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
-                        const std::vector<IndexSet> &relevant_partitioning)
-{
-  jacobian_matrix.clear ();
-
-  TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
-                                            relevant_partitioning,
-                                            comm);
-
-  Table<2,DoFTools::Coupling> coupling = energy.get_coupling();
-
-  DoFTools::make_sparsity_pattern (*dof_handler,
-                                   coupling, sp,
-                                   constraints, false,
-                                   Utilities::MPI::
-                                   this_mpi_process(comm));
-  sp.compress();
-
-  jacobian_matrix.reinit (sp);
-}
-
-/* ------------------------ PRECONDITIONER ------------------------ */
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::
-reinit_jacobian_preconditioner(const std::vector<IndexSet> &partitioning,
-                               const std::vector<IndexSet> &relevant_partitioning)
-{
-  if (energy.get_jacobian_preconditioner_flags() != update_default)
-    {
-      jacobian_preconditioner_matrix.clear ();
-
-      TrilinosWrappers::BlockSparsityPattern sp(partitioning, partitioning,
-                                                relevant_partitioning,
-                                                comm);
-
-      Table<2,DoFTools::Coupling> coupling = energy.get_preconditioner_coupling();
-
-      DoFTools::make_sparsity_pattern (*dof_handler,
-                                       coupling, sp,
-                                       constraints, false,
-                                       Utilities::MPI::
-                                       this_mpi_process(comm));
-      sp.compress();
-
-      jacobian_preconditioner_matrix.reinit (sp);
-    }
-}
-
-
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (const double t,
-    const VEC &solution,
-    const VEC &solution_dot,
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const double t,
+    const typename LAC::BlockVector &solution,
+    const typename LAC::BlockVector &solution_dot,
     const double alpha)
 {
   computing_timer.enter_section ("   Assemble system jacobian");
@@ -306,13 +281,22 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
 
-  VEC tmp(solution);
+  typename LAC::BlockVector tmp(solution);
   constraints.distribute(tmp);
-  distributed_solution = tmp;
-  distributed_solution_dot = solution_dot;
 
-  energy.initialize_data(distributed_solution,
-                         distributed_solution_dot, t, alpha);
+  if (we_are_parallel)
+    {
+      distributed_solution = tmp;
+      distributed_solution_dot = solution_dot;
+
+      energy.initialize_data(distributed_solution,
+                             distributed_solution_dot, t, alpha);
+    }
+  else
+    {
+      energy.initialize_data(tmp,
+                             solution_dot, t, alpha);
+    }
 
 
   auto local_copy = [ this ]
@@ -350,7 +334,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
        Assembly::CopyData::
        NFieldsSystem<dim,spacedim> (*fe));
 
-  jacobian_matrix.compress(VectorOperation::add);
+  compress(jacobian_matrix,VectorOperation::add);
 
 //  pcout << std::endl;
 
@@ -361,7 +345,7 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
       if (constraints.is_constrained(j))
         jacobian_matrix.set(j, j, 1.0);
     }
-  jacobian_matrix.compress(VectorOperation::insert);
+  compress(jacobian_matrix,VectorOperation::insert);
 
   computing_timer.exit_section();
 }
@@ -369,10 +353,10 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_matrix (cons
 
 
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_preconditioner (const double t,
-    const VEC &solution,
-    const VEC &solution_dot,
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
+    const typename LAC::BlockVector &solution,
+    const typename LAC::BlockVector &solution_dot,
     const double alpha)
 {
   if (energy.get_jacobian_preconditioner_flags() != update_default)
@@ -446,8 +430,8 @@ void NFieldsProblem<dim, spacedim, n_components>::assemble_jacobian_precondition
 
 /* ------------------------ MESH AND GRID ------------------------ */
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
   if (adaptive_refinement)
@@ -471,37 +455,64 @@ void NFieldsProblem<dim, spacedim, n_components>::refine_mesh ()
 
     }
 
-  parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_tr(*dof_handler);
-  parallel::distributed::SolutionTransfer<dim,TrilinosWrappers::MPI::BlockVector> sol_dot_tr(*dof_handler);
-  TrilinosWrappers::MPI::BlockVector sol (distributed_solution);
-  TrilinosWrappers::MPI::BlockVector sol_dot (distributed_solution_dot);
-  sol = solution;
-  sol_dot = solution_dot;
+  typedef TrilinosWrappers::MPI::BlockVector pVEC;
+  typedef BlockVector<double> sVEC;
 
-  triangulation->prepare_coarsening_and_refinement();
-  sol_tr.prepare_for_coarsening_and_refinement (sol);
-  sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
-  if (adaptive_refinement)
-    triangulation->execute_coarsening_and_refinement ();
+  if (typeid(typename LAC::BlockVector) == typeid(pVEC))
+    {
+      parallel::distributed::SolutionTransfer<dim,pVEC> sol_tr(*dof_handler);
+      parallel::distributed::SolutionTransfer<dim,pVEC> sol_dot_tr(*dof_handler);
+      typename LAC::BlockVector sol (distributed_solution);
+      typename LAC::BlockVector sol_dot (distributed_solution_dot);
+      sol = solution;
+      sol_dot = solution_dot;
+
+      triangulation->prepare_coarsening_and_refinement();
+      sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
+      sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
+      if (adaptive_refinement)
+        triangulation->execute_coarsening_and_refinement ();
+      else
+        triangulation->refine_global (1);
+
+      setup_dofs(false);
+
+      typename LAC::BlockVector tmp (solution);
+      typename LAC::BlockVector tmp_dot (solution_dot);
+
+      sol_tr.interpolate ((pVEC &)tmp);
+      sol_dot_tr.interpolate ((pVEC &)tmp_dot);
+      solution = tmp;
+      solution_dot = tmp_dot;
+    }
   else
-    triangulation->refine_global (1);
+    {
+      SolutionTransfer<dim,sVEC> sol_tr(*dof_handler);
+      SolutionTransfer<dim,sVEC> sol_dot_tr(*dof_handler);
 
-  setup_dofs(false);
+      typename LAC::BlockVector tmp (solution);
+      typename LAC::BlockVector tmp_dot (solution_dot);
 
-  TrilinosWrappers::MPI::BlockVector tmp (solution);
-  TrilinosWrappers::MPI::BlockVector tmp_dot (solution_dot);
+      triangulation->prepare_coarsening_and_refinement();
+      sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
+      sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
+      if (adaptive_refinement)
+        triangulation->execute_coarsening_and_refinement ();
+      else
+        triangulation->refine_global (1);
 
-  sol_tr.interpolate (tmp);
-  sol_dot_tr.interpolate (tmp_dot);
-  solution = tmp;
-  solution_dot = tmp_dot;
+      setup_dofs(false);
+
+      sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
+      sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
+    }
 
   computing_timer.exit_section();
 }
 
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::make_grid_fe()
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::make_grid_fe()
 {
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim,spacedim>(*triangulation));
@@ -511,8 +522,8 @@ void NFieldsProblem<dim, spacedim, n_components>::make_grid_fe()
 
 /* ------------------------ ERRORS ------------------------ */
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::process_solution ()
 {
   eh.error_from_exact(*dof_handler, solution, exact_solution);
   eh.output_table(pcout);
@@ -520,8 +531,8 @@ void NFieldsProblem<dim, spacedim, n_components>::process_solution ()
 
 /* ------------------------ RUN ------------------------ */
 
-template <int dim, int spacedim, int n_components>
-void NFieldsProblem<dim, spacedim, n_components>::run ()
+template <int dim, int spacedim, int n_components, typename LAC>
+void NFieldsProblem<dim, spacedim, n_components, LAC>::run ()
 {
 //  if(timer_file_name != "")
 //    timer_outfile.open(timer_file_name.c_str());
@@ -555,33 +566,33 @@ void NFieldsProblem<dim, spacedim, n_components>::run ()
 
 /*** ODE Argument Interface ***/
 
-template <int dim, int spacedim, int n_components>
-shared_ptr<VEC>
-NFieldsProblem<dim, spacedim, n_components>::create_new_vector() const
+template <int dim, int spacedim, int n_components, typename LAC>
+shared_ptr<typename LAC::BlockVector>
+NFieldsProblem<dim, spacedim, n_components, LAC>::create_new_vector() const
 {
-  shared_ptr<VEC> ret = SP(new VEC(solution));
+  shared_ptr<typename LAC::BlockVector> ret = SP(new typename LAC::BlockVector(solution));
   return ret;
 }
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 unsigned int
-NFieldsProblem<dim, spacedim, n_components>::n_dofs() const
+NFieldsProblem<dim, spacedim, n_components, LAC>::n_dofs() const
 {
   return dof_handler->n_dofs();
 }
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
-                                                         const VEC &solution,
-                                                         const VEC &solution_dot,
-                                                         const unsigned int step_number,
-                                                         const double /* h */ )
+NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double /* t */,
+    const typename LAC::BlockVector &solution,
+    const typename LAC::BlockVector &solution_dot,
+    const unsigned int step_number,
+    const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-  VEC tmp(solution);
+  typename LAC::BlockVector tmp(solution);
   constraints.distribute(tmp);
   distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
@@ -606,11 +617,11 @@ NFieldsProblem<dim, spacedim, n_components>::output_step(const double /* t */,
 
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 bool
-NFieldsProblem<dim, spacedim, n_components>::solver_should_restart(const double t,
-    const VEC &solution,
-    const VEC &solution_dot,
+NFieldsProblem<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
+    const typename LAC::BlockVector &solution,
+    const typename LAC::BlockVector &solution_dot,
     const unsigned int step_number,
     const double h)
 {
@@ -618,12 +629,12 @@ NFieldsProblem<dim, spacedim, n_components>::solver_should_restart(const double 
 }
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
-                                                      const VEC &solution,
-                                                      const VEC &solution_dot,
-                                                      VEC &dst)
+NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
+                                                           const typename LAC::BlockVector &solution,
+                                                           const typename LAC::BlockVector &solution_dot,
+                                                           typename LAC::BlockVector &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
@@ -638,7 +649,7 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  VEC tmp(solution);
+  typename LAC::BlockVector tmp(solution);
   constraints.distribute(tmp);
 
   distributed_solution = tmp;
@@ -701,15 +712,15 @@ NFieldsProblem<dim, spacedim, n_components>::residual(const double t,
 }
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double t,
-    const VEC &y,
-    const VEC &y_dot,
-    const VEC &,
+NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
+    const typename LAC::BlockVector &y,
+    const typename LAC::BlockVector &y_dot,
+    const typename LAC::BlockVector &,
     const double alpha,
-    const VEC &src,
-    VEC &dst) const
+    const typename LAC::BlockVector &src,
+    typename LAC::BlockVector &dst) const
 {
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
@@ -717,32 +728,48 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
   unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
 
-  PrimitiveVectorMemory<TrilinosWrappers::MPI::BlockVector> mem;
-  SolverControl solver_control (30, solver_tolerance);
-  SolverControl solver_control_refined (jacobian_matrix.m(), solver_tolerance);
+  typedef dealii::BlockSparseMatrix<double> sMAT;
+  typedef dealii::BlockVector<double> sVEC;
 
-  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
-  solver(solver_control, mem,
-         SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
-         AdditionalData(30, true));
-
-  SolverFGMRES<TrilinosWrappers::MPI::BlockVector>
-  solver_refined(solver_control_refined, mem,
-                 SolverFGMRES<TrilinosWrappers::MPI::BlockVector>::
-                 AdditionalData(50, true));
-
-  auto S_inv         = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
-  auto S_inv_refined = inverse_operator(jacobian_op, solver_refined, jacobian_preconditioner_op);
-  try
+  if (we_are_parallel == false &&
+      use_direct_solver == true &&
+      typeid(typename LAC::BlockMatrix) == typeid(dealii::BlockSparseMatrix<double>))
     {
-      S_inv.vmult(dst, src);
-      n_iterations = solver_control.last_step();
+
+      SparseDirectUMFPACK inverse;
+      inverse.factorize((sMAT &) jacobian_matrix);
+      inverse.vmult((sVEC &)dst, (sVEC &)src);
+
     }
-  catch ( SolverControl::NoConvergence )
+  else
     {
-      S_inv_refined.vmult(dst, src);
-      n_iterations = (solver_control.last_step() +
-                      solver_control_refined.last_step());
+
+
+      PrimitiveVectorMemory<typename LAC::BlockVector> mem;
+      SolverControl solver_control (30, solver_tolerance);
+      SolverControl solver_control_refined (jacobian_matrix.m(), solver_tolerance);
+
+      SolverFGMRES<typename LAC::BlockVector>
+      solver(solver_control, mem,
+             typename SolverFGMRES<typename LAC::BlockVector>::AdditionalData(30, true));
+
+      SolverFGMRES<typename LAC::BlockVector>
+      solver_refined(solver_control_refined, mem,
+                     typename SolverFGMRES<typename LAC::BlockVector>::AdditionalData(50, true));
+
+      auto S_inv         = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
+      auto S_inv_refined = inverse_operator(jacobian_op, solver_refined, jacobian_preconditioner_op);
+      try
+        {
+          S_inv.vmult(dst, src);
+          n_iterations = solver_control.last_step();
+        }
+      catch ( SolverControl::NoConvergence )
+        {
+          S_inv_refined.vmult(dst, src);
+          n_iterations = (solver_control.last_step() +
+                          solver_control_refined.last_step());
+        }
     }
 
   set_constrained_dofs_to_zero(dst);
@@ -751,26 +778,33 @@ NFieldsProblem<dim, spacedim, n_components>::solve_jacobian_system(const double 
 //  pcout << " iterations:                           " <<  n_iterations
 //        << std::endl;
 //  pcout << std::endl;
+
   computing_timer.exit_section();
   return 0;
 }
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
-                                                            const VEC &src_yy,
-                                                            const VEC &src_yp,
-                                                            const VEC &,
-                                                            const double alpha)
+NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
+    const typename LAC::BlockVector &src_yy,
+    const typename LAC::BlockVector &src_yp,
+    const typename LAC::BlockVector &,
+    const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
-  assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
 
-  energy.compute_system_operators(*dof_handler,
-                                  jacobian_matrix, jacobian_preconditioner_matrix,
-                                  jacobian_op, jacobian_preconditioner_op);
+  if (use_direct_solver == false &&
+      we_are_parallel == true)
+    {
+      assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
+
+      energy.compute_system_operators(*dof_handler,
+                                      jacobian_matrix, jacobian_preconditioner_matrix,
+                                      jacobian_op, jacobian_preconditioner_op);
+    }
+
   computing_timer.exit_section();
 
   return 0;
@@ -778,11 +812,11 @@ NFieldsProblem<dim, spacedim, n_components>::setup_jacobian(const double t,
 
 
 
-template <int dim, int spacedim, int n_components>
-VEC &
-NFieldsProblem<dim, spacedim, n_components>::differential_components() const
+template <int dim, int spacedim, int n_components, typename LAC>
+typename LAC::BlockVector &
+NFieldsProblem<dim, spacedim, n_components, LAC>::differential_components() const
 {
-  static VEC diff_comps;
+  static typename LAC::BlockVector diff_comps;
   diff_comps.reinit(solution);
   std::vector<unsigned int> block_diff = energy.get_differential_blocks();
   for (unsigned int i=0; i<block_diff.size(); ++i)
@@ -794,13 +828,13 @@ NFieldsProblem<dim, spacedim, n_components>::differential_components() const
 
 
 
-template <int dim, int spacedim, int n_components>
+template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components>::set_constrained_dofs_to_zero(VEC &v) const
+NFieldsProblem<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::BlockVector &v) const
 {
-  for (unsigned int i=0; i<global_partioning.n_elements(); ++i)
+  for (unsigned int i=0; i<global_partitioning.n_elements(); ++i)
     {
-      auto j = global_partioning.nth_index_in_set(i);
+      auto j = global_partitioning.nth_index_in_set(i);
       if (constraints.is_constrained(j))
         v[j] = 0;
     }
@@ -822,6 +856,19 @@ template class NFieldsProblem<2,2,1>;
 template class NFieldsProblem<2,2,2>;
 template class NFieldsProblem<2,2,3>;
 template class NFieldsProblem<2,2,4>;
+template class NFieldsProblem<2,2,5>;
+template class NFieldsProblem<2,2,6>;
+template class NFieldsProblem<2,2,7>;
+template class NFieldsProblem<2,2,8>;
+
+template class NFieldsProblem<2,2,1,LADealII>;
+template class NFieldsProblem<2,2,2,LADealII>;
+template class NFieldsProblem<2,2,3,LADealII>;
+template class NFieldsProblem<2,2,4,LADealII>;
+template class NFieldsProblem<2,2,5,LADealII>;
+template class NFieldsProblem<2,2,6,LADealII>;
+template class NFieldsProblem<2,2,7,LADealII>;
+template class NFieldsProblem<2,2,8,LADealII>;
 
 
 // template class NFieldsProblem<2,3,1>;
@@ -830,8 +877,24 @@ template class NFieldsProblem<2,2,4>;
 // template class NFieldsProblem<2,3,4>;
 
 
+
 template class NFieldsProblem<3,3,1>;
 template class NFieldsProblem<3,3,2>;
 template class NFieldsProblem<3,3,3>;
 template class NFieldsProblem<3,3,4>;
+template class NFieldsProblem<3,3,5>;
+template class NFieldsProblem<3,3,6>;
+template class NFieldsProblem<3,3,7>;
+template class NFieldsProblem<3,3,8>;
+
+
+template class NFieldsProblem<3,3,1,LADealII>;
+template class NFieldsProblem<3,3,2,LADealII>;
+template class NFieldsProblem<3,3,3,LADealII>;
+template class NFieldsProblem<3,3,4,LADealII>;
+template class NFieldsProblem<3,3,5,LADealII>;
+template class NFieldsProblem<3,3,6,LADealII>;
+template class NFieldsProblem<3,3,7,LADealII>;
+template class NFieldsProblem<3,3,8,LADealII>;
+
 // template class NFieldsProblem<3>;

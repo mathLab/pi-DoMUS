@@ -1,7 +1,7 @@
 #include "interface.h"
 
-template<int dim, int spacedim, int n_components, class Implementation>
-class NonConservativeInterface : public Interface<dim,spacedim,n_components>
+template<int dim, int spacedim, int n_components, class Implementation,  typename LAC=LATrilinos>
+class NonConservativeInterface : public Interface<dim,spacedim,n_components,LAC>
 {
 
   typedef FEValuesCache<dim,spacedim> Scratch;

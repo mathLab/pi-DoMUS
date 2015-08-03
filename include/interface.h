@@ -51,14 +51,14 @@
 #include "parsed_dirichlet_bcs.h"
 #include "assembly.h"
 #include "utilities.h"
+#include "lac_type.h"
 
-template <int dim,int spacedim=dim, int n_components=1>
+template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
 class Interface : public ParsedFiniteElement<dim,spacedim>
 {
   typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
-  typedef TrilinosWrappers::MPI::BlockVector VEC;
 
 public:
 
@@ -130,9 +130,7 @@ public:
         unsigned int face_id = cell->face(face)->boundary_id();
         if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
           {
-
-            scratch.reinit(cell, face);
-            scratch.cache_local_solution_vector("solution", *solution, dummy);
+            this->reinit(dummy, cell, face, scratch);
 
             auto &vars = scratch.get_values("solution", dummy);
             auto &q_points = scratch.get_quadrature_points();
@@ -171,9 +169,7 @@ public:
     if (forcing_terms.acts_on_id(cell_id))
       {
         Number dummy = 0.0;
-
-        // scratch.fe_cache.reinit(cell); // It is always called outside
-        scratch.cache_local_solution_vector("solution", *solution, dummy);
+        this->reinit(dummy, cell, scratch);
 
         auto &vars = scratch.get_values("solution", dummy);
         auto &q_points = scratch.get_quadrature_points();
@@ -205,8 +201,8 @@ public:
    *
    * TODO: add current_time and current_alpha
    */
-  virtual void initialize_data(const VEC &solution,
-                               const VEC &solution_dot,
+  virtual void initialize_data(const typename LAC::BlockVector &solution,
+                               const typename LAC::BlockVector &solution_dot,
                                const double t,
                                const double alpha) const;
 
@@ -383,10 +379,10 @@ public:
    * the preconditioner, and two references to LinearOperator.
    */
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                        const TrilinosWrappers::BlockSparseMatrix &,
-                                        const TrilinosWrappers::BlockSparseMatrix &,
-                                        LinearOperator<VEC> &,
-                                        LinearOperator<VEC> &) const
+                                        const typename LAC::BlockMatrix &,
+                                        const typename LAC::BlockMatrix &,
+                                        LinearOperator<typename LAC::BlockVector> &,
+                                        LinearOperator<typename LAC::BlockVector> &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
@@ -428,7 +424,7 @@ public:
 
 
   virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
-                                                         const VEC &) const
+                                                         const typename LAC::BlockVector &) const
   {
     return shared_ptr<Mapping<dim,spacedim> >(new MappingQ<dim,spacedim>(1));
   }
@@ -480,6 +476,33 @@ public:
       sol_dot[i] = (alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
   }
 
+  template<typename Number>
+  void reinit(const Number &alpha,
+              const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+              FEValuesCache<dim,spacedim> &fe_cache) const
+  {
+    fe_cache.reinit(cell);
+    fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+    fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+    this->fix_solution_dot_derivative(fe_cache, alpha);
+  };
+
+
+  template<typename Number>
+  void reinit(const Number &alpha,
+              const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+              const unsigned int face_no,
+              FEValuesCache<dim,spacedim> &fe_cache) const
+  {
+    fe_cache.reinit(cell, face_no);
+    fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+    fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+    this->fix_solution_dot_derivative(fe_cache, alpha);
+  };
+
+
+
+
 protected:
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
   mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
@@ -487,8 +510,8 @@ protected:
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
-  mutable const VEC *solution;
-  mutable const VEC *solution_dot;
+  mutable const typename LAC::BlockVector *solution;
+  mutable const typename LAC::BlockVector *solution_dot;
 
   mutable double alpha;
   mutable double t;
@@ -499,11 +522,11 @@ protected:
 };
 
 
-template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::initialize_data(const VEC &solution,
-                                                           const VEC &solution_dot,
-                                                           const double t,
-                                                           const double alpha) const
+template<int dim, int spacedim, int n_components, typename LAC>
+void Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::BlockVector &solution,
+    const typename LAC::BlockVector &solution_dot,
+    const double t,
+    const double alpha) const
 {
   this->solution = &solution;
   this->solution_dot = &solution_dot;
@@ -511,8 +534,8 @@ void Interface<dim,spacedim,n_components>::initialize_data(const VEC &solution,
   this->t = t;
 }
 
-template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::declare_parameters(ParameterHandler &prm)
+template<int dim, int spacedim, int n_components, typename LAC>
+void Interface<dim,spacedim,n_components,LAC>::declare_parameters(ParameterHandler &prm)
 {
   ParsedFiniteElement<dim,spacedim>::declare_parameters(prm);
   this->add_parameter(prm, &_diff_comp, "Block of differential components", str_diff_comp,
@@ -521,14 +544,15 @@ void Interface<dim,spacedim,n_components>::declare_parameters(ParameterHandler &
                       "0 for algebraic");
 }
 
-template<int dim, int spacedim, int n_components>
-void Interface<dim,spacedim,n_components>::parse_parameters_call_back()
+template<int dim, int spacedim, int n_components, typename LAC>
+void Interface<dim,spacedim,n_components,LAC>::parse_parameters_call_back()
 {
   ParsedFiniteElement<dim,spacedim>::parse_parameters_call_back();
 }
 
-template<int dim, int spacedim, int n_components>
-const std::vector<unsigned int> Interface<dim,spacedim,n_components>::get_differential_blocks() const
+template<int dim, int spacedim, int n_components, typename LAC>
+const std::vector<unsigned int> Interface<dim,spacedim,n_components,LAC>
+::get_differential_blocks() const
 {
   return _diff_comp;
 }
