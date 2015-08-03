@@ -22,6 +22,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/linear_operator.h>
+#include <mpi.h>
 
 // #include <deal.II/lac/precondition.h>
 
@@ -37,31 +38,28 @@
 #include "dae_time_integrator.h"
 
 #include "sak_data.h"
-
 #include "fe_values_cache.h"
 
-#include "mpi.h"
+#include "lac_type.h"
+#include "lac_initializer.h"
 
 using namespace dealii;
 
-typedef TrilinosWrappers::MPI::BlockVector VEC;
-
-template <int dim, int spacedim=dim, int n_components=1>
-class NFieldsProblem : public ParameterAcceptor, public OdeArgument<VEC>
+template <int dim, int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
+class NFieldsProblem : public ParameterAcceptor, public OdeArgument<typename LAC::BlockVector>
 {
-
   typedef typename Assembly::CopyData::NFieldsSystem<dim,spacedim> SystemCopyData;
   typedef typename Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> PreconditionerCopyData;
   typedef FEValuesCache<dim,spacedim> Scratch;
 
   // This is a class required to make tests
-  template<int fdim, int fspacedim, int fn_components>
-  friend void test(NFieldsProblem<fdim,fspacedim,fn_components> &);
+  template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
+  friend void test(NFieldsProblem<fdim,fspacedim,fn_components,fn_LAC> &);
 
 public:
 
 
-  NFieldsProblem (const Interface<dim,spacedim,n_components> &energy,
+  NFieldsProblem (const Interface<dim,spacedim,n_components,LAC> &energy,
                   const MPI_Comm &comm=MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
@@ -72,7 +70,7 @@ public:
   /*********************************************************
    * Public interface from OdeArgument
    *********************************************************/
-  virtual shared_ptr<VEC>
+  virtual shared_ptr<typename LAC::BlockVector>
   create_new_vector() const;
 
   /** Returns the number of degrees of freedom. Pure virtual function. */
@@ -83,8 +81,8 @@ public:
    * other forms of vectors need to be done inside the inheriting
    * class. */
   virtual void output_step(const double t,
-                           const VEC &solution,
-                           const VEC &solution_dot,
+                           const typename LAC::BlockVector &solution,
+                           const typename LAC::BlockVector &solution_dot,
                            const unsigned int step_number,
                            const double h);
 
@@ -94,34 +92,34 @@ public:
    * calculation will be continued. If necessary, it can also reset
    * the time stepper. */
   virtual bool solver_should_restart(const double t,
-                                     const VEC &solution,
-                                     const VEC &solution_dot,
+                                     const typename LAC::BlockVector &solution,
+                                     const typename LAC::BlockVector &solution_dot,
                                      const unsigned int step_number,
                                      const double h);
 
   /** For dae problems, we need a
    residual function. */
   virtual int residual(const double t,
-                       const VEC &src_yy,
-                       const VEC &src_yp,
-                       VEC &dst);
+                       const typename LAC::BlockVector &src_yy,
+                       const typename LAC::BlockVector &src_yp,
+                       typename LAC::BlockVector &dst);
 
   /** Setup Jacobian system and preconditioner. */
   virtual int setup_jacobian(const double t,
-                             const VEC &src_yy,
-                             const VEC &src_yp,
-                             const VEC &residual,
+                             const typename LAC::BlockVector &src_yy,
+                             const typename LAC::BlockVector &src_yp,
+                             const typename LAC::BlockVector &residual,
                              const double alpha);
 
 
   /** Inverse of the Jacobian vector product. */
   virtual int solve_jacobian_system(const double t,
-                                    const VEC &y,
-                                    const VEC &y_dot,
-                                    const VEC &residual,
+                                    const typename LAC::BlockVector &y,
+                                    const typename LAC::BlockVector &y_dot,
+                                    const typename LAC::BlockVector &residual,
                                     const double alpha,
-                                    const VEC &src,
-                                    VEC &dst) const;
+                                    const typename LAC::BlockVector &src,
+                                    typename LAC::BlockVector &dst) const;
 
 
 
@@ -131,37 +129,28 @@ public:
    corresponding variable is a
    differential component, zero
    otherwise.  */
-  virtual VEC &differential_components() const;
+  virtual typename LAC::BlockVector &differential_components() const;
 
 private:
   void make_grid_fe();
   void setup_dofs (const bool &first_run=true);
 
-  void reinit_jacobian_matrix (const std::vector<IndexSet> &partitioning,
-                               const std::vector<IndexSet> &relevant_partitioning);
-
-
   void assemble_jacobian_matrix (const double t,
-                                 const VEC &y,
-                                 const VEC &y_dot,
+                                 const typename LAC::BlockVector &y,
+                                 const typename LAC::BlockVector &y_dot,
                                  const double alpha);
 
-
-  void reinit_jacobian_preconditioner (const std::vector<IndexSet> &partitioning,
-                                       const std::vector<IndexSet> &relevant_partitioning);
-
-
   void assemble_jacobian_preconditioner (const double t,
-                                         const VEC &y,
-                                         const VEC &y_dot,
+                                         const typename LAC::BlockVector &y,
+                                         const typename LAC::BlockVector &y_dot,
                                          const double alpha);
   void refine_mesh ();
   void process_solution ();
 
-  void set_constrained_dofs_to_zero(VEC &v) const;
+  void set_constrained_dofs_to_zero(typename LAC::BlockVector &v) const;
 
   const MPI_Comm &comm;
-  const Interface<dim,spacedim,n_components>    &energy;
+  const Interface<dim,spacedim,n_components,LAC>    &energy;
 
   unsigned int n_cycles;
   unsigned int current_cycle;
@@ -183,17 +172,20 @@ private:
 
   ConstraintMatrix                          constraints;
 
-  TrilinosWrappers::BlockSparseMatrix       jacobian_matrix;
-  TrilinosWrappers::BlockSparseMatrix       jacobian_preconditioner_matrix;
+  typename LAC::BlockSparsityPattern       jacobian_matrix_sp;
+  typename LAC::BlockSparsityPattern       jacobian_preconditioner_matrix_sp;
 
-  LinearOperator<TrilinosWrappers::MPI::BlockVector> jacobian_preconditioner_op;
-  LinearOperator<TrilinosWrappers::MPI::BlockVector> jacobian_op;
+  typename LAC::BlockMatrix       jacobian_matrix;
+  typename LAC::BlockMatrix       jacobian_preconditioner_matrix;
 
-  TrilinosWrappers::MPI::BlockVector        solution;
-  TrilinosWrappers::MPI::BlockVector        solution_dot;
+  LinearOperator<typename LAC::BlockVector> jacobian_preconditioner_op;
+  LinearOperator<typename LAC::BlockVector> jacobian_op;
 
-  mutable TrilinosWrappers::MPI::BlockVector        distributed_solution;
-  mutable TrilinosWrappers::MPI::BlockVector        distributed_solution_dot;
+  typename LAC::BlockVector        solution;
+  typename LAC::BlockVector        solution_dot;
+
+  mutable typename LAC::BlockVector        distributed_solution;
+  mutable typename LAC::BlockVector        distributed_solution_dot;
 
 
   mutable TimerOutput                               computing_timer;
@@ -209,13 +201,16 @@ private:
 
   ParsedDataOut<dim, spacedim>                  data_out;
 
-  DAETimeIntegrator<VEC>  dae;
+  DAETimeIntegrator<typename LAC::BlockVector>  dae;
 
-  IndexSet global_partioning;
+  std::vector<types::global_dof_index> dofs_per_block;
+  IndexSet global_partitioning;
   std::vector<IndexSet> partitioning;
   std::vector<IndexSet> relevant_partitioning;
 
   bool adaptive_refinement;
+  const bool we_are_parallel;
+  bool use_direct_solver;
 };
 
 #endif

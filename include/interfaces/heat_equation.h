@@ -18,26 +18,24 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 #include "assembly.h"
+#include "lac_type.h"
 
 
-typedef TrilinosWrappers::MPI::BlockVector VEC;
-
-template <int dim>
-class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim> >
+template <int dim, typename LAC=LADealII>
+class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim,LAC>, LAC >
 {
   typedef FEValuesCache<dim,dim> Scratch;
   typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
-  typedef TrilinosWrappers::MPI::BlockVector VEC;
 
 public:
 
 
   /* specific and useful functions for this very problem */
   HeatEquation() :
-    ConservativeInterface<dim,dim,1,HeatEquation<dim> >("Heat Equation",
-                                                        "FESystem[FE_Q(2)]",
-                                                        "u", "1", "0","1")
+    ConservativeInterface<dim,dim,1,HeatEquation<dim,LAC>, LAC >("Heat Equation",
+        "FESystem[FE_Q(2)]",
+        "u", "1", "0","1")
   {};
 
 
@@ -62,12 +60,7 @@ public:
                      Number &energy) const
   {
     Number alpha = this->alpha;
-
-    fe_cache.reinit(cell);
-
-    fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-    fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-    this->fix_solution_dot_derivative(fe_cache, alpha);
+    this->reinit(alpha, cell, fe_cache);
 
     auto &JxW = fe_cache.get_JxW_values();
 
@@ -87,45 +80,6 @@ public:
         energy += (u_dot*u  + 0.5*(grad_u*grad_u))*JxW[q];
       }
   };
-
-  void compute_system_operators(const DoFHandler<dim> &dh,
-                                const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &system_op,
-                                LinearOperator<TrilinosWrappers::MPI::BlockVector> &prec_op) const
-  {
-
-    // std::vector<std::vector<bool> > constant_modes;
-    // FEValuesExtractors::Vector velocity_components(0);
-    // DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
-    //              constant_modes);
-
-    //    Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-    Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-
-    TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-    // Amg_data.constant_modes = constant_modes;
-    Amg_data.elliptic = true;
-    Amg_data.higher_order_elements = true;
-    Amg_data.smoother_sweeps = 2;
-    Amg_data.aggregation_threshold = 0.02;
-
-    // Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-    Amg_preconditioner->initialize (matrix.block(0,0),
-                                    Amg_data);
-
-    auto A = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-    system_op  = block_operator<1, 1, TrilinosWrappers::MPI::BlockVector >({{ {{A}} }});
-    auto P = linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(0,0) , *Amg_preconditioner );
-    prec_op  =  block_operator<1, 1, TrilinosWrappers::MPI::BlockVector >({{
-        {{P}},
-      }
-    });
-  };
-
-private:
-
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
 };
 
 

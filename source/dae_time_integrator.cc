@@ -2,6 +2,7 @@
 #include "../include/ode_argument.h"
 
 #include <deal.II/base/utilities.h>
+#include <deal.II/lac/block_vector.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <iostream>
@@ -32,6 +33,27 @@ void copy(N_Vector &dst, const TrilinosWrappers::MPI::BlockVector &src)
       NV_Ith_P(dst, i) = src[is.nth_index_in_set(i)];
     }
 }
+
+
+void copy(BlockVector<double> &dst, const N_Vector &src)
+{
+  AssertDimension((unsigned int)NV_LOCLENGTH_P(src), dst.size());
+  for (unsigned int i=0; i<dst.size(); ++i)
+    {
+      dst[i] = NV_Ith_P(src, i);
+    }
+}
+
+void copy(N_Vector &dst, const BlockVector<double> &src)
+{
+  AssertDimension((unsigned int)NV_LOCLENGTH_P(dst), src.size());
+  for (unsigned int i=0; i<src.size(); ++i)
+    {
+      NV_Ith_P(dst, i) = src[i];
+    }
+}
+
+
 
 
 template<typename VEC>
@@ -390,5 +412,5 @@ void DAETimeIntegrator<VEC>::reset_ode(double current_time,
 #ifdef DEAL_II_WITH_TRILINOS
 template class DAETimeIntegrator<TrilinosWrappers::MPI::BlockVector>;
 #endif
-
+template class DAETimeIntegrator<BlockVector<double> >;
 
