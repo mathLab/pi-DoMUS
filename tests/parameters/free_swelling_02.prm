@@ -1,8 +1,8 @@
 # Parameter file generated with 
-# DEAL_II_SAK_GIT_BRANCH=inner.g
-# DEAL_II_SAK_GIT_SHORTREV=ed8a729.g
-# DEAL_II_GIT_BRANCH=master
-# DEAL_II_GIT_SHORTREV=61ba897
+# DEAL_II_SAK_GIT_BRANCH=master.g
+# DEAL_II_SAK_GIT_SHORTREV=a2fe79a.g
+# DEAL_II_GIT_BRANCH=
+# DEAL_II_GIT_SHORTREV=
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
   set IDs and expressions     = 0=0;0;0;0;0
@@ -88,12 +88,13 @@ subsection Initial solution_dot
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
-subsection NFieldsProblem<3, 3, 5>
-  set Adaptive refinement          = true
-  set Initial global refinement    = 1
-  set Maximum number of time steps = 10000
-  set Number of cycles             = 1
-  set Timer output file            = timer.txt
+subsection NFieldsProblem<3, 3, 5, LADealII>
+  set Adaptive refinement            = false
+  set Initial global refinement      = 2
+  set Maximum number of time steps   = 10000
+  set Number of cycles               = 1
+  set Timer output file              = timer.txt
+  set Use direct solver if available = true
 end
 subsection Neumann boundary conditions
   set IDs and component masks = 

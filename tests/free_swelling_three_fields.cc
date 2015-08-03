@@ -1,5 +1,5 @@
 #include "n_fields_problem.h"
-#include "interfaces/free_swelling.h"
+#include "interfaces/free_swelling_three_fields.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -14,8 +14,8 @@ int main (int argc, char *argv[])
   const int dim = 3;
   const int spacedim = 3;
 
-  FreeSwellingThreeField<dim,spacedim> energy;
-  NFieldsProblem<dim,spacedim,dim+2> n_problem (energy);
+  FreeSwellingThreeFields<dim,spacedim> energy;
+  NFieldsProblem<dim,spacedim,dim+2,LADealII> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/free_swelling_01.prm", "used_parameters.prm");
 
 
