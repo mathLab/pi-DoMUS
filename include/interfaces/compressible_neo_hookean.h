@@ -89,10 +89,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::preconditioner_energy(const 
     Number &energy) const
 {
   Number alpha = this->alpha;
-
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
   auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
@@ -117,12 +114,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
     Number &energy) const
 {
   Number alpha = this->alpha;
-
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
   auto &us = fe_cache.get_values("solution", "u", displacement, alpha);

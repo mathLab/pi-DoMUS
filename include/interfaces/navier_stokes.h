@@ -83,15 +83,11 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
                                                 std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
-
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
+
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
   auto &grad_us = fe_cache.get_gradients("solution","grad_u", velocity, alpha);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
@@ -130,12 +126,7 @@ void NavierStokes<dim>::system_residual(const typename DoFHandler<dim>::active_c
                                         std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
-
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector velocity(0);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);

@@ -83,12 +83,7 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
                                                Number &energy) const
 {
   Number alpha = this->alpha;
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
-
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
