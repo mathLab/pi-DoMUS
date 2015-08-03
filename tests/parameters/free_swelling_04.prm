@@ -88,7 +88,7 @@ subsection Initial solution_dot
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
-subsection NFieldsProblem<3, 3, 5>
+subsection NFieldsProblem<3, 3, 5, LADealII>
   set Adaptive refinement          = true
   set Initial global refinement    = 1
   set Maximum number of time steps = 10000
