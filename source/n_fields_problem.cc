@@ -117,7 +117,7 @@ template <int dim, int spacedim, int n_components, typename LAC>
 NFieldsProblem<dim, spacedim, n_components, LAC>::NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
     const MPI_Comm &communicator)
   :
-  OdeArgument<typename LAC::BlockVector>(communicator),
+  OdeArgument<typename LAC::VectorType>(communicator),
   comm(communicator),
   energy(energy),
   pcout (std::cout,
@@ -260,8 +260,8 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::setup_dofs (const bool &f
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const double t,
-    const typename LAC::BlockVector &solution,
-    const typename LAC::BlockVector &solution_dot,
+    const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
     const double alpha)
 {
   computing_timer.enter_section ("   Assemble system jacobian");
@@ -281,7 +281,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix 
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
   SAKData system_data;
 
-  typename LAC::BlockVector tmp(solution);
+  typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
 
   if (we_are_parallel)
@@ -355,8 +355,8 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix 
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
-    const typename LAC::BlockVector &solution,
-    const typename LAC::BlockVector &solution_dot,
+    const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
     const double alpha)
 {
   if (energy.get_jacobian_preconditioner_flags() != update_default)
@@ -458,12 +458,12 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
   typedef TrilinosWrappers::MPI::BlockVector pVEC;
   typedef BlockVector<double> sVEC;
 
-  if (typeid(typename LAC::BlockVector) == typeid(pVEC))
+  if (typeid(typename LAC::VectorType) == typeid(pVEC))
     {
       parallel::distributed::SolutionTransfer<dim,pVEC> sol_tr(*dof_handler);
       parallel::distributed::SolutionTransfer<dim,pVEC> sol_dot_tr(*dof_handler);
-      typename LAC::BlockVector sol (distributed_solution);
-      typename LAC::BlockVector sol_dot (distributed_solution_dot);
+      typename LAC::VectorType sol (distributed_solution);
+      typename LAC::VectorType sol_dot (distributed_solution_dot);
       sol = solution;
       sol_dot = solution_dot;
 
@@ -477,8 +477,8 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
 
       setup_dofs(false);
 
-      typename LAC::BlockVector tmp (solution);
-      typename LAC::BlockVector tmp_dot (solution_dot);
+      typename LAC::VectorType tmp (solution);
+      typename LAC::VectorType tmp_dot (solution_dot);
 
       sol_tr.interpolate ((pVEC &)tmp);
       sol_dot_tr.interpolate ((pVEC &)tmp_dot);
@@ -490,8 +490,8 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
       SolutionTransfer<dim,sVEC> sol_tr(*dof_handler);
       SolutionTransfer<dim,sVEC> sol_dot_tr(*dof_handler);
 
-      typename LAC::BlockVector tmp (solution);
-      typename LAC::BlockVector tmp_dot (solution_dot);
+      typename LAC::VectorType tmp (solution);
+      typename LAC::VectorType tmp_dot (solution_dot);
 
       triangulation->prepare_coarsening_and_refinement();
       sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
@@ -567,10 +567,10 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::run ()
 /*** ODE Argument Interface ***/
 
 template <int dim, int spacedim, int n_components, typename LAC>
-shared_ptr<typename LAC::BlockVector>
+shared_ptr<typename LAC::VectorType>
 NFieldsProblem<dim, spacedim, n_components, LAC>::create_new_vector() const
 {
-  shared_ptr<typename LAC::BlockVector> ret = SP(new typename LAC::BlockVector(solution));
+  shared_ptr<typename LAC::VectorType> ret = SP(new typename LAC::VectorType(solution));
   return ret;
 }
 
@@ -586,13 +586,13 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::n_dofs() const
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double /* t */,
-    const typename LAC::BlockVector &solution,
-    const typename LAC::BlockVector &solution_dot,
+    const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
     const unsigned int step_number,
     const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
-  typename LAC::BlockVector tmp(solution);
+  typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
   distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
@@ -620,8 +620,8 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double /* t 
 template <int dim, int spacedim, int n_components, typename LAC>
 bool
 NFieldsProblem<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
-    const typename LAC::BlockVector &solution,
-    const typename LAC::BlockVector &solution_dot,
+    const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
     const unsigned int step_number,
     const double h)
 {
@@ -632,9 +632,9 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solver_should_restart(const do
 template <int dim, int spacedim, int n_components, typename LAC>
 int
 NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
-                                                           const typename LAC::BlockVector &solution,
-                                                           const typename LAC::BlockVector &solution_dot,
-                                                           typename LAC::BlockVector &dst)
+                                                           const typename LAC::VectorType &solution,
+                                                           const typename LAC::VectorType &solution_dot,
+                                                           typename LAC::VectorType &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
@@ -649,7 +649,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
   const QGauss<dim> quadrature_formula(fe->degree+1);
   const QGauss<dim-1> face_quadrature_formula(fe->degree+1);
 
-  typename LAC::BlockVector tmp(solution);
+  typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
 
   distributed_solution = tmp;
@@ -715,12 +715,12 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
 template <int dim, int spacedim, int n_components, typename LAC>
 int
 NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
-    const typename LAC::BlockVector &y,
-    const typename LAC::BlockVector &y_dot,
-    const typename LAC::BlockVector &,
+    const typename LAC::VectorType &y,
+    const typename LAC::VectorType &y_dot,
+    const typename LAC::VectorType &,
     const double alpha,
-    const typename LAC::BlockVector &src,
-    typename LAC::BlockVector &dst) const
+    const typename LAC::VectorType &src,
+    typename LAC::VectorType &dst) const
 {
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
@@ -745,17 +745,17 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
     {
 
 
-      PrimitiveVectorMemory<typename LAC::BlockVector> mem;
+      PrimitiveVectorMemory<typename LAC::VectorType> mem;
       SolverControl solver_control (30, solver_tolerance);
       SolverControl solver_control_refined (jacobian_matrix.m(), solver_tolerance);
 
-      SolverFGMRES<typename LAC::BlockVector>
+      SolverFGMRES<typename LAC::VectorType>
       solver(solver_control, mem,
-             typename SolverFGMRES<typename LAC::BlockVector>::AdditionalData(30, true));
+             typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(30, true));
 
-      SolverFGMRES<typename LAC::BlockVector>
+      SolverFGMRES<typename LAC::VectorType>
       solver_refined(solver_control_refined, mem,
-                     typename SolverFGMRES<typename LAC::BlockVector>::AdditionalData(50, true));
+                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
 
       auto S_inv         = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
       auto S_inv_refined = inverse_operator(jacobian_op, solver_refined, jacobian_preconditioner_op);
@@ -787,9 +787,9 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
 template <int dim, int spacedim, int n_components, typename LAC>
 int
 NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
-    const typename LAC::BlockVector &src_yy,
-    const typename LAC::BlockVector &src_yp,
-    const typename LAC::BlockVector &,
+    const typename LAC::VectorType &src_yy,
+    const typename LAC::VectorType &src_yp,
+    const typename LAC::VectorType &,
     const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");
@@ -813,10 +813,10 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
-typename LAC::BlockVector &
+typename LAC::VectorType &
 NFieldsProblem<dim, spacedim, n_components, LAC>::differential_components() const
 {
-  static typename LAC::BlockVector diff_comps;
+  static typename LAC::VectorType diff_comps;
   diff_comps.reinit(solution);
   std::vector<unsigned int> block_diff = energy.get_differential_blocks();
   for (unsigned int i=0; i<block_diff.size(); ++i)
@@ -830,7 +830,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::differential_components() cons
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::BlockVector &v) const
+NFieldsProblem<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
 {
   for (unsigned int i=0; i<global_partitioning.n_elements(); ++i)
     {

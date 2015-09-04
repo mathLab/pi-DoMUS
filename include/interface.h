@@ -201,8 +201,8 @@ public:
    *
    * TODO: add current_time and current_alpha
    */
-  virtual void initialize_data(const typename LAC::BlockVector &solution,
-                               const typename LAC::BlockVector &solution_dot,
+  virtual void initialize_data(const typename LAC::VectorType &solution,
+                               const typename LAC::VectorType &solution_dot,
                                const double t,
                                const double alpha) const;
 
@@ -381,8 +381,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const typename LAC::BlockMatrix &,
                                         const typename LAC::BlockMatrix &,
-                                        LinearOperator<typename LAC::BlockVector> &,
-                                        LinearOperator<typename LAC::BlockVector> &) const
+                                        LinearOperator<typename LAC::VectorType> &,
+                                        LinearOperator<typename LAC::VectorType> &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
@@ -424,7 +424,7 @@ public:
 
 
   virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
-                                                         const typename LAC::BlockVector &) const
+                                                         const typename LAC::VectorType &) const
   {
     return shared_ptr<Mapping<dim,spacedim> >(new MappingQ<dim,spacedim>(1));
   }
@@ -510,8 +510,8 @@ protected:
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
-  mutable const typename LAC::BlockVector *solution;
-  mutable const typename LAC::BlockVector *solution_dot;
+  mutable const typename LAC::VectorType *solution;
+  mutable const typename LAC::VectorType *solution_dot;
 
   mutable double alpha;
   mutable double t;
@@ -523,8 +523,8 @@ protected:
 
 
 template<int dim, int spacedim, int n_components, typename LAC>
-void Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::BlockVector &solution,
-    const typename LAC::BlockVector &solution_dot,
+void Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
     const double t,
     const double alpha) const
 {
