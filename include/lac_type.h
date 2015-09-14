@@ -32,7 +32,7 @@ using namespace dealii;
 class LADealII
 {
 public:
-  typedef BlockVector<double> BlockVector;
+  typedef BlockVector<double> VectorType;
   typedef BlockSparseMatrix<double> BlockMatrix;
   typedef dealii::BlockSparsityPattern BlockSparsityPattern;
 };
@@ -59,7 +59,7 @@ public:
    * Typedef for the type used to describe vectors that consist of multiple
    * blocks.
    */
-  typedef PETScWrappers::MPI::BlockVector BlockVector;
+  typedef PETScWrappers::MPI::BlockVector VectorType;
 
   /**
    * Typedef for the type used to describe sparse matrices that consist of
@@ -92,7 +92,7 @@ public:
   /**
    * Typedef for the vector type used.
    */
-  typedef TrilinosWrappers::MPI::BlockVector BlockVector;
+  typedef TrilinosWrappers::MPI::BlockVector VectorType;
 
   /**
    * Typedef for the type used to describe sparse matrices that consist of
