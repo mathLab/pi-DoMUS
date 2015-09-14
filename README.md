@@ -41,7 +41,7 @@ to load **deal.ii** and **deal.ii SAK** :
 
 ## Indentation:
 
-when you have made modifications to the code, make sure you run
+when you have made modifications to the code, make sure you run from the top level directory of Navier-Stokes
 
 ```
 	./script/indent
