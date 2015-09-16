@@ -216,6 +216,10 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
+  TrilinosWrappers::MPI::Vector u, v;
+  A.reinit_range_vector(u, true);
+  A.reinit_domain_vector(v, true);
+  A.vmult(u,v);
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
   //  auto B =  transpose_operator(Bt);
   auto B     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
