@@ -795,14 +795,14 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
 
-  if (use_direct_solver == false /* && we_are_parallel == true */)
-    {
-      assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
+  //if (use_direct_solver == false /* && we_are_parallel == true */)
+  //  {
+  assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
 
-      energy.compute_system_operators(*dof_handler,
-                                      jacobian_matrix, jacobian_preconditioner_matrix,
-                                      jacobian_op, jacobian_preconditioner_op);
-    }
+  energy.compute_system_operators(*dof_handler,
+                                  jacobian_matrix, jacobian_preconditioner_matrix,
+                                  jacobian_op, jacobian_preconditioner_op);
+  //  }
 
   computing_timer.exit_section();
 
