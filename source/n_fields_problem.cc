@@ -795,8 +795,8 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
 
-  if (use_direct_solver == false &&
-      we_are_parallel == true)
+  if (use_direct_solver == false && // <-- BUG
+      we_are_parallel == true) // <-- BUG
     {
       assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
 
