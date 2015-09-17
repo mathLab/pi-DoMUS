@@ -30,7 +30,7 @@
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
 #include <deal.II/lac/linear_operator.h>
 
-#include "utilities.h"
+#include <deal2lkit/utilities.h>
 
 #include <fstream>
 #include <iostream>

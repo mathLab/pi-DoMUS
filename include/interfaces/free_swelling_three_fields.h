@@ -2,7 +2,7 @@
 #define _free_swelling_three_fields_h_
 
 #include "conservative_interface.h"
-#include "parsed_function.h"
+#include <deal2lkit/parsed_function.h>
 
 
 #include <deal.II/fe/fe_values.h>

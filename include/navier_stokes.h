@@ -12,12 +12,12 @@
 
 #include "assembly.h"
 
-#include "parsed_grid_generator.h"
-#include "parsed_finite_element.h"
-#include "error_handler.h"
-#include "parsed_function.h"
-#include "parsed_data_out.h"
-#include "parameter_acceptor.h"
+#include <deal2lkit/parsed_grid_generator.h>
+#include <deal2lkit/parsed_finite_element.h>
+#include <deal2lkit/error_handler.h>
+#include <deal2lkit/parsed_function.h>
+#include <deal2lkit/parsed_data_out.h>
+#include <deal2lkit/parameter_acceptor.h>
 
 using namespace dealii;
 

@@ -2,7 +2,7 @@
 #define _dynamic_navier_stokes_h_
 
 #include "non_conservative_interface.h"
-#include "parsed_function.h"
+#include <deal2lkit/parsed_function.h>
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
@@ -17,7 +17,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#include "fe_values_cache.h"
+#include <deal2lkit/fe_values_cache.h>
 
 template <int dim>
 class NavierStokes : public NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >

@@ -117,7 +117,7 @@ template <int dim, int spacedim, int n_components, typename LAC>
 NFieldsProblem<dim, spacedim, n_components, LAC>::NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
     const MPI_Comm &communicator)
   :
-  OdeArgument<typename LAC::VectorType>(communicator),
+  SundialsInterface<typename LAC::VectorType>(communicator),
   comm(communicator),
   energy(energy),
   pcout (std::cout,

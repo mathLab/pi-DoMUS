@@ -28,17 +28,17 @@
 
 #include "assembly.h"
 #include "interface.h"
-#include "parsed_grid_generator.h"
-#include "parsed_finite_element.h"
-#include "error_handler.h"
-#include "parsed_function.h"
-#include "parsed_data_out.h"
-#include "parameter_acceptor.h"
-#include "ode_argument.h"
-#include "dae_time_integrator.h"
+#include <deal2lkit/parsed_grid_generator.h>
+#include <deal2lkit/parsed_finite_element.h>
+#include <deal2lkit/error_handler.h>
+#include <deal2lkit/parsed_function.h>
+#include <deal2lkit/parsed_data_out.h>
+#include <deal2lkit/parameter_acceptor.h>
+#include <deal2lkit/sundials_interface.h>
+#include <deal2lkit/dae_time_integrator.h>
 
-#include "sak_data.h"
-#include "fe_values_cache.h"
+#include <deal2lkit/sak_data.h>
+#include <deal2lkit/fe_values_cache.h>
 
 #include "lac_type.h"
 #include "lac_initializer.h"
@@ -46,7 +46,7 @@
 using namespace dealii;
 
 template <int dim, int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
-class NFieldsProblem : public ParameterAcceptor, public OdeArgument<typename LAC::VectorType>
+class NFieldsProblem : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
   typedef typename Assembly::CopyData::NFieldsSystem<dim,spacedim> SystemCopyData;
   typedef typename Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> PreconditionerCopyData;
@@ -68,7 +68,7 @@ public:
 
 
   /*********************************************************
-   * Public interface from OdeArgument
+   * Public interface from SundialsInterface
    *********************************************************/
   virtual shared_ptr<typename LAC::VectorType>
   create_new_vector() const;
