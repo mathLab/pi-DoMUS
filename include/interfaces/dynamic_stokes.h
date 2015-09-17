@@ -54,8 +54,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
-                                        LinearOperator<VEC> &,
-                                        LinearOperator<VEC> &) const;
+                                        BlockLinearOperator<VEC> &,
+                                        BlockLinearOperator<VEC> &) const;
 
 private:
   double eta;
@@ -174,8 +174,8 @@ void
 DynamicStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                              const TrilinosWrappers::BlockSparseMatrix &matrix,
                                              const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                             LinearOperator<VEC> &system_op,
-                                             LinearOperator<VEC> &prec_op) const
+                                             BlockLinearOperator<VEC> &system_op,
+                                             BlockLinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;

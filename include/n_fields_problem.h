@@ -178,8 +178,8 @@ private:
   typename LAC::BlockMatrix       jacobian_matrix;
   typename LAC::BlockMatrix       jacobian_preconditioner_matrix;
 
-  LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
-  LinearOperator<typename LAC::VectorType> jacobian_op;
+  BlockLinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
+  BlockLinearOperator<typename LAC::VectorType> jacobian_op;
 
   typename LAC::VectorType        solution;
   typename LAC::VectorType        solution_dot;

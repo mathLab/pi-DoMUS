@@ -381,8 +381,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const typename LAC::BlockMatrix &,
                                         const typename LAC::BlockMatrix &,
-                                        LinearOperator<typename LAC::VectorType> &,
-                                        LinearOperator<typename LAC::VectorType> &) const
+                                        BlockLinearOperator<typename LAC::VectorType> &,
+                                        BlockLinearOperator<typename LAC::VectorType> &) const
   {
     Assert(false, ExcPureFunctionCalled ());
   }
