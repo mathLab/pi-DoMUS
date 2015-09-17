@@ -18,19 +18,19 @@
 
 #include <mpi.h>
 
-#include "ode_argument.h"
-#include "dae_time_integrator.h"
-#include "parameter_acceptor.h"
+#include <deal2lkit/sundials_interface.h>
+#include <deal2lkit/dae_time_integrator.h>
+#include <deal2lkit/parameter_acceptor.h>
 
 #include <fstream>
 
 template <typename VEC>
-class Solver : public OdeArgument<VEC>, public ParameterAcceptor
+class Solver : public SundialsInterface<VEC>, public ParameterAcceptor
 {
 public:
 
   Solver(const MPI_Comm &comm) :
-    OdeArgument<VEC>(comm),
+    SundialsInterface<VEC>(comm),
     n_dofs_(1),
     ofile("output.gpl")
   {};

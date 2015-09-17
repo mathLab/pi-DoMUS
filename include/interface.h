@@ -43,14 +43,14 @@
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include "dof_utilities.h"
-#include "parsed_finite_element.h"
-#include "sak_data.h"
-#include "parsed_function.h"
-#include "parsed_mapped_functions.h"
-#include "parsed_dirichlet_bcs.h"
+#include <deal2lkit/dof_utilities.h>
+#include <deal2lkit/parsed_finite_element.h>
+#include <deal2lkit/sak_data.h>
+#include <deal2lkit/parsed_function.h>
+#include <deal2lkit/parsed_mapped_functions.h>
+#include <deal2lkit/parsed_dirichlet_bcs.h>
 #include "assembly.h"
-#include "utilities.h"
+#include <deal2lkit/utilities.h>
 #include "lac_type.h"
 
 template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>

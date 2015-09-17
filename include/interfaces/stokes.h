@@ -2,7 +2,7 @@
 #define _stokes_h_
 
 #include "conservative_interface.h"
-#include "parsed_function.h"
+#include <deal2lkit/parsed_function.h>
 
 
 #include <deal.II/fe/fe_values.h>
@@ -18,7 +18,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#include "fe_values_cache.h"
+#include <deal2lkit/fe_values_cache.h>
 
 template <int dim>
 class Stokes : public ConservativeInterface<dim,dim,dim+1, Stokes<dim> >

@@ -11,9 +11,9 @@
 #define _ASSEMBLY_
 
 #include <deal.II/fe/fe_values.h>
-#include "sak_data.h"
+#include <deal2lkit/sak_data.h>
 #include "Sacado.hpp"
-#include "fe_values_cache.h"
+#include <deal2lkit/fe_values_cache.h>
 
 using namespace dealii;
 typedef Sacado::Fad::DFad<double> Sdouble;

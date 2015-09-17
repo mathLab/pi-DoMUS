@@ -10,10 +10,10 @@
 //-----------------------------------------------------------
 
 #include "tests.h"
-#include "parameter_acceptor.h"
+#include <deal2lkit/parameter_acceptor.h>
 #include "Sacado.hpp"
-#include "dof_utilities.h"
-#include "parsed_finite_element.h"
+#include <deal2lkit/dof_utilities.h>
+#include <deal2lkit/parsed_finite_element.h>
 
 class Scratch
 {

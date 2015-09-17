@@ -20,7 +20,7 @@
 
 #include <fstream>
 
-#include "utilities.h"
+#include <deal2lkit/utilities.h>
 #include "Sacado.hpp"
 
 typedef Sacado::Fad::DFad<double> Sdouble;
