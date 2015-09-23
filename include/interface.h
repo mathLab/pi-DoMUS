@@ -52,6 +52,7 @@
 #include "assembly.h"
 #include <deal2lkit/utilities.h>
 #include "lac_type.h"
+#include <deal.II/base/sacado_product_type.h>
 
 template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
 class Interface : public ParsedFiniteElement<dim,spacedim>
