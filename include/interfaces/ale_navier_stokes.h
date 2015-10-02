@@ -332,20 +332,20 @@ ALENavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   // P[1][1] = identity_operator< TrilinosWrappers::MPI::Vector >(S[1][1].reinit_domain_vector);
   // P[2][2] = identity_operator< TrilinosWrappers::MPI::Vector >(S[2][2].reinit_domain_vector);
   // for (unsigned int i=0; i<3; ++i)
-  
+
   P[0][0] = linear_operator<
-                dealii::TrilinosWrappers::MPI::Vector,
-                dealii::TrilinosWrappers::MPI::Vector,
-                TrilinosWrappers::SparseMatrix,
-                //dealii::LinearOperator<dealii::TrilinosWrappers::MPI::Vector,
-                //                       dealii::TrilinosWrappers::MPI::Vector>,
-                TrilinosWrappers::PreconditionJacobi
-                >( preconditioner_matrix.block(0,0), *P00_preconditioner  );
+            dealii::TrilinosWrappers::MPI::Vector,
+            dealii::TrilinosWrappers::MPI::Vector,
+            TrilinosWrappers::SparseMatrix,
+            //dealii::LinearOperator<dealii::TrilinosWrappers::MPI::Vector,
+            //                       dealii::TrilinosWrappers::MPI::Vector>,
+            TrilinosWrappers::PreconditionJacobi
+            >( preconditioner_matrix.block(0,0), *P00_preconditioner  );
   // P[1][1] = linear_operator< >( matrix.block(1,1), *P11_preconditioner  );
   // P[2][2] = linear_operator< >( matrix.block(1,1), *P22_preconditioner  );
 
 
-    //  P[0][0] = inverse_operator<  >(  S[0][0],
+  //  P[0][0] = inverse_operator<  >(  S[0][0],
 //                                   solver_CG,
 //                                   *P00_preconditioner);
   // TrilinosWrappers::MPI::Vector u,v;
@@ -353,11 +353,11 @@ ALENavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   // P[0][0].reinit_domain_vector(v, true);
   // std::cout << "vmult... " << std::flush <<std::endl;
   // P[0][0].vmult(u,v);
-   P[1][1] = inverse_operator< >(  S[1][1],
+  P[1][1] = inverse_operator< >(  S[1][1],
                                   solver_CG,
                                   *P11_preconditioner);
   // P[2][2] = S[2][2];
-   P[2][2] = inverse_operator< >(  S[2][2],
+  P[2][2] = inverse_operator< >(  S[2][2],
                                   solver_CG,
                                   *P22_preconditioner);
 

@@ -45,24 +45,25 @@
 
 using namespace dealii;
 
-template <int dim, int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
+template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
 class NFieldsProblem : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
-  typedef typename Assembly::CopyData::NFieldsSystem<dim,spacedim> SystemCopyData;
-  typedef typename Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> PreconditionerCopyData;
-  typedef FEValuesCache<dim,spacedim> Scratch;
+  typedef typename Assembly::CopyData::NFieldsSystem<dim, spacedim> SystemCopyData;
+  typedef typename Assembly::CopyData::NFieldsPreconditioner<dim, spacedim> PreconditionerCopyData;
+  typedef FEValuesCache<dim, spacedim> Scratch;
 
   // This is a class required to make tests
   template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
-  friend void test(NFieldsProblem<fdim,fspacedim,fn_components,fn_LAC> &);
+  friend void test(NFieldsProblem<fdim, fspacedim, fn_components, fn_LAC> &);
 
 public:
 
 
-  NFieldsProblem (const Interface<dim,spacedim,n_components,LAC> &energy,
-                  const MPI_Comm &comm=MPI_COMM_WORLD);
+  NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
+                  const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
+  virtual void parse_parameters_call_back();
 
   void run ();
 
@@ -133,7 +134,7 @@ public:
 
 private:
   void make_grid_fe();
-  void setup_dofs (const bool &first_run=true);
+  void setup_dofs (const bool &first_run = true);
 
   void assemble_jacobian_matrix (const double t,
                                  const typename LAC::VectorType &y,
@@ -150,7 +151,7 @@ private:
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
   const MPI_Comm &comm;
-  const Interface<dim,spacedim,n_components,LAC>    &energy;
+  const Interface<dim, spacedim, n_components, LAC>    &energy;
 
   unsigned int n_cycles;
   unsigned int current_cycle;
@@ -164,11 +165,11 @@ private:
   std::ofstream             timer_outfile;
   ConditionalOStream        tcout;
 
-  shared_ptr<Mapping<dim,spacedim> >             mapping;
+  shared_ptr<Mapping<dim, spacedim> >             mapping;
 
-  shared_ptr<parallel::distributed::Triangulation<dim,spacedim> > triangulation;
-  shared_ptr<FiniteElement<dim,spacedim> >       fe;
-  shared_ptr<DoFHandler<dim,spacedim> >          dof_handler;
+  shared_ptr<parallel::distributed::Triangulation<dim, spacedim> > triangulation;
+  shared_ptr<FiniteElement<dim, spacedim> >       fe;
+  shared_ptr<DoFHandler<dim, spacedim> >          dof_handler;
 
   ConstraintMatrix                          constraints;
 
@@ -192,7 +193,7 @@ private:
 
 
   ErrorHandler<1>       eh;
-  ParsedGridGenerator<dim,spacedim>   pgg;
+  ParsedGridGenerator<dim, spacedim>   pgg;
 
   ParsedFunction<spacedim, n_components>        exact_solution;
 

@@ -4,7 +4,7 @@ subsection NFieldsProblem<2, 2, 5, LATrilinos>
   set Maximum number of time steps   = 10000
   set Number of cycles               = 2
   set Timer output file              = timer.txt
-  set Use direct solver if available = false
+  set Use direct solver if available = true
 end
 
 subsection ALE Navier Stokes
