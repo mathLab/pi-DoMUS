@@ -35,7 +35,7 @@
 #include <deal2lkit/parsed_data_out.h>
 #include <deal2lkit/parameter_acceptor.h>
 #include <deal2lkit/sundials_interface.h>
-#include <deal2lkit/dae_time_integrator.h>
+#include <deal2lkit/ida_interface.h>
 
 #include <deal2lkit/sak_data.h>
 #include <deal2lkit/fe_values_cache.h>
@@ -202,7 +202,7 @@ private:
 
   ParsedDataOut<dim, spacedim>                  data_out;
 
-  DAETimeIntegrator<typename LAC::VectorType>  dae;
+  IDAInterface<typename LAC::VectorType>  dae;
 
   std::vector<types::global_dof_index> dofs_per_block;
   IndexSet global_partitioning;
