@@ -7,7 +7,7 @@
 # ./include: containing all class declarations
 # ./tests: containing pairs of files: test.cc/test.output to test
 #
-# If you set the environemnt variable D2K_DIR, 
+# If you set the environemnt variable DEAL2LKIT_DIR or D2K_DIR, 
 # everything will work out of the box
 ##
 
@@ -27,12 +27,10 @@ SET(_main source/main.cc)
 # Declare all source files the target consists of:
 file(GLOB _files source/*cc)
 
-set(SUNDIALS_LIBS "sundials_ida;sundials_nvecserial;sundials_nvecparallel")
-
 # Don't compile the main file into the library
 IF(NOT "${_main}" STREQUAL "") 
-    LIST(REMOVE_ITEM _files
-      ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
+  LIST(REMOVE_ITEM _files
+    ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
     )
 ENDIF()
 
@@ -42,92 +40,57 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
 FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
-)
-
+  )
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
+
+
 PROJECT(${TARGET})
+FIND_PACKAGE(deal2lkit 1.0 REQUIRED
+  HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
+  )
+D2K_INITIALIZE_CACHED_VARIABLES()
+OPTION(ENABLE_APP_TESTING "Enable tests in this application." ON)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pedantic")
-
-SET(D2K_DIR "$ENV{D2K_DIR}" CACHE PATH "Path to deal2lkit")
-SET(SUNDIALS_DIR "$ENV{SUNDIALS_DIR}" CACHE PATH "Path to sundials")
-
-# We one library and one target for each type of deal.II library
+# We add one library and one target for each type of deal.II library
 # we found. If you compiled deal.II with both Release and Debug
-# mode, this will generate both Release and Debug programs for you
+# mode, this will generate both Release and Debug programs for you.
 # The debug library and program are postfixed with ".g"
 SET(_d2_build_types "Release;Debug")
 SET(Release_postfix "")
 SET(Debug_postfix ".g")
 
 FOREACH(_build_type ${_d2_build_types})
-    # Postfix to use everywhere
-    SET(_p "${${_build_type}_postfix}")
-    # Only build this type, if deal.II was compiled with it.
-    IF(DEAL_II_BUILD_TYPE MATCHES "${_build_type}")
-	MESSAGE("-- Found ${_build_type} version of deal.II.")
+  # Postfix to use everywhere
+  SET(_p "${${_build_type}_postfix}")
+  # Only build this type, if deal.II was compiled with it.
+  IF(CMAKE_BUILD_TYPE MATCHES "${_build_type}" AND
+      DEAL_II_BUILD_TYPE MATCHES "${_build_type}"  AND
+      D2K_BUILD_TYPE MATCHES "${_build_type}")
 
-	SET(_lib "${TARGET}-lib${_p}")
-	MESSAGE("-- Configuring library ${_lib}")
+    MESSAGE("-- Found ${_build_type} version of deal.II.")
+    MESSAGE("-- Found ${_build_type} version of deal2lkit.")
 
-	STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
+    SET(_lib "${TARGET}-lib${_p}")
+    MESSAGE("-- Configuring library ${_lib}")
 
-	# Add all files, except the main file, to the library
-	ADD_LIBRARY(${_lib} SHARED ${_files})
-	
-	# Look for deal2lkit. If not found, ignore it. 
-	SET(_d2k deal2lkit${${_build_type}_postfix})
-	MESSAGE("-- Looking for ${_d2k} in ${D2K_DIR}")
-	FIND_LIBRARY(D2K${_p} ${_d2k} HINTS ${D2K_DIR} PATH_SUFFIXES lib)
-	IF(NOT "${D2K${_p}}" STREQUAL "D2K${_p}-NOTFOUND")
-		TARGET_LINK_LIBRARIES(${_lib} ${D2K${_p}})
-		MESSAGE("-- Library ${_d2k} found: ${D2K${_p}}")
-	ELSE()
-		MESSAGE(WARNING "-- Library deal2lkit not found: ${D2K${_p}}")
-	ENDIF()
+    STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
 
-	FOREACH(_slib ${SUNDIALS_LIBS})
-	    FIND_LIBRARY(SUNDIALS_${_slib} ${_slib} HINTS ${SUNDIALS_DIR} PATH_SUFFIXES lib)
-	    IF(NOT "${SUNDIALS_${_slib}}" STREQUAL "${_slib}-NOTFOUND")
-		TARGET_LINK_LIBRARIES(${_lib} ${SUNDIALS_${_slib}})
-		MESSAGE("-- Library ${_slib} found: ${SUNDIALS_${_slib}}")
-	    ELSE()
-		MESSAGE(WARNING "-- Library ${_slib} not found: ${SUNDIALS_${_slib}}")
-	    ENDIF()
-	ENDFOREACH()
+    ADD_LIBRARY(${_lib} SHARED ${_files})
+    SET(_exe "${TARGET}${${_build_type}_postfix}")
+    MESSAGE("-- Configuring executable ${_exe}")
+    ADD_EXECUTABLE(${_exe} ${_main})
+    TARGET_LINK_LIBRARIES(${_exe} ${_lib})
+    D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
 
-	# Compile an executable only if required by the user
-	IF(NOT "${_main}" STREQUAL "") 
-	    SET(_exe "${TARGET}${${_build_type}_postfix}")
-	    MESSAGE("-- Configuring executable ${_exe}")
-	    ADD_EXECUTABLE(${_exe} ${_main})
-	    TARGET_LINK_LIBRARIES(${_exe} ${_lib})
-	    DEAL_II_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
-	ENDIF()
-	SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
-	DEAL_II_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
-    ENDIF()
+    SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
+
+    D2K_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
+  ENDIF()
 ENDFOREACH()
 
-INCLUDE_DIRECTORIES(${D2K_DIR}/include)
-INCLUDE_DIRECTORIES(${SUNDIALS_DIR}/include)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-    ADD_SUBDIRECTORY(tests)
-    ENABLE_TESTING()
-endif()
-
-
-# Doxygen
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-    find_package(Doxygen)
-    if(DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(doc
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen" VERBATIM
-    )
-    endif(DOXYGEN_FOUND)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests AND ${ENABLE_APP_TESTING})
+  ADD_SUBDIRECTORY(tests)
+  ENABLE_TESTING()
 endif()
 
