@@ -594,13 +594,23 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::n_dofs() const
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double /* t */,
+NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double  t,
     const typename LAC::VectorType &solution,
     const typename LAC::VectorType &solution_dot,
     const unsigned int step_number,
     const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
+
+  energy.set_time(t);
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
+
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
+
   typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
   distributed_solution = tmp;
