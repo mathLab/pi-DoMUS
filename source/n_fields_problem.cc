@@ -526,6 +526,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::make_grid_fe()
 {
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
+  energy.post_process_triangulation(*triangulation);
   fe = SP(energy());
   triangulation->refine_global (initial_global_refinement);
 }

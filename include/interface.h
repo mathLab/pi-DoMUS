@@ -98,6 +98,12 @@ public:
   }
 
   /**
+   * This function is used to modify triangulation using boundary_id or manifold_id.
+   * In the case a signal is required, this is the function to modify.
+   */
+  virtual void post_process_triangulation(const Triangulation<dim, spacedim> &tria) const {}
+
+  /**
    * Applies Dirichlet boundary conditions
    *
    * This function is used to applies Dirichlet boundary conditions.
