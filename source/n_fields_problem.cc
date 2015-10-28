@@ -62,6 +62,7 @@
 #include "lac_initializer.h"
 
 using namespace dealii;
+using namespace deal2lkit;
 
 /* ------------------------ PARAMETERS ------------------------ */
 
@@ -288,7 +289,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix 
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-  SAKData system_data;
+  AnyData system_data;
 
   typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
@@ -390,7 +391,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_precond
       FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
       CellFilter;
 
-      SAKData preconditioner_data;
+      AnyData preconditioner_data;
 
       distributed_solution = solution;
       distributed_solution_dot = solution_dot;
@@ -741,7 +742,6 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
     const typename LAC::VectorType &src,
     typename LAC::VectorType &dst) const
 {
-  OverWriteStream<>         fixed_out(1, std::cout);
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
 

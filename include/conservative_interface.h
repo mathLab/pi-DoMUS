@@ -1,5 +1,5 @@
-#ifndef __sak_conservative_interface_h
-#define __sak_conservative_interface_h
+#ifndef __any_conservative_interface_h
+#define __any_conservative_interface_h
 /*
  * Conservative Interface
  *
@@ -12,6 +12,8 @@
  */
 
 #include "interface.h"
+
+using namespace deal2lkit;
 
 template<int dim, int spacedim, int n_components, class Implementation, typename LAC=LATrilinos>
 class ConservativeInterface : public Interface<dim,spacedim,n_components,LAC>

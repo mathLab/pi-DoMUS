@@ -20,6 +20,7 @@
 #include <deal2lkit/parameter_acceptor.h>
 
 using namespace dealii;
+using namespace deal2lkit;
 
 template <int dim>
 class NavierStokes : public ParameterAcceptor

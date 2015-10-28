@@ -57,6 +57,7 @@
 #include <deal2lkit/utilities.h>
 
 using namespace dealii;
+using namespace deal2lkit;
 
 /* ------------------------ PARAMETERS ------------------------ */
 

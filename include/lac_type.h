@@ -28,6 +28,7 @@
 #include <deal.II/lac/precondition.h>
 
 using namespace dealii;
+using namespace deal2lkit;
 
 class LADealII
 {
