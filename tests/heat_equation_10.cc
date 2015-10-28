@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/heat_equation.h"
 #include "tests.h"
 

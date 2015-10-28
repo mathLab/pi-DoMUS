@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/heat_equation.h"
 #include <deal.II/fe/component_mask.h>
 #include "tests.h"

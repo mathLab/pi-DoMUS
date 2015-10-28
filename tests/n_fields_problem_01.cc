@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/stokes_derived_interface.h"
 #include "tests.h"
 

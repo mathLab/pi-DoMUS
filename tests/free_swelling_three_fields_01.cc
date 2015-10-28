@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/free_swelling_three_fields.h"
 #include "tests.h"
 

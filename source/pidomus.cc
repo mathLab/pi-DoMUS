@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/numerics/solution_transfer.h>
 
@@ -58,7 +58,6 @@
 #include <string>
 #include <math.h>
 
-#include "equation_data.h"
 #include "lac_initializer.h"
 
 using namespace dealii;

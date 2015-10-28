@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/neo_hookean_two_fields.h"
 #include "tests.h"
 
