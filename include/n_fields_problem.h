@@ -37,13 +37,14 @@
 #include <deal2lkit/sundials_interface.h>
 #include <deal2lkit/ida_interface.h>
 
-#include <deal2lkit/sak_data.h>
+#include <deal2lkit/any_data.h>
 #include <deal2lkit/fe_values_cache.h>
 
 #include "lac_type.h"
 #include "lac_initializer.h"
 
 using namespace dealii;
+using namespace deal2lkit;
 
 template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
 class NFieldsProblem : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>

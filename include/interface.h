@@ -49,7 +49,7 @@
 
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
-#include <deal2lkit/sak_data.h>
+#include <deal2lkit/any_data.h>
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
@@ -196,13 +196,13 @@ public:
   /**
    * Initialize all data required for the system
    *
-   * This function is used to initialize the varibale SAKData @p d
+   * This function is used to initialize the varibale AnyData @p d
    * that contains all data of the problem (solutions, DoF, quadrature
    * points, solutions vector, etc ).
    * It takes as argument the number of DoF per cell @p dofs_per_cell,
    * the number of quadrature points @p n_q_points, the number of
    * quadrature points per face @p n_face_q_points, the reference to
-   * solutions vectors @p sol and the reference to the SAKData @p d.
+   * solutions vectors @p sol and the reference to the AnyData @p d.
    *
    * TODO: add current_time and current_alpha
    */
@@ -220,7 +220,7 @@ public:
    * in the case it is required just one derivative.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
-   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * system  such as fe values, quadrature points, AnyData (Scratch),
    * all the informations related to the PDE (CopySystem) and the energy
    * (Sdouble)
    */
@@ -240,7 +240,7 @@ public:
    *in the case the Jacobian is automatically constructed using the derivative of the residual.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
-   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * system  such as fe values, quadrature points, AnyData (Scratch),
    * all the informations related to the PDE (CopySystem) and the energy
    * (SSdouble)
    */
@@ -260,7 +260,7 @@ public:
    *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * (DoFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
-   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * system  such as fe values, quadrature points, AnyData (Scratch),
    * all the informations related to the PDE (CopySystem) and the energy
    * (SSdouble)
    */
@@ -280,7 +280,7 @@ public:
    *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * (DFHandler<dim,spacedim>::active_cell_iterator), all the informations of the
-   * system  such as fe values, quadrature points, SAKData (Scratch),
+   * system  such as fe values, quadrature points, AnyData (Scratch),
    * all the informations related to the PDE (CopySystem) and the energy
    * (SSdouble)
    */
@@ -300,7 +300,7 @@ public:
    *in the case two derivatives are required.
    * It takes as argument a reference to the active cell
    * @p cell, all the informations of the system @p scratch ( fe values,
-   * quadrature points, SAKData ), all the informations related to the PDE
+   * quadrature points, AnyData ), all the informations related to the PDE
    * @p data and a reference to the local residual @p local_residual.
    */
   virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -330,7 +330,7 @@ public:
    * in the case it is required just one derivatice.
    * It takes as argument a reference to the active cell
    * @p cell, all the informations of the system @p scratch ( fe values,
-   * quadrature points, SAKData ), all the informations related to the PDE
+   * quadrature points, AnyData ), all the informations related to the PDE
    * @p data and a reference to the local residual @p local_residual.
    */
   virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -359,7 +359,7 @@ public:
    * in the case it is required just one derivatice.
    * It takes as argument a reference to the active cell
    * @p cell, all the informations of the system @p scratch ( fe values,
-   * quadrature points, SAKData ), all the informations related to the PDE
+   * quadrature points, AnyData ), all the informations related to the PDE
    * @p data and a reference to the local residual @p local_residual.
    */
   virtual void get_preconditioner_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,

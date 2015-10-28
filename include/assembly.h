@@ -11,11 +11,13 @@
 #define _ASSEMBLY_
 
 #include <deal.II/fe/fe_values.h>
-#include <deal2lkit/sak_data.h>
 #include "Sacado.hpp"
 #include <deal2lkit/fe_values_cache.h>
+#include <deal2lkit/any_data.h>
 
 using namespace dealii;
+using namespace deal2lkit;
+
 typedef Sacado::Fad::DFad<double> Sdouble;
 typedef Sacado::Fad::DFad<Sdouble> SSdouble;
 
@@ -175,7 +177,7 @@ namespace Assembly
     template <int dim, int spacedim>
     struct NFields
     {
-      NFields     (const SAKData &anydata,
+      NFields     (const AnyData &anydata,
                    const FiniteElement<dim, spacedim>   &fe,
                    const Quadrature<dim>                &quadrature,
                    const Mapping<dim, spacedim>         &mapping,
@@ -193,7 +195,7 @@ namespace Assembly
       {}
       ;
 
-      SAKData                                           anydata;
+      AnyData                                           anydata;
       FEValuesCache<dim, spacedim>                      fe_cache;
     };
   }

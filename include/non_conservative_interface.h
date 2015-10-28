@@ -1,5 +1,7 @@
 #include "interface.h"
 
+using namespace deal2lkit;
+
 template<int dim, int spacedim, int n_components, class Implementation,  typename LAC=LATrilinos>
 class NonConservativeInterface : public Interface<dim,spacedim,n_components,LAC>
 {
@@ -54,4 +56,3 @@ public:
     static_cast<const Implementation *>(this)->preconditioner_residual(cell, scratch, data, local_residual);
   }
 };
-

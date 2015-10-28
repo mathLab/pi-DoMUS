@@ -1,5 +1,7 @@
 #include "navier_stokes.h"
 
+using namespace deal2lkit;
+
 template <int dim>
 NavierStokes<dim>::Postprocessor::
 Postprocessor (const unsigned int partition,
