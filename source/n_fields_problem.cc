@@ -789,10 +789,9 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
           n_iterations = (solver_control.last_step() +
                           solver_control_refined.last_step());
         }
-      fixed_out << std::endl;
-      fixed_out << " iterations:                           " <<  n_iterations
-                << std::endl;
-      // fixed_out << std::endl;
+      pcout << std::endl;
+      pcout << " iterations:                           " <<  n_iterations
+            << std::endl;
 
     }
 
