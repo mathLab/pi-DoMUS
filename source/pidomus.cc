@@ -107,9 +107,6 @@ declare_parameters (ParameterHandler &prm)
                   "Use direct solver if available",
                   "true",
                   Patterns::Bool());
-
-
-
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -145,6 +142,8 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedi
      print(std::vector<std::string>(n_components, "L2,H1"), ";")),
 
   pgg("Domain"),
+
+  pgr("Refinement"),
 
   exact_solution("Exact solution"),
   initial_solution("Initial solution"),
@@ -443,6 +442,10 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
+
+  typedef TrilinosWrappers::MPI::BlockVector pVEC;
+  typedef BlockVector<double> sVEC;
+
   if (adaptive_refinement)
     {
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
@@ -456,16 +459,9 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
                                           0,
                                           triangulation->locally_owned_subdomain());
 
-      parallel::distributed::GridRefinement::
-      refine_and_coarsen_fixed_fraction (*triangulation,
-                                         estimated_error_per_cell,
-                                         0.3, 0.1);
-
-
+      pgr.mark_cells(estimated_error_per_cell, *triangulation);
     }
 
-  typedef TrilinosWrappers::MPI::BlockVector pVEC;
-  typedef BlockVector<double> sVEC;
 
   if (typeid(typename LAC::VectorType) == typeid(pVEC))
     {

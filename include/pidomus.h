@@ -30,6 +30,7 @@
 #include "interface.h"
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
+#include <deal2lkit/parsed_grid_refinement.h>
 #include <deal2lkit/error_handler.h>
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parsed_data_out.h>
@@ -195,6 +196,7 @@ private:
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim, spacedim>   pgg;
+  ParsedGridRefinement  pgr;
 
   ParsedFunction<spacedim, n_components>        exact_solution;
 

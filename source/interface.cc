@@ -126,6 +126,7 @@ Interface<dim,spacedim,n_components,LAC>::get_system_residual (const typename Do
   get_system_energy(cell, scratch, data, energy);
 
   apply_forcing_terms(cell,scratch,data,energy);
+  
   if (cell->at_boundary())
     apply_neumann_bcs(cell,scratch, data, energy);
 
