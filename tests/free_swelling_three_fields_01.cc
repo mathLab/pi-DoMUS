@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   FreeSwellingThreeFields<dim,spacedim> energy;
-  NFieldsProblem<dim,spacedim,dim+2,LADealII> n_problem (energy);
+  piDoMUSProblem<dim,spacedim,dim+2,LADealII> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/free_swelling_01.prm", "used_parameters.prm");
 
 

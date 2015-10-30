@@ -29,8 +29,8 @@ template <int dim, int spacedim>
 class FreeSwellingThreeFields : public ConservativeInterface<dim,spacedim,dim+2, FreeSwellingThreeFields<dim,spacedim>, LAC>
 {
   typedef FEValuesCache<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,spacedim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,spacedim> CopySystem;
 
 public:
 

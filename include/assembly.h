@@ -26,10 +26,10 @@ namespace Assembly
   namespace CopyData
   {
     template <int dim, int spacedim>
-    struct NFieldsPreconditioner
+    struct piDoMUSPreconditioner
     {
-      NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe);
-      NFieldsPreconditioner (const NFieldsPreconditioner &data);
+      piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe);
+      piDoMUSPreconditioner (const piDoMUSPreconditioner &data);
 
       FullMatrix<double>                    local_matrix;
       std::vector<types::global_dof_index>  local_dof_indices;
@@ -38,8 +38,8 @@ namespace Assembly
     };
 
     template <int dim, int spacedim>
-    NFieldsPreconditioner<dim, spacedim>::
-    NFieldsPreconditioner (const FiniteElement<dim, spacedim> &fe)
+    piDoMUSPreconditioner<dim, spacedim>::
+    piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe)
       :
       local_matrix (      fe.dofs_per_cell,
                           fe.dofs_per_cell),
@@ -49,8 +49,8 @@ namespace Assembly
     {}
 
     template <int dim, int spacedim>
-    NFieldsPreconditioner<dim, spacedim>::
-    NFieldsPreconditioner (const NFieldsPreconditioner &data)
+    piDoMUSPreconditioner<dim, spacedim>::
+    piDoMUSPreconditioner (const piDoMUSPreconditioner &data)
       :
       local_matrix (      data.local_matrix),
       local_dof_indices ( data.local_dof_indices),
@@ -59,27 +59,27 @@ namespace Assembly
     {}
 
     template <int dim, int spacedim>
-    struct NFieldsSystem : public NFieldsPreconditioner<dim, spacedim>
+    struct piDoMUSSystem : public piDoMUSPreconditioner<dim, spacedim>
     {
-      NFieldsSystem (const FiniteElement<dim, spacedim> &fe);
-      NFieldsSystem (const NFieldsSystem<dim, spacedim> &data);
+      piDoMUSSystem (const FiniteElement<dim, spacedim> &fe);
+      piDoMUSSystem (const piDoMUSSystem<dim, spacedim> &data);
 
       Vector<double> local_rhs;
     };
 
     template <int dim, int spacedim>
-    NFieldsSystem<dim, spacedim>::
-    NFieldsSystem (const FiniteElement<dim, spacedim> &fe)
+    piDoMUSSystem<dim, spacedim>::
+    piDoMUSSystem (const FiniteElement<dim, spacedim> &fe)
       :
-      NFieldsPreconditioner<dim, spacedim> (fe),
+      piDoMUSPreconditioner<dim, spacedim> (fe),
       local_rhs (fe.dofs_per_cell)
     {}
 
     template <int dim, int spacedim>
-    NFieldsSystem<dim, spacedim>::
-    NFieldsSystem (const NFieldsSystem<dim, spacedim> &data)
+    piDoMUSSystem<dim, spacedim>::
+    piDoMUSSystem (const piDoMUSSystem<dim, spacedim> &data)
       :
-      NFieldsPreconditioner<dim, spacedim> (data),
+      piDoMUSPreconditioner<dim, spacedim> (data),
       local_rhs (data.local_rhs)
     {}
 

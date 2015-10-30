@@ -8,7 +8,7 @@ typedef TrilinosWrappers::MPI::BlockVector VEC;
 
 
 template<int fdim, int fspacedim, int fn_components>
-void test(NFieldsProblem<fdim,fspacedim,fn_components> &pb)
+void test(piDoMUSProblem<fdim,fspacedim,fn_components> &pb)
 {
   pb.make_grid_fe();
   pb.setup_dofs();
@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
 
   const int dim = 2;
   HeatEquation<dim> energy;
-  NFieldsProblem<dim,dim,1> n_problem (energy);
+  piDoMUSProblem<dim,dim,1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/heat_equation_06.prm", "used_parameters.prm");
 
   deallog << "##########################################"<<std::endl;

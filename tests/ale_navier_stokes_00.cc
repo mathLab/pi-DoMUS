@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 2;
 
   ALENavierStokes<dim> energy;
-  NFieldsProblem<dim,spacedim,dim+dim+1> n_problem (energy);
+  piDoMUSProblem<dim,spacedim,dim+dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/ale_navier_stokes_00.prm", "used_parameters.prm");
 
 

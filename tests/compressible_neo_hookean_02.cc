@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   CompressibleNeoHookeanInterface<dim,spacedim> energy;
-  NFieldsProblem<dim,spacedim,dim> n_problem (energy);
+  piDoMUSProblem<dim,spacedim,dim> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_02.prm", "used_parameters.prm");
 
 

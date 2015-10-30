@@ -56,8 +56,8 @@ template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
 class Interface : public ParsedFiniteElement<dim,spacedim>
 {
   typedef FEValuesCache<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
 
 public:
 
