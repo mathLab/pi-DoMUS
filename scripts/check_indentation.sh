@@ -8,6 +8,6 @@ fi
 
 export PATH=`pwd`/astyle/build/gcc/bin:$PATH
 
-./script/indent
+./scripts/indent
 git diff
 git diff-files --quiet 
