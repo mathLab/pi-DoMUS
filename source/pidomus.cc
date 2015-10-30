@@ -124,7 +124,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
 
 template <int dim, int spacedim, int n_components, typename LAC>
 piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
-    const MPI_Comm &communicator)
+                                                    const MPI_Comm &communicator)
   :
   SundialsInterface<typename LAC::VectorType>(communicator),
   comm(communicator),
@@ -596,10 +596,10 @@ piDoMUS<dim, spacedim, n_components, LAC>::n_dofs() const
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const unsigned int step_number,
-    const double /* h */ )
+                                                       const typename LAC::VectorType &solution,
+                                                       const typename LAC::VectorType &solution_dot,
+                                                       const unsigned int step_number,
+                                                       const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
 
@@ -652,9 +652,9 @@ piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
 template <int dim, int spacedim, int n_components, typename LAC>
 int
 piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
-                                                           const typename LAC::VectorType &solution,
-                                                           const typename LAC::VectorType &solution_dot,
-                                                           typename LAC::VectorType &dst)
+                                                    const typename LAC::VectorType &solution,
+                                                    const typename LAC::VectorType &solution_dot,
+                                                    typename LAC::VectorType &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
@@ -805,10 +805,10 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
 template <int dim, int spacedim, int n_components, typename LAC>
 int
 piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
-    const typename LAC::VectorType &src_yy,
-    const typename LAC::VectorType &src_yp,
-    const typename LAC::VectorType &,
-    const double alpha)
+                                                          const typename LAC::VectorType &src_yy,
+                                                          const typename LAC::VectorType &src_yp,
+                                                          const typename LAC::VectorType &,
+                                                          const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);

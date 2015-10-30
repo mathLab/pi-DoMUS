@@ -61,7 +61,7 @@ public:
 
 
   piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
-                  const MPI_Comm &comm = MPI_COMM_WORLD);
+           const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
