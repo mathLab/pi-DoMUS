@@ -5,7 +5,7 @@
 - Sundials
 - Sacado
 
-#Equation implemented:
+#Implemented Partial Differential Equations:
 - Stokes
 - Navier Stokes
 - ALE Navier Stokes
