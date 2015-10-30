@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 2;
 
   DynamicStokes<dim> energy;
-  piDoMUSProblem<dim,spacedim,dim+1> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/stokes_forcing_01.prm", "used_parameters.prm");
 
 

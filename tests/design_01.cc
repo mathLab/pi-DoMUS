@@ -145,10 +145,10 @@ public:
 
 
 template <int dim, int spacedim>
-class piDoMUSProblem
+class piDoMUS
 {
 public:
-  piDoMUSProblem(const Interface<dim,spacedim> &pb) :
+  piDoMUS(const Interface<dim,spacedim> &pb) :
     problem(pb),
     names(pb.get_component_names())
   {
@@ -164,8 +164,8 @@ int main ()
   NavierStokesInterface<2> interface0;
   StokesInterface<2> interface1;
 
-  piDoMUSProblem<2,2> navier_stoks_driver(interface0);
-  piDoMUSProblem<2,2> stokes_driver(interface1);
+  piDoMUS<2,2> navier_stoks_driver(interface0);
+  piDoMUS<2,2> stokes_driver(interface1);
 
   deallog << navier_stoks_driver.names << std::endl;
   deallog << navier_stoks_driver.problem.n_components() << std::endl;

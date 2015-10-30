@@ -4,7 +4,7 @@
 #include "lac_type.h"
 
 template<int dim, int spacedim, int n_components,typename LAC>
-void test(piDoMUSProblem<dim,spacedim,n_components,LAC> &pb)
+void test(piDoMUS<dim,spacedim,n_components,LAC> &pb)
 {
   for (pb.current_cycle=0; pb.current_cycle<pb.n_cycles; ++pb.current_cycle)
     {
@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   FreeSwellingThreeFields<dim,spacedim> energy;
-  piDoMUSProblem<dim,spacedim,dim+2,LADealII> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+2,LADealII> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/free_swelling_02.prm", "used_parameters.prm");
 
 

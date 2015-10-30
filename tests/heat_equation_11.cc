@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
   const int dim = 2;
 
   HeatEquation<dim> energy;
-  piDoMUSProblem<dim,dim,1> n_problem (energy);
+  piDoMUS<dim,dim,1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/heat_equation_11.prm", "used_parameters.prm");
 
   n_problem.run();
