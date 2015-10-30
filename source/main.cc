@@ -39,7 +39,7 @@ int main (int argc, char *argv[])
       // BoussinesqFlowProblem<dim>::Parameters  parameters(parameter_filename);
 
       HeatEquation<dim> energy;
-      piDoMUSProblem<dim,dim,1,LADealII> n_problem (energy);
+      piDoMUS<dim,dim,1,LADealII> n_problem (energy);
       // NavierStokes<dim> flow_problem (NavierStokes<dim>::global_refinement);
       ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
 
