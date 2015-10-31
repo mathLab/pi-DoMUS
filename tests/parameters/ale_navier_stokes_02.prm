@@ -1,11 +1,12 @@
-subsection NFieldsProblem<2, 2, 5, LATrilinos>
+subsection piDoMUS<2, 2, 5, LATrilinos>
   set Adaptive refinement            = true
-  set Initial global refinement      = 3
+  set Initial global refinement      = 1
   set Maximum number of time steps   = 10000
-  set Number of cycles               = 1
+  set Number of cycles               = 3
   set Timer output file              = timer.txt
   set Use direct solver if available = true
 end
+
 
 subsection ALE Navier Stokes
   set Block coupling                   = 1,0,0; 1,1,1; 0,0,1
