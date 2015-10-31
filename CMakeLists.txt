@@ -1,96 +1,228 @@
+## ---------------------------------------------------------------------
 ##
-# CMake script for large project, with one executable
-# and a library of objects depending on deal2lkit.
-#
-# The structure of the directory is assumed to be: 
-# ./source: containing implementations and one file with "int main()"
-# ./include: containing all class declarations
-# ./tests: containing pairs of files: test.cc/test.output to test
-#
-# If you set the environemnt variable DEAL2LKIT_DIR or D2K_DIR, 
-# everything will work out of the box
+## This file is copyrighted by the pi-DoMUS authors and by the deal.II
+## authors (see below for the original copyright in the deal.II library.)
 ##
+## The structure of the cmake files are the same of those of the
+## deal.II library and they have been modified in order to make them
+## compatible with the deal2lkit library.
+##
+## This file is part of the pi-DoMUS library.
+##
+## The deal2lkit library is free software; you can use it, redistribute
+## it, and/or modify it under the terms of the GNU Lesser General
+## Public License as published by the Free Software Foundation; either
+## version 2.1 of the License, or (at your option) any later version.
+## The full text of the license can be found in the file LICENSE at
+## the top level of the deal2lkit distribution.
+## ---------------------------------------------------------------------
 
-# Set the name of the project and target
-# If your application follows the structure above, you don't need to 
-# specify anything else. 
-SET(TARGET n_components)
-SET(_main source/main.cc)
+## ---------------------------------------------------------------------
+##
+## Copyright (C) 2012 - 2015 by the deal.II authors
+##
+## This file is part of the deal.II library.
+##
+## The deal.II library is free software; you can use it, redistribute
+## it, and/or modify it under the terms of the GNU Lesser General
+## Public License as published by the Free Software Foundation; either
+## version 2.1 of the License, or (at your option) any later version.
+## The full text of the license can be found in the file LICENSE at
+## the top level of the deal.II distribution.
+##
+## ---------------------------------------------------------------------
 
-# Set the _main variable to empty if you don't want an executable
-# but only a library
-#SET(_main "")
+##                                                                    ##
+#            The cmake build system for the deal2lkit project          #
+##                                                                    ##
 
-############################################################
-# Normally you shouldn't need to change anything below.
-############################################################
-# Declare all source files the target consists of:
-file(GLOB _files source/*cc)
+########################################################################
+#                                                                      #
+#                            Configuration:                            #
+#                                                                      #
+########################################################################
 
-# Don't compile the main file into the library
-IF(NOT "${_main}" STREQUAL "") 
-  LIST(REMOVE_ITEM _files
-    ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
-    )
-ENDIF()
-
-INCLUDE_DIRECTORIES(include)
+#
+# General configuration for cmake:
+#
+MESSAGE(STATUS "This is CMake ${CMAKE_VERSION}")
+MESSAGE(STATUS "")
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
+
+#
+# We support all policy changes up to version 3.1.0. Thus, explicitly set
+# all policies CMP0001 - CMP0054 to new for version 3.1 (and later) to
+# avoid some unnecessary warnings.
+#
+IF( "${CMAKE_VERSION}" VERSION_EQUAL "3.1" OR
+    "${CMAKE_VERSION}" VERSION_GREATER "3.1" )
+  CMAKE_POLICY(VERSION 3.1.0)
+ENDIF()
+
+IF(POLICY CMP0037)
+  # allow to override "test" target for quick tests
+  CMAKE_POLICY(SET CMP0037 OLD)
+ENDIF()
 
 FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
+
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
+DEAL_II_QUERY_GIT_INFORMATION()
 
-
-PROJECT(${TARGET})
 FIND_PACKAGE(deal2lkit 1.0 REQUIRED
   HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
   )
+
 D2K_INITIALIZE_CACHED_VARIABLES()
-OPTION(ENABLE_APP_TESTING "Enable tests in this application." ON)
 
-# We add one library and one target for each type of deal.II library
-# we found. If you compiled deal.II with both Release and Debug
-# mode, this will generate both Release and Debug programs for you.
-# The debug library and program are postfixed with ".g"
-SET(_d2_build_types "Release;Debug")
-SET(Release_postfix "")
-SET(Debug_postfix ".g")
+#
+# The INCLUDE() and FIND_PACKAGE() search first in these directories
+#
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
 
-FOREACH(_build_type ${_d2_build_types})
-  # Postfix to use everywhere
-  SET(_p "${${_build_type}_postfix}")
-  # Only build this type, if deal.II was compiled with it.
-  IF(CMAKE_BUILD_TYPE MATCHES "${_build_type}" AND
-      DEAL_II_BUILD_TYPE MATCHES "${_build_type}"  AND
-      D2K_BUILD_TYPE MATCHES "${_build_type}")
 
-    MESSAGE("-- Found ${_build_type} version of deal.II.")
-    MESSAGE("-- Found ${_build_type} version of deal2lkit.")
+#
+# Load all macros:
+#
+FILE(GLOB _macro_files "cmake/macros/*.cmake")
+MESSAGE(STATUS "Include ${CMAKE_SOURCE_DIR}/cmake/load_cmake_macros.cmake")
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/load_cmake_macros.cmake)
+FOREACH(_file ${_macro_files})
+  MESSAGE(STATUS "Include ${_file}")
+  INCLUDE(${_file})
+ENDFOREACH()
 
-    SET(_lib "${TARGET}-lib${_p}")
-    MESSAGE("-- Configuring library ${_lib}")
+#PIDOMUS_QUERY_GIT_INFORMATION()
 
-    STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
+#
+# Check for the existence of various optional folders:
+#
+IF(EXISTS ${CMAKE_SOURCE_DIR}/doc/CMakeLists.txt)
+  SET(PIDOMUS_HAVE_DOC_DIRECTORY TRUE)
+ENDIF()
 
-    ADD_LIBRARY(${_lib} SHARED ${_files})
-    SET(_exe "${TARGET}${${_build_type}_postfix}")
-    MESSAGE("-- Configuring executable ${_exe}")
-    ADD_EXECUTABLE(${_exe} ${_main})
-    TARGET_LINK_LIBRARIES(${_exe} ${_lib})
-    D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+IF(EXISTS ${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt)
+  SET(PIDOMUS_HAVE_TESTS_DIRECTORY TRUE)
+ENDIF()
 
-    SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
+#
+# We have to initialize some cached variables before PROJECT is called, so
+# do it at this point:
+#
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/setup_cached_variables.cmake)
 
-    D2K_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
-  ENDIF()
+#
+# Now, set the project and set up the rest:
+#
+PROJECT(pidomus CXX C)
+
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/setup_pidomus.cmake)
+
+
+#
+# Feature configuration:
+#
+FILE(GLOB _configure_files "cmake/configure/configure_*.cmake")
+LIST(SORT _configure_files) # make sure to include in alphabetical order
+FOREACH(_file ${_configure_files})
+  INCLUDE(${_file})
 ENDFOREACH()
 
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests AND ${ENABLE_APP_TESTING})
+#
+# Finalize the configuration:
+#
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/setup_custom_targets.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/setup_finalize.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/setup_write_config.cmake)
+
+########################################################################
+#                                                                      #
+#                     Compilation and installation:                    #
+#                                                                      #
+########################################################################
+
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Configuring done. Proceed to target definitions now.")
+
+ADD_SUBDIRECTORY(include)
+
+
+#ADD_SUBDIRECTORY(source)
+
+INCLUDE_DIRECTORIES(
+  ${CMAKE_BINARY_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include
+  ${PIDOMUS_INCLUDE_DIRS}
+  )
+file(GLOB _library_source_files source/*.cc)
+
+FOREACH(_BUILD_TYPE ${PIDOMUS_BUILD_TYPES})
+  SET(_lib ${PIDOMUS_BASE_NAME}${PIDOMUS_${_BUILD_TYPE}_SUFFIX})
+  ADD_LIBRARY(${_lib}
+    SHARED
+    ${_library_source_files}
+    )
+
+
+  # link external libraries
+  TARGET_LINK_LIBRARIES(${_lib}
+    ${PIDOMUS_LIBRARIES_${_BUILD_TYPE}}
+    ${PIDOMUS_LIBRARIES}
+    )
+
+
+  SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
+  DEAL_II_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
+
+
+  #	INSTALL(TARGETS ${_lib} LIBRARY DESTINATION lib)
+  INSTALL(TARGETS ${PIDOMUS_BASE_NAME}${PIDOMUS_${_BUILD_TYPE}_SUFFIX}
+    COMPONENT library
+    EXPORT ${PIDOMUS_PROJECT_CONFIG_NAME}Targets
+    RUNTIME DESTINATION ${PIDOMUS_EXECUTABLE_RELDIR}
+    LIBRARY DESTINATION ${PIDOMUS_LIBRARY_RELDIR}
+    ARCHIVE DESTINATION ${PIDOMUS_LIBRARY_RELDIR}
+    )
+ENDFOREACH()
+INSTALL(EXPORT ${PIDOMUS_PROJECT_CONFIG_NAME}Targets
+  DESTINATION ${PIDOMUS_PROJECT_CONFIG_RELDIR}
+  COMPONENT library
+  )
+
+MESSAGE(STATUS "Setting up library - Done")
+
+
+
+ADD_SUBDIRECTORY(cmake/config) # has to be included after source
+# ADD_SUBDIRECTORY(examples)
+
+#Do not automatically include the testsuite subproject on Windows.
+IF(PIDOMUS_HAVE_TESTS_DIRECTORY AND NOT DEAL_II_MSVC AND PIDOMUS_ENABLE_TESTING)
   ADD_SUBDIRECTORY(tests)
   ENABLE_TESTING()
-endif()
+ENDIF()
 
+IF(PIDOMUS_COMPONENT_DOCUMENTATION)
+  MESSAGE(STATUS "Setting up documentation")
+  # Doxygen
+  FIND_PACKAGE(Doxygen)
+  IF(DOXYGEN_FOUND)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    ADD_CUSTOM_TARGET(doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+  MESSAGE(STATUS "Setting up documentation - Done")
+  ENDIF()
+ENDIF()
+
+#
+# And finally, print the configuration:
+#
+FILE(READ ${CMAKE_BINARY_DIR}/summary.log PIDOMUS_LOG_SUMMARY)
+MESSAGE("${PIDOMUS_LOG_SUMMARY}")
