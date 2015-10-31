@@ -1,9 +1,9 @@
 ## ---------------------------------------------------------------------
 ##
-## This file is copyrighted by the pidomus authors and by the deal.II 
+## This file is copyrighted by the pidomus authors and by the deal.II
 ## authors (see below for the original copyright in the deal.II library.)
-## 
-## The structure of the cmake files are the same of those of the 
+##
+## The structure of the cmake files are the same of those of the
 ## deal.II library and they have been modified in order to make them
 ## compatible with the pidomus library.
 ##
@@ -133,5 +133,6 @@ MACRO(PIDOMUS_SETUP_TARGET _target)
   ENDIF()
 
   DEAL_II_SETUP_TARGET(${_target} ${ARGN})
+  D2K_SETUP_TARGET(${_target} ${ARGN})
 
 ENDMACRO()

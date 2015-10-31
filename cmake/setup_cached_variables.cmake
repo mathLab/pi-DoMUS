@@ -93,10 +93,11 @@ OPTION(PIDOMUS_ENABLE_TESTING
 # Setup CMAKE_BUILD_TYPE:
 #
 SET(CMAKE_BUILD_TYPE
-  ${DEAL_II_BUILD_TYPE}
+  ${DEAL_II_BUILD_TYPE} ${D2K_BUILD_TYPE}
   CACHE STRING
   "Choose the type of build, options are: Debug, Release and DebugRelease."
   )
+
 
 # This is cruel, I know. But it is better to only have a known number of
 # options for CMAKE_BUILD_TYPE...

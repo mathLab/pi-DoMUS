@@ -71,6 +71,7 @@ MACRO(PIDOMUS_ADD_LIBRARY _library)
     #STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
     #DEAL_II_SETUP_TARGET(${_library}.${_build_lowercase} ${_BUILD_TYPE})
     DEAL_II_SETUP_TARGET(${_library}.${_build_lowercase} ${_build})
+    D2K_SETUP_TARGET(${_library}.${_build_lowercase} ${_build})
   ENDFOREACH()
 
 ENDMACRO()
