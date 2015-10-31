@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/neo_hookean_two_fields.h"
 #include "tests.h"
 
@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   NeoHookeanTwoFieldsInterface<dim,spacedim> energy;
-  NFieldsProblem<dim,spacedim,dim+1> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/incompressible_neo_hookean_two_fields.prm", "used_parameters.prm");
 
 

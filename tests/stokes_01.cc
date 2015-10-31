@@ -1,9 +1,9 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/dynamic_stokes.h"
 #include "tests.h"
 
 template<int dim, int spacedim, int n_components>
-void test(NFieldsProblem<dim,spacedim,n_components> &pb)
+void test(piDoMUS<dim,spacedim,n_components> &pb)
 {
   for (pb.current_cycle=0; pb.current_cycle<pb.n_cycles; ++pb.current_cycle)
     {
@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
   const int spacedim = 2;
 
   DynamicStokes<dim> energy;
-  NFieldsProblem<dim,spacedim,dim+1> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/stokes_01.prm", "used_parameters.prm");
 
 

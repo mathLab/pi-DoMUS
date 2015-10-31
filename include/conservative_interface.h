@@ -20,8 +20,8 @@ class ConservativeInterface : public Interface<dim,spacedim,n_components,LAC>
 {
 
   typedef FEValuesCache<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,spacedim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,spacedim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,spacedim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,spacedim> CopySystem;
 
 public:
 

@@ -47,21 +47,21 @@ using namespace dealii;
 using namespace deal2lkit;
 
 template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
-class NFieldsProblem : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
+class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
-  typedef typename Assembly::CopyData::NFieldsSystem<dim, spacedim> SystemCopyData;
-  typedef typename Assembly::CopyData::NFieldsPreconditioner<dim, spacedim> PreconditionerCopyData;
+  typedef typename Assembly::CopyData::piDoMUSSystem<dim, spacedim> SystemCopyData;
+  typedef typename Assembly::CopyData::piDoMUSPreconditioner<dim, spacedim> PreconditionerCopyData;
   typedef FEValuesCache<dim, spacedim> Scratch;
 
   // This is a class required to make tests
   template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
-  friend void test(NFieldsProblem<fdim, fspacedim, fn_components, fn_LAC> &);
+  friend void test(piDoMUS<fdim, fspacedim, fn_components, fn_LAC> &);
 
 public:
 
 
-  NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
-                  const MPI_Comm &comm = MPI_COMM_WORLD);
+  piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
+           const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();

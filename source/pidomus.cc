@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/numerics/solution_transfer.h>
 
@@ -58,7 +58,6 @@
 #include <string>
 #include <math.h>
 
-#include "equation_data.h"
 #include "lac_initializer.h"
 
 using namespace dealii;
@@ -68,7 +67,7 @@ using namespace deal2lkit;
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::
+piDoMUS<dim, spacedim, n_components, LAC>::
 declare_parameters (ParameterHandler &prm)
 {
   add_parameter(  prm,
@@ -115,7 +114,7 @@ declare_parameters (ParameterHandler &prm)
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
+piDoMUS<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
 {
   use_direct_solver &= (typeid(typename LAC::BlockMatrix) == typeid(dealii::BlockSparseMatrix<double>));
 }
@@ -124,8 +123,8 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-NFieldsProblem<dim, spacedim, n_components, LAC>::NFieldsProblem (const Interface<dim, spacedim, n_components, LAC> &energy,
-    const MPI_Comm &communicator)
+piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
+                                                    const MPI_Comm &communicator)
   :
   SundialsInterface<typename LAC::VectorType>(communicator),
   comm(communicator),
@@ -160,7 +159,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::NFieldsProblem (const Interfac
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_run)
+void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_run)
 {
   computing_timer.enter_section("Setup dof systems");
   std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
@@ -269,7 +268,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::setup_dofs (const bool &f
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const double t,
+void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const double t,
     const typename LAC::VectorType &solution,
     const typename LAC::VectorType &solution_dot,
     const double alpha)
@@ -342,7 +341,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix 
                face_quadrature_formula,
                energy.get_face_flags()),
        Assembly::CopyData::
-       NFieldsSystem<dim, spacedim> (*fe));
+       piDoMUSSystem<dim, spacedim> (*fe));
 
   compress(jacobian_matrix, VectorOperation::add);
 
@@ -364,7 +363,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix 
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
+void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
     const typename LAC::VectorType &solution,
     const typename LAC::VectorType &solution_dot,
     const double alpha)
@@ -431,7 +430,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_precond
                     face_quadrature_formula,
                     UpdateFlags(0)),
            Assembly::CopyData::
-           NFieldsPreconditioner<dim, spacedim> (*fe));
+           piDoMUSPreconditioner<dim, spacedim> (*fe));
 
       jacobian_preconditioner_matrix.compress(VectorOperation::add);
       computing_timer.exit_section();
@@ -441,7 +440,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::assemble_jacobian_precond
 /* ------------------------ MESH AND GRID ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
+void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
   if (adaptive_refinement)
@@ -522,7 +521,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::refine_mesh ()
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::make_grid_fe()
+void piDoMUS<dim, spacedim, n_components, LAC>::make_grid_fe()
 {
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
@@ -534,7 +533,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::make_grid_fe()
 /* ------------------------ ERRORS ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::process_solution ()
+void piDoMUS<dim, spacedim, n_components, LAC>::process_solution ()
 {
   eh.error_from_exact(*dof_handler, solution, exact_solution);
   eh.output_table(pcout);
@@ -543,7 +542,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::process_solution ()
 /* ------------------------ RUN ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void NFieldsProblem<dim, spacedim, n_components, LAC>::run ()
+void piDoMUS<dim, spacedim, n_components, LAC>::run ()
 {
 //  if(timer_file_name != "")
 //    timer_outfile.open(timer_file_name.c_str());
@@ -579,7 +578,7 @@ void NFieldsProblem<dim, spacedim, n_components, LAC>::run ()
 
 template <int dim, int spacedim, int n_components, typename LAC>
 shared_ptr<typename LAC::VectorType>
-NFieldsProblem<dim, spacedim, n_components, LAC>::create_new_vector() const
+piDoMUS<dim, spacedim, n_components, LAC>::create_new_vector() const
 {
   shared_ptr<typename LAC::VectorType> ret = SP(new typename LAC::VectorType(solution));
   return ret;
@@ -588,7 +587,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::create_new_vector() const
 
 template <int dim, int spacedim, int n_components, typename LAC>
 unsigned int
-NFieldsProblem<dim, spacedim, n_components, LAC>::n_dofs() const
+piDoMUS<dim, spacedim, n_components, LAC>::n_dofs() const
 {
   return dof_handler->n_dofs();
 }
@@ -596,11 +595,11 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::n_dofs() const
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double  t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const unsigned int step_number,
-    const double /* h */ )
+piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
+                                                       const typename LAC::VectorType &solution,
+                                                       const typename LAC::VectorType &solution_dot,
+                                                       const unsigned int step_number,
+                                                       const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
 
@@ -640,7 +639,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::output_step(const double  t,
 
 template <int dim, int spacedim, int n_components, typename LAC>
 bool
-NFieldsProblem<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
+piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
     const typename LAC::VectorType &solution,
     const typename LAC::VectorType &solution_dot,
     const unsigned int step_number,
@@ -652,10 +651,10 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solver_should_restart(const do
 
 template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
-                                                           const typename LAC::VectorType &solution,
-                                                           const typename LAC::VectorType &solution_dot,
-                                                           typename LAC::VectorType &dst)
+piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
+                                                    const typename LAC::VectorType &solution,
+                                                    const typename LAC::VectorType &solution_dot,
+                                                    typename LAC::VectorType &dst)
 {
   computing_timer.enter_section ("Residual");
   energy.set_time(t);
@@ -735,7 +734,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::residual(const double t,
 
 template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
+piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
     const typename LAC::VectorType &y,
     const typename LAC::VectorType &y_dot,
     const typename LAC::VectorType &,
@@ -805,11 +804,11 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::solve_jacobian_system(const do
 
 template <int dim, int spacedim, int n_components, typename LAC>
 int
-NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
-    const typename LAC::VectorType &src_yy,
-    const typename LAC::VectorType &src_yp,
-    const typename LAC::VectorType &,
-    const double alpha)
+piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
+                                                          const typename LAC::VectorType &src_yy,
+                                                          const typename LAC::VectorType &src_yp,
+                                                          const typename LAC::VectorType &,
+                                                          const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");
   assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
@@ -831,7 +830,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
 
 template <int dim, int spacedim, int n_components, typename LAC>
 typename LAC::VectorType &
-NFieldsProblem<dim, spacedim, n_components, LAC>::differential_components() const
+piDoMUS<dim, spacedim, n_components, LAC>::differential_components() const
 {
   static typename LAC::VectorType diff_comps;
   diff_comps.reinit(solution);
@@ -847,7 +846,7 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::differential_components() cons
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-NFieldsProblem<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
+piDoMUS<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
 {
   for (unsigned int i = 0; i < global_partitioning.n_elements(); ++i)
     {
@@ -857,62 +856,62 @@ NFieldsProblem<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(t
     }
 }
 
-// template class NFieldsProblem<1>;
+// template class piDoMUS<1>;
 
-//template class NFieldsProblem<1,1,1>;
-//template class NFieldsProblem<1,1,2>;
-//template class NFieldsProblem<1,1,3>;
-//template class NFieldsProblem<1,1,4>;
+//template class piDoMUS<1,1,1>;
+//template class piDoMUS<1,1,2>;
+//template class piDoMUS<1,1,3>;
+//template class piDoMUS<1,1,4>;
 
-// template class NFieldsProblem<1,2,1>;
-// template class NFieldsProblem<1,2,2>;
-// template class NFieldsProblem<1,2,3>;
-// template class NFieldsProblem<1,2,4>;
+// template class piDoMUS<1,2,1>;
+// template class piDoMUS<1,2,2>;
+// template class piDoMUS<1,2,3>;
+// template class piDoMUS<1,2,4>;
 
-template class NFieldsProblem<2, 2, 1>;
-template class NFieldsProblem<2, 2, 2>;
-template class NFieldsProblem<2, 2, 3>;
-template class NFieldsProblem<2, 2, 4>;
-template class NFieldsProblem<2, 2, 5>;
+template class piDoMUS<2, 2, 1>;
+template class piDoMUS<2, 2, 2>;
+template class piDoMUS<2, 2, 3>;
+template class piDoMUS<2, 2, 4>;
+template class piDoMUS<2, 2, 5>;
 
-template class NFieldsProblem<2, 2, 6>;
-template class NFieldsProblem<2, 2, 7>;
-template class NFieldsProblem<2, 2, 8>;
+template class piDoMUS<2, 2, 6>;
+template class piDoMUS<2, 2, 7>;
+template class piDoMUS<2, 2, 8>;
 
-template class NFieldsProblem<2, 2, 1, LADealII>;
-template class NFieldsProblem<2, 2, 2, LADealII>;
-template class NFieldsProblem<2, 2, 3, LADealII>;
-template class NFieldsProblem<2, 2, 4, LADealII>;
-template class NFieldsProblem<2, 2, 5, LADealII>;
-template class NFieldsProblem<2, 2, 6, LADealII>;
-template class NFieldsProblem<2, 2, 7, LADealII>;
-template class NFieldsProblem<2, 2, 8, LADealII>;
-
-
-// template class NFieldsProblem<2,3,1>;
-// template class NFieldsProblem<2,3,2>;
-// template class NFieldsProblem<2,3,3>;
-// template class NFieldsProblem<2,3,4>;
+template class piDoMUS<2, 2, 1, LADealII>;
+template class piDoMUS<2, 2, 2, LADealII>;
+template class piDoMUS<2, 2, 3, LADealII>;
+template class piDoMUS<2, 2, 4, LADealII>;
+template class piDoMUS<2, 2, 5, LADealII>;
+template class piDoMUS<2, 2, 6, LADealII>;
+template class piDoMUS<2, 2, 7, LADealII>;
+template class piDoMUS<2, 2, 8, LADealII>;
 
 
-
-template class NFieldsProblem<3, 3, 1>;
-template class NFieldsProblem<3, 3, 2>;
-template class NFieldsProblem<3, 3, 3>;
-template class NFieldsProblem<3, 3, 4>;
-template class NFieldsProblem<3, 3, 5>;
-template class NFieldsProblem<3, 3, 6>;
-template class NFieldsProblem<3, 3, 7>;
-template class NFieldsProblem<3, 3, 8>;
+// template class piDoMUS<2,3,1>;
+// template class piDoMUS<2,3,2>;
+// template class piDoMUS<2,3,3>;
+// template class piDoMUS<2,3,4>;
 
 
-template class NFieldsProblem<3, 3, 1, LADealII>;
-template class NFieldsProblem<3, 3, 2, LADealII>;
-template class NFieldsProblem<3, 3, 3, LADealII>;
-template class NFieldsProblem<3, 3, 4, LADealII>;
-template class NFieldsProblem<3, 3, 5, LADealII>;
-template class NFieldsProblem<3, 3, 6, LADealII>;
-template class NFieldsProblem<3, 3, 7, LADealII>;
-template class NFieldsProblem<3, 3, 8, LADealII>;
 
-// template class NFieldsProblem<3>;;
+template class piDoMUS<3, 3, 1>;
+template class piDoMUS<3, 3, 2>;
+template class piDoMUS<3, 3, 3>;
+template class piDoMUS<3, 3, 4>;
+template class piDoMUS<3, 3, 5>;
+template class piDoMUS<3, 3, 6>;
+template class piDoMUS<3, 3, 7>;
+template class piDoMUS<3, 3, 8>;
+
+
+template class piDoMUS<3, 3, 1, LADealII>;
+template class piDoMUS<3, 3, 2, LADealII>;
+template class piDoMUS<3, 3, 3, LADealII>;
+template class piDoMUS<3, 3, 4, LADealII>;
+template class piDoMUS<3, 3, 5, LADealII>;
+template class piDoMUS<3, 3, 6, LADealII>;
+template class piDoMUS<3, 3, 7, LADealII>;
+template class piDoMUS<3, 3, 8, LADealII>;
+
+// template class piDoMUS<3>;;

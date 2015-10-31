@@ -25,8 +25,8 @@ class Stokes : public ConservativeInterface<dim,dim,dim+1, Stokes<dim> >
 {
 public:
   typedef FEValuesCache<dim,dim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */

@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/stokes_derived_interface.h"
 #include "tests.h"
 
@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
   const int dim = 2;
 
   StokesDerivedInterface<dim> energy;
-  NFieldsProblem<dim,dim,dim+1> n_problem (energy);
+  piDoMUS<dim,dim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/n_fields_problem_01.prm", "used_parameters.prm");
 
 

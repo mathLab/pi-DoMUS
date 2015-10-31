@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/dynamic_stokes.h"
 #include "tests.h"
 
@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 2;
 
   DynamicStokes<dim> energy;
-  NFieldsProblem<dim,spacedim,dim+1> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/stokes_forcing_02.prm", "used_parameters.prm");
 
 

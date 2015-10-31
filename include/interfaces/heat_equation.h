@@ -25,8 +25,8 @@ template <int dim, typename LAC=LADealII>
 class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim,LAC>, LAC >
 {
   typedef FEValuesCache<dim,dim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
 
 public:
 

@@ -25,8 +25,8 @@ class NeoHookeanTwoFieldsInterface : public ConservativeInterface<dim,spacedim,d
 public:
 
   typedef FEValuesCache<dim,spacedim> Scratch;
-  typedef Assembly::CopyData::NFieldsPreconditioner<dim,dim> CopyPreconditioner;
-  typedef Assembly::CopyData::NFieldsSystem<dim,dim> CopySystem;
+  typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
+  typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */

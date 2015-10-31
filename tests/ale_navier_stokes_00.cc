@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/ale_navier_stokes.h"
 #include "tests.h"
 
@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int spacedim = 2;
 
   ALENavierStokes<dim> energy;
-  NFieldsProblem<dim,spacedim,dim+dim+1> n_problem (energy);
+  piDoMUS<dim,spacedim,dim+dim+1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/ale_navier_stokes_00.prm", "used_parameters.prm");
 
 

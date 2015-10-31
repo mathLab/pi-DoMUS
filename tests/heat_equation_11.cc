@@ -1,4 +1,4 @@
-#include "n_fields_problem.h"
+#include "pidomus.h"
 #include "interfaces/heat_equation.h"
 #include "tests.h"
 
@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
   const int dim = 2;
 
   HeatEquation<dim> energy;
-  NFieldsProblem<dim,dim,1> n_problem (energy);
+  piDoMUS<dim,dim,1> n_problem (energy);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/heat_equation_11.prm", "used_parameters.prm");
 
   n_problem.run();
