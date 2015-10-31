@@ -1,0 +1,186 @@
+## ---------------------------------------------------------------------
+##
+## This file is copyrighted by the pidomus authors and by the deal.II
+## authors (see below for the original copyright in the deal.II library.)
+##
+## The structure of the cmake files are the same of those of the
+## deal.II library and they have been modified in order to make them
+## compatible with the pidomus library.
+##
+## This file is part of the pidomus library.
+##
+## The pidomus library is free software; you can use it, redistribute
+## it, and/or modify it under the terms of the GNU Lesser General
+## Public License as published by the Free Software Foundation; either
+## version 2.1 of the License, or (at your option) any later version.
+## The full text of the license can be found in the file LICENSE at
+## the top level of the pidomus distribution.
+##
+## ---------------------------------------------------------------------
+
+## ---------------------------------------------------------------------
+##
+## Copyright (C) 2012 - 2015 by the deal.II authors
+##
+## This file is part of the deal.II library.
+##
+## The deal.II library is free software; you can use it, redistribute
+## it, and/or modify it under the terms of the GNU Lesser General
+## Public License as published by the Free Software Foundation; either
+## version 2.1 of the License, or (at your option) any later version.
+## The full text of the license can be found in the file LICENSE at
+## the top level of the deal.II distribution.
+##
+## ---------------------------------------------------------------------
+
+#
+# Set up cached variables (prior to the PROJECT(pidomus) call)
+#
+# This file sets up the following cached Options:
+#
+# General configuration options:
+#
+#     PIDOMUS_ENABLE_TESTING
+#     PIDOMUS_COMPONENT_EXAMPLES
+#     PIDOMUS_COMPILE_EXAMPLES
+#     PIDOMUS_COMPONENT_DOCUMENTATION
+#
+# Options regarding compilation and linking:
+#
+#     CMAKE_BUILD_TYPE
+#     BUILD_SHARED_LIBS
+#     PIDOMUS_CXX_FLAGS                    *)
+#     PIDOMUS_LINKER_FLAGS                 *)
+#
+#
+#
+# *)  May also be set via environment variable (CXXFLAGS, LDFLAGS)
+#     (a nonempty cached variable has precedence and will not be
+#     overwritten by environment)
+#
+
+
+########################################################################
+#                                                                      #
+#                    General configuration options:                    #
+#                                                                      #
+########################################################################
+
+
+OPTION(PIDOMUS_COMPONENT_DOCUMENTATION
+  "Enable configuration, build and installation of the documentation. This adds a COMPONENT \"documentation\" to the build system."
+  ON
+  )
+
+# OPTION(PIDOMUS_COMPONENT_EXAMPLES
+#   "Enable configuration and installation of the example steps. This adds a COMPONENT \"examples\" to the build system."
+#   ON
+#   )
+
+OPTION(PIDOMUS_ENABLE_TESTING
+  "Enable configuration and installation of the tests."
+  OFF
+  )
+
+
+########################################################################
+#                                                                      #
+#                       Compilation and linking:                       #
+#                                                                      #
+########################################################################
+
+#
+# Setup CMAKE_BUILD_TYPE:
+#
+SET(CMAKE_BUILD_TYPE
+  ${DEAL_II_BUILD_TYPE} ${D2K_BUILD_TYPE}
+  CACHE STRING
+  "Choose the type of build, options are: Debug, Release and DebugRelease."
+  )
+
+
+# This is cruel, I know. But it is better to only have a known number of
+# options for CMAKE_BUILD_TYPE...
+IF( NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release" AND
+    NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND
+    NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DebugRelease" )
+  MESSAGE(FATAL_ERROR
+    "CMAKE_BUILD_TYPE does neither match Release, Debug, nor DebugRelease!"
+    )
+ENDIF()
+
+#
+# Configuration behaviour:
+#
+
+
+
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH "ON" CACHE BOOL
+  "Set the rpath of the library to the external link pathes on installation"
+  )
+MARK_AS_ADVANCED(CMAKE_INSTALL_RPATH_USE_LINK_PATH)
+
+
+########################################################################
+#                                                                      #
+#                Components and miscellaneous setup:                   #
+#                                                                      #
+########################################################################
+
+
+OPTION(PIDOMUS_DOXYGEN_USE_MATHJAX
+  "If set to ON, doxygen documentation is generated using mathjax"
+  OFF
+  )
+MARK_AS_ADVANCED(PIDOMUS_DOXYGEN_USE_MATHJAX)
+
+
+
+########################################################################
+#                                                                      #
+#                               Finalize:                              #
+#                                                                      #
+########################################################################
+
+#
+# We do not support installation into the binary directory any more ("too
+# much pain, not enough profit"):
+#
+
+IF("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_INSTALL_PREFIX}")
+  MESSAGE(FATAL_ERROR "
+  Error CMAKE_INSTALL_PREFIX is equal to CMAKE_BINARY_DIR.
+  It is not possible to install into the build directory. Please set
+  CMAKE_INSTALL_PREFIX to a designated install directory different than
+  CMAKE_BINARY_DIR.
+  (Please note that you can use pidomus directly out of a build directory
+  without the need to install it, if this is what you tried to do.)
+"
+)
+ENDIF()
+
+#
+# Miscellaneous renaming:
+#
+
+GET_CMAKE_PROPERTY(_res VARIABLES)
+FOREACH(_var ${_res})
+  #
+  # Rename (ALLOW|WITH|FORCE|COMPONENT)_* by PIDOMUS_(ALLOW|WITH|FORCE|COMPONENT)_*
+  #
+  FOREACH(_match ALLOW_ WITH_ FORCE_ COMPONENT_)
+    IF(_var MATCHES "^${_match}")
+      SET(PIDOMUS_${_var} ${${_var}} CACHE BOOL "" FORCE)
+      UNSET(${_var} CACHE)
+    ENDIF()
+  ENDFOREACH()
+
+  #
+  # Same for components:
+  #
+  IF(_var MATCHES "^(DOCUMENTATION|PACKAGE|PARAMETER_GUI)") #|EXAMPLES
+    SET(PIDOMUS_COMPONENT_${_var} ${${_var}} CACHE BOOL "" FORCE)
+    UNSET(${_var} CACHE)
+  ENDIF()
+
+ENDFOREACH()

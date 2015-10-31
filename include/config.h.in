@@ -1,0 +1,88 @@
+// ---------------------------------------------------------------------
+//
+//    Copyright (C) 2012 - 2015 by the deal.II authors
+//    Copyright (C) 2015 by the deal2lkit authors
+//
+//    This file is part of the deal2lkit library.
+//
+//    The deal2lkit library is free software; you can use it, redistribute
+//    it, and/or modify it under the terms of the GNU Lesser General
+//    Public License as published by the Free Software Foundation; either
+//    version 2.1 of the License, or (at your option) any later version.
+//    The full text of the license can be found in the file LICENSE at
+//    the top level of the deal2lkit distribution.
+//
+// ---------------------------------------------------------------------
+
+#ifndef _d2k_config_h
+#define _d2k_config_h
+
+
+/***********************************************************************
+ * Information about deal.II:
+ */
+
+#define PIDOMUS_PACKAGE_NAME "@PIDOMUS_PACKAGE_NAME@"
+
+#define PIDOMUS_PACKAGE_VERSION "@PIDOMUS_PACKAGE_VERSION@"
+
+#define PIDOMUS_VERSION_MAJOR @PIDOMUS_VERSION_MAJOR@
+#define PIDOMUS_VERSION_MINOR @PIDOMUS_VERSION_MINOR@
+#define PIDOMUS_VERSION_SUBMINOR @PIDOMUS_VERSION_SUBMINOR@
+
+/**
+ * Name of the local git branch of the source directory.
+ */
+#define PIDOMUS_GIT_BRANCH "@PIDOMUS_GIT_BRANCH@"
+
+/**
+ * Full sha1 revision of the current git HEAD.
+ */
+#define PIDOMUS_GIT_REVISION "@PIDOMUS_GIT_REVISION@"
+
+/**
+ * Short sha1 revision of the current git HEAD.
+ */
+#define PIDOMUS_GIT_SHORTREV "@PIDOMUS_GIT_SHORTREV@"
+
+/***********************************************************************
+ * Configured deal.II features:
+ */
+
+#cmakedefine PIDOMUS_WITH_SUNDIALS
+#cmakedefine PIDOMUS_WITH_ASSIMP
+
+
+
+/***********************************************************************
+ * Various macros for version number query and comparison:
+ *
+ * These macros are defined to make testing for specific versions within
+ * the deal.II main code as simple as possible.
+ */
+
+/*
+ * deal.II:
+ */
+
+#define PIDOMUS_VERSION_GTE(major,minor,subminor) \
+ ((PIDOMUS_VERSION_MAJOR * 10000 + \
+    PIDOMUS_VERSION_MINOR * 100 + \
+     PIDOMUS_VERSION_SUBMINOR) \
+    >=  \
+    (major)*10000 + (minor)*100 + (subminor))
+
+
+
+/***********************************************************************
+ * Two macro names that we put at the top and bottom of all deal.II files
+ * and that will be expanded to "namespace deal2lkit {" and "}".
+ */
+
+#define PIDOMUS_NAMESPACE_OPEN namespace deal2lkit {
+#define PIDOMUS_NAMESPACE_CLOSE }
+
+
+
+#endif
+
