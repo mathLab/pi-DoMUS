@@ -94,10 +94,10 @@ public:
    * calculation will be continued. If necessary, it can also reset
    * the time stepper. */
   virtual bool solver_should_restart(const double t,
-                                     const typename LAC::VectorType &solution,
-                                     const typename LAC::VectorType &solution_dot,
                                      const unsigned int step_number,
-                                     const double h);
+                                     const double h,
+                                     typename LAC::VectorType &solution,
+                                     typename LAC::VectorType &solution_dot);
 
   /** For dae problems, we need a
    residual function. */

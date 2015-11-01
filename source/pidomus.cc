@@ -640,10 +640,10 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
 template <int dim, int spacedim, int n_components, typename LAC>
 bool
 piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
     const unsigned int step_number,
-    const double h)
+    const double h,
+    typename LAC::VectorType &solution,
+    typename LAC::VectorType &solution_dot)
 {
   return false;
 }
