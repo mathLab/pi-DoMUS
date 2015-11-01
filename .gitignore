@@ -5,3 +5,5 @@
 .ycm_extra_conf.py
 Testing/
 build/
+TAGS
+doc/
