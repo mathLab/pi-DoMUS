@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
 
   StokesDerivedInterface<dim> energy;
   piDoMUS<dim,dim,dim+1> n_problem (energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/n_fields_problem_01.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/pidomus_01.prm", "used_parameters.prm");
 
 
   n_problem.run ();
