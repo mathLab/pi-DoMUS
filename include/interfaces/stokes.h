@@ -54,8 +54,8 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
-                                        BlockLinearOperator<VEC> &,
-                                        BlockLinearOperator<VEC> &) const;
+                                        LinearOperator<VEC> &,
+                                        LinearOperator<VEC> &) const;
 
 private:
   double eta;
@@ -88,6 +88,8 @@ void Stokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_c
   const FEValuesExtractors::Scalar pressure(dim);
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
   auto &grad_us = fe_cache.get_gradients("solution","grad_u", velocity, alpha);
+  auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
+  auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -96,10 +98,12 @@ void Stokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_c
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       const Number &p = ps[q];
-      const Tensor <2, dim, Number> &grad_u = grad_us[q];
+      const Tensor<1, dim, Number> &u = us[q];
+      const Tensor<1, dim, Number> &u_dot = us_dot[q];
+      const Tensor<2, dim, Number> &grad_u = grad_us[q];
 
-      energy += (eta*.5*scalar_product(grad_u,grad_u) +
-                 (1./eta)*0.5*p*p)*JxW[q];
+      energy += (eta*scalar_product(grad_u,grad_u) +
+                 (1./eta)*p*p)*JxW[q];
     }
 }
 
@@ -136,7 +140,7 @@ void Stokes<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iter
       const Number &p = ps[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
-      Number psi = u_dot*u+eta*scalar_product(sym_grad_u,sym_grad_u) - p*div_u;
+      Number psi = eta*scalar_product(sym_grad_u,sym_grad_u) + p*div_u;
       energy += psi*JxW[q];
     }
 }
@@ -161,8 +165,8 @@ void
 Stokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                       const TrilinosWrappers::BlockSparseMatrix &matrix,
                                       const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                      BlockLinearOperator<VEC> &system_op,
-                                      BlockLinearOperator<VEC> &prec_op) const
+                                      LinearOperator<VEC> &system_op,
+                                      LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
