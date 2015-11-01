@@ -50,6 +50,7 @@ FIND_PACKAGE(deal2lkit 1.0 REQUIRED
   )
 D2K_INITIALIZE_CACHED_VARIABLES()
 OPTION(ENABLE_APP_TESTING "Enable tests in this application." ON)
+OPTION(ENABLE_DOCUMENTATION "Enable Doxygen documentation." ON)
 
 # We add one library and one target for each type of deal.II library
 # we found. If you compiled deal.II with both Release and Debug
@@ -93,4 +94,20 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests AND ${ENABLE_APP_TESTING})
   ADD_SUBDIRECTORY(tests)
   ENABLE_TESTING()
 endif()
+
+IF(ENABLE_DOCUMENTATION)
+  MESSAGE(STATUS "Setting up documentation")
+  # Doxygen
+  FIND_PACKAGE(Doxygen)
+  IF(DOXYGEN_FOUND)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    ADD_CUSTOM_TARGET(doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+      )
+  MESSAGE(STATUS "Setting up documentation - Done")
+  ENDIF()
+ENDIF()
+
 
