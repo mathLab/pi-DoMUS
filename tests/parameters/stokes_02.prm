@@ -1,6 +1,6 @@
 subsection piDoMUS<2, 2, 3, LATrilinos>
-  set Adaptive refinement          = false
-  set Initial global refinement    = 4
+  set Adaptive refinement          = true
+  set Initial global refinement    = 2
   set Maximum number of time steps = 10000
   set Number of cycles             = 1
   set Timer output file            = timer.txt
@@ -9,21 +9,21 @@ end
 
 subsection Forcing terms
   set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=-2*t
+  set IDs and expressions     = 0=t*sin(x);0;0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = # 0=u % 1=u % 2=u % 3=u
-  set IDs and expressions     = # 0=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 1=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 2=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 3=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set IDs and component masks = 0=u % 1=u % 2=u % 3=u
+  set IDs and expressions     = 0=t*sin(x);0;0 % 1=t*sin(x);0;0 % 2=t*sin(x);0;0 % 3=t*sin(x);0;0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Exact solution
   set Function constants  =
-  set Function expression = t*x^2 
+  set Function expression = t*sin(x);0;0
   set Variable names      = x,y,t
 end
 
@@ -41,13 +41,13 @@ subsection Domain
   set Output grid file name      =
 end
 
-# subsection Refinement
-#   set Bottom fraction                        = 0.100000
-#   set Maximum number of cells (if available) = 300
-#   set Order (optimize)                       = 2
-#   set Refinement strategy                    = fraction
-#   set Top fraction                           = 0.300000
-# end
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 300
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end
 
 subsection Stokes
   set Block coupling                   = 1,1; 1,0
@@ -77,7 +77,7 @@ end
 
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0
+  set Final time                                    = 1
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -85,20 +85,20 @@ subsection IDA Solver Parameters
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
+  set Maximum order of BDF                          = 2
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-1
+  set Seconds between each output                   = 1e-2
   set Use local tolerances                          = false
 end
 subsection Initial solution
   set Function constants  =
-  set Function expression = 0;0;0
+  set Function expression = t*sin(x);0;0
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
   set Function constants  =
-  set Function expression = 0; 0; 0
+  set Function expression = t*cos(x);0;0
   set Variable names      = x,y,t
 end
 
