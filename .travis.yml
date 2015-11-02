@@ -1,0 +1,58 @@
+env:
+  - BUILD_TYPE=Release
+  - BUILD_TYPE=Debug
+sudo: false
+cache:
+  apt: true
+  directories:
+    - programs
+notifications:
+  email: false
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-3.6
+    - george-edison55-precise-backports
+    packages:
+    - ninja-build
+    - clang-3.6
+    - cmake
+    - cmake-data
+    - build-essential
+    - libblas-dev
+    - liblapack-dev
+    - libboost-dev
+    - doxygen
+    - graphviz
+
+language: cpp
+compiler: clang
+
+before_install:
+  - ./scripts/setup_astyle.sh
+  - export PATH=$PWD/programs/astyle/build/gcc/bin:$PATH
+  - ./scripts/check_indentation.sh
+
+install:
+  - export PRG=$PWD/programs
+  - export CASA=$PWD
+  - export CXX=clang++-3.6
+  - export TRILINOS_DIR=$PWD/programs/trilinos
+  - export DEAL_II_DIR=$PWD/programs/dealii
+  - export DEAL2LKIT_DIR=$PWD/programs/deal2lkit
+  - export PATH=$PWD/programs/astyle/build/gcc/bin:$PATH
+  - export PATH=$PRG/numdiff/bin:$PATH
+  - ./scripts/set_cache.sh
+    #  - mkdir build
+    #  - cd build
+    #  - cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+    #  - ninja -j4 install
+  
+script:
+  - echo "ctest"
+
+branches:
+  only:
+    - master

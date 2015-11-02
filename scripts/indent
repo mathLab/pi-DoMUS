@@ -14,6 +14,11 @@
 ##
 ## ---------------------------------------------------------------------
 
+if test ! -d source -o ! -d include ; then
+  echo "*** This script must be run from the top-level directory of pi-DoMUS."
+  exit
+fi
+
 if test ! -f scripts/astyle.rc ; then
   echo "*** No style file scripts/astyle.rc found."
   exit

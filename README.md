@@ -14,3 +14,6 @@ Parallel-Deal.II MUlti-physics Solver
 - Heat Equation
 - Compressible Neo Hookean
 - Neo Hookean two fields
+
+#Continuous Integration status
+[![Build Status](https://travis-ci.org/mathLab/pi-DoMUS.svg)](https://travis-ci.org/mathLab/pi-DoMUS)
