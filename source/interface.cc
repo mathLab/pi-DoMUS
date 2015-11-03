@@ -272,10 +272,10 @@ Interface<dim,spacedim,n_components,LAC>::fix_solution_dot_derivative(FEValuesCa
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-Interface<dim,spacedim,n_components,LAC>::Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const double t,
-    const double alpha) const
+Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
+                                                          const typename LAC::VectorType &solution_dot,
+                                                          const double t,
+                                                          const double alpha) const
 {
   this->solution = &solution;
   this->solution_dot = &solution_dot;

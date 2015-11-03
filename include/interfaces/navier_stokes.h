@@ -167,6 +167,8 @@ void NavierStokes<dim>::system_residual(const typename DoFHandler<dim>::active_c
                                 - m*div_u -p*div_v)*JxW[q];
         }
     }
+  this->apply_forcing_terms(cell,fe_cache,data,local_residual);
+  this->apply_neumann_bcs(cell,fe_cache,data,local_residual);
 }
 
 
