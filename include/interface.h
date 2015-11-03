@@ -111,28 +111,8 @@ public:
   void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                           Scratch &scratch,
                           CopySystem &data,
-                          Number &energy) const;
-
-
-  /**
-   * Applies Neumann boundary conditions
-   *
-   */
-  template<typename Number>
-  void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                          Scratch &scratch,
-                          CopySystem &data,
                           std::vector<Number> &local_residual) const;
 
-  /**
-   * Applies CONSERVATIVE forcing terms
-   *
-   */
-  template<typename Number>
-  void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                            Scratch &scratch,
-                            CopySystem &data,
-                            Number &energy) const;
 
   /**
    * Applies CONSERVATIVE forcing terms
@@ -361,48 +341,6 @@ apply_neumann_bcs (
   const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
   Scratch &scratch,
   CopySystem &data,
-  Number &energy) const
-{
-
-  Number dummy = 0.0;
-
-  for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-    {
-      unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
-        {
-          this->reinit(dummy, cell, face, scratch);
-
-          auto &vars = scratch.get_values("solution", dummy);
-          auto &q_points = scratch.get_quadrature_points();
-          auto &JxW = scratch.get_JxW_values();
-
-          for (unsigned int q=0; q<q_points.size(); ++q)
-            {
-              Vector<double> T(n_components);
-              neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
-
-              for (unsigned int i=0; i < n_components; ++i)
-                if (neumann_bcs.get_mapped_mask(face_id)[i])
-                  {
-                    const std::vector<Number> &var_face = vars[q];
-
-                    energy -= (T[i]*var_face[i])*JxW[q];
-                  }
-            }
-          break;
-        }
-    }
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-template<typename Number>
-void
-Interface<dim,spacedim,n_components,LAC>::
-apply_neumann_bcs (
-  const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-  Scratch &scratch,
-  CopySystem &data,
   std::vector<Number> &local_residual) const
 {
 
@@ -430,39 +368,6 @@ apply_neumann_bcs (
 
             }
           break;
-        }
-    }
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-template<typename Number>
-void
-Interface<dim,spacedim,n_components,LAC>::
-apply_forcing_terms (
-  const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-  Scratch &scratch,
-  CopySystem &data,
-  Number &energy) const
-{
-  unsigned cell_id = cell->material_id();
-  if (forcing_terms.acts_on_id(cell_id))
-    {
-      Number dummy = 0.0;
-      this->reinit(dummy, cell, scratch);
-
-      auto &vars = scratch.get_values("solution", dummy);
-      auto &q_points = scratch.get_quadrature_points();
-      auto &JxW = scratch.get_JxW_values();
-
-      for (unsigned int q=0; q<q_points.size(); ++q)
-        {
-          const std::vector<Number> &var = vars[q]; // u,u,u
-          for (unsigned int i=0; i < n_components; ++i)
-            if (forcing_terms.get_mapped_mask(cell_id)[i])
-              {
-                double B = forcing_terms.get_mapped_function(cell_id)->value(q_points[q],i);
-                energy -= B*var[i]*JxW[q];
-              }
         }
     }
 }
@@ -495,44 +400,6 @@ apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterat
     }
 }
 
-template <int dim, int spacedim, int n_components, typename LAC>
-template<typename Number>
-void
-Interface<dim,spacedim,n_components,LAC>::
-apply_neumann_bcs (
-  const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-  Scratch &scratch,
-  CopySystem &data,
-  std::vector<Number> &local_residual) const
-{
-
-  Number dummy = 0.0;
-
-  for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-    {
-      unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
-        {
-          this->reinit(dummy, cell, face, scratch);
-
-          auto &fev = scratch.get_current_fe_values();
-          auto &q_points = scratch.get_quadrature_points();
-          auto &JxW = scratch.get_JxW_values();
-
-          for (unsigned int q=0; q<q_points.size(); ++q)
-            {
-              Vector<double> T(n_components);
-              neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
-
-              for (unsigned int i=0; i<local_residual.size(); ++i)
-                for (unsigned int c=0; c<n_components; ++c)
-                  local_residual[i] -= T[c]*fev.shape_value_component(i,q,c)*JxW[q];
-
-            }
-          break;
-        }
-    }
-}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 template<typename Number>
