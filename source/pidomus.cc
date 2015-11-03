@@ -690,6 +690,11 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
   {
     cell->get_dof_indices (data.local_dof_indices);
     this->energy.get_system_residual(cell, scratch, data, data.double_residual);
+    // apply conservative loads
+    this->energy.apply_forcing_terms(cell, scratch, data, data.double_residual);
+
+    if (cell->at_boundary())
+      this->energy.apply_neumann_bcs(cell, scratch, data, data.double_residual);
   };
 
   typedef

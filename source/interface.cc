@@ -104,11 +104,6 @@ Interface<dim,spacedim,n_components,LAC>::get_system_residual (const typename Do
   SSdouble energy;
   get_system_energy(cell, scratch, data, energy);
 
-  apply_forcing_terms(cell,scratch,data,energy);
-
-  if (cell->at_boundary())
-    apply_neumann_bcs(cell,scratch, data, energy);
-
   for (unsigned int i=0; i<local_residual.size(); ++i)
     {
       local_residual[i] = energy.dx(i);
@@ -124,11 +119,6 @@ Interface<dim,spacedim,n_components,LAC>::get_system_residual (const typename Do
 {
   Sdouble energy;
   get_system_energy(cell, scratch, data, energy);
-
-  apply_forcing_terms(cell,scratch,data,energy);
-
-  if (cell->at_boundary())
-    apply_neumann_bcs(cell,scratch, data, energy);
 
   for (unsigned int i=0; i<local_residual.size(); ++i)
     {
@@ -272,10 +262,10 @@ Interface<dim,spacedim,n_components,LAC>::fix_solution_dot_derivative(FEValuesCa
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
-Interface<dim,spacedim,n_components,LAC>::Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const double t,
-    const double alpha) const
+Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
+                                                          const typename LAC::VectorType &solution_dot,
+                                                          const double t,
+                                                          const double alpha) const
 {
   this->solution = &solution;
   this->solution_dot = &solution_dot;
