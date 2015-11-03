@@ -134,6 +134,11 @@ public:
    otherwise.  */
   virtual typename LAC::VectorType &differential_components() const;
 
+  /**
+   * This function is used to get back the solution.
+   */
+  typename LAC::VectorType get_solution();
+
 private:
   void make_grid_fe();
   void setup_dofs (const bool &first_run = true);

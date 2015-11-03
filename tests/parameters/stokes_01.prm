@@ -8,22 +8,25 @@ subsection piDoMUS<2, 2, 3, LATrilinos>
 end
 
 subsection Forcing terms
-  set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=2*pi^3*cos(k*pi*x)*cos(k*pi*y); 2*pi^3*sin(k*pi*x)*sin(k*pi*y); 0
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=(pi^2)*cos(pi*x)*cos(pi*y); (pi^2)*sin(pi*x)*sin(pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u % 1=u % 2=u % 3=u
-  set IDs and expressions     = 0=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 1=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 2=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0 % 3=pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set IDs and expressions     = 0=cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0 % \
+                                1=cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0 % \
+                                2=cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0 % \
+                                3=cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Exact solution
   set Function constants  =
-  set Function expression = pi*cos(pi*x)*cos(pi*y); pi*sin(pi*x)*sin(pi*y); 0
+  set Function expression = cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0
   set Variable names      = x,y,t
 end
 
@@ -41,13 +44,13 @@ subsection Domain
   set Output grid file name      =
 end
 
-# subsection Refinement
-#   set Bottom fraction                        = 0.100000
-#   set Maximum number of cells (if available) = 300
-#   set Order (optimize)                       = 2
-#   set Refinement strategy                    = fraction
-#   set Top fraction                           = 0.300000
-# end
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 500
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end
 
 subsection Stokes
   set Block coupling                   = 1,1; 1,0
