@@ -115,7 +115,12 @@ public:
 
 
   /**
-   * Applies CONSERVATIVE forcing terms
+   * Applies CONSERVATIVE forcing terms.
+   * This function applies the conservative forcing terms, which can be
+   * defined by expressions in the parameter file.
+   *
+   * If the problem involves NON-conservative loads, they must be included
+   * in the residual formulation.
    *
    */
   template<typename Number>
