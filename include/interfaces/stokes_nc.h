@@ -1,6 +1,14 @@
 #ifndef _stokes_nc_h_
 #define _stokes_nc_h_
 
+/**
+ *  This interface solves a Stokes flow using non conservative interface:
+ *  \f[
+ *    - \textrm{div} \epsilon(u) + \grad p = 0
+ *  \f]
+ *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
+ */
+
 #include "non_conservative_interface.h"
 
 #include <deal.II/fe/fe_values.h>
@@ -19,9 +27,6 @@
 #include <deal2lkit/fe_values_cache.h>
 #include <deal2lkit/parsed_function.h>
 
-// for DOFUtilities::inner
-using namespace DOFUtilities;
-
 template <int dim>
 class StokesNC : public NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >
 {
@@ -36,10 +41,6 @@ public:
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
-
-  /* these functions MUST have the follwowing names
-   *  because they are called by the NonConservativeInterface class
-   */
 
   template<typename Number>
   void preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &,
@@ -126,7 +127,7 @@ void StokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim>::acti
 
           // compute residual:
           local_residual[i] +=
-            (eta * inner(grad_u,grad_v) +
+            (eta * scalar_product(grad_u,grad_v) +
              (1./eta)*p*m)*JxW[q];
 
         }
@@ -136,10 +137,12 @@ void StokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim>::acti
 
 template <int dim>
 template<typename Number>
-void StokesNC<dim>::system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                    Scratch &fe_cache,
-                                    CopySystem &data,
-                                    std::vector<Number> &local_residual) const
+void
+StokesNC<dim>::
+system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                Scratch &fe_cache,
+                CopySystem &data,
+                std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
   fe_cache.reinit(cell);
@@ -197,7 +200,7 @@ void StokesNC<dim>::system_residual(const typename DoFHandler<dim>::active_cell_
           //    pressure:
           const Number                  &p          = ps[q];
 
-          local_residual[i] += ( eta*inner( sym_grad_u , grad_v )
+          local_residual[i] += ( eta*scalar_product( sym_grad_u , grad_v )
                                  + p * div_v )
                                * JxW[q];
         }
@@ -208,14 +211,18 @@ void StokesNC<dim>::system_residual(const typename DoFHandler<dim>::active_cell_
 
 
 template <int dim>
-void StokesNC<dim>::declare_parameters (ParameterHandler &prm)
+void
+StokesNC<dim>::
+declare_parameters (ParameterHandler &prm)
 {
   NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
 }
 
 template <int dim>
-void StokesNC<dim>::parse_parameters_call_back ()
+void
+StokesNC<dim>::
+parse_parameters_call_back ()
 {
   NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >::parse_parameters_call_back();
 }
