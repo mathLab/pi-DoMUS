@@ -535,6 +535,16 @@ void piDoMUS<dim, spacedim, n_components, LAC>::process_solution ()
   eh.output_table(pcout);
 }
 
+/* ------------------------ OUTPUTS ------------------------ */
+
+template <int dim, int spacedim, int n_components, typename LAC>
+typename LAC::VectorType
+piDoMUS<dim, spacedim, n_components, LAC>::
+get_solution()
+{
+  return solution;
+};
+
 /* ------------------------ RUN ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
