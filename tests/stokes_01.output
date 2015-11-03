@@ -1,43 +1,43 @@
 
-DEAL:FGMRES::Starting value 26.4144
-DEAL:FGMRES::Convergence step 7 value 2.86961e-15
-DEAL:FGMRES::Starting value 2.81099e-14
-DEAL:FGMRES::Convergence step 0 value 2.81099e-14
-DEAL:FGMRES::Starting value 2.81099e-14
-DEAL:FGMRES::Convergence step 0 value 2.81099e-14
+DEAL:FGMRES::Starting value 4.21364
+DEAL:FGMRES::Convergence step 3 value 7.04932e-12
+DEAL:FGMRES::Starting value 7.04918e-12
+DEAL:FGMRES::Convergence step 0 value 7.04918e-12
+DEAL:FGMRES::Starting value 7.04918e-12
+DEAL:FGMRES::Convergence step 0 value 7.04918e-12
 DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
 DEAL:AddingData::Added data: u,u,p
 DEAL:AddingData::Added data: u_dot,u_dot,p_dot
 DEAL:WritingData::Wrote output file.
 DEAL:WritingData::Reset output.
-DEAL:FGMRES::Starting value 33.6743
-DEAL:FGMRES::Convergence step 12 value 6.43152e-09
-DEAL:FGMRES::Starting value 32.5895
-DEAL:FGMRES::Convergence step 13 value 4.05456e-10
-DEAL:FGMRES::Starting value 32.5895
-DEAL:FGMRES::Convergence step 13 value 4.05456e-10
+DEAL:FGMRES::Starting value 5.36689
+DEAL:FGMRES::Convergence step 9 value 2.33835e-09
+DEAL:FGMRES::Starting value 5.19428
+DEAL:FGMRES::Convergence step 10 value 3.81760e-10
+DEAL:FGMRES::Starting value 5.19428
+DEAL:FGMRES::Convergence step 10 value 3.81760e-10
 DEAL:PrepareOutput::Will write on file: ./solution.1.0.vtu
 DEAL:AddingData::Added data: u,u,p
 DEAL:AddingData::Added data: u_dot,u_dot,p_dot
 DEAL:WritingData::Wrote output file.
 DEAL:WritingData::Reset output.
-DEAL:FGMRES::Starting value 43.3004
-DEAL:FGMRES::Convergence step 16 value 1.33578e-09
-DEAL:FGMRES::Starting value 43.1870
-DEAL:FGMRES::Convergence step 16 value 1.52850e-09
-DEAL:FGMRES::Starting value 43.1870
-DEAL:FGMRES::Convergence step 16 value 1.52850e-09
+DEAL:FGMRES::Starting value 6.89537
+DEAL:FGMRES::Convergence step 10 value 2.12955e-09
+DEAL:FGMRES::Starting value 6.87732
+DEAL:FGMRES::Convergence step 11 value 4.24873e-09
+DEAL:FGMRES::Starting value 6.87732
+DEAL:FGMRES::Convergence step 11 value 4.24873e-09
 DEAL:PrepareOutput::Will write on file: ./solution.2.0.vtu
 DEAL:AddingData::Added data: u,u,p
 DEAL:AddingData::Added data: u_dot,u_dot,p_dot
 DEAL:WritingData::Wrote output file.
 DEAL:WritingData::Reset output.
-DEAL:FGMRES::Starting value 58.4240
-DEAL:FGMRES::Convergence step 17 value 4.26754e-09
-DEAL:FGMRES::Starting value 58.4134
-DEAL:FGMRES::Convergence step 17 value 4.22470e-09
-DEAL:FGMRES::Starting value 58.4134
-DEAL:FGMRES::Convergence step 17 value 4.23449e-09
+DEAL:FGMRES::Starting value 9.30010
+DEAL:FGMRES::Convergence step 14 value 4.54228e-09
+DEAL:FGMRES::Starting value 9.29842
+DEAL:FGMRES::Convergence step 14 value 4.61367e-09
+DEAL:FGMRES::Starting value 9.29842
+DEAL:FGMRES::Convergence step 14 value 4.64748e-09
 DEAL:PrepareOutput::Will write on file: ./solution.3.0.vtu
 DEAL:AddingData::Added data: u,u,p
 DEAL:AddingData::Added data: u_dot,u_dot,p_dot
