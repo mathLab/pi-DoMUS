@@ -3,7 +3,9 @@
 
 // This includes all types we know of.
 #include "lac_type.h"
+#ifdef DEAL_II_WITH_MPI
 #include <mpi.h>
+#endif
 
 /**
  * General class, used to initialize different types of Vectors, Matrices and
@@ -14,14 +16,22 @@ class ScopedLACInitializer
 public:
   ScopedLACInitializer(const std::vector<types::global_dof_index> &dofs_per_block,
                        const std::vector<IndexSet> &owned,
-                       const std::vector<IndexSet> &relevant,
-                       const MPI_Comm &comm = MPI_COMM_WORLD):
+                       const std::vector<IndexSet> &relevant
+#ifdef DEAL_II_WITH_MPI
+                       ,
+                       const MPI_Comm &comm = MPI_COMM_WORLD
+#endif
+                       ):
     dofs_per_block(dofs_per_block),
     owned(owned),
-    relevant(relevant),
+    relevant(relevant)
+#ifdef DEAL_II_WITH_MPI
+    ,
     comm(comm)
+#endif
   {};
 
+#ifdef DEAL_II_WITH_MPI
   /**
    * Initialize a non ghosted TrilinosWrappers::MPI::BlockVector.
    */
@@ -39,6 +49,7 @@ public:
     v.reinit(owned, relevant, comm, fast);
   };
 
+#endif
   /**
    * Initialize a serial BlockVector<double>.
    */
@@ -108,10 +119,12 @@ private:
    */
   const std::vector<IndexSet> &relevant;
 
+#ifdef DEAL_II_WITH_MPI
   /**
    * MPI Communicator.
    */
   const MPI_Comm &comm;
+#endif
 };
 
 
