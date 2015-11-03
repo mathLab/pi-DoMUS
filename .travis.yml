@@ -41,17 +41,18 @@ install:
   - export CXX=clang++-3.6
   - export TRILINOS_DIR=$PWD/programs/trilinos
   - export DEAL_II_DIR=$PWD/programs/dealii
+  - export SUNDIALS_DIR=$PWD/programs/sundials
   - export DEAL2LKIT_DIR=$PWD/programs/deal2lkit
   - export PATH=$PWD/programs/astyle/build/gcc/bin:$PATH
   - export PATH=$PRG/numdiff/bin:$PATH
   - ./scripts/set_cache.sh
-    #  - mkdir build
-    #  - cd build
-    #  - cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-    #  - ninja -j4 install
+  - mkdir build
+  - cd build
+  - cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+  - ninja -j4
   
 script:
-  - echo "ctest"
+  - ctest -j4 -V -R "${BUILD_TYPE,,}"
 
 branches:
   only:

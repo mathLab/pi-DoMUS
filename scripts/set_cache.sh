@@ -111,6 +111,31 @@ then
   cd $CASA
 fi
 
+# sundials
+if [ ! -d $PRG/sundials ]
+then
+  echo "installing sundials"
+  rm -rf $PRG/deal2lkit
+  DST_INST=$PRG/sundials 
+  cd $PRG
+  wget http://pkgs.fedoraproject.org/repo/extras/sundials/sundials-2.6.2.tar.gz/3deeb0ede9f514184c6bd83ecab77d95/sundials-2.6.2.tar.gz
+  tar xzf sundials-2.6.2.tar.gz 
+  rm sundials-2.6.2.tar.gz
+  mv sundials-2.6.2 sundials-tmp
+  cd sundials-tmp
+  mkdir build
+  cd build
+  cmake \
+    -G Ninja \
+    -D CMAKE_INSTALL_PREFIX:PATH=$DST_INST \
+    -D CXX_ENABLE:BOOL=ON \
+    .. 
+  ninja -j4 install
+  cd $PRG
+  rm -rf sundials-tmp
+  cd $CASA
+fi
+
 # deal2lkit
 if [ ! -d $PRG/deal2lkit ]
 then
