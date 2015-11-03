@@ -120,11 +120,17 @@ piDoMUS<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
-                                                    const MPI_Comm &communicator)
+piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy
+#ifdef DEAL_II_WITH_MPI
+                                                    ,
+                                                    const MPI_Comm &communicator
+#endif
+                                                   )
   :
   SundialsInterface<typename LAC::VectorType>(communicator),
+#ifdef DEAL_II_WITH_MPI
   comm(communicator),
+#endif
   energy(energy),
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)

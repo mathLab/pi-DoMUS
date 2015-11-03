@@ -93,7 +93,11 @@ public:
   /**
    * Typedef for the vector type used.
    */
+#ifdef DEAL_II_WITH_MPI
   typedef TrilinosWrappers::MPI::BlockVector VectorType;
+#else
+  typedef TrilinosWrappers::BlockVector VectorType;
+#endif
 
   /**
    * Typedef for the type used to describe sparse matrices that consist of

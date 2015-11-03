@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef _N_FIELDS_LINEAR_PROBLEM_
-#define _N_FIELDS_LINEAR_PROBLEM_
+#ifndef __pidomus_h
+#define __pidomus_h
 
 
 #include <deal.II/base/timer.h>
@@ -22,7 +22,10 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/linear_operator.h>
+
+#ifdef DEAL_II_WITH_MPI
 #include <mpi.h>
+#endif
 
 // #include <deal.II/lac/precondition.h>
 
@@ -60,9 +63,13 @@ class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC:
 
 public:
 
-
+#ifdef DEAL_II_WITH_MPI
   piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
            const MPI_Comm &comm = MPI_COMM_WORLD);
+#else
+  piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy);
+#endif
+
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
@@ -157,7 +164,9 @@ private:
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
+#ifdef DEAL_II_WITH_MPI
   const MPI_Comm &comm;
+#endif
   const Interface<dim, spacedim, n_components, LAC>    &energy;
 
   unsigned int n_cycles;
@@ -174,7 +183,11 @@ private:
 
   shared_ptr<Mapping<dim, spacedim> >             mapping;
 
+#ifdef DEAL_II_WITH_MPI
   shared_ptr<parallel::distributed::Triangulation<dim, spacedim> > triangulation;
+#else
+  shared_ptr<Triangulation<dim, spacedim> > triangulation;
+#endif
   shared_ptr<FiniteElement<dim, spacedim> >       fe;
   shared_ptr<DoFHandler<dim, spacedim> >          dof_handler;
 
