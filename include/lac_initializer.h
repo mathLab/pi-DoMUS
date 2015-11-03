@@ -21,7 +21,7 @@ public:
                        ,
                        const MPI_Comm &comm = MPI_COMM_WORLD
 #endif
-                       ):
+                      ):
     dofs_per_block(dofs_per_block),
     owned(owned),
     relevant(relevant)
