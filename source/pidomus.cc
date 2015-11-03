@@ -741,7 +741,6 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
 
-  unsigned int n_iterations = 0;
   const double solver_tolerance = 1e-8;
 
   typedef dealii::BlockSparseMatrix<double> sMAT;
@@ -759,34 +758,19 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
   else
     {
 
-
       PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (30, solver_tolerance);
-      SolverControl solver_control_refined (jacobian_matrix.m(), solver_tolerance);
+      SolverControl solver_control (jacobian_matrix.m(), solver_tolerance);
 
       SolverFGMRES<typename LAC::VectorType>
       solver(solver_control, mem,
-             typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(30, true));
+             typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
 
-      SolverFGMRES<typename LAC::VectorType>
-      solver_refined(solver_control_refined, mem,
-                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+      auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
+      S_inv.vmult(dst, src);
 
-      auto S_inv         = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
-      auto S_inv_refined = inverse_operator(jacobian_op, solver_refined, jacobian_preconditioner_op);
-      try
-        {
-          S_inv.vmult(dst, src);
-          n_iterations = solver_control.last_step();
-        }
-      catch ( SolverControl::NoConvergence )
-        {
-          S_inv_refined.vmult(dst, src);
-          n_iterations = (solver_control.last_step() +
-                          solver_control_refined.last_step());
-        }
-      pcout << std::endl;
-      pcout << " iterations:                           " <<  n_iterations
+      pcout << std::endl
+            << " iterations:                           "
+            << solver_control.last_step()
             << std::endl;
 
     }
