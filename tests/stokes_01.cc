@@ -1,3 +1,7 @@
+/**
+ *  This test solves a Stokes problem non time dependent.
+ */
+
 #include "pidomus.h"
 #include "interfaces/stokes.h"
 #include "tests.h"
