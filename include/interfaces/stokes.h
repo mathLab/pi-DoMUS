@@ -67,6 +67,7 @@ public:
 
 private:
   double eta;
+  bool block_back_substitution_bool;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -159,6 +160,7 @@ void Stokes<dim>::declare_parameters (ParameterHandler &prm)
 {
   ConservativeInterface<dim,dim,dim+1, Stokes<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &block_back_substitution_bool, "use block_back_substitution", "false", Patterns::Bool());
 }
 
 template <int dim>
@@ -211,26 +213,42 @@ Stokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
-  auto P00 = A_inv;
-  auto P01 = null_operator(Bt);
-  auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
+  if (block_back_substitution_bool)
+    {
+      const auto Mat = block_operator<2, 2, VEC >({{
+          {{ A, Bt }} ,
+          {{ B, ZeroP }}
+        }
+      });
 
-  // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, VEC >({{
-      {{ A, Bt }} ,
-      {{ B, ZeroP }}
+      const auto DiagInv = block_operator<2, 2, VEC >({{
+          {{ A_inv, Bt }} ,
+          {{ B, -1*Schur_inv }}
+        }
+      } );
+
+      prec_op = block_back_substitution<VEC>( Mat, DiagInv );
+      system_op  = Mat;
+
+
     }
-  });
-
-
-  //const auto S = linear_operator<VEC>(matrix);
-
-  prec_op = block_operator<2, 2, VEC >({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
+  else
+    {
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+      system_op  = block_operator<2, 2, VEC >({{
+          {{ A, Bt }} ,
+          {{ B, ZeroP }}
+        }
+      });
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
     }
-  });
 }
 
 
