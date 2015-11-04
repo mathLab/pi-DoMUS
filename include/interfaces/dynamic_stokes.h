@@ -88,7 +88,7 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
-  auto &grad_us = fe_cache.get_gradients("solution","grad_u", velocity, alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "u", velocity, alpha);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
@@ -101,10 +101,10 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
       const Number &p = ps[q];
       const Tensor<1, dim, Number> &u = us[q];
       const Tensor<1, dim, Number> &u_dot = us_dot[q];
-      const Tensor<2, dim, Number> &grad_u = grad_us[q];
+      const Tensor<2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
       energy += (rho*(u*u_dot) +
-                 eta*.5*scalar_product(grad_u,grad_u) +
+                 eta*.5*scalar_product(sym_grad_u,sym_grad_u) +
                  (1./eta)*0.5*p*p)*JxW[q];
     }
 }
