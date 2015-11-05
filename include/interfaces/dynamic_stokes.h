@@ -1,6 +1,14 @@
 #ifndef _dynamic_stokes_h_
 #define _dynamic_stokes_h_
 
+/**
+ *  This interface solves a dynamic Stokes flow:
+ *  \f[
+ *     \partial_t u - \textrm{div} \epsilon(u) + \grad p = 0
+ *  \f]
+ *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
+ */
+
 #include "conservative_interface.h"
 #include <deal2lkit/parsed_function.h>
 

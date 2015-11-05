@@ -2,9 +2,9 @@
 #define _stokes_nc_h_
 
 /**
- *  This interface solves a Stokes flow using non conservative interface:
+ *  This interface solves a dynamic Stokes flow using non conservative interface:
  *  \f[
- *    - \textrm{div} \epsilon(u) + \grad p = 0
+ *     \partial_t u - \textrm{div} \epsilon(u) + \grad p = 0
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
