@@ -84,7 +84,7 @@ subsection IDA Solver Parameters
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_dot
+  set Initial condition type                        = use_y_diff
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
@@ -96,12 +96,12 @@ subsection IDA Solver Parameters
 end
 subsection Initial solution
   set Function constants  =
-  set Function expression = 0;0;0
+  set Function expression = t*cos(pi*x)*cos(pi*y); t*sin(pi*x)*sin(pi*y); 0
   set Variable names      = x,y,t
 end
 subsection Initial solution_dot
   set Function constants  =
-  set Function expression = 0; 0; 0
+  set Function expression = cos(pi*x)*cos(pi*y); sin(pi*x)*sin(pi*y); 0
   set Variable names      = x,y,t
 end
 
