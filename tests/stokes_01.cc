@@ -2,6 +2,10 @@
 #include "interfaces/stokes.h"
 #include "tests.h"
 
+/*
+ * Test the stokes interface with an exact solution.
+ */
+
 using namespace dealii;
 int main (int argc, char *argv[])
 {
