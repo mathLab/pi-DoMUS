@@ -57,7 +57,9 @@ subsection Navier Stokes
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
   set Preconditioner block coupling    = 1,0; 0,1
-  set eta [Pa s]                       = 1.0
+  set nu [Pa s]                        = 1.0
+  set rho [kg m^3]                     = 1.0
+  set Preconditioner                   = default
 end
 
 subsection Error Tables

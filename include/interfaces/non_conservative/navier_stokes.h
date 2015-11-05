@@ -39,7 +39,7 @@ public:
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
-  NavierStokes();
+  NavierStokes(std::string prec="default");
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -66,6 +66,7 @@ private:
 
   double rho;
   double nu;
+  std::string prec_name;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -74,10 +75,11 @@ private:
 };
 
 template<int dim>
-NavierStokes<dim>::NavierStokes() :
+NavierStokes<dim>::NavierStokes(std::string prec) :
   NonConservativeInterface<dim,dim,dim+1,NavierStokes<dim> >("Navier Stokes",
                                                              "FESystem[FE_Q(2)^d-FE_Q(1)]",
-                                                             "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
+                                                             "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0"),
+  prec_name(prec)
 {};
 
 
@@ -234,8 +236,10 @@ NavierStokes<dim>::
 declare_parameters (ParameterHandler &prm)
 {
   NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::declare_parameters(prm);
-  this->add_parameter(prm, &rho, "rho [kg m^3]", "1.0", Patterns::Double(0.0));
-  this->add_parameter(prm, &nu,  "nu [Pa s]",    "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &rho,      "rho [kg m^3]",  "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &nu,       "nu [Pa s]",     "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &prec_name,"Preconditioner","default",
+                      Patterns::Selection("default|preconditioner1"));
 }
 
 template <int dim>
@@ -296,18 +300,34 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, VEC >({{
-      {{ A, Bt }} ,
-      {{ B, ZeroP }}
-    }
-  });
+  Assert(prec_name != "", ExcNotInitialized());
+  if (prec_name=="default")
+    {
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
 
+    }
+  else if (prec_name=="preconditioner1")
+    {
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
+    }
+  else
+    {
+      AssertThrow(false, ExcMessage("Preconditioner not recognized."));
+    }
 
   //const auto S = linear_operator<VEC>(matrix);
 
-  prec_op = block_operator<2, 2, VEC >({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
+  system_op  = block_operator<2, 2, VEC >({{
+      {{ A, Bt }} ,
+      {{ B, ZeroP }}
     }
   });
 }
