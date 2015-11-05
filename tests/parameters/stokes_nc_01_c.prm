@@ -1,8 +1,8 @@
 subsection piDoMUS<2, 2, 3, LATrilinos>
   set Adaptive refinement          = false
-  set Initial global refinement    = 1
+  set Initial global refinement    = 4
   set Maximum number of time steps = 10000
-  set Number of cycles             = 4
+  set Number of cycles             = 1
   set Timer output file            = timer.txt
   set Use direct solver if available = false
 end

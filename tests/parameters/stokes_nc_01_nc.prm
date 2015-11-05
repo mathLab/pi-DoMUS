@@ -1,8 +1,8 @@
 subsection piDoMUS<2, 2, 3, LATrilinos>
   set Adaptive refinement          = false
-  set Initial global refinement    = 1
+  set Initial global refinement    = 4
   set Maximum number of time steps = 10000
-  set Number of cycles             = 4
+  set Number of cycles             = 1
   set Timer output file            = timer.txt
   set Use direct solver if available = false
 end
@@ -52,7 +52,7 @@ subsection Refinement
   set Top fraction                           = 0.300000
 end
 
-subsection Stokes
+subsection StokesNC
   set Block coupling                   = 1,1; 1,0
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,p
