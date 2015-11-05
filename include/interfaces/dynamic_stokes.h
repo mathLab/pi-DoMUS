@@ -125,12 +125,7 @@ void DynamicStokes<dim>::system_energy(const typename DoFHandler<dim>::active_ce
                                        Number &energy) const
 {
   Number alpha = this->alpha;
-
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector velocity(0);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
