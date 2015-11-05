@@ -1,7 +1,7 @@
 #ifndef _heat_equation_derived_interface_h_
 #define _heat_equation_derived_interface_h_
 
-#include "conservative_interface.h"
+#include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 
 
@@ -17,8 +17,8 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
-#include "assembly.h"
-#include "lac_type.h"
+#include "data/assembly.h"
+#include "lac/lac_type.h"
 
 
 template <int dim, typename LAC=LADealII>

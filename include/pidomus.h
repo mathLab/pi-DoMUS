@@ -26,8 +26,8 @@
 
 // #include <deal.II/lac/precondition.h>
 
-#include "assembly.h"
-#include "interface.h"
+#include "data/assembly.h"
+#include "interfaces/interface.h"
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/parsed_grid_refinement.h>
@@ -41,8 +41,8 @@
 #include <deal2lkit/any_data.h>
 #include <deal2lkit/fe_values_cache.h>
 
-#include "lac_type.h"
-#include "lac_initializer.h"
+#include "lac/lac_type.h"
+#include "lac/lac_initializer.h"
 
 using namespace dealii;
 using namespace deal2lkit;

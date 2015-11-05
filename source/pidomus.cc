@@ -58,7 +58,7 @@
 #include <string>
 #include <math.h>
 
-#include "lac_initializer.h"
+#include "lac/lac_initializer.h"
 
 using namespace dealii;
 using namespace deal2lkit;

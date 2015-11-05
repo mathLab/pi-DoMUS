@@ -2,7 +2,7 @@
 #define _LAC_INITIALIZER_H_
 
 // This includes all types we know of.
-#include "lac_type.h"
+#include "lac/lac_type.h"
 #include <mpi.h>
 
 /**

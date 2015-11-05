@@ -1,4 +1,16 @@
-#include "interface.h"
+#ifndef _non_conservative_interface_h
+#define _non_conservative_interface_h
+/*
+ * Non Conservative Interface
+ *
+ * This class is a child of interface.h
+ *
+ * It is used to define a problem in the case whole the problem
+ * could not be stated in terms of energy.
+ *
+ */
+
+#include "interfaces/interface.h"
 
 using namespace deal2lkit;
 
@@ -56,3 +68,5 @@ public:
     static_cast<const Implementation *>(this)->preconditioner_residual(cell, scratch, data, local_residual);
   }
 };
+
+#endif

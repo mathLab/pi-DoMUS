@@ -10,6 +10,7 @@
  */
 
 #include "conservative_interface.h"
+#include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 
 

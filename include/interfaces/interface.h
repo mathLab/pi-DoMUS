@@ -48,8 +48,8 @@
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
 
-#include "assembly.h"
-#include "lac_type.h"
+#include "data/assembly.h"
+#include "lac/lac_type.h"
 #include <deal.II/base/sacado_product_type.h>
 
 template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>

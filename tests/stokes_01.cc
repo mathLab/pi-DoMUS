@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/stokes.h"
+#include "interfaces/conservative/stokes.h"
 #include "tests.h"
 
 /*

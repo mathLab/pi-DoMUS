@@ -1,6 +1,6 @@
 #include "pidomus.h"
-#include "interfaces/stokes.h"
-#include "lac_type.h"
+#include "interfaces/conservative/stokes.h"
+#include "lac/lac_type.h"
 #include "tests.h"
 
 /*
