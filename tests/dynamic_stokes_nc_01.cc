@@ -2,6 +2,11 @@
 #include "interfaces/dynamic_stokes_nc.h"
 #include "tests.h"
 
+/*
+ * Test the dynamic stokes (using a non conservative interface) interface
+ * with an exact solution.
+ */
+
 using namespace dealii;
 int main (int argc, char *argv[])
 {
