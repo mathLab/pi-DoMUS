@@ -4,7 +4,7 @@
 /**
  *  This interface solves a Stokes flow using non conservative interface:
  *  \f[
- *    - \textrm{div} \epsilon(u) + \grad p = 0
+ *    - \textrm{div} \epsilon(u) + \grad p = f
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */

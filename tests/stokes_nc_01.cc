@@ -4,6 +4,12 @@
 #include "lac_type.h"
 #include "tests.h"
 
+/*
+ * Test the implementation of the stokes problem using the conservative and the
+ * non conservative formulation. This code finds a solution using both codes and
+ * then compares the solutions.
+ */
+
 using namespace dealii;
 int main (int argc, char *argv[])
 {
@@ -35,7 +41,7 @@ int main (int argc, char *argv[])
 
   for (unsigned int i = 0 ; i<sol_c.size(); ++i)
     {
-      if (std::abs(sol_c[i]-sol_nc[i]) > 1e-2)
+      if (std::abs(sol_c[i]-sol_nc[i]) > 1e-3)
         {
           deallog << "FAIL" << std::endl;
         }

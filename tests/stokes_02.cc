@@ -3,6 +3,11 @@
 #include "lac_type.h"
 #include "tests.h"
 
+/*
+ * Test two different implementation of the Stokes preconditioner.
+ * The first uses block_back_substitution while the other not.
+ */
+
 using namespace dealii;
 int main (int argc, char *argv[])
 {
