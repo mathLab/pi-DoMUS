@@ -4,9 +4,9 @@
 /**
  *  This interface solves a Stokes flow using non conservative interface:
  *  \f[
- *    - \textrm{div} \epsilon(u) + \grad p = f
+ *    - \textrm{div} \varepsilon(u) + \nabla p = f
  *  \f]
- *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
+ *  where \f$ \varepsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
 
 #include "interfaces/non_conservative.h"
