@@ -102,13 +102,13 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Bool());
 
   add_parameter(  prm,
-                  &kelly_output,
-                  "Print Kelly output",
+                  &estimator_output,
+                  "Print estimator output",
                   "false",
                   Patterns::Bool());
 
   add_parameter(  prm,
-                  &kelly_threshold,
+                  &estimator_threshold,
                   "Threshold for restart solver",
                   "1e-2",
                   Patterns::Double(0.0));
@@ -639,8 +639,8 @@ solver_should_restart(
   if (use_space_adaptivity)
     {
       int check = 0;
-      double max_kelly=0;
-      double mpi_max_kelly=0;
+      double max_estimator=0;
+      double mpi_max_estimator=0;
 
       computing_timer.enter_section ("   Compute error estimator");
 
@@ -660,16 +660,16 @@ solver_should_restart(
                             fe->degree + 1,
                             distributed_solution);
 
-      max_kelly = estimated_error_per_cell.linfty_norm();
-      max_kelly = Utilities::MPI::max(max_kelly, comm);
+      max_estimator = estimated_error_per_cell.linfty_norm();
+      max_estimator = Utilities::MPI::max(max_estimator, comm);
 
-      if (max_kelly > kelly_threshold)
+      if (max_estimator > estimator_threshold)
 
         {
-          if (kelly_output)
+          if (estimator_output)
             pcout << "#################### restart ######### \n"
-                  << "max_kelly > threshold\n"
-                  << max_kelly  << " >  " << kelly_threshold
+                  << "max_estimator > threshold\n"
+                  << max_estimator  << " >  " << estimator_threshold
                   << std::endl
                   << "######################################\n";
 
@@ -735,7 +735,7 @@ solver_should_restart(
           MPI::COMM_WORLD.Barrier();
           return true;
         }
-      else // if max_kelly > kelly_threshold
+      else // if max_estimator > estimator_threshold
         {
           computing_timer.exit_section();
           return false;

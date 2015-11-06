@@ -218,8 +218,8 @@ private:
   std::vector<IndexSet> relevant_partitioning;
 
   bool use_space_adaptivity;
-  double kelly_threshold;
-  bool kelly_output;
+  double estimator_threshold;
+  bool estimator_output;
   const bool we_are_parallel;
   bool use_direct_solver;
 };
