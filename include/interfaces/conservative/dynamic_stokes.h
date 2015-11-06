@@ -9,7 +9,6 @@
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
 
-#include "conservative_interface.h"
 #include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 

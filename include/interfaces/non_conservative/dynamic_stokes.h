@@ -9,7 +9,7 @@
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
 
-#include "non_conservative_interface.h"
+#include "interfaces/non_conservative.h"
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
