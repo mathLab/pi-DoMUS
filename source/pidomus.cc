@@ -40,7 +40,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/solution_transfer.h>
-#include <deal.II/numerics/error_estimator.h>
+// #include <deal.II/numerics/error_estimator.h> // TODO: comment
 
 #include <deal.II/distributed/solution_transfer.h>
 //#include <deal.II/base/index_set.h>
@@ -454,23 +454,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
   typedef TrilinosWrappers::MPI::BlockVector pVEC;
   typedef BlockVector<double> sVEC;
 
-  if (use_space_adaptivity)
-    {
-      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-      KellyErrorEstimator<dim>::estimate (*dof_handler,
-                                          QGauss < dim - 1 > (fe->degree + 1),
-                                          typename FunctionMap<dim>::type(),
-                                          distributed_solution,
-                                          estimated_error_per_cell,
-                                          ComponentMask(),
-                                          0,
-                                          0,
-                                          triangulation->locally_owned_subdomain());
-
-      pgr.mark_cells(estimated_error_per_cell, *triangulation);
-    }
-
-
   if (typeid(typename LAC::VectorType) == typeid(pVEC))
     {
       parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
@@ -483,10 +466,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       triangulation->prepare_coarsening_and_refinement();
       sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
       sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
-      if (use_space_adaptivity)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
+      triangulation->refine_global (1);
 
       setup_dofs(false);
 
@@ -509,10 +489,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       triangulation->prepare_coarsening_and_refinement();
       sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
       sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
-      if (use_space_adaptivity)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
+      triangulation->refine_global (1);
 
       setup_dofs(false);
 
@@ -520,7 +497,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
     }
 
-  // triangulation->refine_global (1);
   computing_timer.exit_section();
 }
 
@@ -674,20 +650,15 @@ solver_should_restart(
       constraints.distribute(tmp_c);
       distributed_solution = tmp_c;
 
-      std::vector<bool> mask(dim+1,true);
-      mask[dim] = false;
+
 
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-      KellyErrorEstimator<dim>::estimate (*dof_handler,
-                                          QGauss<dim-1>(4),
-                                          typename FunctionMap<dim>::type(),
-                                          distributed_solution,
-                                          estimated_error_per_cell,
-                                          ComponentMask(mask),
-                                          0,
-                                          0,
-                                          triangulation->locally_owned_subdomain());
 
+      energy.grid_estimate (*triangulation,
+                            estimated_error_per_cell,
+                            *dof_handler,
+                            fe->degree + 1,
+                            distributed_solution);
 
       max_kelly = estimated_error_per_cell.linfty_norm();
       max_kelly = Utilities::MPI::max(max_kelly, comm);

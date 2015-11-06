@@ -10,6 +10,7 @@
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/base/sacado_product_type.h>
+#include <deal.II/numerics/error_estimator.h>
 
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -53,6 +54,28 @@ update_constraints (  const double &t,
   // DoFTools::make_hanging_node_constraints (*dof_handler, constraints_dot);
   // dirichlet_dot.interpolate_boundary_values(*dof_handler, constraints_dot);
   // constraints_dot.close ();
+}
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+grid_estimate (  Triangulation<dim, spacedim> &tria,
+                 Vector<float> &estimated_error_per_cell,
+                 const DoFHandler<dim,spacedim> &dof_handler,
+                 unsigned int fe_degree,
+                 typename LAC::VectorType &distributed_solution) const
+{
+  std::vector<bool> mask(dim+1,true);
+  mask[dim] = false;
+  KellyErrorEstimator<dim>::estimate (dof_handler,
+                                      QGauss<dim-1>(fe_degree+1),
+                                      typename FunctionMap<dim>::type(),
+                                      distributed_solution,
+                                      estimated_error_per_cell,
+                                      ComponentMask(mask),
+                                      0,
+                                      0,
+                                      tria.locally_owned_subdomain());
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
