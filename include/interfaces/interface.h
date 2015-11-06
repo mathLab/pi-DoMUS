@@ -86,6 +86,14 @@ public:
    */
   virtual void set_time (const double &t) const;
 
+  /**
+   * update Dirichlet, Forcing, and Newmann terms. Moreovere, it updates
+   * constraints.
+   */
+  virtual void update_constraints (const double &t,
+                                   ConstraintMatrix &constraints,
+                                   ConstraintMatrix &constraints_dot,
+                                   const DoFHandler<dim,spacedim> &dof_handler) const;
 
   /**
    * This function is used to modify triangulation using boundary_id or manifold_id.

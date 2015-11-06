@@ -28,9 +28,32 @@ Interface<dim,spacedim,n_components,LAC>::
 set_time (const double &t) const
 {
   dirichlet_bcs.set_time(t);
+  // dirichlet_dot.set_time(t);
   forcing_terms.set_time(t);
   neumann_bcs.set_time(t);
+  // exact_solution.set_time(t);
 };
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+update_constraints (  const double &t,
+                      ConstraintMatrix &constraints,
+                      ConstraintMatrix &constraints_dot,
+                      const DoFHandler<dim,spacedim> &dof_handler) const
+{
+  set_time(t);
+
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (dof_handler, constraints);
+  dirichlet_bcs.interpolate_boundary_values(dof_handler, constraints);
+  constraints.close ();
+
+  // constraints_dot.clear();
+  // DoFTools::make_hanging_node_constraints (*dof_handler, constraints_dot);
+  // dirichlet_dot.interpolate_boundary_values(*dof_handler, constraints_dot);
+  // constraints_dot.close ();
+}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
@@ -300,6 +323,7 @@ get_differential_blocks() const
 {
   return _diff_comp;
 }
+
 
 template class Interface<2, 2, 1, LATrilinos>;
 template class Interface<2, 2, 1, LADealII>;
