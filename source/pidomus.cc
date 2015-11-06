@@ -98,7 +98,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &use_space_adaptivity,
                   "Adaptive refinement",
-                  "true",
+                  "false",
                   Patterns::Bool());
 
   add_parameter(  prm,
@@ -451,74 +451,74 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
 
-  // typedef TrilinosWrappers::MPI::BlockVector pVEC;
-  // typedef BlockVector<double> sVEC;
-  //
-  // if (use_space_adaptivity)
-  //   {
-  //     Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-  //     KellyErrorEstimator<dim>::estimate (*dof_handler,
-  //                                         QGauss < dim - 1 > (fe->degree + 1),
-  //                                         typename FunctionMap<dim>::type(),
-  //                                         distributed_solution,
-  //                                         estimated_error_per_cell,
-  //                                         ComponentMask(),
-  //                                         0,
-  //                                         0,
-  //                                         triangulation->locally_owned_subdomain());
-  //
-  //     pgr.mark_cells(estimated_error_per_cell, *triangulation);
-  //   }
-  //
-  //
-  // if (typeid(typename LAC::VectorType) == typeid(pVEC))
-  //   {
-  //     parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
-  //     parallel::distributed::SolutionTransfer<dim, pVEC> sol_dot_tr(*dof_handler);
-  //     typename LAC::VectorType sol (distributed_solution);
-  //     typename LAC::VectorType sol_dot (distributed_solution_dot);
-  //     sol = solution;
-  //     sol_dot = solution_dot;
-  //
-  //     triangulation->prepare_coarsening_and_refinement();
-  //     sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
-  //     sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
-  //     if (use_space_adaptivity)
-  //       triangulation->execute_coarsening_and_refinement ();
-  //     else
-  //       triangulation->refine_global (1);
-  //
-  //     setup_dofs(false);
-  //
-  //     typename LAC::VectorType tmp (solution);
-  //     typename LAC::VectorType tmp_dot (solution_dot);
-  //
-  //     sol_tr.interpolate ((pVEC &)tmp);
-  //     sol_dot_tr.interpolate ((pVEC &)tmp_dot);
-  //     solution = tmp;
-  //     solution_dot = tmp_dot;
-  //   }
-  // else
-  //   {
-  //     SolutionTransfer<dim, sVEC> sol_tr(*dof_handler);
-  //     SolutionTransfer<dim, sVEC> sol_dot_tr(*dof_handler);
-  //
-  //     typename LAC::VectorType tmp (solution);
-  //     typename LAC::VectorType tmp_dot (solution_dot);
-  //
-  //     triangulation->prepare_coarsening_and_refinement();
-  //     sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
-  //     sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
-  //     if (use_space_adaptivity)
-  //       triangulation->execute_coarsening_and_refinement ();
-  //     else
-  //       triangulation->refine_global (1);
-  //
-  //     setup_dofs(false);
-  //
-  //     sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
-  //     sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
-  //   }
+  typedef TrilinosWrappers::MPI::BlockVector pVEC;
+  typedef BlockVector<double> sVEC;
+
+  if (use_space_adaptivity)
+    {
+      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
+      KellyErrorEstimator<dim>::estimate (*dof_handler,
+                                          QGauss < dim - 1 > (fe->degree + 1),
+                                          typename FunctionMap<dim>::type(),
+                                          distributed_solution,
+                                          estimated_error_per_cell,
+                                          ComponentMask(),
+                                          0,
+                                          0,
+                                          triangulation->locally_owned_subdomain());
+
+      pgr.mark_cells(estimated_error_per_cell, *triangulation);
+    }
+
+
+  if (typeid(typename LAC::VectorType) == typeid(pVEC))
+    {
+      parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
+      parallel::distributed::SolutionTransfer<dim, pVEC> sol_dot_tr(*dof_handler);
+      typename LAC::VectorType sol (distributed_solution);
+      typename LAC::VectorType sol_dot (distributed_solution_dot);
+      sol = solution;
+      sol_dot = solution_dot;
+
+      triangulation->prepare_coarsening_and_refinement();
+      sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
+      sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
+      if (use_space_adaptivity)
+        triangulation->execute_coarsening_and_refinement ();
+      else
+        triangulation->refine_global (1);
+
+      setup_dofs(false);
+
+      typename LAC::VectorType tmp (solution);
+      typename LAC::VectorType tmp_dot (solution_dot);
+
+      sol_tr.interpolate ((pVEC &)tmp);
+      sol_dot_tr.interpolate ((pVEC &)tmp_dot);
+      solution = tmp;
+      solution_dot = tmp_dot;
+    }
+  else
+    {
+      SolutionTransfer<dim, sVEC> sol_tr(*dof_handler);
+      SolutionTransfer<dim, sVEC> sol_dot_tr(*dof_handler);
+
+      typename LAC::VectorType tmp (solution);
+      typename LAC::VectorType tmp_dot (solution_dot);
+
+      triangulation->prepare_coarsening_and_refinement();
+      sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
+      sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
+      if (use_space_adaptivity)
+        triangulation->execute_coarsening_and_refinement ();
+      else
+        triangulation->refine_global (1);
+
+      setup_dofs(false);
+
+      sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
+      sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
+    }
 
   triangulation->refine_global (1);
   computing_timer.exit_section();
@@ -704,33 +704,57 @@ solver_should_restart(
 
           pgr.mark_cells(estimated_error_per_cell, *triangulation);
 
-          parallel::distributed::SolutionTransfer<dim,typename LAC::VectorType> sol_tr(*dof_handler);
-          parallel::distributed::SolutionTransfer<dim,typename LAC::VectorType> sol_dot_tr(*dof_handler);
+          typedef TrilinosWrappers::MPI::BlockVector pVEC;
+          typedef BlockVector<double> sVEC;
 
-          typename LAC::VectorType sol (distributed_solution);
-          typename LAC::VectorType sol_dot (distributed_solution_dot);
-          sol = solution;
-          sol_dot = solution_dot;
+          if (typeid(typename LAC::VectorType) == typeid(pVEC))
+            {
+              parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
+              parallel::distributed::SolutionTransfer<dim, pVEC> sol_dot_tr(*dof_handler);
+              typename LAC::VectorType sol (distributed_solution);
+              typename LAC::VectorType sol_dot (distributed_solution_dot);
+              sol = solution;
+              sol_dot = solution_dot;
 
-          triangulation->prepare_coarsening_and_refinement();
-          sol_tr.prepare_for_coarsening_and_refinement (sol);
-          sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
+              triangulation->prepare_coarsening_and_refinement();
+              sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
+              sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
+              if (use_space_adaptivity)
+                triangulation->execute_coarsening_and_refinement ();
+              else
+                triangulation->refine_global (1);
 
-          if (use_space_adaptivity)
-            triangulation->execute_coarsening_and_refinement ();
+              setup_dofs(false);
+
+              typename LAC::VectorType tmp (solution);
+              typename LAC::VectorType tmp_dot (solution_dot);
+
+              sol_tr.interpolate ((pVEC &)tmp);
+              sol_dot_tr.interpolate ((pVEC &)tmp_dot);
+              solution = tmp;
+              solution_dot = tmp_dot;
+            }
           else
-            triangulation->refine_global (1);
+            {
+              SolutionTransfer<dim, sVEC> sol_tr(*dof_handler);
+              SolutionTransfer<dim, sVEC> sol_dot_tr(*dof_handler);
 
-          setup_dofs(false);
+              typename LAC::VectorType tmp (solution);
+              typename LAC::VectorType tmp_dot (solution_dot);
 
-          typename LAC::VectorType tmp (solution);
-          typename LAC::VectorType tmp_dot (solution_dot);
+              triangulation->prepare_coarsening_and_refinement();
+              sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
+              sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
+              if (use_space_adaptivity)
+                triangulation->execute_coarsening_and_refinement ();
+              else
+                triangulation->refine_global (1);
 
-          sol_tr.interpolate (tmp);
-          sol_dot_tr.interpolate (tmp_dot);
+              setup_dofs(false);
 
-          solution = tmp;
-          solution_dot = tmp_dot;
+              sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
+              sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
+            }
 
           energy.update_constraints(t, constraints, constraints, *dof_handler);
 
@@ -747,7 +771,7 @@ solver_should_restart(
         }
 
     }
-  else // use space adaptivity
+  else // it does not use space adaptivity
     return false;
 }
 
