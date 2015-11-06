@@ -520,7 +520,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
     }
 
-  triangulation->refine_global (1);
+  // triangulation->refine_global (1);
   computing_timer.exit_section();
 }
 
