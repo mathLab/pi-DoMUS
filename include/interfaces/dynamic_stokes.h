@@ -1,6 +1,14 @@
 #ifndef _dynamic_stokes_h_
 #define _dynamic_stokes_h_
 
+/**
+ *  This interface solves a dynamic Stokes flow:
+ *  \f[
+ *     \partial_t u - \textrm{div} \epsilon(u) + \grad p = f
+ *  \f]
+ *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
+ */
+
 #include "conservative_interface.h"
 #include <deal2lkit/parsed_function.h>
 
@@ -88,7 +96,7 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
-  auto &grad_us = fe_cache.get_gradients("solution","grad_u", velocity, alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "u", velocity, alpha);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
@@ -101,10 +109,10 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
       const Number &p = ps[q];
       const Tensor<1, dim, Number> &u = us[q];
       const Tensor<1, dim, Number> &u_dot = us_dot[q];
-      const Tensor<2, dim, Number> &grad_u = grad_us[q];
+      const Tensor<2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
       energy += (rho*(u*u_dot) +
-                 eta*.5*scalar_product(grad_u,grad_u) +
+                 eta*.5*scalar_product(sym_grad_u,sym_grad_u) +
                  (1./eta)*0.5*p*p)*JxW[q];
     }
 }
@@ -117,12 +125,7 @@ void DynamicStokes<dim>::system_energy(const typename DoFHandler<dim>::active_ce
                                        Number &energy) const
 {
   Number alpha = this->alpha;
-
-  fe_cache.reinit(cell);
-
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
-  this->fix_solution_dot_derivative(fe_cache, alpha);
+  this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector velocity(0);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
