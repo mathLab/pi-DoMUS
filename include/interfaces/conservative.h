@@ -1,5 +1,5 @@
-#ifndef __any_conservative_interface_h
-#define __any_conservative_interface_h
+#ifndef _conservative_interface_h
+#define _conservative_interface_h
 /*
  * Conservative Interface
  *
@@ -11,7 +11,7 @@
  *
  */
 
-#include "interface.h"
+#include "interfaces/interface.h"
 
 using namespace deal2lkit;
 

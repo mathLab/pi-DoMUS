@@ -2,14 +2,14 @@
 #define _stokes_nc_h_
 
 /**
- *  This interface solves a dynamic Stokes flow using non conservative interface:
+ *  This interface solves a Stokes flow using non conservative interface:
  *  \f[
- *     \partial_t u - \textrm{div} \epsilon(u) + \grad p = f
+ *    - \textrm{div} \epsilon(u) + \grad p = f
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
 
-#include "non_conservative_interface.h"
+#include "interfaces/non_conservative.h"
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
@@ -28,7 +28,7 @@
 #include <deal2lkit/parsed_function.h>
 
 template <int dim>
-class DynamicStokesNC : public NonConservativeInterface<dim,dim,dim+1, DynamicStokesNC<dim> >
+class StokesNC : public NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >
 {
 public:
   typedef FEValuesCache<dim,dim> Scratch;
@@ -37,7 +37,7 @@ public:
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
-  DynamicStokesNC();
+  StokesNC();
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -70,19 +70,19 @@ private:
 };
 
 template<int dim>
-DynamicStokesNC<dim>::DynamicStokesNC() :
-  NonConservativeInterface<dim,dim,dim+1,DynamicStokesNC<dim> >("Dynamic StokesNC",
-      "FESystem[FE_Q(2)^d-FE_Q(1)]",
-      "u,u,p", "1,1; 1,0", "1,0; 0,1","0,0")
+StokesNC<dim>::StokesNC() :
+  NonConservativeInterface<dim,dim,dim+1,StokesNC<dim> >("StokesNC",
+                                                         "FESystem[FE_Q(2)^d-FE_Q(1)]",
+                                                         "u,u,p", "1,1; 1,0", "1,0; 0,1","0,0")
 {};
 
 
 template <int dim>
 template<typename Number>
-void DynamicStokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                   Scratch &fe_cache,
-                                                   CopyPreconditioner &data,
-                                                   std::vector<Number> &local_residual) const
+void StokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                            Scratch &fe_cache,
+                                            CopyPreconditioner &data,
+                                            std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
   fe_cache.reinit(cell);
@@ -95,14 +95,10 @@ void DynamicStokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
 
-  auto &us          = fe_cache.get_values(
-                        "solution",     "u",      velocity,       alpha);
-  auto &sym_grad_us = fe_cache.get_symmetric_gradients(
-                        "solution",     "sym_grad_u", velocity,       alpha);
-  auto &us_dot      = fe_cache.get_values(
-                        "solution_dot", "u_dot",  velocity,       alpha);
-  auto &ps          = fe_cache.get_values(
-                        "solution",     "p",      pressure,       alpha);
+  auto &us      = fe_cache.get_values(    "solution",     "u",      velocity,       alpha);
+  auto &grad_us = fe_cache.get_gradients( "solution",     "grad_u", velocity,       alpha);
+  auto &us_dot  = fe_cache.get_values(    "solution_dot", "u_dot",  velocity,       alpha);
+  auto &ps      = fe_cache.get_values(    "solution",     "p",      pressure,       alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -124,17 +120,15 @@ void DynamicStokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim
           auto m      = fev[pressure    ].value(i,q);
 
           // variables:
-          const Tensor<1, dim, Number> &u           = us[q];
-          const Tensor<1, dim, Number> &u_dot       = us_dot[q];
-          const Tensor<2, dim, Number> &sym_grad_u  = sym_grad_us[q];
-          const Number                 &p           = ps[q];
+          const Tensor<1, dim, Number> &u       = us[q];
+          const Tensor<1, dim, Number> &u_dot   = us_dot[q];
+          const Tensor<2, dim, Number> &grad_u  = grad_us[q];
+          const Number                 &p       = ps[q];
 
           // compute residual:
-          local_residual[i] +=  (
-                                  u_dot * v +
-                                  eta * scalar_product(sym_grad_u,grad_v) +
-                                  (1./eta)*p*m
-                                )*JxW[q];
+          local_residual[i] +=
+            (eta * scalar_product(grad_u,grad_v) +
+             (1./eta)*p*m)*JxW[q];
 
         }
     }
@@ -144,7 +138,7 @@ void DynamicStokesNC<dim>::preconditioner_residual(const typename DoFHandler<dim
 template <int dim>
 template<typename Number>
 void
-DynamicStokesNC<dim>::
+StokesNC<dim>::
 system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                 Scratch &fe_cache,
                 CopySystem &data,
@@ -164,8 +158,9 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
   // velocity:
   auto &us          = fe_cache.get_values(                "solution",     "u",      velocity,       alpha);
+  auto &grad_us     = fe_cache.get_gradients(             "solution",     "grad_u", velocity,       alpha);
   auto &div_us      = fe_cache.get_divergences(           "solution",     "div_u",  velocity,       alpha);
-  auto &sym_grad_us = fe_cache.get_symmetric_gradients(   "solution",     "sym_grad_u",      velocity,       alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients(   "solution",     "u",      velocity,       alpha);
   auto &us_dot      = fe_cache.get_values(                "solution_dot", "u_dot",  velocity,       alpha);
 
   // pressure:
@@ -199,17 +194,15 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           const Tensor<1, dim, Number>  &u          = us[q];
           const Number                  &div_u      = div_us[q];
           const Tensor<1, dim, Number>  &u_dot      = us_dot[q];
+          const Tensor<2, dim, Number>  &grad_u     = grad_us[q];
           const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
           //    pressure:
           const Number                  &p          = ps[q];
 
-          // compute residual:
-          local_residual[i] +=  (
-                                  u_dot * v +
-                                  eta * scalar_product(sym_grad_u,grad_v) +
-                                  (1./eta)*p*div_v
-                                )*JxW[q];
+          local_residual[i] += ( eta*scalar_product( sym_grad_u , grad_v )
+                                 + p * div_v )
+                               * JxW[q];
         }
     }
 }
@@ -219,29 +212,29 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 template <int dim>
 void
-DynamicStokesNC<dim>::
+StokesNC<dim>::
 declare_parameters (ParameterHandler &prm)
 {
-  NonConservativeInterface<dim,dim,dim+1, DynamicStokesNC<dim> >::declare_parameters(prm);
+  NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
 }
 
 template <int dim>
 void
-DynamicStokesNC<dim>::
+StokesNC<dim>::
 parse_parameters_call_back ()
 {
-  NonConservativeInterface<dim,dim,dim+1, DynamicStokesNC<dim> >::parse_parameters_call_back();
+  NonConservativeInterface<dim,dim,dim+1, StokesNC<dim> >::parse_parameters_call_back();
 }
 
 
 template <int dim>
 void
-DynamicStokesNC<dim>::compute_system_operators(const DoFHandler<dim> &dh,
-                                               const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                               const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                               LinearOperator<VEC> &system_op,
-                                               LinearOperator<VEC> &prec_op) const
+StokesNC<dim>::compute_system_operators(const DoFHandler<dim> &dh,
+                                        const TrilinosWrappers::BlockSparseMatrix &matrix,
+                                        const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                        LinearOperator<VEC> &system_op,
+                                        LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -301,6 +294,6 @@ DynamicStokesNC<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 }
 
 
-template class DynamicStokesNC <2>;
+template class StokesNC <2>;
 
 #endif

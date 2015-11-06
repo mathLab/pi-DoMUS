@@ -1,7 +1,7 @@
-#ifndef _neo_hookean_two_fields_interface_h_
-#define _neo_hookean_two_fields_interface_h_
+#ifndef _compressible_neo_hookean_h_
+#define _compressible_neo_hookean_h_
 
-#include "conservative_interface.h"
+#include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 
 
@@ -20,24 +20,28 @@
 
 
 template <int dim, int spacedim>
-class NeoHookeanTwoFieldsInterface : public ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >
+class CompressibleNeoHookeanInterface : public ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >
 {
-public:
-
   typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
-  /* specific and useful functions for this very problem */
-  NeoHookeanTwoFieldsInterface();
+public:
 
-  virtual void declare_parameters (ParameterHandler &prm);
-  virtual void parse_parameters_call_back ();
+  /* specific and useful functions for this very problem */
+  ~CompressibleNeoHookeanInterface() {};
+
+  CompressibleNeoHookeanInterface();
+
+  void declare_parameters (ParameterHandler &prm);
+  void parse_parameters_call_back ();
+
 
   /* these functions MUST have the follwowing names
    *  because they are called by the ConservativeInterface class
    */
+
   template<typename Number>
   void preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                              Scratch &,
@@ -50,17 +54,18 @@ public:
                      CopySystem &,
                      Number &energy) const;
 
-  virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                        const TrilinosWrappers::BlockSparseMatrix &,
-                                        const TrilinosWrappers::BlockSparseMatrix &,
-                                        BlockLinearOperator<VEC> &,
-                                        BlockLinearOperator<VEC> &) const;
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
+                                const TrilinosWrappers::BlockSparseMatrix &,
+                                const TrilinosWrappers::BlockSparseMatrix &,
+                                LinearOperator<VEC> &,
+                                LinearOperator<VEC> &) const;
 
 private:
   double E;
   double nu;
   double mu;
   double lambda;
+
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -69,18 +74,16 @@ private:
 };
 
 template <int dim, int spacedim>
-NeoHookeanTwoFieldsInterface<dim,spacedim>::NeoHookeanTwoFieldsInterface() :
-  ConservativeInterface<dim,spacedim,dim+1,NeoHookeanTwoFieldsInterface<dim,spacedim> >("NeoHookean Interface",
-      "FESystem[FE_Q(2)^d-FE_DGP(1)]",
-      "u,u,u,p", "1,1; 1,0", "1,0; 0,1",
-      "1,0")
+CompressibleNeoHookeanInterface<dim,spacedim>::CompressibleNeoHookeanInterface() :
+  ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
+      "FESystem[FE_Q(1)^d]",
+      "u,u,u", "1", "1","1")
 {};
-
 
 
 template <int dim, int spacedim>
 template<typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+void CompressibleNeoHookeanInterface<dim,spacedim>::preconditioner_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
     Scratch &fe_cache,
     CopyPreconditioner &data,
     Number &energy) const
@@ -88,29 +91,24 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::preconditioner_energy(const typ
   Number alpha = this->alpha;
   this->reinit(alpha, cell, fe_cache);
 
-  auto &JxW = fe_cache.get_JxW_values();
-
   const FEValuesExtractors::Vector displacement(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
-  auto &grad_us = fe_cache.get_gradients("solution","grad_u",displacement, alpha);
+  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
 
-  const unsigned int n_q_points = ps.size();
+  const unsigned int n_q_points = us.size();
 
+  auto &JxW = fe_cache.get_JxW_values();
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      const Number &p = ps[q];
-      const Tensor <2, dim, Number> &grad_u = grad_us[q];
+      const Tensor <1, dim, Number> &u = us[q];
 
-      energy += (scalar_product(grad_u,grad_u) +
-                 0.5*p*p)*JxW[q];
+      energy += 0.5*(u*u)*JxW[q];
     }
 }
 
 template <int dim, int spacedim>
 template<typename Number>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
     Scratch &fe_cache,
     CopySystem &data,
     Number &energy) const
@@ -123,56 +121,54 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim>::system_energy(const typename Do
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
-  const FEValuesExtractors::Scalar pressure(dim);
-  auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
+  const unsigned int n_q_points = us.size();
 
   auto &JxW = fe_cache.get_JxW_values();
-
-  const unsigned int n_q_points = ps.size();
-
   energy = 0;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      Tensor <1, dim, double> B;
 
       const Tensor <1, dim, Number> &u = us[q];
       const Tensor <1, dim, Number> &u_dot = us_dot[q];
-      const Number &p = ps[q];
       const Tensor <2, dim, Number> &F = Fs[q];
       const Tensor<2, dim, Number> C = transpose(F)*F;
 
       Number Ic = trace(C);
       Number J = determinant(F);
+      Number lnJ = std::log (J);
 
-      Number psi = (mu/2.)*(Ic-dim) +p*(J-1.);
+      Number psi = (mu/2.)*(Ic-dim) - mu*lnJ + (lambda/2.)*(lnJ)*(lnJ);
+
       energy += (u*u_dot + psi)*JxW[q];
+
     }
+
 }
 
 
 template <int dim, int spacedim>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
+void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
 {
-  ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >::declare_parameters(prm);
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }
 
 template <int dim, int spacedim>
-void NeoHookeanTwoFieldsInterface<dim,spacedim>::parse_parameters_call_back ()
+void CompressibleNeoHookeanInterface<dim,spacedim>::parse_parameters_call_back ()
 {
-  ConservativeInterface<dim,spacedim,dim+1, NeoHookeanTwoFieldsInterface<dim,spacedim> >::parse_parameters_call_back();
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::parse_parameters_call_back();
   mu = E/(2.0*(1.+nu));
   lambda = (E *nu)/((1.+nu)*(1.-2.*nu));
 }
 
 template <int dim, int spacedim>
 void
-NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
     const TrilinosWrappers::BlockSparseMatrix &matrix,
     const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-    BlockLinearOperator<VEC> &system_op,
-    BlockLinearOperator<VEC> &prec_op) const
+    LinearOperator<VEC> &system_op,
+    LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -190,48 +186,35 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHa
   Amg_data.smoother_sweeps = 2;
   Amg_data.aggregation_threshold = 0.02;
 
-  Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+//  Mp_preconditioner->initialize (preconditioner_matrix.block(0,0));
   Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
                                   Amg_data);
 
 
-  // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-  auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  //  auto B =  transpose_operator(Bt);
-  auto B     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-  auto ZeroP = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
-
-  auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >( preconditioner_matrix.block(1,1) );
 
   static ReductionControl solver_control_pre(5000, 1e-8);
   static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
   auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
-  auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
   auto P00 = A_inv;
-  auto P01 = null_operator(Bt);
-  auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, VEC >({{
-      {{ A, Bt }} ,
-      {{ B, ZeroP }}
+  system_op  = block_operator<1, 1, VEC >({{
+      {{ A }}
     }
   });
 
 
   //const auto S = linear_operator<VEC>(matrix);
 
-  prec_op = block_operator<2, 2, VEC >({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
+  prec_op = block_operator<1, 1, VEC >({{
+      {{ P00}} ,
     }
   });
 }
 
 
-template class NeoHookeanTwoFieldsInterface <3,3>;
+template class CompressibleNeoHookeanInterface <3,3>;
 
 #endif

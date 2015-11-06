@@ -1,7 +1,7 @@
 #ifndef _dynamic_navier_stokes_h_
 #define _dynamic_navier_stokes_h_
 
-#include "non_conservative_interface.h"
+#include "interfaces/non_conservative.h"
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>

@@ -1,7 +1,7 @@
 #ifndef _free_swelling_three_fields_h_
 #define _free_swelling_three_fields_h_
 
-#include "conservative_interface.h"
+#include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 
 
@@ -18,7 +18,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#include "lac_type.h"
+#include "lac/lac_type.h"
 
 
 typedef LADealII LAC;

@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/dynamic_stokes_nc.h"
+#include "interfaces/non_conservative/dynamic_stokes.h"
 #include "tests.h"
 
 /*

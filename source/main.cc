@@ -1,4 +1,4 @@
-#include "interfaces/heat_equation.h"
+#include "interfaces/conservative/heat_equation.h"
 #include "pidomus.h"
 #include "mpi.h"
 

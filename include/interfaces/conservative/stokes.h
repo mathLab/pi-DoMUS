@@ -1,15 +1,15 @@
-#ifndef _dynamic_stokes_h_
-#define _dynamic_stokes_h_
+#ifndef _stokes_h_
+#define _stokes_h_
 
 /**
- *  This interface solves a dynamic Stokes flow:
+ *  This interface solves a Stokes flow:
  *  \f[
- *     \partial_t u - \textrm{div} \epsilon(u) + \grad p = f
+ *    - \textrm{div} \epsilon(u) + \grad p = f
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
 
-#include "conservative_interface.h"
+#include "interfaces/conservative.h"
 #include <deal2lkit/parsed_function.h>
 
 
@@ -29,7 +29,7 @@
 #include <deal2lkit/fe_values_cache.h>
 
 template <int dim>
-class DynamicStokes : public ConservativeInterface<dim,dim,dim+1, DynamicStokes<dim> >
+class Stokes : public ConservativeInterface<dim,dim,dim+1, Stokes<dim> >
 {
 public:
   typedef FEValuesCache<dim,dim> Scratch;
@@ -38,7 +38,7 @@ public:
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
   /* specific and useful functions for this very problem */
-  DynamicStokes();
+  Stokes();
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -67,7 +67,7 @@ public:
 
 private:
   double eta;
-  double rho;
+  bool block_back_substitution_bool;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -76,19 +76,19 @@ private:
 };
 
 template<int dim>
-DynamicStokes<dim>::DynamicStokes() :
-  ConservativeInterface<dim,dim,dim+1,DynamicStokes<dim> >("Dynamic Stokes",
-                                                           "FESystem[FE_Q(2)^d-FE_Q(1)]",
-                                                           "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0")
+Stokes<dim>::Stokes() :
+  ConservativeInterface<dim,dim,dim+1,Stokes<dim> >("Stokes",
+                                                    "FESystem[FE_Q(2)^d-FE_Q(1)]",
+                                                    "u,u,p", "1,1; 1,0", "1,0; 0,1","0,0")
 {};
 
 
 template <int dim>
 template<typename Number>
-void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                               Scratch &fe_cache,
-                                               CopyPreconditioner &data,
-                                               Number &energy) const
+void Stokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                        Scratch &fe_cache,
+                                        CopyPreconditioner &data,
+                                        Number &energy) const
 {
   Number alpha = this->alpha;
   this->reinit(alpha, cell, fe_cache);
@@ -96,7 +96,7 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
   auto &ps = fe_cache.get_values("solution","p", pressure, alpha);
-  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "u", velocity, alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution","sym_grad_u", velocity, alpha);
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
@@ -111,18 +111,17 @@ void DynamicStokes<dim>::preconditioner_energy(const typename DoFHandler<dim>::a
       const Tensor<1, dim, Number> &u_dot = us_dot[q];
       const Tensor<2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
-      energy += (rho*(u*u_dot) +
-                 eta*.5*scalar_product(sym_grad_u,sym_grad_u) +
-                 (1./eta)*0.5*p*p)*JxW[q];
+      energy += (eta*.5*scalar_product(sym_grad_u,sym_grad_u) +
+                 (1./eta)*p*p)*JxW[q];
     }
 }
 
 template <int dim>
 template<typename Number>
-void DynamicStokes<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                       Scratch &fe_cache,
-                                       CopySystem &data,
-                                       Number &energy) const
+void Stokes<dim>::system_energy(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                Scratch &fe_cache,
+                                CopySystem &data,
+                                Number &energy) const
 {
   Number alpha = this->alpha;
   this->reinit(alpha, cell, fe_cache);
@@ -150,35 +149,34 @@ void DynamicStokes<dim>::system_energy(const typename DoFHandler<dim>::active_ce
       const Number &p = ps[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
 
-      energy += (rho*(u_dot*u)
-                 + .5*eta*scalar_product(sym_grad_u,sym_grad_u)
-                 - p*div_u )*JxW[q];
+      Number psi = eta*.5*scalar_product(sym_grad_u,sym_grad_u) - p*div_u;
+      energy += psi*JxW[q];
     }
 }
 
 
 template <int dim>
-void DynamicStokes<dim>::declare_parameters (ParameterHandler &prm)
+void Stokes<dim>::declare_parameters (ParameterHandler &prm)
 {
-  ConservativeInterface<dim,dim,dim+1, DynamicStokes<dim> >::declare_parameters(prm);
+  ConservativeInterface<dim,dim,dim+1, Stokes<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &eta, "eta [Pa s]", "1.0", Patterns::Double(0.0));
-  this->add_parameter(prm, &rho, "rho [Kg m^-d]", "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &block_back_substitution_bool, "use block_back_substitution", "false", Patterns::Bool());
 }
 
 template <int dim>
-void DynamicStokes<dim>::parse_parameters_call_back ()
+void Stokes<dim>::parse_parameters_call_back ()
 {
-  ConservativeInterface<dim,dim,dim+1, DynamicStokes<dim> >::parse_parameters_call_back();
+  ConservativeInterface<dim,dim,dim+1, Stokes<dim> >::parse_parameters_call_back();
 }
 
 
 template <int dim>
 void
-DynamicStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
-                                             const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                             const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                             LinearOperator<VEC> &system_op,
-                                             LinearOperator<VEC> &prec_op) const
+Stokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
+                                      const TrilinosWrappers::BlockSparseMatrix &matrix,
+                                      const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                      LinearOperator<VEC> &system_op,
+                                      LinearOperator<VEC> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
@@ -215,29 +213,45 @@ DynamicStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
   auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
-  auto P00 = A_inv;
-  auto P01 = null_operator(Bt);
-  auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
+  if (block_back_substitution_bool)
+    {
+      const auto Mat = block_operator<2, 2, VEC >({{
+          {{ A, Bt }} ,
+          {{ B, ZeroP }}
+        }
+      });
 
-  // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<2, 2, VEC >({{
-      {{ A, Bt }} ,
-      {{ B, ZeroP }}
+      const auto DiagInv = block_operator<2, 2, VEC >({{
+          {{ A_inv, Bt }} ,
+          {{ B, -1*Schur_inv }}
+        }
+      } );
+
+      prec_op = block_back_substitution<VEC>( Mat, DiagInv );
+      system_op  = Mat;
+
+
     }
-  });
-
-
-  //const auto S = linear_operator<VEC>(matrix);
-
-  prec_op = block_operator<2, 2, VEC >({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
+  else
+    {
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+      system_op  = block_operator<2, 2, VEC >({{
+          {{ A, Bt }} ,
+          {{ B, ZeroP }}
+        }
+      });
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
     }
-  });
 }
 
 
-template class DynamicStokes <2>;
+template class Stokes <2>;
 
 #endif

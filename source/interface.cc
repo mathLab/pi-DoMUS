@@ -1,4 +1,7 @@
-#include "interface.h"
+#include "interfaces/interface.h"
+#include "lac/lac_type.h"
+#include "data/assembly.h"
+
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
@@ -6,6 +9,7 @@
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/base/sacado_product_type.h>
 
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -13,10 +17,7 @@
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
-#include "assembly.h"
 #include <deal2lkit/utilities.h>
-#include "lac_type.h"
-#include <deal.II/base/sacado_product_type.h>
 
 using namespace dealii;
 using namespace deal2lkit;

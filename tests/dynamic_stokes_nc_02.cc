@@ -1,7 +1,7 @@
 #include "pidomus.h"
-#include "interfaces/dynamic_stokes.h"
-#include "interfaces/dynamic_stokes_nc.h"
-#include "lac_type.h"
+#include "interfaces/conservative/dynamic_stokes.h"
+#include "interfaces/non_conservative/dynamic_stokes.h"
+#include "lac/lac_type.h"
 #include "tests.h"
 
 /*
