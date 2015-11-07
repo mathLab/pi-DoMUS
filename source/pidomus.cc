@@ -655,8 +655,8 @@ solver_should_restart(
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
 
       energy.compute_error_estimate (*dof_handler,
-                            distributed_solution,
-                            estimated_error_per_cell);
+                                     distributed_solution,
+                                     estimated_error_per_cell);
 
       max_estimator = estimated_error_per_cell.linfty_norm();
       max_estimator = Utilities::MPI::max(max_estimator, comm);
