@@ -141,7 +141,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           // compute residual:
           local_residual[i] +=  (
                                   u_dot * v +
-                                  scalar_product(transpose(grad_u)*u, v) +
+                                  // scalar_product(transpose(grad_u)*u, v) +
                                   nu * scalar_product(sym_grad_u,grad_v) +
                                   (1./rho)*p*m
                                 )*JxW[q];
@@ -217,10 +217,13 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           const Number                  &p          = ps[q];
 
           // compute residual:
-          local_residual[i] +=  (
-                                  u_dot * v +
-                                  scalar_product(transpose(grad_u)*u, v) +
-                                  nu * scalar_product(sym_grad_u,grad_v) +
+          local_residual[i] += (
+                                  u_dot * v
+                                  -
+                                  scalar_product(outer_product(u,u), grad_v)
+                                  +
+                                  nu * scalar_product(sym_grad_u,grad_v)
+                                  +
                                   (1./rho)*p*div_v
                                 )*JxW[q];
         }
@@ -284,7 +287,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
   //  auto B =  transpose_operator(Bt);
-  auto B     = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
+  auto B  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
   auto ZeroP = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
 
   auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >( preconditioner_matrix.block(1,1) );

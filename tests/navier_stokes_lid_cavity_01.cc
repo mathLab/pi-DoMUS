@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/non_consevative/navier_stokes.h"
+#include "interfaces/non_conservative/navier_stokes.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
 
   NavierStokes<dim> energy;
   piDoMUS<dim,spacedim,dim+1> navier_stokes_equation (energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/navier_stokes_01.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/navier_stokes_lid_cavity_01.prm", "used_parameters.prm");
 
   navier_stokes_equation.run ();
 
