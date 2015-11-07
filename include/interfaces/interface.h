@@ -100,11 +100,9 @@ public:
    * \fn solver_should_restart calls this function to refine the gride
    * when @p use_space_adaptivity is true.
    */
-  virtual void grid_estimate (  Triangulation<dim, spacedim> &tria,
-                                Vector<float> &estimated_error_per_cell,
-                                const DoFHandler<dim,spacedim> &dof_handler,
-                                unsigned int fe_degree,
-                                typename LAC::VectorType &distributed_solution) const;
+  virtual void compute_error_estimate ( const DoFHandler<dim,spacedim> &dof_handler,
+                                        const typename LAC::VectorType &distributed_solution,
+                                        Vector<float> &estimated_error_per_cell) const;
 
 
   /**

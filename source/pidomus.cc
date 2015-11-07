@@ -109,7 +109,7 @@ declare_parameters (ParameterHandler &prm)
 
   add_parameter(  prm,
                   &estimator_threshold,
-                  "Threshold for restart solver",
+                  "Threshold for solver restart",
                   "1e-2",
                   Patterns::Double(0.0));
 
@@ -654,11 +654,9 @@ solver_should_restart(
 
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
 
-      energy.grid_estimate (*triangulation,
-                            estimated_error_per_cell,
-                            *dof_handler,
-                            fe->degree + 1,
-                            distributed_solution);
+      energy.compute_error_estimate (*dof_handler,
+                            distributed_solution,
+                            estimated_error_per_cell);
 
       max_estimator = estimated_error_per_cell.linfty_norm();
       max_estimator = Utilities::MPI::max(max_estimator, comm);

@@ -59,23 +59,21 @@ update_constraints (  const double &t,
 template<int dim, int spacedim, int n_components, typename LAC>
 void
 Interface<dim,spacedim,n_components,LAC>::
-grid_estimate (  Triangulation<dim, spacedim> &tria,
-                 Vector<float> &estimated_error_per_cell,
-                 const DoFHandler<dim,spacedim> &dof_handler,
-                 unsigned int fe_degree,
-                 typename LAC::VectorType &distributed_solution) const
+compute_error_estimate (const DoFHandler<dim,spacedim> &dh,
+                        const typename LAC::VectorType &distributed_solution,
+                        Vector<float> &estimated_error_per_cell) const
 {
   std::vector<bool> mask(dim+1,true);
   mask[dim] = false;
-  KellyErrorEstimator<dim>::estimate (dof_handler,
-                                      QGauss<dim-1>(fe_degree+1),
+  KellyErrorEstimator<dim>::estimate (dh,
+                                      QGauss<dim-1>(dh.get_fe().degree + 1),
                                       typename FunctionMap<dim>::type(),
                                       distributed_solution,
                                       estimated_error_per_cell,
                                       ComponentMask(mask),
                                       0,
                                       0,
-                                      tria.locally_owned_subdomain());
+                                      dh.get_tria().locally_owned_subdomain());
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
