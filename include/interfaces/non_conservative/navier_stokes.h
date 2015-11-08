@@ -70,6 +70,7 @@ private:
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    GGp_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
 
 };
@@ -111,6 +112,8 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
                         "solution_dot", "u_dot",  velocity,       alpha);
   auto &ps          = fe_cache.get_values(
                         "solution",     "p",      pressure,       alpha);
+  auto &grad_ps = fe_cache.get_gradients(
+                    "solution",     "grad_p", pressure,       alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -130,24 +133,48 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           auto v      = fev[velocity    ].value(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
           auto m      = fev[pressure    ].value(i,q);
+          auto grad_q = fev[pressure    ].gradient(i,q);
 
           // variables:
           const Tensor<1, dim, Number> &u           = us[q];
           const Tensor<1, dim, Number> &u_dot       = us_dot[q];
           const Tensor<2, dim, Number> &sym_grad_u  = sym_grad_us[q];
           const Tensor<2, dim, Number> &grad_u      = grad_us[q];
+          const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
           const Number                 &p           = ps[q];
 
           // compute residual:
-          local_residual[i] +=  (
-                                  u_dot * v +
-                                  // scalar_product(transpose(grad_u)*u, v) +
-                                  nu * scalar_product(sym_grad_u,grad_v) +
-                                  (1./rho)*p*m
-                                )*JxW[q];
-
+          if (prec_name=="default")
+            {
+              local_residual[i] +=  (
+                                      u_dot * v +
+                                      // scalar_product(transpose(grad_u)*u, v) +
+                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      (1./rho)*p*m
+                                    )*JxW[q];
+            }
+          else if (prec_name=="BFBt_identity")
+            {
+              local_residual[i] +=  (
+                                      u_dot * v +
+                                      scalar_product(transpose(grad_u)*u, v) +
+                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      (1./rho)*grad_p*grad_q
+                                    )*JxW[q];
+            }
+          else if (prec_name=="BFBt_diagA")
+            {
+              local_residual[i] +=  (
+                                      u_dot * v +
+                                      scalar_product(transpose(grad_u)*u, v) +
+                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      (1./rho)*grad_p*grad_q
+                                    )*JxW[q];
+            }
         }
+
     }
+
 }
 
 
@@ -219,8 +246,8 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           // compute residual:
           local_residual[i] += (
                                  u_dot * v
-                                 -
-                                 scalar_product(outer_product(u,u), grad_v)
+                                 +
+                                 scalar_product(transpose(grad_u)*u, v) +
                                  +
                                  nu * scalar_product(sym_grad_u,grad_v)
                                  +
@@ -242,7 +269,7 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &rho,      "rho [kg m^3]",  "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu,       "nu [Pa s]",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,"Preconditioner","default",
-                      Patterns::Selection("default|preconditioner1"));
+                      Patterns::Selection("default|BFBt_identity|BFBt_diagA"));
 }
 
 template <int dim>
@@ -268,20 +295,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
                                     constant_modes);
 
-  Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
-  Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
-
-  Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-  Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                  Amg_data);
-
 
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
@@ -290,22 +303,39 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   auto B  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
   auto ZeroP = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
 
-  auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >( preconditioner_matrix.block(1,1) );
 
-  static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-  auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
-  auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-
-  auto P00 = A_inv;
-  auto P01 = null_operator(Bt);
-  auto P10 = Schur_inv * B * A_inv;
-  auto P11 = -1 * Schur_inv;
 
   // ASSEMBLE THE PROBLEM:
   Assert(prec_name != "", ExcNotInitialized());
   if (prec_name=="default")
     {
+      Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
+      Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+
+      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+      Amg_data.constant_modes = constant_modes;
+      Amg_data.elliptic = true;
+      Amg_data.higher_order_elements = true;
+      Amg_data.smoother_sweeps = 2;
+      Amg_data.aggregation_threshold = 0.02;
+
+      Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+                                      Amg_data);
+
+      auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
+                   ( preconditioner_matrix.block(1,1) );
+
+      static ReductionControl solver_control_pre(5000, 1e-8);
+      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
+      auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
+      auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
+
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+
       prec_op = block_operator<2, 2, VEC >({{
           {{ P00, P01 }} ,
           {{ P10, P11 }}
@@ -313,8 +343,92 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       });
 
     }
-  else if (prec_name=="preconditioner1")
+  else if (prec_name=="BFBt_identity")
     {
+      GGp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+
+      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+      Amg_data.constant_modes = constant_modes;
+      Amg_data.elliptic = true;
+      Amg_data.higher_order_elements = true;
+      Amg_data.smoother_sweeps = 2;
+      Amg_data.aggregation_threshold = 0.02;
+
+      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
+      Amg_data.elliptic = true;
+      Amg_data.higher_order_elements = true;
+      Amg_data.smoother_sweeps = 2;
+      Amg_data.aggregation_threshold = 0.02;
+
+      GGp_preconditioner->initialize (preconditioner_matrix.block(1,1),
+                                      Amg_data_p);
+      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+                                      Amg_data);
+
+
+      static ReductionControl solver_control_pre(5000, 1e-8);
+      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
+      auto A_inv     = inverse_operator( A,   solver_CG, *Amg_preconditioner);
+      auto BBt       = B*Bt;
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *GGp_preconditioner);
+      auto Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
+
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
+    }
+  else if (prec_name=="BFBt_diagA")
+    {
+      GGp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+
+      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+      Amg_data.constant_modes = constant_modes;
+      Amg_data.elliptic = true;
+      Amg_data.higher_order_elements = true;
+      Amg_data.smoother_sweeps = 2;
+      Amg_data.aggregation_threshold = 0.02;
+
+      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
+      Amg_data.elliptic = true;
+      Amg_data.higher_order_elements = true;
+      Amg_data.smoother_sweeps = 2;
+      Amg_data.aggregation_threshold = 0.02;
+
+      GGp_preconditioner->initialize (preconditioner_matrix.block(1,1),
+                                      Amg_data_p);
+      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+                                      Amg_data);
+
+
+      static ReductionControl solver_control_pre(5000, 1e-8);
+      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
+
+      auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
+      inv_diag_A.vmult = [&matrix](TrilinosWrappers::MPI::Vector &v, const TrilinosWrappers::MPI::Vector &u)
+      {
+        for (unsigned int i = 0; i<matrix.block(0,0).m(); ++i)
+          v(i)=u(i)/matrix.block(0,0)(i,i);
+      };
+
+      auto A_inv     = inverse_operator( A,   solver_CG, *Amg_preconditioner);
+      auto BBt       = B*inv_diag_A*Bt;
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *GGp_preconditioner);
+      auto Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
+
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+
       prec_op = block_operator<2, 2, VEC >({{
           {{ P00, P01 }} ,
           {{ P10, P11 }}
