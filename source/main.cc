@@ -65,8 +65,6 @@ int main (int argc, char *argv[])
       return 1; // Error!
     }
 
-
-
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
                                                       n_threads == 0 ? numbers::invalid_unsigned_int  : n_threads);
 
@@ -109,13 +107,13 @@ int main (int argc, char *argv[])
   else
     {
       out << std::endl
-          << "============================================================="
-          << std::endl
-          << " ERROR:"
-          << std::endl
-          << "  " << pde_name << " needs to be implemented or it is bad name."
-          << std::endl
-          << "=============================================================";
+                << "============================================================="
+                << std::endl
+                << " ERROR:"
+                << std::endl
+                << "  " << pde_name << " needs to be implemented or it is bad name."
+                << std::endl
+                << "=============================================================";
     }
 
   out << std::endl;
@@ -137,32 +135,32 @@ void print_status(  std::string name,
   if (myid == 0)
     {
       out << std::endl
-          << "============================================================="
-          << std::endl
-          << "    Name:   " << name
-          // << std::endl
-          // << "-------------------------------------------------------------"
-          << std::endl
-          << " Prm file:  " << prm_file
-          << std::endl
-          << " spacedim:  " << spacedim
-          << std::endl
-          << "      dim:  " << dim
-          << std::endl
-          << "    codim:  " << spacedim-dim
-          << std::endl
-          << "-------------------------------------------------------------"
-          << std::endl;
+                << "============================================================="
+                << std::endl
+                << "    Name:   " << name
+                // << std::endl
+                // << "-------------------------------------------------------------"
+                << std::endl
+                << " Prm file:  " << prm_file
+                << std::endl
+                << " spacedim:  " << spacedim
+                << std::endl
+                << "      dim:  " << dim
+                << std::endl
+                << "    codim:  " << spacedim-dim
+                << std::endl
+                << "-------------------------------------------------------------"
+                << std::endl;
     }
   out << " Process " << getpid() << " is " << myid
-      << "   of " << numprocs << " processes" << std::endl;
+            << "   of " << numprocs << " processes" << std::endl;
 
   if (myid == 0)
     {
       out << "-------------------------------------------------------------"
-          << std::endl;
+                << std::endl;
       system("read -p \" Press [Enter] key to start...\"");
       out << "============================================================="
-          <<std::endl<<std::endl;
+                <<std::endl<<std::endl;
     }
 }
