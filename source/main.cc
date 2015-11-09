@@ -1,7 +1,13 @@
 #include "interfaces/non_conservative/navier_stokes.h"
 #include "pidomus.h"
 
-#include <Teuchos_CommandLineProcessor.hpp>
+#include "deal.II/base/numbers.h"
+
+#include "Teuchos_CommandLineProcessor.hpp"
+#include "Teuchos_GlobalMPISession.hpp"
+#include "Teuchos_oblackholestream.hpp"
+#include "Teuchos_StandardCatchMacros.hpp"
+#include "Teuchos_Version.hpp"
 
 #include "mpi.h"
 #include <iostream>
@@ -26,17 +32,8 @@ int main (int argc, char *argv[])
     "  | | | |   ______|  .--.  |  |  |  | |  \\  /  | |  |  |  |    |   (----` \n"
     "  | | | |  |______|  |  |  |  |  |  | |  |\\/|  | |  |  |  |     \\   \\     \n"
     "  | | | |         |  '--'  |  `--'  | |  |  |  | |  `--'  | .----)   |    \n"
-    "  |_| |_|         |_______/ \\______/  |__|  |__|  \\______/  |_______/     \n"
-    "\n\n"
-    " PDE implemented: \n"
-    " - Navier Stokes (navier_stokes): \n"
-    "   - dim 2 \n"
-    "     - default.prm     \n"
-    "     - lid_cavity.prm  \n"
-    "     - flow_past_a_cylinder.prm \n\n\n"
+    "  |_| |_|         |_______/ \\______/  |__|  |__|  \\______/  |_______/     \n\n"
   );
-
-
 
   std::string pde_name="navier_stokes";
   My_CLP.setOption("pde", &pde_name, "name of the PDE (heat, stokes, dynamic_stokes, or navier_stokes)");
@@ -47,14 +44,18 @@ int main (int argc, char *argv[])
   int dim = 2;
   My_CLP.setOption("dim", &dim, "dimension of the problem");
 
-  std::string prm_file="default.prm";
+  int n_threads = 0;
+  My_CLP.setOption("n_threads", &n_threads, "number of threads");
+
+  std::string prm_file=pde_name+".prm";
   My_CLP.setOption("prm", &prm_file, "name of the parameter file");
 
-  My_CLP.recogniseAllOptions(true);
+  // My_CLP.recogniseAllOptions(true);
   My_CLP.throwExceptions(false);
 
   Teuchos::CommandLineProcessor::EParseCommandLineReturn
   parseReturn= My_CLP.parse( argc, argv );
+
   if ( parseReturn == Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED )
     {
       return 0;
@@ -64,15 +65,19 @@ int main (int argc, char *argv[])
       return 1; // Error!
     }
 
-  My_CLP.printHelpMessage(argv[0], std::cout);
+
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
-                                                      numbers::invalid_unsigned_int);
+                                                      n_threads == 0 ? numbers::invalid_unsigned_int  : n_threads);
 
-  const MPI_Comm &comm = MPI_COMM_WORLD;
+  const MPI_Comm &comm  = MPI_COMM_WORLD;
+
+  Teuchos::oblackholestream blackhole;
+  std::ostream &out = ( Utilities::MPI::this_mpi_process(comm) == 0 ? std::cout : blackhole );
+
+  My_CLP.printHelpMessage(argv[0], out);
+
   deallog.depth_console (0);
-
-  std::string parameter_file = "../utilities/prm/"+pde_name+"/"+prm_file;
 
   if (pde_name == "navier_stokes")
     {
@@ -88,7 +93,7 @@ int main (int argc, char *argv[])
         {
           NavierStokes<2> energy;
           piDoMUS<2,2,3> navier_stokes_equation (energy);
-          ParameterAcceptor::initialize(parameter_file, "used_parameters.prm");
+          ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
           ParameterAcceptor::prm.log_parameters(deallog);
           navier_stokes_equation.run ();
         }
@@ -96,24 +101,24 @@ int main (int argc, char *argv[])
         {
           NavierStokes<3> energy;
           piDoMUS<3,3,4> navier_stokes_equation (energy);
-          ParameterAcceptor::initialize(parameter_file, "used_parameters.prm");
+          ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
           ParameterAcceptor::prm.log_parameters(deallog);
           navier_stokes_equation.run ();
         }
     }
   else
     {
-      std::cout << std::endl
-                << "============================================================="
-                << std::endl
-                << " ERROR:"
-                << std::endl
-                << "  " << pde_name << " needs to be implemented or it is bad name."
-                << std::endl
-                << "=============================================================";
+      out << std::endl
+          << "============================================================="
+          << std::endl
+          << " ERROR:"
+          << std::endl
+          << "  " << pde_name << " needs to be implemented or it is bad name."
+          << std::endl
+          << "=============================================================";
     }
 
-  std::cout << std::endl;
+  out << std::endl;
   return 0;
 }
 
@@ -123,39 +128,41 @@ void print_status(  std::string name,
                     int spacedim,
                     const MPI_Comm &comm)
 {
-  int numprocs = Utilities::MPI::n_mpi_processes(comm);
-  int myid = Utilities::MPI::this_mpi_process(comm);
+  int numprocs  = Utilities::MPI::n_mpi_processes(comm);
+  int myid      = Utilities::MPI::this_mpi_process(comm);
 
+  Teuchos::oblackholestream blackhole;
+  std::ostream &out = ( Utilities::MPI::this_mpi_process(comm) == 0 ? std::cout : blackhole );
 
   if (myid == 0)
     {
-      std::cout << std::endl
-                << "============================================================="
-                << std::endl
-                << "    Name:   " << name
-                // << std::endl
-                // << "-------------------------------------------------------------"
-                << std::endl
-                << " Prm file:  " << prm_file
-                << std::endl
-                << " spacedim:  " << spacedim
-                << std::endl
-                << "      dim:  " << dim
-                << std::endl
-                << "    codim:  " << spacedim-dim
-                << std::endl
-                << "-------------------------------------------------------------"
-                << std::endl;
+      out << std::endl
+          << "============================================================="
+          << std::endl
+          << "    Name:   " << name
+          // << std::endl
+          // << "-------------------------------------------------------------"
+          << std::endl
+          << " Prm file:  " << prm_file
+          << std::endl
+          << " spacedim:  " << spacedim
+          << std::endl
+          << "      dim:  " << dim
+          << std::endl
+          << "    codim:  " << spacedim-dim
+          << std::endl
+          << "-------------------------------------------------------------"
+          << std::endl;
     }
-  std::cout << " Process " << getpid() << " is " << myid
-            << "   of " << numprocs << " processes" << std::endl;
+  out << " Process " << getpid() << " is " << myid
+      << "   of " << numprocs << " processes" << std::endl;
 
   if (myid == 0)
     {
-      std::cout << "-------------------------------------------------------------"
-                << std::endl;
+      out << "-------------------------------------------------------------"
+          << std::endl;
       system("read -p \" Press [Enter] key to start...\"");
-      std::cout << "============================================================="
-                <<std::endl<<std::endl;
+      out << "============================================================="
+          <<std::endl<<std::endl;
     }
 }
