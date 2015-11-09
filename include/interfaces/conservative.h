@@ -1,6 +1,4 @@
-#ifndef _conservative_interface_h
-#define _conservative_interface_h
-/*
+/**
  * Conservative Interface
  *
  * This class is a child of interface.h
@@ -10,6 +8,9 @@
  * in ordert ot find a solution to the problem.
  *
  */
+
+#ifndef _conservative_interface_h
+#define _conservative_interface_h
 
 #include "interfaces/interface.h"
 

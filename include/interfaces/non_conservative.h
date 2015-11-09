@@ -1,5 +1,3 @@
-#ifndef _non_conservative_interface_h
-#define _non_conservative_interface_h
 /*
  * Non Conservative Interface
  *
@@ -9,6 +7,9 @@
  * could not be stated in terms of energy.
  *
  */
+
+#ifndef _non_conservative_interface_h
+#define _non_conservative_interface_h
 
 #include "interfaces/interface.h"
 
