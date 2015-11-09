@@ -1,80 +1,126 @@
 #include "interfaces/non_conservative/navier_stokes.h"
 #include "pidomus.h"
+
+#include <Teuchos_CommandLineProcessor.hpp>
+
 #include "mpi.h"
+#include <iostream>
+#include <string>
 
 void print_status(  std::string name,
                     std::string prm_file,
+                    int dim,
+                    int spacedim,
                     const MPI_Comm &comm);
+
 
 int main (int argc, char *argv[])
 {
   using namespace dealii;
   using namespace deal2lkit;
 
+  Teuchos::CommandLineProcessor My_CLP;
+  My_CLP.setDocString(
+    ".__________        _______   ______   .___  ___.  __    __       _______. \n"
+    "|_   __  __|      |       \\ /  __  \\  |   \\/   | |  |  |  |     /       | \n"
+    "  | | | |   ______|  .--.  |  |  |  | |  \\  /  | |  |  |  |    |   (----` \n"
+    "  | | | |  |______|  |  |  |  |  |  | |  |\\/|  | |  |  |  |     \\   \\     \n"
+    "  | | | |         |  '--'  |  `--'  | |  |  |  | |  `--'  | .----)   |    \n"
+    "  |_| |_|         |_______/ \\______/  |__|  |__|  \\______/  |_______/     \n"
+    "\n\n"
+    " PDE implemented: \n"
+    " - Navier Stokes (navier_stokes): \n"
+    "   - dim 2 \n"
+    "     - default.prm     \n"
+    "     - lid_cavity.prm  \n"
+    "     - flow_past_a_cylinder.prm \n\n\n"
+  );
+
+
+
+  std::string pde_name="navier_stokes";
+  My_CLP.setOption("pde", &pde_name, "name of the PDE (heat, stokes, dynamic_stokes, or navier_stokes)");
+
+  int spacedim = 2;
+  My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
+
+  int dim = 2;
+  My_CLP.setOption("dim", &dim, "dimension of the problem");
+
+  std::string prm_file="default.prm";
+  My_CLP.setOption("prm", &prm_file, "name of the parameter file");
+
+  My_CLP.recogniseAllOptions(true);
+  My_CLP.throwExceptions(false);
+
+  Teuchos::CommandLineProcessor::EParseCommandLineReturn
+  parseReturn= My_CLP.parse( argc, argv );
+  if ( parseReturn == Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED )
+    {
+      return 0;
+    }
+  if ( parseReturn != Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL   )
+    {
+      return 1; // Error!
+    }
+
+  My_CLP.printHelpMessage(argv[0], std::cout);
+
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
                                                       numbers::invalid_unsigned_int);
 
   const MPI_Comm &comm = MPI_COMM_WORLD;
+  deallog.depth_console (0);
 
-  /*Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);*/
+  std::string parameter_file = "../utilities/prm/"+pde_name+"/"+prm_file;
 
-  try
+  if (pde_name == "navier_stokes")
     {
-      deallog.depth_console (0);
-      //initlog();
 
-      std::string parameter_filename;
-      if (argc>=2)
-        parameter_filename = argv[1];
+
+      print_status(   "Navier-Stokes Equation",
+                      prm_file,
+                      dim,
+                      spacedim,
+                      comm);
+
+      if (dim==2)
+        {
+          NavierStokes<2> energy;
+          piDoMUS<2,2,3> navier_stokes_equation (energy);
+          ParameterAcceptor::initialize(parameter_file, "used_parameters.prm");
+          ParameterAcceptor::prm.log_parameters(deallog);
+          navier_stokes_equation.run ();
+        }
       else
-        parameter_filename = "../utilities/prm/navier_stokes_default.prm";
-
-      print_status("Navier-Stokes Equation", parameter_filename, comm);
-
-      const int dim = 2;
-      const int spacedim = 2;
-
-      NavierStokes<dim> energy;
-      piDoMUS<dim,spacedim,dim+1> navier_stokes_equation (energy);
-      ParameterAcceptor::initialize(parameter_filename, "used_parameters.prm");
-
-      ParameterAcceptor::prm.log_parameters(deallog);
-
-      navier_stokes_equation.run ();
-
-      std::cout << std::endl;
-
+        {
+          NavierStokes<3> energy;
+          piDoMUS<3,3,4> navier_stokes_equation (energy);
+          ParameterAcceptor::initialize(parameter_file, "used_parameters.prm");
+          ParameterAcceptor::prm.log_parameters(deallog);
+          navier_stokes_equation.run ();
+        }
     }
-  catch (std::exception &exc)
+  else
     {
-      std::cerr << std::endl << std::endl
-                << "-------------------------------------------------------------"
-                << std::endl;
-      std::cerr << "Exception on processing: " << std::endl
-                << exc.what() << std::endl
-                << "Aborting!" << std::endl
-                << "-------------------------------------------------------------"
-                << std::endl;
-
-      return 1;
-    }
-  catch (...)
-    {
-      std::cerr << std::endl << std::endl
-                << "-------------------------------------------------------------"
-                << std::endl;
-      std::cerr << "Unknown exception!" << std::endl
-                << "Aborting!" << std::endl
-                << "-------------------------------------------------------------"
-                << std::endl;
-      return 1;
+      std::cout << std::endl
+                << "============================================================="
+                << std::endl
+                << " ERROR:"
+                << std::endl
+                << "  " << pde_name << " needs to be implemented or it is bad name."
+                << std::endl
+                << "=============================================================";
     }
 
+  std::cout << std::endl;
   return 0;
 }
 
 void print_status(  std::string name,
                     std::string prm_file,
+                    int dim,
+                    int spacedim,
                     const MPI_Comm &comm)
 {
   int numprocs = Utilities::MPI::n_mpi_processes(comm);
@@ -91,6 +137,12 @@ void print_status(  std::string name,
                 // << "-------------------------------------------------------------"
                 << std::endl
                 << " Prm file:  " << prm_file
+                << std::endl
+                << " spacedim:  " << spacedim
+                << std::endl
+                << "      dim:  " << dim
+                << std::endl
+                << "    codim:  " << spacedim-dim
                 << std::endl
                 << "-------------------------------------------------------------"
                 << std::endl;
