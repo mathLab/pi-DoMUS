@@ -126,6 +126,7 @@ void print_status(  std::string name,
                     std::string prm_file,
                     int dim,
                     int spacedim,
+                    int n_threads,
                     const MPI_Comm &comm)
 {
   int numprocs  = Utilities::MPI::n_mpi_processes(comm);
@@ -156,8 +157,8 @@ void print_status(  std::string name,
           << "-------------------------------------------------------------"
           << std::endl;
     }
-  out << " Process " << getpid() << " is " << myid
-      << "   of " << numprocs << " processes" << std::endl;
+  std::cout << " Process " << getpid() << " is " << myid
+            << "   of " << numprocs << " processes" << std::endl;
 
   if (myid == 0)
     {
