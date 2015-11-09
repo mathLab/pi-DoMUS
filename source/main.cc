@@ -157,8 +157,8 @@ void print_status(  std::string name,
           << "-------------------------------------------------------------"
           << std::endl;
     }
-  std::cout << " Process " << getpid() << " is " << myid
-            << "   of " << numprocs << " processes" << std::endl;
+  // std::cout << " Process " << getpid() << " is " << myid
+  //           << "   of " << numprocs << " processes" << std::endl;
 
   if (myid == 0)
     {
