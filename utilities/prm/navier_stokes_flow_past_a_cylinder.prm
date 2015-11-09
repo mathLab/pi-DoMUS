@@ -2,7 +2,6 @@
 #   This parameter files solves for a navier stokes flow past a cylinder
 ################################################################################
 
-
 subsection Navier Stokes
   set Block coupling                   = 1,1; 1,0
   set Block of differential components = 1,0
