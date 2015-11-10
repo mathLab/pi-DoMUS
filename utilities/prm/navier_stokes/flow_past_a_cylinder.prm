@@ -57,7 +57,7 @@ end
 subsection Domain
   set Grid to generate           = file
   set Input grid file name       = \
-      ../utilities/grids/flow_past_a_cylinder-2.2.inp
+      ../utilities/grids/rectangle_with_circular_hole.inp
   set Mesh smoothing alogrithm   = none
   set Optional Point<spacedim> 1 = 0,0
   set Optional Point<spacedim> 2 = 1,1
