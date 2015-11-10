@@ -135,6 +135,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           // test functions:
           auto v      = fev[velocity    ].value(i,q);
           auto div_v  = fev[velocity    ].divergence(i,q);
+          auto sym_grad_v = fev[velocity ].symmetric_gradient(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
           auto m      = fev[pressure    ].value(i,q);
           auto grad_q = fev[pressure    ].gradient(i,q);
@@ -155,7 +156,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
                                       u_dot * v    +
                                       gamma * div_u * div_v
                                       +
-                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
                                       (1./rho)*p*m
                                     )*JxW[q];
             }
@@ -166,7 +167,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
                                       gamma * div_u * div_v
                                       +
                                       scalar_product(transpose(grad_u)*u, v) +
-                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
                                       (1./rho)*grad_p*grad_q
                                     )*JxW[q];
             }
@@ -177,7 +178,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
                                       gamma * div_u * div_v
                                       +
                                       scalar_product(transpose(grad_u)*u, v) +
-                                      nu * scalar_product(sym_grad_u,grad_v) +
+                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
                                       (1./rho)*grad_p*grad_q
                                     )*JxW[q];
             }
@@ -237,6 +238,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           //    velocity:
           auto v      = fev[velocity    ].value(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
+          auto sym_grad_v = fev[velocity ].symmetric_gradient(i,q);
           auto div_v  = fev[velocity    ].divergence(i,q);
 
           //    pressure:
@@ -261,7 +263,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                  +
                                  gamma * div_u * div_v
                                  +
-                                 nu * scalar_product(sym_grad_u,grad_v)
+                                 nu * scalar_product(sym_grad_u,sym_grad_v)
                                  +
                                  (1./rho)*p*div_v
                                )*JxW[q];
