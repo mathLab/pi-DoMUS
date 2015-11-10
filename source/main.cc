@@ -177,8 +177,10 @@ void print_status(  std::string name,
       << std::endl
       << " Prm file:  " << prm_file
       << std::endl
-      << "n threads:  " <<n_threads
+      << "n threads:  " << n_threads
+      << std::endl
       << "  process: "  << getpid()
+      << std::endl
       << " proc.tot: "  << numprocs
       << std::endl
       << " spacedim:  " << spacedim
