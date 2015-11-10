@@ -7,18 +7,23 @@ subsection Navier Stokes
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,1; 0,1
+  set Preconditioner block coupling    = 1,1; 1,1
   set nu [Pa s]                        = .01
   set rho [kg m^3]                     = 1.0
-  # default|BFBt_identity
-  set Preconditioner                 = default
+  set grad-div stabilization           = 1.0 
+
+  set Preconditioner                   = default
+  # set Preconditioner                 = diag
+  # set Preconditioner                 = linear
+  # set Preconditioner                 = diag_linear
   # set Preconditioner                 = BFBt_identity
-  # set Preconditioner                   = BFBt_diagA
+  # set Preconditioner                 = BFBt_diagA
+
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
   set Adaptive refinement            = false
-  set Initial global refinement      = 4
+  set Initial global refinement      = 1
   set Maximum number of time steps   = 10000
   set Number of cycles               = 1
   set Timer output file              = timer.txt
