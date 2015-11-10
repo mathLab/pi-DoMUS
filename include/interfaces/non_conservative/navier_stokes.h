@@ -66,6 +66,8 @@ private:
 
   double rho;
   double nu;
+  double gamma;
+
   std::string prec_name;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
@@ -104,6 +106,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
 
   auto &us          = fe_cache.get_values(
                         "solution",     "u",      velocity,       alpha);
+  auto &div_us      = fe_cache.get_divergences(           "solution",     "div_u",  velocity,       alpha);
   auto &sym_grad_us = fe_cache.get_symmetric_gradients(
                         "solution",     "sym_grad_u", velocity,       alpha);
   auto &grad_us = fe_cache.get_symmetric_gradients(
@@ -131,6 +134,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
         {
           // test functions:
           auto v      = fev[velocity    ].value(i,q);
+          auto div_v  = fev[velocity    ].divergence(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
           auto m      = fev[pressure    ].value(i,q);
           auto grad_q = fev[pressure    ].gradient(i,q);
@@ -138,6 +142,7 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           // variables:
           const Tensor<1, dim, Number> &u           = us[q];
           const Tensor<1, dim, Number> &u_dot       = us_dot[q];
+          const Number                  &div_u      = div_us[q];
           const Tensor<2, dim, Number> &sym_grad_u  = sym_grad_us[q];
           const Tensor<2, dim, Number> &grad_u      = grad_us[q];
           const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
@@ -147,8 +152,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           if (prec_name=="default")
             {
               local_residual[i] +=  (
-                                      u_dot * v +
-                                      // scalar_product(transpose(grad_u)*u, v) +
+                                      u_dot * v    +
+                                      gamma * div_u * div_v
+                                      +
                                       nu * scalar_product(sym_grad_u,grad_v) +
                                       (1./rho)*p*m
                                     )*JxW[q];
@@ -156,7 +162,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           else if (prec_name=="BFBt_identity")
             {
               local_residual[i] +=  (
-                                      u_dot * v +
+                                      u_dot * v    +
+                                      gamma * div_u * div_v
+                                      +
                                       scalar_product(transpose(grad_u)*u, v) +
                                       nu * scalar_product(sym_grad_u,grad_v) +
                                       (1./rho)*grad_p*grad_q
@@ -165,7 +173,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           else if (prec_name=="BFBt_diagA")
             {
               local_residual[i] +=  (
-                                      u_dot * v +
+                                      u_dot * v    +
+                                      gamma * div_u * div_v
+                                      +
                                       scalar_product(transpose(grad_u)*u, v) +
                                       nu * scalar_product(sym_grad_u,grad_v) +
                                       (1./rho)*grad_p*grad_q
@@ -249,6 +259,8 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                  +
                                  scalar_product(transpose(grad_u)*u, v) +
                                  +
+                                 gamma * div_u * div_v
+                                 +
                                  nu * scalar_product(sym_grad_u,grad_v)
                                  +
                                  (1./rho)*p*div_v
@@ -268,6 +280,7 @@ declare_parameters (ParameterHandler &prm)
   NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::declare_parameters(prm);
   this->add_parameter(prm, &rho,      "rho [kg m^3]",  "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu,       "nu [Pa s]",     "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,"Preconditioner","default",
                       Patterns::Selection("default|BFBt_identity|BFBt_diagA"));
 }
@@ -415,7 +428,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
       inv_diag_A.vmult = [&matrix](TrilinosWrappers::MPI::Vector &v, const TrilinosWrappers::MPI::Vector &u)
       {
-        for (unsigned int i = 0; i<matrix.block(0,0).m(); ++i)
+        // for (unsigned int i = 0; i<matrix.block(0,0).m(); ++i)
+        for (auto i : v.locally_owned_elements())
           v(i)=u(i)/matrix.block(0,0)(i,i);
       };
 
@@ -451,5 +465,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 
 
 template class NavierStokes <2>;
+template class NavierStokes <3>;
 
 #endif
