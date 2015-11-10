@@ -7,34 +7,36 @@ subsection Navier Stokes
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,1; 1,1
-  set nu [Pa s]                        = .1
+  set Preconditioner block coupling    = 1,1; 0,1
+  set nu [Pa s]                        = .01
   set rho [kg m^3]                     = 1.0
   # default|BFBt_identity
   set Preconditioner                 = default
-  # set Preconditioner                   = BFBt_identity
-  # set Preconditioner                 = BFBt_diagA
+  # set Preconditioner                 = BFBt_identity
+  # set Preconditioner                   = BFBt_diagA
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
-  set Adaptive refinement          = false
-  set Initial global refinement    = 3
-  set Maximum number of time steps = 10000
-  set Number of cycles             = 1
-  set Timer output file            = timer.txt
-  set Use direct solver if available = false
+  set Adaptive refinement            = false
+  set Initial global refinement      = 4
+  set Maximum number of time steps   = 10000
+  set Number of cycles               = 1
+  set Timer output file              = timer.txt
+  set Use direct solver if available = true
 end
 
 subsection Forcing terms
-  set IDs and component masks = 0 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0
+  set IDs and component masks =
+  set IDs and expressions     =
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks =  1= u % 5=u % 3=u % 4=u
-  set IDs and expressions     =  1= (1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
+  set IDs and component masks = 1 = u % 2 = u % 4 = u
+  set IDs and expressions     = 1 = 0;0;0 % 2=(4-y)*y;0;0 % 4 = 0;0;0
+  # set IDs and component masks =  1= u % 5=u % 3=u % 4=u
+  # set IDs and expressions     =  1= (1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
   set Known component names   = u,u,p
   set Used constants          = k=1e-5
 end
@@ -54,8 +56,8 @@ end
 
 subsection Domain
   set Grid to generate           = file
-  set Input grid file name       = ../utilities/grids/flow_past_a_cylinder-2.2.ucd
-  # /Users/esenonfossiio/git/project/pi-DoMUS/tests/grids/grid-2.2.ucd
+  set Input grid file name       = \
+      ../utilities/grids/rectangle_with_circular_hole.inp
   set Mesh smoothing alogrithm   = none
   set Optional Point<spacedim> 1 = 0,0
   set Optional Point<spacedim> 2 = 1,1
@@ -94,7 +96,7 @@ end
 
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-3
-  set Final time                                    = 40
+  set Final time                                    = 20
   set Ignore algebraic terms for error computations = true
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33

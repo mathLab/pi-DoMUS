@@ -7,19 +7,20 @@ subsection Navier Stokes
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,0; 0,1
-  set nu [Pa s]                        = 200
+  set Preconditioner block coupling    = 1,1; 0,1
+  set grad-div stabilization           = 1.0
+  set nu [Pa s]                        = .05
   set rho [kg m^3]                     = 1.0
   set Preconditioner                   = default
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
-  set Adaptive refinement          = false
-  set Initial global refinement    = 4
-  set Maximum number of time steps = 10000
-  set Number of cycles             = 1
-  set Timer output file            = timer.txt
-  set Use direct solver if available = false
+  set Adaptive refinement            = false
+  set Initial global refinement      = 4
+  set Maximum number of time steps   = 10000
+  set Number of cycles               = 1
+  set Timer output file              = timer.txt
+  set Use direct solver if available = true
 end
 
 subsection Forcing terms
@@ -30,7 +31,7 @@ subsection Forcing terms
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0 = u.N % 1 = u.N % 2 = u.N % 3 = u
+  set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
   set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 % \
                                 2 = 0 ; 0 ; 0 % \
