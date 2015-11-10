@@ -32,17 +32,17 @@ public:
                            const std::string &default_coupling="",
                            const std::string &default_preconditioner_coupling="",
                            const std::string &default_differential_components="") :
-    Interface<dim,spacedim,n_components>(name, default_fe, default_component_names,
-                                         default_coupling, default_preconditioner_coupling,
-                                         default_differential_components) {};
+    Interface<dim,spacedim,n_components,LAC>(name, default_fe, default_component_names,
+                                             default_coupling, default_preconditioner_coupling,
+                                             default_differential_components) {};
 
   virtual void declare_parameters(ParameterHandler &prm)
   {
-    Interface<dim,spacedim,n_components>::declare_parameters(prm);
+    Interface<dim,spacedim,n_components,LAC>::declare_parameters(prm);
   }
   virtual void parse_parameters_call_back()
   {
-    Interface<dim,spacedim,n_components>::parse_parameters_call_back();
+    Interface<dim,spacedim,n_components,LAC>::parse_parameters_call_back();
   }
 
   virtual void get_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
