@@ -18,7 +18,8 @@ void print_status(  std::string name,
                     int dim,
                     int spacedim,
                     int n_threads,
-                    const MPI_Comm &comm);
+                    const MPI_Comm &comm,
+                    bool check_prm);
 
 
 int main (int argc, char *argv[])
@@ -50,6 +51,9 @@ int main (int argc, char *argv[])
 
   std::string prm_file=pde_name+".prm";
   My_CLP.setOption("prm", &prm_file, "name of the parameter file");
+
+  bool check_prm = false;
+  My_CLP.setOption("check","no-check", &check_prm, "wait for a key press before starting the run");
 
   // My_CLP.recogniseAllOptions(true);
   My_CLP.throwExceptions(false);
@@ -87,7 +91,8 @@ int main (int argc, char *argv[])
                       dim,
                       spacedim,
                       n_threads,
-                      comm);
+                      comm,
+                      check_prm);
 
       if (dim==2)
         {
@@ -127,7 +132,8 @@ void print_status(  std::string name,
                     int dim,
                     int spacedim,
                     int n_threads,
-                    const MPI_Comm &comm)
+                    const MPI_Comm &comm,
+                    bool check_prm)
 {
   int numprocs  = Utilities::MPI::n_mpi_processes(comm);
   int myid      = Utilities::MPI::this_mpi_process(comm);
@@ -135,37 +141,32 @@ void print_status(  std::string name,
   Teuchos::oblackholestream blackhole;
   std::ostream &out = ( Utilities::MPI::this_mpi_process(comm) == 0 ? std::cout : blackhole );
 
-  if (myid == 0)
-    {
-      out << std::endl
-          << "============================================================="
-          << std::endl
-          << "    Name:   " << name
-          // << std::endl
-          // << "-------------------------------------------------------------"
-          << std::endl
-          << " Prm file:  " << prm_file
-          << std::endl
-          << "n threads:  " <<n_threads
-          << std::endl
-          << " spacedim:  " << spacedim
-          << std::endl
-          << "      dim:  " << dim
-          << std::endl
-          << "    codim:  " << spacedim-dim
-          << std::endl
-          << "-------------------------------------------------------------"
-          << std::endl;
-    }
-  // std::cout << " Process " << getpid() << " is " << myid
-  //           << "   of " << numprocs << " processes" << std::endl;
 
-  if (myid == 0)
+  out << std::endl
+      << "============================================================="
+      << std::endl
+      << "    Name:   " << name
+      // << std::endl
+      // << "-------------------------------------------------------------"
+      << std::endl
+      << " Prm file:  " << prm_file
+      << std::endl
+      << "n threads:  " <<n_threads
+      << std::endl
+      << " spacedim:  " << spacedim
+      << std::endl
+      << "      dim:  " << dim
+      << std::endl
+      << "    codim:  " << spacedim-dim
+      << std::endl;
+  if (check_prm)
     {
-      out << "-------------------------------------------------------------"
-          << std::endl;
-      system("read -p \" Press [Enter] key to start...\"");
-      out << "============================================================="
-          <<std::endl<<std::endl;
+      out<< "-------------------------------------------------------------"
+         << std::endl;
+      out << "Press [Enter] key to start...";
+      if (std::cin.get() == '\n') {};
     }
+  out << "============================================================="
+      <<std::endl<<std::endl;
+
 }
