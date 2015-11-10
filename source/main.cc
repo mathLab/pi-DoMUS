@@ -81,49 +81,75 @@ int main (int argc, char *argv[])
   My_CLP.printHelpMessage(argv[0], out);
 
   deallog.depth_console (0);
-
-  if (pde_name == "navier_stokes")
+  try
     {
-
-
-      print_status(   "Navier-Stokes Equation",
-                      prm_file,
-                      dim,
-                      spacedim,
-                      n_threads,
-                      comm,
-                      check_prm);
-
-      if (dim==2)
+      if (pde_name == "navier_stokes")
         {
-          NavierStokes<2> energy;
-          piDoMUS<2,2,3> navier_stokes_equation (energy);
-          ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-          ParameterAcceptor::prm.log_parameters(deallog);
-          navier_stokes_equation.run ();
+
+
+          print_status(   "Navier-Stokes Equation",
+                          prm_file,
+                          dim,
+                          spacedim,
+                          n_threads,
+                          comm,
+                          check_prm);
+
+          if (dim==2)
+            {
+              NavierStokes<2> energy;
+              piDoMUS<2,2,3> navier_stokes_equation (energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
+          else
+            {
+              NavierStokes<3> energy;
+              piDoMUS<3,3,4> navier_stokes_equation (energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
         }
       else
         {
-          NavierStokes<3> energy;
-          piDoMUS<3,3,4> navier_stokes_equation (energy);
-          ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-          ParameterAcceptor::prm.log_parameters(deallog);
-          navier_stokes_equation.run ();
+          out << std::endl
+              << "============================================================="
+              << std::endl
+              << " ERROR:"
+              << std::endl
+              << "  " << pde_name << " needs to be implemented or it is bad name."
+              << std::endl
+              << "=============================================================";
         }
+      out << std::endl;
     }
-  else
+  catch (std::exception &exc)
     {
-      out << std::endl
-          << "============================================================="
-          << std::endl
-          << " ERROR:"
-          << std::endl
-          << "  " << pde_name << " needs to be implemented or it is bad name."
-          << std::endl
-          << "=============================================================";
+      std::cerr << std::endl << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      std::cerr << "Exception on processing: " << std::endl
+                << exc.what() << std::endl
+                << "Aborting!" << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+
+      return 1;
+    }
+  catch (...)
+    {
+      std::cerr << std::endl << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      std::cerr << "Unknown exception!" << std::endl
+                << "Aborting!" << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      return 1;
     }
 
-  out << std::endl;
   return 0;
 }
 
@@ -152,6 +178,8 @@ void print_status(  std::string name,
       << " Prm file:  " << prm_file
       << std::endl
       << "n threads:  " <<n_threads
+      << "  process: "  << getpid()
+      << " proc.tot: "  << numprocs
       << std::endl
       << " spacedim:  " << spacedim
       << std::endl
