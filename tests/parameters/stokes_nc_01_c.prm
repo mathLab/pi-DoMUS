@@ -36,7 +36,7 @@ subsection Domain
   set Mesh smoothing alogrithm   = none
   set Optional Point<spacedim> 1 = 0,0
   set Optional Point<spacedim> 2 = 1,1
-  set Optional bool 1            = false
+  set Colorize                   = false
   set Optional double 1          = 1.
   set Optional double 2          = 0.5
   set Optional int 1             = 1
@@ -115,49 +115,9 @@ end
 
 subsection Output Parameters
   set Incremental run prefix =
+  set Output format          = vtu
   set Output partitioning    = false
   set Problem base name      = solution
   set Solution names         = u
-  subsection Solution output format
-    set Output format = vtu
-    set Subdivisions  = 1
-    subsection DX output parameters
-      set Coordinates format = ascii
-      set Data format        = ascii
-      set Integer format     = ascii
-      set Write neighbors    = true
-    end
-    subsection Eps output parameters
-      set Azimut angle                        = 60
-      set Color function                      = default
-      set Color shading of interior of cells  = true
-      set Draw mesh lines                     = true
-      set Fill interior of cells              = true
-      set Index of vector for color           = 0
-      set Index of vector for height          = 0
-      set Line widths in eps units            = 0.5
-      set Scale to width or height            = width
-      set Scaling for z-axis                  = 1
-      set Size (width or height) in eps units = 300
-      set Turn angle                          = 30
-    end
-    subsection Gmv output parameters
-    end
-    subsection Gnuplot output parameters
-    end
-    subsection Povray output parameters
-      set Include external file = true
-      set Use bicubic patches   = false
-      set Use smooth triangles  = false
-    end
-    subsection Tecplot output parameters
-    end
-    subsection UCD output parameters
-      set Write preamble = true
-    end
-    subsection Vtk output parameters
-    end
-    subsection deal.II intermediate output parameters
-    end
-  end
+  set Subdivisions           = 1
 end
