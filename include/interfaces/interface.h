@@ -86,6 +86,24 @@ public:
    */
   virtual void set_time (const double &t) const;
 
+  /**
+   * Update Dirichlet, Forcing, and Newmann terms. Moreovere, it updates
+   * constraints.
+   */
+  virtual void update_constraints (const double &t,
+                                   ConstraintMatrix &constraints,
+                                   ConstraintMatrix &constraints_dot,
+                                   const DoFHandler<dim,spacedim> &dof_handler) const;
+
+  /**
+   * Fill @p estimated_error_per_cell according to an error estimator.
+   * \fn solver_should_restart calls this function to refine the gride
+   * when @p use_space_adaptivity is true.
+   */
+  virtual void compute_error_estimate ( const DoFHandler<dim,spacedim> &dof_handler,
+                                        const typename LAC::VectorType &distributed_solution,
+                                        Vector<float> &estimated_error_per_cell) const;
+
 
   /**
    * This function is used to modify triangulation using boundary_id or manifold_id.
@@ -301,7 +319,6 @@ public:
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, Sdouble alpha) const;
-
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, SSdouble alpha) const;
 

@@ -217,7 +217,9 @@ private:
   std::vector<IndexSet> partitioning;
   std::vector<IndexSet> relevant_partitioning;
 
-  bool adaptive_refinement;
+  bool use_space_adaptivity;
+  double estimator_threshold;
+  bool estimator_output;
   const bool we_are_parallel;
   bool use_direct_solver;
 

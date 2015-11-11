@@ -40,7 +40,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/solution_transfer.h>
-#include <deal.II/numerics/error_estimator.h>
+// #include <deal.II/numerics/error_estimator.h> // TODO: comment
 
 #include <deal.II/distributed/solution_transfer.h>
 //#include <deal.II/base/index_set.h>
@@ -96,11 +96,22 @@ declare_parameters (ParameterHandler &prm)
 
 
   add_parameter(  prm,
-                  &adaptive_refinement,
+                  &use_space_adaptivity,
                   "Adaptive refinement",
-                  "true",
+                  "false",
                   Patterns::Bool());
 
+  add_parameter(  prm,
+                  &estimator_output,
+                  "Print estimator output",
+                  "false",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
+                  &estimator_threshold,
+                  "Threshold for solver restart",
+                  "1e-2",
+                  Patterns::Double(0.0));
 
   add_parameter(  prm,
                   &use_direct_solver,
@@ -370,9 +381,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const 
   computing_timer.exit_section();
 }
 
-
-
-
 template <int dim, int spacedim, int n_components, typename LAC>
 void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
     const typename LAC::VectorType &solution,
@@ -458,23 +466,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
   typedef TrilinosWrappers::MPI::BlockVector pVEC;
   typedef BlockVector<double> sVEC;
 
-  if (adaptive_refinement)
-    {
-      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-      KellyErrorEstimator<dim>::estimate (*dof_handler,
-                                          QGauss < dim - 1 > (fe->degree + 1),
-                                          typename FunctionMap<dim>::type(),
-                                          distributed_solution,
-                                          estimated_error_per_cell,
-                                          ComponentMask(),
-                                          0,
-                                          0,
-                                          triangulation->locally_owned_subdomain());
-
-      pgr.mark_cells(estimated_error_per_cell, *triangulation);
-    }
-
-
   if (typeid(typename LAC::VectorType) == typeid(pVEC))
     {
       parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
@@ -487,10 +478,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       triangulation->prepare_coarsening_and_refinement();
       sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
       sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
-      if (adaptive_refinement)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
+      triangulation->refine_global (1);
 
       setup_dofs(false);
 
@@ -513,10 +501,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
       triangulation->prepare_coarsening_and_refinement();
       sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
       sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
-      if (adaptive_refinement)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
+      triangulation->refine_global (1);
 
       setup_dofs(false);
 
@@ -653,17 +638,122 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
   computing_timer.exit_section ();
 }
 
-
-
 template <int dim, int spacedim, int n_components, typename LAC>
 bool
-piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
-    const unsigned int step_number,
-    const double h,
-    typename LAC::VectorType &solution,
-    typename LAC::VectorType &solution_dot)
+piDoMUS<dim, spacedim, n_components, LAC>::
+solver_should_restart(
+  const double t,
+  const unsigned int step_number,
+  const double h,
+  typename LAC::VectorType &solution,
+  typename LAC::VectorType &solution_dot)
 {
-  return false;
+  if (use_space_adaptivity)
+    {
+      int check = 0;
+      double max_estimator=0;
+      double mpi_max_estimator=0;
+
+      computing_timer.enter_section ("   Compute error estimator");
+
+      energy.update_constraints(t, constraints, constraints, *dof_handler);
+
+      typename LAC::VectorType tmp_c(solution);
+      constraints.distribute(tmp_c);
+      distributed_solution = tmp_c;
+
+
+
+      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
+
+      energy.compute_error_estimate (*dof_handler,
+                                     distributed_solution,
+                                     estimated_error_per_cell);
+
+      max_estimator = estimated_error_per_cell.linfty_norm();
+      max_estimator = Utilities::MPI::max(max_estimator, comm);
+
+      if (max_estimator > estimator_threshold)
+
+        {
+          if (estimator_output)
+            pcout << "#################### restart ######### \n"
+                  << "max_estimator > threshold\n"
+                  << max_estimator  << " >  " << estimator_threshold
+                  << std::endl
+                  << "######################################\n";
+
+          pgr.mark_cells(estimated_error_per_cell, *triangulation);
+
+          typedef TrilinosWrappers::MPI::BlockVector pVEC;
+          typedef BlockVector<double> sVEC;
+
+          if (typeid(typename LAC::VectorType) == typeid(pVEC))
+            {
+              parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
+              parallel::distributed::SolutionTransfer<dim, pVEC> sol_dot_tr(*dof_handler);
+              typename LAC::VectorType sol (distributed_solution);
+              typename LAC::VectorType sol_dot (distributed_solution_dot);
+              sol = solution;
+              sol_dot = solution_dot;
+
+              triangulation->prepare_coarsening_and_refinement();
+              sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
+              sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
+              if (use_space_adaptivity)
+                triangulation->execute_coarsening_and_refinement ();
+              else
+                triangulation->refine_global (1);
+
+              setup_dofs(false);
+
+              typename LAC::VectorType tmp (solution);
+              typename LAC::VectorType tmp_dot (solution_dot);
+
+              sol_tr.interpolate ((pVEC &)tmp);
+              sol_dot_tr.interpolate ((pVEC &)tmp_dot);
+              solution = tmp;
+              solution_dot = tmp_dot;
+            }
+          else
+            {
+              SolutionTransfer<dim, sVEC> sol_tr(*dof_handler);
+              SolutionTransfer<dim, sVEC> sol_dot_tr(*dof_handler);
+
+              typename LAC::VectorType tmp (solution);
+              typename LAC::VectorType tmp_dot (solution_dot);
+
+              triangulation->prepare_coarsening_and_refinement();
+              sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
+              sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
+              if (use_space_adaptivity)
+                triangulation->execute_coarsening_and_refinement ();
+              else
+                triangulation->refine_global (1);
+
+              setup_dofs(false);
+
+              sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
+              sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
+            }
+
+          energy.update_constraints(t, constraints, constraints, *dof_handler);
+
+          constraints.distribute(solution);
+          // constraints_dot.distribute(solution_dot);
+          computing_timer.exit_section();
+          MPI::COMM_WORLD.Barrier();
+          return true;
+        }
+      else // if max_estimator > estimator_threshold
+        {
+          computing_timer.exit_section();
+          return false;
+        }
+
+    }
+  else // it does not use space adaptivity
+    return false;
 }
 
 

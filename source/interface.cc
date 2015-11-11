@@ -10,6 +10,7 @@
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/base/sacado_product_type.h>
+#include <deal.II/numerics/error_estimator.h>
 
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -28,9 +29,52 @@ Interface<dim,spacedim,n_components,LAC>::
 set_time (const double &t) const
 {
   dirichlet_bcs.set_time(t);
+  // dirichlet_dot.set_time(t);
   forcing_terms.set_time(t);
   neumann_bcs.set_time(t);
+  // exact_solution.set_time(t);
 };
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+update_constraints (  const double &t,
+                      ConstraintMatrix &constraints,
+                      ConstraintMatrix &constraints_dot,
+                      const DoFHandler<dim,spacedim> &dof_handler) const
+{
+  set_time(t);
+
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (dof_handler, constraints);
+  dirichlet_bcs.interpolate_boundary_values(dof_handler, constraints);
+  constraints.close ();
+
+  // constraints_dot.clear();
+  // DoFTools::make_hanging_node_constraints (*dof_handler, constraints_dot);
+  // dirichlet_dot.interpolate_boundary_values(*dof_handler, constraints_dot);
+  // constraints_dot.close ();
+}
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+compute_error_estimate (const DoFHandler<dim,spacedim> &dh,
+                        const typename LAC::VectorType &distributed_solution,
+                        Vector<float> &estimated_error_per_cell) const
+{
+  std::vector<bool> mask(dim+1,true);
+  mask[dim] = false;
+  KellyErrorEstimator<dim>::estimate (dh,
+                                      QGauss<dim-1>(dh.get_fe().degree + 1),
+                                      typename FunctionMap<dim>::type(),
+                                      distributed_solution,
+                                      estimated_error_per_cell,
+                                      ComponentMask(mask),
+                                      0,
+                                      0,
+                                      dh.get_tria().locally_owned_subdomain());
+}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
@@ -300,6 +344,7 @@ get_differential_blocks() const
 {
   return _diff_comp;
 }
+
 
 template class Interface<2, 2, 1, LATrilinos>;
 template class Interface<2, 2, 1, LADealII>;
