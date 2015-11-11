@@ -15,12 +15,14 @@ subsection Navier Stokes
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
-  set Adaptive refinement            = false
-  set Initial global refinement      = 4
-  set Maximum number of time steps   = 10000
-  set Number of cycles               = 1
-  set Timer output file              = timer.txt
-  set Use direct solver if available = true
+set Adaptive refinement                            = false
+set Initial global refinement                      = 4
+set Maximum number of time steps                   = 10000
+set Number of cycles                               = 1
+set Timer output file                              = timer.txt
+set Use direct solver if available                 = true
+set Overwrite Newton's iterations                  = true
+set Print some useful informations about processes = true
 end
 
 subsection Forcing terms
