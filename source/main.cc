@@ -171,7 +171,7 @@ void print_status(  std::string name,
   out << std::endl
       << "============================================================="
       << std::endl
-      << "    Name:   " << name
+      << "     Name:  " << name
       // << std::endl
       // << "-------------------------------------------------------------"
       << std::endl
@@ -179,9 +179,9 @@ void print_status(  std::string name,
       << std::endl
       << "n threads:  " << n_threads
       << std::endl
-      << "  process: "  << getpid()
+      << "  process:  "  << getpid()
       << std::endl
-      << " proc.tot: "  << numprocs
+      << " proc.tot:  "  << numprocs
       << std::endl
       << " spacedim:  " << spacedim
       << std::endl
