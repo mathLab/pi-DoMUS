@@ -7,23 +7,24 @@ subsection Navier Stokes
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,1; 1,1
-  set nu [Pa s]                        = .01
+  set Preconditioner block coupling    = 1,0; 0,1
+  set nu [Pa s]                        = 0.044
   set rho [kg m^3]                     = 1.0
-  set grad-div stabilization           = 1.0 
+  set grad-div stabilization           = 1.0
 
-  set Preconditioner                   = default
-  # set Preconditioner                 = diag
-  # set Preconditioner                 = linear
-  # set Preconditioner                 = diag_linear
-  # set Preconditioner                 = BFBt_identity
-  # set Preconditioner                 = BFBt_diagA
-
+  # set Preconditioner                   = default
+  # set Preconditioner                   = diag
+  # set Preconditioner                   = linear
+  # set Preconditioner                   = diag_linear
+  # set Preconditioner                   = BFBt_identity
+  # set Preconditioner                   = BFBt_diagA
+  set Preconditioner                   = cahouet-chabard
+  # set Preconditioner                     = diag_cahouet-chabard
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
   set Adaptive refinement            = false
-  set Initial global refinement      = 1
+  set Initial global refinement      = 3
   set Maximum number of time steps   = 10000
   set Number of cycles               = 1
   set Timer output file              = timer.txt
@@ -38,10 +39,10 @@ subsection Forcing terms
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 1 = u % 2 = u % 4 = u
-  set IDs and expressions     = 1 = 0;0;0 % 2=(4-y)*y;0;0 % 4 = 0;0;0
-  # set IDs and component masks =  1= u % 5=u % 3=u % 4=u
-  # set IDs and expressions     =  1= (1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
+  # set IDs and component masks = 1 = u % 2 = u % 4 = u
+  # set IDs and expressions     = 1 = 0;0;0 % 2=y>3?10*(4-y)*y:(3-y)*y+(4-y)*y;0;0 % 4 = 0;0;0
+  set IDs and component masks =  1= u % 5=u % 3=u % 4=u % 2=p
+  set IDs and expressions     =  1= y>.8?0:(1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0 % 2=0;0;0
   set Known component names   = u,u,p
   set Used constants          = k=1e-5
 end
@@ -62,7 +63,7 @@ end
 subsection Domain
   set Grid to generate           = file
   set Input grid file name       = \
-      ../utilities/grids/rectangle_with_circular_hole.inp
+      ../utilities/grids/rectangle_with_circular_hole.ucd
   set Mesh smoothing alogrithm   = none
   set Optional Point<spacedim> 1 = 0,0
   set Optional Point<spacedim> 2 = 1,1
