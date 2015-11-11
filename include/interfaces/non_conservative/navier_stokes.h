@@ -316,39 +316,44 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
                                     constant_modes);
 
+  Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
+  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+  Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+
+  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+  Amg_data.constant_modes = constant_modes;
+  Amg_data.elliptic = true;
+  Amg_data.higher_order_elements = true;
+  Amg_data.smoother_sweeps = 2;
+  Amg_data.aggregation_threshold = 0.02;
+
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  //  auto B =  transpose_operator(Bt);
-  auto B  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-  auto ZeroP = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
+  auto B =  transpose_operator(Bt);
+  auto C = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
+  auto ZeroP = null_operator(C);
+
+  system_op  = block_operator<2, 2, VEC >({{
+      {{ A, Bt }} ,
+      {{ B, ZeroP }}
+    }
+  });
+
+  // PRECONDITIONER
+  Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+                                  Amg_data);
+  static ReductionControl solver_control_pre(5000, 1e-8);
+  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
+  auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
 
 
-
-  // ASSEMBLE THE PROBLEM:
   Assert(prec_name != "", ExcNotInitialized());
   if (prec_name=="default" || prec_name == "linear")
     {
-      Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-      Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
       Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
-
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    ( preconditioner_matrix.block(1,1) );
-
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-      auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
       auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
       auto P00 = A_inv;
@@ -365,26 +370,9 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="diag" || prec_name == "linear_diag")
     {
-      Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-      Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
       Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
-
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    ( preconditioner_matrix.block(1,1) );
-
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-      auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
       auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
       auto P00 = A_inv;
@@ -401,28 +389,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="cahouet-chabard")
     {
-      Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-      Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
-
-      Amg_data_p.elliptic = true;
-      Amg_data_p.higher_order_elements = true;
-      Amg_data_p.smoother_sweeps = 2;
-      Amg_data_p.aggregation_threshold = 0.02;
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-                                     Amg_data_p);
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
       Mp_preconditioner->initialize (matrix.block(1,1));
 
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
@@ -430,9 +397,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    (preconditioner_matrix.block(1,1) );
 
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-      auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
       auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
       auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
       auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
@@ -450,27 +414,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="diag_cahouet-chabard")
     {
-      Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-      Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
 
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
-      Amg_data_p.elliptic = true;
-      Amg_data_p.higher_order_elements = true;
-      Amg_data_p.smoother_sweeps = 2;
-      Amg_data_p.aggregation_threshold = 0.02;
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-                                     Amg_data_p);
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
       Mp_preconditioner->initialize (matrix.block(1,1));
 
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
@@ -478,9 +423,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    (preconditioner_matrix.block(1,1) );
 
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-      auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
+
       auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
       auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
       auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
@@ -498,32 +441,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_identity")
     {
-      Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
-
-      Amg_data_p.elliptic = true;
-      Amg_data_p.higher_order_elements = true;
-      Amg_data_p.smoother_sweeps = 1;
-      Amg_data_p.aggregation_threshold = 0.2;
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-                                     Amg_data_p);
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
-
-
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-      auto A_inv     = inverse_operator( A,   solver_CG, *Amg_preconditioner);
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
       auto BBt       = B*Bt;
       auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
@@ -541,31 +459,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_diagA")
     {
-      Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
 
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-      Amg_data.constant_modes = constant_modes;
-      Amg_data.elliptic = true;
-      Amg_data.higher_order_elements = true;
-      Amg_data.smoother_sweeps = 2;
-      Amg_data.aggregation_threshold = 0.02;
-
-      TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
-
-      Amg_data_p.elliptic = true;
-      Amg_data_p.higher_order_elements = true;
-      Amg_data_p.smoother_sweeps = 2;
-      Amg_data_p.aggregation_threshold = 0.02;
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-                                     Amg_data_p);
-      Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                      Amg_data);
-
-
-      static ReductionControl solver_control_pre(5000, 1e-8);
-      static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
 
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
       inv_diag_A.vmult = [&matrix](TrilinosWrappers::MPI::Vector &v, const TrilinosWrappers::MPI::Vector &u)
@@ -575,7 +470,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
           v(i)=u(i)/matrix.block(0,0)(i,i);
       };
 
-      auto A_inv     = inverse_operator( A,   solver_CG, *Amg_preconditioner);
       auto BBt       = B*inv_diag_A*Bt;
       auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
@@ -596,13 +490,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       AssertThrow(false, ExcMessage("Preconditioner not recognized."));
     }
 
-  //const auto S = linear_operator<VEC>(matrix);
 
-  system_op  = block_operator<2, 2, VEC >({{
-      {{ A, Bt }} ,
-      {{ B, ZeroP }}
-    }
-  });
 }
 
 
