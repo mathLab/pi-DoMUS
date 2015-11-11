@@ -107,6 +107,18 @@ declare_parameters (ParameterHandler &prm)
                   "Use direct solver if available",
                   "true",
                   Patterns::Bool());
+
+  add_parameter(  prm,
+                  &verbose,
+                  "Print some useful informations about processes",
+                  "true",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
+                  &overwrite_iter,
+                  "Overwrite Newton's iterations",
+                  "true",
+                  Patterns::Bool());
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -783,10 +795,17 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
       auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
       S_inv.vmult(dst, src);
 
-      pcout << std::endl
-            << " iterations:                           "
-            << solver_control.last_step()
-            << std::endl;
+      if (verbose)
+        {
+          if (!overwrite_iter)
+            pcout << std::endl;
+          pcout << " iterations:            "
+                << solver_control.last_step();
+          if (overwrite_iter)
+            pcout << "               \r";
+          else
+            pcout << "               " << std::endl;
+        }
 
     }
 

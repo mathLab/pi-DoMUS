@@ -220,6 +220,17 @@ private:
   bool adaptive_refinement;
   const bool we_are_parallel;
   bool use_direct_solver;
+
+  /*
+   * Print all avaible information about processes.
+   */
+  bool verbose;
+
+  /*
+   * Overwrite newton's iterations: every time step shows only the last value.
+   */
+  bool overwrite_iter;
+
 };
 
 #endif

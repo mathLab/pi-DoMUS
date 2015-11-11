@@ -12,23 +12,25 @@ subsection Navier Stokes
   set rho [kg m^3]                     = 1.0
   set grad-div stabilization           = 1.0
 
-  # set Preconditioner                   = default
+  set Preconditioner                     = default
   # set Preconditioner                   = diag
   # set Preconditioner                   = linear
   # set Preconditioner                   = diag_linear
   # set Preconditioner                   = BFBt_identity
   # set Preconditioner                   = BFBt_diagA
-  set Preconditioner                   = cahouet-chabard
-  # set Preconditioner                     = diag_cahouet-chabard
+  # set Preconditioner                   = cahouet-chabard
+  # set Preconditioner                   = diag_cahouet-chabard
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
-  set Adaptive refinement            = false
-  set Initial global refinement      = 3
-  set Maximum number of time steps   = 10000
-  set Number of cycles               = 1
-  set Timer output file              = timer.txt
-  set Use direct solver if available = true
+  set Adaptive refinement                            = false
+  set Initial global refinement                      = 3
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Timer output file                              = timer.txt
+  set Use direct solver if available                 = true
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = false
 end
 
 subsection Forcing terms
@@ -124,6 +126,7 @@ subsection Initial solution
   set Function expression = 0;0;0
   set Variable names      = x,y,t
 end
+
 subsection Initial solution_dot
   set Function constants  =
   set Function expression = 0;0;0
