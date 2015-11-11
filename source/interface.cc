@@ -258,7 +258,7 @@ Interface<dim,spacedim,n_components,LAC>::fix_solution_dot_derivative(FEValuesCa
   auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
 
   for (unsigned int i=0; i<sol.size(); ++i)
-    sol_dot[i] = (alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
+    sol_dot[i] = (0.5*alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
