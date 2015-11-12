@@ -74,8 +74,10 @@ private:
   double rho;
   double nu;
   double gamma;
+  double picard_interp;
 
   std::string prec_name;
+  std::string picard_approx;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -102,8 +104,10 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
 {
   Number alpha = this->alpha;
   fe_cache.reinit(cell);
+  double dummy = 0.0;
 
   fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
+  fe_cache.cache_local_solution_vector("algebraic_solution",      *this->solution,      dummy);
   fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -130,8 +134,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       // variables:
-      const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
+      // pressure:
       const Number                 &p           = ps[q];
+      const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
@@ -140,10 +145,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
           auto grad_q = fev[pressure     ].gradient(i,q);
 
           // compute residual:
-
           if (  prec_name=="BFBt_identity"  ||
                 prec_name=="BFBt_diagA"     ||
-                prec_name=="cahouet-chabard")
+                prec_name=="cahouet-chabard"  )
             {
               local_residual[i] +=  ( grad_p*grad_q )*JxW[q];
             }
@@ -165,8 +169,10 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 {
   Number alpha = this->alpha;
   fe_cache.reinit(cell);
+  double dummy = 0.0;
 
   fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
+  fe_cache.cache_local_solution_vector("algebraic_solution",      *this->solution,      dummy);
   fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -182,6 +188,8 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
   auto &grad_us     = fe_cache.get_gradients(   "solution",     "grad_u",          velocity,       alpha);
   auto &us_dot      = fe_cache.get_values(                "solution_dot", "u_dot",  velocity,       alpha);
 
+  auto &uas          = fe_cache.get_values(                "algebraic_solution",     "ua",      velocity,       dummy);
+  auto &grad_uas     = fe_cache.get_gradients(   "algebraic_solution",     "grad_ua",          velocity,       dummy);
   // pressure:
   auto &ps          = fe_cache.get_values(                "solution",     "p",      pressure,       alpha);
 
@@ -197,20 +205,21 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
   auto &fev = fe_cache.get_current_fe_values();
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      // variables:
+      // **Variables**:
       //    velocity:
       const Tensor<1, dim, Number>  &u          = us[q];
+      const Tensor<1, dim, double>  &ua          = uas[q];
       const Number                  &div_u      = div_us[q];
       const Tensor<1, dim, Number>  &u_dot      = us_dot[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
       const Tensor <2, dim, Number> &grad_u     = grad_us[q];
-
+      const Tensor <2, dim, double> &grad_ua     = grad_uas[q];
       //    pressure:
       const Number                  &p          = ps[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
-          // test functions:
+          // **Test functions**:
           //    velocity:
           auto v      = fev[velocity    ].value(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
@@ -221,14 +230,34 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           auto m      = fev[pressure    ].value(i,q);
 
           // compute residual:
+
+          auto graduu = scalar_product(grad_u*u, v);
+
+          if (picard_approx=="grad_u")
+            graduu = scalar_product(grad_u*u, v);
+          else if (picard_approx=="u")
+            graduu = scalar_product(grad_u*ua, v);
+          else if (picard_approx=="grad")
+            graduu = scalar_product(grad_ua*u, v);
+          else if (picard_approx=="mix")
+            {
+              graduu = picard_interp * scalar_product(grad_ua*u, v);
+              graduu += (1-picard_interp) * scalar_product(grad_u*ua, v);
+            }
+
           local_residual[i] += (
+                                 // Navier Stokes
                                  u_dot * v +
-                                 scalar_product(grad_u*u, v) +
+                                 graduu +
                                  gamma * div_u * div_v +
                                  nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                 (1./rho)*p*div_v -
-                                 m * div_u +
-                                 m * p
+                                 (1./rho)*p*div_v +
+
+                                 // Incompressible constraint
+                                 m*div_u  +
+
+                                 // Used to assemble mass matrix in preconditioner
+                                 m*p
                                )*JxW[q];
         }
     }
@@ -247,7 +276,22 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &nu,          "nu [Pa s]",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,   "Preconditioner","default",
-                      Patterns::Selection("default|diag|BFBt_identity|BFBt_diagA|cahouet-chabard"));
+
+                      Patterns::Selection("default|diag|BFBt_identity|BFBt_diagA|cahouet-chabard"),
+                      "Preconditioner avaibles:\n"
+                      "  - BFB_t_identity \n"
+                      "  - BFB_t_diagA \n"
+                      "  - cahouet-chabard\n");
+  this->add_parameter(prm, &picard_approx,   "Picard approximation","none",
+                      Patterns::Selection("none|grad|u|grad_u|mix"),
+                      "This variable is used to set a picard approximation on the term (grad u)^t u using solution evaluated at previous time steps. This code implement five algorithms:\n"
+                      " - none: (grad u_{n})^t u_{n} \n"
+                      " - grad: (grad u_{n-1})^t u_{n} \n"
+                      " - u: (grad u_{n})^t u_{n-1} \n"
+                      " - grad_u: (grad u_{n-1})^t u_{n-1} \n"
+                      " - mix: a( (grad u_{n})^t u_{n} ) + (1-a) ((grad u_{n-1})^t u_{n-1}) where a is defined by Picard interpolation parameter.\n");
+  this->add_parameter(prm, &picard_interp, "Picard interpolation parameter",     "0.5", Patterns::Double(0.0,1.0),
+                      "Parameter a such that a( (grad u_{n-1})^t u_{n} ) + (1-a) ((grad u_{n-1})^t u_{n}) is used to approximate (grad u)^t u.\n");
 }
 
 template <int dim>
@@ -296,7 +340,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
 
 
-
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
@@ -312,9 +355,9 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   });
 
   // PRECONDITIONER
-  Amg_preconditioner->initialize (matrix.block(0,0),
-                                  Amg_data);
-  static ReductionControl solver_control_cg(50000, 1e-8);
+  Amg_preconditioner->initialize (matrix.block(0,0), Amg_data);
+
+  static ReductionControl solver_control_cg(10000000*matrix.m(), 1e-8);
   static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_cg);
 
   static ReductionControl solver_control_gmres(50000, 1e-8);
@@ -324,8 +367,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   PrimitiveVectorMemory<TrilinosWrappers::MPI::Vector> mem;
   static SolverFGMRES<TrilinosWrappers::MPI::Vector>
   solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<TrilinosWrappers::MPI::Vector>:: AdditionalData(30, true));
-
-
 
   auto A_inv     = inverse_operator( A, solver_GMRES, *Amg_preconditioner);
 
@@ -379,7 +420,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    (matrix.block(1,1) );
 
-
       auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
       auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
       auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
@@ -397,7 +437,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_identity")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1), Amg_data_p);
       auto BBt       = B*Bt;
       auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
@@ -415,7 +455,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_diagA")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
+      Amg_data_p);
 
 
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
