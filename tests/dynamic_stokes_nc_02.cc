@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
 
   for (unsigned int i = 0 ; i<sol_c.size(); ++i)
     {
-      if (std::abs(sol_c[i]-sol_nc[i]) > 1e-2)
+      if (std::abs(sol_c[i]-sol_nc[i]) > 1e-4)
         {
           deallog << "FAIL" << std::endl;
         }

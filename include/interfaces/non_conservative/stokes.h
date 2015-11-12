@@ -208,7 +208,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           const Number                  &p          = ps[q];
 
           local_residual[i] += ( eta*scalar_product( sym_grad_u , grad_v )
-                                 + p * div_v )
+                                 + p * div_v  + m * div_u )
                                * JxW[q];
         }
     }

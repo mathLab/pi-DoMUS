@@ -214,8 +214,8 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           // compute residual:
           local_residual[i] +=  (
                                   u_dot * v +
-                                  eta * scalar_product(sym_grad_u,grad_v) +
-                                  (1./eta)*p*div_v
+                                  eta * scalar_product(sym_grad_u,grad_v) -
+                                  (1./eta)*p*div_v + m * div_u
                                 )*JxW[q];
         }
     }
