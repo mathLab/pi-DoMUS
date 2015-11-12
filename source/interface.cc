@@ -30,13 +30,13 @@ set_time (const double &t) const
   dirichlet_bcs.set_time(t);
   forcing_terms.set_time(t);
   neumann_bcs.set_time(t);
-};
+}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 Interface<dim,spacedim,n_components,LAC>::
 postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &) const
-{};
+{}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
@@ -52,7 +52,7 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
       dirichlet_bcs.project_boundary_values(dof_handler,quad,constraints);
     }
   dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,constraints);
-};
+}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void

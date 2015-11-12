@@ -417,7 +417,7 @@ Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
-};
+}
 
 
 template <int dim, int spacedim, int n_components, typename LAC>

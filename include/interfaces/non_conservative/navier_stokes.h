@@ -90,7 +90,7 @@ NavierStokes<dim>::NavierStokes(std::string prec) :
                                                              "FESystem[FE_Q(2)^d-FE_Q(1)]",
                                                              "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0"),
   prec_name(prec)
-{};
+{}
 
 
 template <int dim>
