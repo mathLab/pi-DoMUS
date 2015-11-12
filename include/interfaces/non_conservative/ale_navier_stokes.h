@@ -1,3 +1,7 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _dynamic_navier_stokes_h_
 #define _dynamic_navier_stokes_h_
 
@@ -373,3 +377,4 @@ ALENavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 template class ALENavierStokes <2>;
 
 #endif
+/*! @} */

@@ -1,10 +1,17 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _stokes_h_
 #define _stokes_h_
 
 /**
  *  This interface solves a Stokes flow:
  *  \f[
- *    - \textrm{div} \varepsilon(u) + \nabla p = f
+ *     \begin{cases}
+ *    - \textrm{div} \varepsilon(u) + \nabla p = f \\
+ *       \textrm{div}u=0
+ *     \end{cases}
  *  \f]
  *  where \f$ \varepsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
@@ -255,3 +262,4 @@ Stokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 template class Stokes <2>;
 
 #endif
+/*! @} */

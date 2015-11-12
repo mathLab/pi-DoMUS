@@ -1,3 +1,7 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _heat_equation_derived_interface_h_
 #define _heat_equation_derived_interface_h_
 
@@ -84,3 +88,4 @@ public:
 
 
 #endif
+/*! @} */

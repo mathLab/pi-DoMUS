@@ -1,3 +1,7 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _neo_hookean_two_fields_interface_h_
 #define _neo_hookean_two_fields_interface_h_
 
@@ -235,3 +239,4 @@ NeoHookeanTwoFieldsInterface<dim,spacedim>::compute_system_operators(const DoFHa
 template class NeoHookeanTwoFieldsInterface <3,3>;
 
 #endif
+/*! @} */

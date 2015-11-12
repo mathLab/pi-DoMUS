@@ -1,3 +1,7 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _free_swelling_three_fields_h_
 #define _free_swelling_three_fields_h_
 
@@ -292,3 +296,4 @@ void FreeSwellingThreeFields<dim,spacedim>::parse_parameters_call_back ()
 template class FreeSwellingThreeFields <3,3>;
 
 #endif
+/*! @} */
