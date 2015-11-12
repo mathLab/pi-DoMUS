@@ -1,3 +1,7 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _compressible_neo_hookean_h_
 #define _compressible_neo_hookean_h_
 
@@ -218,3 +222,4 @@ CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const Do
 template class CompressibleNeoHookeanInterface <3,3>;
 
 #endif
+/*! @} */

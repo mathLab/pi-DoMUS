@@ -1,10 +1,17 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _stokes_nc_h_
 #define _stokes_nc_h_
 
 /**
  *  This interface solves a dynamic Stokes flow using non conservative interface:
  *  \f[
- *     \partial_t u - \textrm{div} \varepsilon(u) + \nabla p = f
+ *     \begin{cases}
+ *       \partial_t u - \textrm{div} \varepsilon(u) + \nabla p = f \\
+ *       \textrm{div}u=0
+ *     \end{cases}
  *  \f]
  *  where \f$ \varepsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
@@ -304,3 +311,4 @@ DynamicStokesNC<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 template class DynamicStokesNC <2>;
 
 #endif
+/*! @} */

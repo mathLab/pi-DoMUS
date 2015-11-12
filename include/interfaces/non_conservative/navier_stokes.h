@@ -1,11 +1,18 @@
+/*! \addtogroup equations
+ *  @{
+ */
+
 #ifndef _navier_stokes_h_
 #define _navier_stokes_h_
 
 /**
  *  This interface solves a Navier Stokes Equation:
  *  \f[
- *     \partial_t u + (u\cdot\nabla)u - \nu\textrm{div} \epsilon(u)
- *     + \frac{1}{\rho}\grad p = f
+ *     \begin{cases}
+ *       \partial_t u + (u\cdot\nabla)u - \nu\textrm{div} \epsilon(u)
+ *     + \frac{1}{\rho}\nabla p = f \\
+ *       \textrm{div}u=0
+ *     \end{cases}
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
  */
@@ -603,3 +610,4 @@ template class NavierStokes <2>;
 template class NavierStokes <3>;
 
 #endif
+/*! @} */
