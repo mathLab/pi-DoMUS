@@ -22,6 +22,9 @@
 #include <deal2lkit/parsed_function.h>
 
 #include <deal.II/fe/fe_values.h>
+
+#include <deal.II/grid/tria_boundary_lib.h>
+
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
@@ -69,6 +72,8 @@ public:
                                         LinearOperator<VEC> &,
                                         LinearOperator<VEC> &) const;
 
+  virtual void postprocess_newly_created_triangulation(Triangulation<dim,dim> &tria) const;
+
 private:
 
   double rho;
@@ -76,6 +81,7 @@ private:
   double gamma;
 
   std::string prec_name;
+  std::string used_mesh;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -92,6 +98,19 @@ NavierStokes<dim>::NavierStokes(std::string prec) :
   prec_name(prec)
 {}
 
+
+template <int dim>
+void
+NavierStokes<dim>::
+postprocess_newly_created_triangulation(Triangulation<dim,dim> &tria) const
+{
+  if (used_mesh == "../utilities/grids/rectangle_with_circular_hole.ucd")
+    {
+      static HyperShellBoundary<dim> boundary;
+      tria.set_all_manifold_ids_on_boundary(5,99);
+      tria.set_manifold (99, boundary);
+    }
+}
 
 template <int dim>
 template<typename Number>
@@ -256,6 +275,12 @@ NavierStokes<dim>::
 parse_parameters_call_back ()
 {
   NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::parse_parameters_call_back();
+
+  this->prm.leave_subsection();
+  this->prm.enter_subsection("Domain");
+  used_mesh = this->prm.get("Input grid file name");
+  this->prm.leave_subsection();
+  this->prm.enter_subsection("Navier Stokes");
 }
 
 
