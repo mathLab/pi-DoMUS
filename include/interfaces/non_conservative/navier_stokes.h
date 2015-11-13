@@ -18,6 +18,7 @@
  */
 
 #include "interfaces/non_conservative.h"
+
 #include <deal2lkit/parsed_function.h>
 
 #include <deal.II/fe/fe_values.h>
@@ -45,7 +46,6 @@ public:
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
 
-  /* specific and useful functions for this very problem */
   NavierStokes(std::string prec="default");
 
   void declare_parameters (ParameterHandler &prm);
@@ -111,19 +111,11 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
 
-  auto &us          = fe_cache.get_values(
-                        "solution",     "u",      velocity,       alpha);
-  auto &div_us      = fe_cache.get_divergences(           "solution",     "div_u",  velocity,       alpha);
-  auto &sym_grad_us = fe_cache.get_symmetric_gradients(
-                        "solution",     "sym_grad_u", velocity,       alpha);
-  auto &grad_us = fe_cache.get_gradients(
-                    "solution",     "grad_u", velocity,       alpha);
-  auto &us_dot      = fe_cache.get_values(
-                        "solution_dot", "u_dot",  velocity,       alpha);
   auto &ps          = fe_cache.get_values(
-                        "solution",     "p",      pressure,       alpha);
+                        "solution",     "p",        pressure,       alpha);
+
   auto &grad_ps = fe_cache.get_gradients(
-                    "solution",     "grad_p", pressure,       alpha);
+                    "solution",     "grad_p",   pressure,       alpha);
 
   const unsigned int n_q_points = ps.size();
 
@@ -138,58 +130,22 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       // variables:
-      const Tensor<1, dim, Number> &u           = us[q];
-      const Tensor<1, dim, Number> &u_dot       = us_dot[q];
-      const Number                 &div_u      = div_us[q];
-      const Tensor<2, dim, Number> &sym_grad_u  = sym_grad_us[q];
-      const Tensor<2, dim, Number> &grad_u      = grad_us[q];
       const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
       const Number                 &p           = ps[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
           // test functions:
-          auto v      = fev[velocity     ].value(i,q);
-          auto div_v  = fev[velocity     ].divergence(i,q);
-          auto sym_grad_v = fev[velocity ].symmetric_gradient(i,q);
-          auto grad_v = fev[velocity     ].gradient(i,q);
           auto m      = fev[pressure     ].value(i,q);
           auto grad_q = fev[pressure     ].gradient(i,q);
 
           // compute residual:
-          if (prec_name=="default" || prec_name=="diag")
-            {
-              local_residual[i] +=  (
-                                      u_dot * v +
-                                      gamma * div_u * div_v +
-                                      scalar_product(transpose(grad_u)*u, v) +
-                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
-                                      (1./rho)*p*m
-                                    )*JxW[q];
-            }
-          else if (prec_name=="linear" || prec_name=="linear_diag")
-            {
-              local_residual[i] +=  (
-                                      u_dot * v +
-                                      gamma * div_u * div_v  +
-                                      scalar_product(transpose(grad_u)*u, v) +
-                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
-                                      (1./rho)*p*m
-                                    )*JxW[q];
 
-            }
-          else if ( prec_name=="BFBt_identity"  ||
-                    prec_name=="BFBt_diagA"     ||
-                    prec_name=="cahouet-chabard"||
-                    prec_name=="diag_cahouet-chabard")
+          if (  prec_name=="BFBt_identity"  ||
+                prec_name=="BFBt_diagA"     ||
+                prec_name=="cahouet-chabard")
             {
-              local_residual[i] +=  (
-                                      u_dot * v +
-                                      gamma * div_u * div_v +
-                                      scalar_product(transpose(grad_u)*u, v) +
-                                      nu * scalar_product(sym_grad_u,sym_grad_v) +
-                                      (1./rho)*grad_p*grad_q
-                                    )*JxW[q];
+              local_residual[i] +=  ( grad_p*grad_q )*JxW[q];
             }
         }
 
@@ -267,10 +223,12 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           // compute residual:
           local_residual[i] += (
                                  u_dot * v +
-                                 scalar_product(transpose(grad_u)*u, v) +
+                                 scalar_product(grad_u*u, v) +
                                  gamma * div_u * div_v +
-                                 nu * scalar_product(sym_grad_u,sym_grad_v) +
-                                 (1./rho)*p*div_v
+                                 nu * scalar_product(sym_grad_u,sym_grad_v) -
+                                 (1./rho)*p*div_v -
+                                 m * div_u +
+                                 m * p
                                )*JxW[q];
         }
     }
@@ -289,7 +247,7 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &nu,          "nu [Pa s]",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,   "Preconditioner","default",
-                      Patterns::Selection("default|linear|diag|linear_diag|BFBt_identity|BFBt_diagA|cahouet-chabard|diag_cahouet-chabard"));
+                      Patterns::Selection("default|diag|BFBt_identity|BFBt_diagA|cahouet-chabard"));
 }
 
 template <int dim>
@@ -315,22 +273,35 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   FEValuesExtractors::Vector velocity_components(0);
   DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
                                     constant_modes);
+  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+  Amg_data.constant_modes = constant_modes;
+  // Amg_data.elliptic = true;
+  Amg_data.higher_order_elements = true;
+  Amg_data.smoother_sweeps = 2;
+  // Amg_data.aggregation_threshold = 0.02;
+
+  std::vector<std::vector<bool> > constant_modes_p;
+  FEValuesExtractors::Scalar pressure_components(dim);
+  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(pressure_components),
+                                    constant_modes_p);
+  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
+  Amg_data_p.constant_modes = constant_modes_p;
+  Amg_data_p.elliptic = true;
+  Amg_data_p.higher_order_elements = true;
+  Amg_data_p.smoother_sweeps = 2;
+  Amg_data_p.aggregation_threshold = 0.02;
 
   Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
   Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
 
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
-  Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
+
 
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  auto B =  transpose_operator(Bt);
+  auto B = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
+  // auto B =  transpose_operator(Bt);
   auto C = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
   auto ZeroP = null_operator(C);
 
@@ -341,19 +312,30 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   });
 
   // PRECONDITIONER
-  Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+  Amg_preconditioner->initialize (matrix.block(0,0),
                                   Amg_data);
-  static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-  auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
+  static ReductionControl solver_control_cg(50000, 1e-8);
+  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_cg);
+
+  static ReductionControl solver_control_gmres(50000, 1e-8);
+  static SolverGMRES<TrilinosWrappers::MPI::Vector> solver_GMRES(solver_control_gmres);
+
+  static SolverControl solver_control_fgmres (30, 1e-8);
+  PrimitiveVectorMemory<TrilinosWrappers::MPI::Vector> mem;
+  static SolverFGMRES<TrilinosWrappers::MPI::Vector>
+  solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<TrilinosWrappers::MPI::Vector>:: AdditionalData(30, true));
+
+
+
+  auto A_inv     = inverse_operator( A, solver_GMRES, *Amg_preconditioner);
 
 
   Assert(prec_name != "", ExcNotInitialized());
-  if (prec_name=="default" || prec_name == "linear")
+  if (prec_name=="default")
     {
-      Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Mp_preconditioner->initialize (matrix.block(1,1));
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   ( preconditioner_matrix.block(1,1) );
+                   ( matrix.block(1,1) );
       auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
       auto P00 = A_inv;
@@ -368,11 +350,11 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       });
 
     }
-  else if (prec_name=="diag" || prec_name == "linear_diag")
+  else if (prec_name=="diag")
     {
-      Mp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Mp_preconditioner->initialize (matrix.block(1,1));
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   ( preconditioner_matrix.block(1,1) );
+                   ( matrix.block(1,1) );
       auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
       auto P00 = A_inv;
@@ -389,13 +371,14 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="cahouet-chabard")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-      Mp_preconditioner->initialize (matrix.block(1,1));
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),    Amg_data_p);
+      auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
+                   (preconditioner_matrix.block(1,1));
 
+      Mp_preconditioner->initialize (matrix.block(1,1));
       auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
                    (matrix.block(1,1) );
-      auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   (preconditioner_matrix.block(1,1) );
+
 
       auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
       auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
@@ -404,33 +387,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto P00 = A_inv;
       auto P01 = null_operator(Bt);
       auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
-        }
-      });
-    }
-  else if (prec_name=="diag_cahouet-chabard")
-    {
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-      Mp_preconditioner->initialize (matrix.block(1,1));
-
-      auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   (matrix.block(1,1) );
-      auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   (preconditioner_matrix.block(1,1) );
-
-
-      auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-      auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
-      auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
-
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = null_operator(B);
       auto P11 = -1 * Schur_inv;
 
       prec_op = block_operator<2, 2, VEC >({{
@@ -465,7 +421,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
       inv_diag_A.vmult = [&matrix](TrilinosWrappers::MPI::Vector &v, const TrilinosWrappers::MPI::Vector &u)
       {
-        // for (unsigned int i = 0; i<matrix.block(0,0).m(); ++i)
         for (auto i : v.locally_owned_elements())
           v(i)=u(i)/matrix.block(0,0)(i,i);
       };
@@ -492,7 +447,6 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 
 
 }
-
 
 template class NavierStokes <2>;
 template class NavierStokes <3>;
