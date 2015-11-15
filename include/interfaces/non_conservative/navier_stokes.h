@@ -456,7 +456,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   else if (prec_name=="BFBt_diagA")
     {
       Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-      Amg_data_p);
+                                     Amg_data_p);
 
 
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
