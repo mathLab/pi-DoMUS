@@ -168,9 +168,12 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                 std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
+  double dummy = 0.0;
+
   fe_cache.reinit(cell);
 
   fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
+  fe_cache.cache_local_solution_vector("_solution",      *this->solution,      dummy);
   fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -181,6 +184,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
   // velocity:
   auto &us          = fe_cache.get_values(                "solution",     "u",      velocity,       alpha);
+  auto &_us          = fe_cache.get_values(                "_solution",     "u",      velocity,       dummy);
   auto &div_us      = fe_cache.get_divergences(           "solution",     "div_u",  velocity,       alpha);
   auto &sym_grad_us = fe_cache.get_symmetric_gradients(   "solution",     "sym_grad_u",      velocity,       alpha);
   auto &grad_us     = fe_cache.get_gradients(   "solution",     "grad_u",          velocity,       alpha);
@@ -205,6 +209,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
       // variables:
       //    velocity:
       const Tensor<1, dim, Number>  &u          = us[q];
+      const Tensor<1, dim, double>  &_u         = _us[q];
       const Number                  &div_u      = div_us[q];
       const Tensor<1, dim, Number>  &u_dot      = us_dot[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
@@ -232,14 +237,14 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
             {
               local_residual[i] += (
                                      u_dot * v +
-                                     scalar_product(grad_u*u, v) +
+                                     scalar_product(grad_u*_u, v) +
                                      gamma * div_u * div_v +
                                      nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                     (1./rho)*p*div_v -
+                                     (1./rho)*p*div_v +
                                      m * div_u +
                                      alpha * m * p +
                                      nu*inner( grad_p,grad_m ) +
-                                     (u*grad_p) * m
+                                     (_u*grad_p) * m
                                    )*JxW[q];
             }
           else
@@ -249,7 +254,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      scalar_product(grad_u*u, v) +
                                      gamma * div_u * div_v +
                                      nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                     (1./rho)*p*div_v -
+                                     (1./rho)*p*div_v +
                                      m * div_u +
                                      m * p
                                    )*JxW[q];
@@ -302,7 +307,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   // Amg_data.elliptic = true;
   Amg_data.higher_order_elements = true;
   Amg_data.smoother_sweeps = 2;
-  // Amg_data.aggregation_threshold = 0.02;
+  Amg_data.aggregation_threshold = 0.02;
 
   std::vector<std::vector<bool> > constant_modes_p;
   FEValuesExtractors::Scalar pressure_components(dim);
@@ -311,8 +316,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
   Amg_data_p.elliptic = true;
-  Amg_data_p.higher_order_elements = true;
-  Amg_data_p.smoother_sweeps = 2;
+  // Amg_data_p.higher_order_elements = true;
+  Amg_data_p.smoother_sweeps = 5;
   Amg_data_p.aggregation_threshold = 0.02;
 
   Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
@@ -324,8 +329,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   // SYSTEM MATRIX:
   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
   auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  auto B = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-  // auto B =  transpose_operator(Bt);
+  // auto B = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
+  auto B =  transpose_operator(Bt);
   auto C = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
   auto ZeroP = null_operator(C);
 
@@ -469,9 +474,11 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
                                      Amg_data_p);
       auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
-
+      auto S=linear_operator<TrilinosWrappers::MPI::Vector>(preconditioner_matrix.block(1,1));
       auto BBt       = B*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+      // auto BBt_inv   = linear_operator<TrilinosWrappers::MPI::Vector>( S, *Kp_preconditioner);
+      auto BBt_inv   = inverse_operator(S, solver_CG, *Kp_preconditioner);
+      // auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = Ap*BBt_inv;
 
       auto P00 = A_inv;
