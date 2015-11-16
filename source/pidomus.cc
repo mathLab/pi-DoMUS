@@ -638,7 +638,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
     }
   data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear("", *mapping);
+  data_out.write_data_and_clear(*mapping);
 
   computing_timer.exit_section ();
 }
