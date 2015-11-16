@@ -153,7 +153,6 @@ private:
                                          const typename LAC::VectorType &y_dot,
                                          const double alpha);
   void refine_mesh ();
-  void process_solution ();
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
