@@ -527,7 +527,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
   computing_timer.exit_section();
 }
 
-
 template <int dim, int spacedim, int n_components, typename LAC>
 void piDoMUS<dim, spacedim, n_components, LAC>::make_grid_fe()
 {
@@ -536,15 +535,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::make_grid_fe()
   energy.postprocess_newly_created_triangulation(*triangulation);
   fe = SP(energy());
   triangulation->refine_global (initial_global_refinement);
-}
-
-/* ------------------------ ERRORS ------------------------ */
-
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::process_solution ()
-{
-  eh.error_from_exact(*dof_handler, solution, exact_solution);
-  eh.output_table(pcout);
 }
 
 /* ------------------------ OUTPUTS ------------------------ */

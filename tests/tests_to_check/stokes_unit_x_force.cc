@@ -10,7 +10,6 @@ void test(NavierStokes<dim> &ns)
   ns.assemble_navier_stokes_system();
   ns.build_navier_stokes_preconditioner();
   ns.solve();
-  ns.process_solution();
   ns.output_results();
 }
 
