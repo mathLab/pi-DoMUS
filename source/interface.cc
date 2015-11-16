@@ -147,6 +147,7 @@ void
 Interface<dim,spacedim,n_components,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &,
     const typename LAC::BlockMatrix &,
     const typename LAC::BlockMatrix &,
+    const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
     LinearOperator<typename LAC::VectorType> &,
     LinearOperator<typename LAC::VectorType> &) const
 {
@@ -306,6 +307,69 @@ Interface<dim,spacedim,n_components,LAC>::
 get_differential_blocks() const
 {
   return _diff_comp;
+}
+
+
+// auxiliary matrices //////////////////////////////////////////////////////////
+template<int dim, int spacedim, int n_components, typename LAC>
+UpdateFlags
+Interface<dim,spacedim,n_components,LAC>::
+get_aux_matrix_flags(const unsigned int &i) const
+{
+  // TODO
+  // return aux_matrix_update_flags[i];
+
+  (void)i; // no warning
+  return get_jacobian_preconditioner_flags();
+}
+
+template<int dim, int spacedim, int n_components, typename LAC>
+unsigned int
+Interface<dim,spacedim,n_components,LAC>::get_number_of_aux_matrices() const
+{
+  return 0;
+}
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+assemble_local_aux_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                             Scratch &scratch,
+                             CopyPreconditioner &data) const
+{
+  const unsigned dofs_per_cell = data.local_dof_indices.size();
+
+  cell->get_dof_indices (data.local_dof_indices);
+//  data.local_matrix = 0;
+
+  get_aux_matrix_residuals(cell, scratch, data, data.sacado_residuals);
+
+  for (unsigned aux=0; aux<get_number_of_aux_matrices(); ++aux)
+    for (unsigned int i=0; i<dofs_per_cell; ++i)
+      for (unsigned int j=0; j<dofs_per_cell; ++j)
+        data.local_matrices[aux](i,j) = data.sacado_residuals[aux][i].dx(j);
+}
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+get_aux_matrix_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                         Scratch &scratch,
+                         CopyPreconditioner &data,
+                         std::vector<std::vector<double> > &local_residuals) const
+{
+  Assert(false,ExcPureFunctionCalled());
+}
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+Interface<dim,spacedim,n_components,LAC>::
+get_aux_matrix_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                         Scratch &scratch,
+                         CopyPreconditioner &data,
+                         std::vector<std::vector<Sdouble> > &local_residuals) const
+{
+  Assert(false,ExcPureFunctionCalled());
 }
 
 template class Interface<2, 2, 1, LATrilinos>;

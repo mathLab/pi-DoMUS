@@ -42,6 +42,7 @@ public:
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
+  typedef TrilinosWrappers::BlockSparseMatrix MAT;
 
   /* specific and useful functions for this very problem */
   StokesNC();
@@ -64,8 +65,17 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim> &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
                                         const TrilinosWrappers::BlockSparseMatrix &,
+                                        const std::vector<shared_ptr<MAT> >,
                                         LinearOperator<VEC> &,
                                         LinearOperator<VEC> &) const;
+
+  template<typename Number>
+  void aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &,
+                            Scratch &,
+                            CopyPreconditioner &,
+                            std::vector<std::vector<Number> > &) const
+  {};
+
 
 private:
   double eta;
@@ -240,6 +250,7 @@ void
 StokesNC<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                         const TrilinosWrappers::BlockSparseMatrix &matrix,
                                         const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+                                        const std::vector<shared_ptr<MAT> >,
                                         LinearOperator<VEC> &system_op,
                                         LinearOperator<VEC> &prec_op) const
 {

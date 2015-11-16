@@ -150,6 +150,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedi
                    TimerOutput::summary,
                    TimerOutput::wall_times),
 
+  n_aux_matrices(energy.get_number_of_aux_matrices()),
   eh("Error Tables", energy.get_component_names(),
      print(std::vector<std::string>(n_components, "L2,H1"), ";")),
 
@@ -164,7 +165,13 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedi
   data_out("Output Parameters", "vtu"),
   dae(*this),
   we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
-{}
+{
+  for (unsigned int i=0; i<n_aux_matrices; ++i)
+    {
+      aux_matrix.push_back( SP( new typename LAC::BlockMatrix() ) );
+      aux_matrix_sp.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+    }
+}
 
 
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
@@ -258,6 +265,17 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
                   energy.get_preconditioner_coupling());
 
       jacobian_preconditioner_matrix.reinit(jacobian_preconditioner_matrix_sp);
+
+      for (unsigned int i=0; i < n_aux_matrices; ++i)
+        {
+          aux_matrix[i]->clear();
+          initializer(*aux_matrix_sp[i],
+                      *dof_handler,
+                      constraints,
+                      energy.get_preconditioner_coupling());
+          /*  energy.get_aux_matrix_coupling(i));*/
+          aux_matrix[i]->reinit(*aux_matrix_sp[i]);
+        }
     }
 
   if (first_run)
@@ -299,7 +317,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const 
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-  AnyData system_data;
 
   typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
@@ -352,7 +369,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const 
                face_quadrature_formula,
                energy.get_face_flags()),
        Assembly::CopyData::
-       piDoMUSSystem<dim, spacedim> (*fe));
+       piDoMUSSystem<dim, spacedim> (*fe,n_aux_matrices));
 
   compress(jacobian_matrix, VectorOperation::add);
 
@@ -401,7 +418,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner
       FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
       CellFilter;
 
-      AnyData preconditioner_data;
 
       distributed_solution = solution;
       distributed_solution_dot = solution_dot;
@@ -441,12 +457,94 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner
                     face_quadrature_formula,
                     UpdateFlags(0)),
            Assembly::CopyData::
-           piDoMUSPreconditioner<dim, spacedim> (*fe));
+           piDoMUSPreconditioner<dim, spacedim> (*fe,n_aux_matrices));
 
       jacobian_preconditioner_matrix.compress(VectorOperation::add);
       computing_timer.exit_section();
     }
 }
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void piDoMUS<dim, spacedim, n_components, LAC>::update_all (const double t)
+{
+  energy.set_time(t);
+  constraints.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints);
+
+  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+
+  constraints.close ();
+}
+
+
+// aux matrices ////////////////////////////////////////////////////////////////
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void piDoMUS<dim, spacedim, n_components, LAC>::assemble_aux_matrices (const double t,
+    const typename LAC::VectorType &solution,
+    const typename LAC::VectorType &solution_dot,
+    const double alpha)
+{
+  computing_timer.enter_section ("   Assemble aux matrices");
+  update_all(t);
+  const QGauss<dim> quadrature_formula(fe->degree + 1);
+  const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
+  distributed_solution = solution;
+  distributed_solution_dot = solution_dot;
+
+  energy.initialize_data(distributed_solution,
+                         distributed_solution_dot, t, alpha);
+  typedef
+  FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
+  CellFilter;
+
+
+  for (unsigned int i=0; i<n_aux_matrices; ++i)
+    *(aux_matrix[i]) = 0;
+
+
+
+  auto local_copy = [this]
+                    (const PreconditionerCopyData & data)
+  {
+
+    for (unsigned int i=0; i<n_aux_matrices; ++i)
+      this->constraints.distribute_local_to_global (data.local_matrices[i],
+                                                    data.local_dof_indices,
+                                                    *(this->aux_matrix[i]));
+  };
+
+  auto local_assemble = [ this ]
+                        (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
+                         Scratch & scratch,
+                         PreconditionerCopyData & data)
+  {
+    this->energy.assemble_local_aux_matrices(cell, scratch, data);
+  };
+
+
+
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       local_assemble,
+       local_copy,
+       Scratch (*mapping,
+                *fe, quadrature_formula,
+                energy.get_jacobian_preconditioner_flags(),  /*energy.aux_matrix_flags(i),*/
+                face_quadrature_formula,
+                UpdateFlags(0)),
+       Assembly::CopyData::
+       piDoMUSPreconditioner<dim, spacedim> (*fe,n_aux_matrices));
+
+  for (unsigned int i=0; i<n_aux_matrices; ++i)
+    aux_matrix[i]->compress(VectorOperation::add);
+  computing_timer.exit_section();
+}
+
 
 /* ------------------------ MESH AND GRID ------------------------ */
 
@@ -725,7 +823,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                energy.get_jacobian_flags(),
                face_quadrature_formula,
                energy.get_face_flags()),
-       SystemCopyData(*fe));
+       SystemCopyData(*fe,n_aux_matrices));
 
 //   constraints.distribute(dst);
 
@@ -822,6 +920,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
 
       energy.compute_system_operators(*dof_handler,
                                       jacobian_matrix, jacobian_preconditioner_matrix,
+                                      aux_matrix,
                                       jacobian_op, jacobian_preconditioner_op);
     }
 

@@ -30,6 +30,7 @@ class CompressibleNeoHookeanInterface : public ConservativeInterface<dim,spacedi
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
   typedef TrilinosWrappers::MPI::BlockVector VEC;
+  typedef TrilinosWrappers::BlockSparseMatrix MAT;
 
 public:
 
@@ -61,6 +62,7 @@ public:
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const TrilinosWrappers::BlockSparseMatrix &,
                                 const TrilinosWrappers::BlockSparseMatrix &,
+                                const std::vector<shared_ptr<MAT> >,
                                 LinearOperator<VEC> &,
                                 LinearOperator<VEC> &) const;
 
@@ -171,6 +173,7 @@ void
 CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
     const TrilinosWrappers::BlockSparseMatrix &matrix,
     const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+    const std::vector<shared_ptr<MAT> >,
     LinearOperator<VEC> &system_op,
     LinearOperator<VEC> &prec_op) const
 {

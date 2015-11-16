@@ -28,40 +28,52 @@ namespace Assembly
     template <int dim, int spacedim>
     struct piDoMUSPreconditioner
     {
-      piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe);
+      piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe,
+                             const unsigned int &n_aux);
       piDoMUSPreconditioner (const piDoMUSPreconditioner &data);
 
       FullMatrix<double>                    local_matrix;
       std::vector<types::global_dof_index>  local_dof_indices;
       std::vector<Sdouble>                  sacado_residual;
       std::vector<double>                   double_residual;
+      std::vector<std::vector<double> >     double_residuals;
+      std::vector<std::vector<Sdouble> >    sacado_residuals;
+      std::vector<FullMatrix<double> >      local_matrices;
     };
 
     template <int dim, int spacedim>
     piDoMUSPreconditioner<dim, spacedim>::
-    piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe)
+    piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe,
+                           const unsigned int &n_aux)
       :
-      local_matrix (      fe.dofs_per_cell,
+      local_matrix       (fe.dofs_per_cell,
                           fe.dofs_per_cell),
-      local_dof_indices ( fe.dofs_per_cell),
-      sacado_residual (   fe.dofs_per_cell),
-      double_residual (   fe.dofs_per_cell)
+      local_dof_indices  (fe.dofs_per_cell),
+      sacado_residual    (fe.dofs_per_cell),
+      double_residual    (fe.dofs_per_cell),
+      double_residuals   (n_aux),
+      sacado_residuals   (n_aux),
+      local_matrices     (n_aux, local_matrix)
     {}
 
     template <int dim, int spacedim>
     piDoMUSPreconditioner<dim, spacedim>::
     piDoMUSPreconditioner (const piDoMUSPreconditioner &data)
       :
-      local_matrix (      data.local_matrix),
-      local_dof_indices ( data.local_dof_indices),
-      sacado_residual (   data.sacado_residual),
-      double_residual (   data.double_residual)
+      local_matrix       (data.local_matrix),
+      local_dof_indices  (data.local_dof_indices),
+      sacado_residual    (data.sacado_residual),
+      double_residual    (data.double_residual),
+      double_residuals   (data.double_residuals),
+      sacado_residuals   (data.sacado_residuals),
+      local_matrices     (data.local_matrices)
     {}
 
     template <int dim, int spacedim>
     struct piDoMUSSystem : public piDoMUSPreconditioner<dim, spacedim>
     {
-      piDoMUSSystem (const FiniteElement<dim, spacedim> &fe);
+      piDoMUSSystem (const FiniteElement<dim, spacedim> &fe,
+                     const unsigned int &n_aux);
       piDoMUSSystem (const piDoMUSSystem<dim, spacedim> &data);
 
       Vector<double> local_rhs;
@@ -69,9 +81,10 @@ namespace Assembly
 
     template <int dim, int spacedim>
     piDoMUSSystem<dim, spacedim>::
-    piDoMUSSystem (const FiniteElement<dim, spacedim> &fe)
+    piDoMUSSystem (const FiniteElement<dim, spacedim> &fe,
+                   const unsigned int &n_aux)
       :
-      piDoMUSPreconditioner<dim, spacedim> (fe),
+      piDoMUSPreconditioner<dim, spacedim> (fe, n_aux),
       local_rhs (fe.dofs_per_cell)
     {}
 
