@@ -37,6 +37,8 @@
 #include <deal2lkit/fe_values_cache.h>
 #include <deal2lkit/parsed_function.h>
 
+using namespace DOFUtilities;
+
 template <int dim>
 class NavierStokes : public NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >
 {
@@ -143,7 +145,9 @@ void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::
 
           if (  prec_name=="BFBt_identity"  ||
                 prec_name=="BFBt_diagA"     ||
-                prec_name=="cahouet-chabard")
+                prec_name=="cahouet-chabard"||
+                prec_name=="elman"
+             )
             {
               local_residual[i] +=  ( grad_p*grad_q )*JxW[q];
             }
@@ -183,7 +187,8 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
   auto &us_dot      = fe_cache.get_values(                "solution_dot", "u_dot",  velocity,       alpha);
 
   // pressure:
-  auto &ps          = fe_cache.get_values(                "solution",     "p",      pressure,       alpha);
+  auto &ps = fe_cache.get_values(                "solution",     "p",      pressure,       alpha);
+  auto &grad_ps = fe_cache.get_gradients(                "solution",     "p",      pressure,       alpha);
 
   // Jacobian:
   auto &JxW = fe_cache.get_JxW_values();
@@ -207,6 +212,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
       //    pressure:
       const Number                  &p          = ps[q];
+      const Tensor<1, dim, Number>  &grad_p     = grad_ps[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
@@ -214,22 +220,40 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           //    velocity:
           auto v      = fev[velocity    ].value(i,q);
           auto grad_v = fev[velocity    ].gradient(i,q);
-          auto sym_grad_v = fev[velocity ].symmetric_gradient(i,q);
+          auto sym_grad_v = fev[velocity].symmetric_gradient(i,q);
           auto div_v  = fev[velocity    ].divergence(i,q);
 
           //    pressure:
           auto m      = fev[pressure    ].value(i,q);
+          auto grad_m = fev[pressure    ].gradient(i,q);
 
           // compute residual:
-          local_residual[i] += (
-                                 u_dot * v +
-                                 scalar_product(grad_u*u, v) +
-                                 gamma * div_u * div_v +
-                                 nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                 (1./rho)*p*div_v -
-                                 m * div_u +
-                                 m * p
-                               )*JxW[q];
+          if (prec_name=="elman")
+            {
+              local_residual[i] += (
+                                     u_dot * v +
+                                     scalar_product(grad_u*u, v) +
+                                     gamma * div_u * div_v +
+                                     nu * scalar_product(sym_grad_u,sym_grad_v) -
+                                     (1./rho)*p*div_v -
+                                     m * div_u +
+                                     alpha * m * p +
+                                     nu*inner( grad_p,grad_m ) +
+                                     (u*grad_p) * m
+                                   )*JxW[q];
+            }
+          else
+            {
+              local_residual[i] += (
+                                     u_dot * v +
+                                     scalar_product(grad_u*u, v) +
+                                     gamma * div_u * div_v +
+                                     nu * scalar_product(sym_grad_u,sym_grad_v) -
+                                     (1./rho)*p*div_v -
+                                     m * div_u +
+                                     m * p
+                                   )*JxW[q];
+            }
         }
     }
 }
@@ -247,7 +271,7 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &nu,          "nu [Pa s]",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,   "Preconditioner","default",
-                      Patterns::Selection("default|diag|BFBt_identity|BFBt_diagA|cahouet-chabard"));
+                      Patterns::Selection("default|diag|elman|BFBt_identity|BFBt_diagA|cahouet-chabard"));
 }
 
 template <int dim>
@@ -428,6 +452,27 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       auto BBt       = B*inv_diag_A*Bt;
       auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
+
+      auto P00 = A_inv;
+      auto P01 = null_operator(Bt);
+      auto P10 = Schur_inv * B * A_inv;
+      auto P11 = -1 * Schur_inv;
+
+      prec_op = block_operator<2, 2, VEC >({{
+          {{ P00, P01 }} ,
+          {{ P10, P11 }}
+        }
+      });
+    }
+  else if (prec_name=="elman")
+    {
+      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
+                                     Amg_data_p);
+      auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
+
+      auto BBt       = B*Bt;
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+      auto Schur_inv = Ap*BBt_inv;
 
       auto P00 = A_inv;
       auto P01 = null_operator(Bt);

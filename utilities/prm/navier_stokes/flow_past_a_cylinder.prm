@@ -4,21 +4,22 @@
 
 subsection Navier Stokes
   set Block coupling                   = 1,1; 1,1
-  set Block of differential components = 1,0
+  set Block of differential components = 1,1
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
   set Preconditioner block coupling    = 0,0; 0,1
   set nu [Pa s]                        = 1
   set rho [kg m^3]                     = 1.0
-  set grad-div stabilization           = 1.0
+  set grad-div stabilization           = 0.0
 
+    set Preconditioner                   = elman
   # set Preconditioner                   = default
   # set Preconditioner                   = diag
   # set Preconditioner                   = linear
   # set Preconditioner                   = diag_linear
   # set Preconditioner                   = BFBt_identity
   # set Preconditioner                   = BFBt_diagA
-  set Preconditioner                   = cahouet-chabard
+  # set Preconditioner                   = cahouet-chabard
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
