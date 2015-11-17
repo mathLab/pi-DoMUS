@@ -328,14 +328,32 @@ protected:
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
-  mutable typename LAC::VectorType old_solution;
+  /**
+   * Solution vector evaluated at time t
+   */
   mutable const typename LAC::VectorType *solution;
+
+  /**
+   * Solution vector evaluated at time t-dt
+   */
+  mutable typename LAC::VectorType old_solution;
+
+  /**
+   * Time derivative solution vector evaluated at time t
+   */
   mutable const typename LAC::VectorType *solution_dot;
 
-  mutable double alpha;
-
-  mutable double old_t;
+  /**
+   * Current time step
+   */
   mutable double t;
+
+  /**
+   * Previous time step
+   */
+  mutable double old_t;
+
+  mutable double alpha;
   mutable unsigned int dofs_per_cell;
   mutable unsigned int n_q_points;
   mutable unsigned int n_face_q_points;

@@ -268,12 +268,12 @@ Interface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::Ve
                                                           const double t,
                                                           const double alpha) const
 {
-  if(this->old_t < t)
-  {
-    this->old_solution.reinit(solution, true);
-    this->old_solution = solution;
-    this->old_t = t;
-  }
+  if (this->old_t < t)
+    {
+      this->old_solution.reinit(solution, true);
+      this->old_solution = solution;
+      this->old_t = t;
+    }
 
   this->solution = &solution;
   this->solution_dot = &solution_dot;
