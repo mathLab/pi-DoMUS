@@ -73,9 +73,45 @@ public:
 
 private:
 
+  /**
+   * Density
+   */
   double rho;
+
+  /**
+   * Viscosity
+   */
   double nu;
+
+  /**
+   * div-grad stabilization parameter
+   */
   double gamma;
+
+  /**
+   * AMG high order:
+   */
+  bool amg_higher_order;
+
+  /**
+   * AMG smoother sweeps:
+   */
+  int amg_smoother_sweeps;
+
+  /**
+   * AMG aggregation threshold:
+   */
+  double amg_aggregation_threshold;
+
+  /**
+   * AMG smoother sweeps:
+   */
+  int amg_p_smoother_sweeps;
+
+  /**
+   * AMG aggregation threshold:
+   */
+  double amg_p_aggregation_threshold;
 
   std::string prec_name;
 
@@ -277,6 +313,15 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
   this->add_parameter(prm, &prec_name,   "Preconditioner","default",
                       Patterns::Selection("default|diag|elman|BFBt_identity|BFBt_diagA|cahouet-chabard"));
+  this->add_parameter(prm, &amg_higher_order,   "Amg Higher Order","true",
+                      Patterns::Bool());
+  this->add_parameter(prm, &amg_smoother_sweeps,   "Amg Smoother Sweeps","2",
+                      Patterns::Integer(0));
+  this->add_parameter(prm, &amg_aggregation_threshold,       "Amg Aggregation Threshold",     "0.02", Patterns::Double(0.0));
+
+  this->add_parameter(prm, &amg_p_smoother_sweeps,   "Amg P Smoother Sweeps","2",
+                      Patterns::Integer(0));
+  this->add_parameter(prm, &amg_p_aggregation_threshold,       "Amg P Aggregation Threshold",     "0.02", Patterns::Double(0.0));
 }
 
 template <int dim>
@@ -305,9 +350,9 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
   Amg_data.constant_modes = constant_modes;
   // Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
+  Amg_data.higher_order_elements = amg_higher_order;
+  Amg_data.smoother_sweeps = amg_smoother_sweeps;
+  Amg_data.aggregation_threshold = amg_aggregation_threshold;
 
   std::vector<std::vector<bool> > constant_modes_p;
   FEValuesExtractors::Scalar pressure_components(dim);
@@ -317,8 +362,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
   Amg_data_p.constant_modes = constant_modes_p;
   Amg_data_p.elliptic = true;
   // Amg_data_p.higher_order_elements = true;
-  Amg_data_p.smoother_sweeps = 5;
-  Amg_data_p.aggregation_threshold = 0.02;
+  Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
+  Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
   Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
@@ -474,11 +519,11 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
                                      Amg_data_p);
       auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
-      auto S=linear_operator<TrilinosWrappers::MPI::Vector>(preconditioner_matrix.block(1,1));
+      // auto S=linear_operator<TrilinosWrappers::MPI::Vector>(preconditioner_matrix.block(1,1));
       auto BBt       = B*Bt;
       // auto BBt_inv   = linear_operator<TrilinosWrappers::MPI::Vector>( S, *Kp_preconditioner);
-      auto BBt_inv   = inverse_operator(S, solver_CG, *Kp_preconditioner);
-      // auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+      // auto BBt_inv   = inverse_operator(S, solver_CG, *Kp_preconditioner);
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
       auto Schur_inv = Ap*BBt_inv;
 
       auto P00 = A_inv;
