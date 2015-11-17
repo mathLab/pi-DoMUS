@@ -209,7 +209,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
   fe_cache.reinit(cell);
 
   fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
-  fe_cache.cache_local_solution_vector("_solution",      *this->solution,      dummy);
+  fe_cache.cache_local_solution_vector("_solution",      this->old_solution,      dummy);
   fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -516,14 +516,13 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="elman")
     {
+      auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
+
       Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
                                      Amg_data_p);
-      auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
-      // auto S=linear_operator<TrilinosWrappers::MPI::Vector>(preconditioner_matrix.block(1,1));
       auto BBt       = B*Bt;
-      // auto BBt_inv   = linear_operator<TrilinosWrappers::MPI::Vector>( S, *Kp_preconditioner);
-      // auto BBt_inv   = inverse_operator(S, solver_CG, *Kp_preconditioner);
       auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+
       auto Schur_inv = Ap*BBt_inv;
 
       auto P00 = A_inv;

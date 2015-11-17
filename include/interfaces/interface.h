@@ -74,7 +74,8 @@ public:
     forcing_terms("Forcing terms", default_component_names, "0=ALL"),
     neumann_bcs("Neumann boundary conditions", default_component_names, "0=ALL"),
     dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
-    str_diff_comp(default_differential_components)
+    str_diff_comp(default_differential_components),
+    old_t(-1.0)
   {};
 
   virtual void declare_parameters (ParameterHandler &prm);
@@ -327,10 +328,13 @@ protected:
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
+  mutable typename LAC::VectorType old_solution;
   mutable const typename LAC::VectorType *solution;
   mutable const typename LAC::VectorType *solution_dot;
 
   mutable double alpha;
+
+  mutable double old_t;
   mutable double t;
   mutable unsigned int dofs_per_cell;
   mutable unsigned int n_q_points;
@@ -414,6 +418,7 @@ Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
                                                  FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell);
+  fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -429,6 +434,7 @@ Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
                                                  FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell, face_no);
+  fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
