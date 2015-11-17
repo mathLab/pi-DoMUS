@@ -273,7 +273,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
             {
               local_residual[i] += (
                                      u_dot * v +
-                                     scalar_product(grad_u*_u, v) +
+                                     scalar_product(_u*grad_u, v) +
                                      gamma * div_u * div_v +
                                      nu * scalar_product(sym_grad_u,sym_grad_v) -
                                      (1./rho)*p*div_v +
@@ -287,7 +287,7 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
             {
               local_residual[i] += (
                                      u_dot * v +
-                                     scalar_product(grad_u*u, v) +
+                                     scalar_product(_u*grad_u, v) +
                                      gamma * div_u * div_v +
                                      nu * scalar_product(sym_grad_u,sym_grad_v) -
                                      (1./rho)*p*div_v +
