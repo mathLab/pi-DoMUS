@@ -3,20 +3,20 @@
 ################################################################################
 
 subsection Navier Stokes
-  set Block coupling                   = 1,1; 1,0
-  set Block of differential components = 1,0
+  set Block coupling                   = 1,1; 1,1
+  set Block of differential components = 1,1
   set Blocking of the finite element   = u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set Preconditioner block coupling    = 1,1; 0,1
-  set grad-div stabilization           = 1.0
+  set Preconditioner block coupling    = 0,0; 0,1
+  set grad-div stabilization           = 0
   set nu [Pa s]                        = .05
   set rho [kg m^3]                     = 1.0
-  set Preconditioner                   = default
+  set Preconditioner                   = elman
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
 set Adaptive refinement                            = false
-set Initial global refinement                      = 4
+set Initial global refinement                      = 3
 set Maximum number of time steps                   = 10000
 set Number of cycles                               = 1
 set Timer output file                              = timer.txt
@@ -37,17 +37,14 @@ subsection Dirichlet boundary conditions
   set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 % \
                                 2 = 0 ; 0 ; 0 % \
-                                3 = 1 ; 0 ; 0
+                                3 = t<1?(t^6)*k:k ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Neumann boundary conditions
-  set IDs and component masks = 0 = u.N % 1 = u.N % 2 = u.N % 3 = u.N
-  set IDs and expressions     = 0 = 0; 0; 0 % \
-                                1 = 0; 0; 0 % \
-                                2 = 0; 0; 0 % \
-                                3 = 0; 0; 0
+  set IDs and component masks =
+  set IDs and expressions     =
   set Known component names   = u,u,p
   set Used constants          =
 end
@@ -104,13 +101,13 @@ subsection IDA Solver Parameters
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_dot
-  set Initial step size                             = 1e-4
+  set Initial step size                             = 1e-6
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-2
+  set Seconds between each output                   = 1e-3
   set Use local tolerances                          = false
 end
 subsection Initial solution
