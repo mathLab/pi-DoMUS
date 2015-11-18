@@ -31,6 +31,7 @@ class HeatEquation : public ConservativeInterface<dim,dim,1, HeatEquation<dim,LA
   typedef FEValuesCache<dim,dim> Scratch;
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
+  typedef BlockSparseMatrix<double> MAT;
 
 public:
 

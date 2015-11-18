@@ -139,6 +139,8 @@ public:
    */
   typename LAC::VectorType get_solution();
 
+  void update_all(const double t);
+
 private:
   void make_grid_fe();
   void setup_dofs (const bool &first_run = true);
@@ -152,6 +154,11 @@ private:
                                          const typename LAC::VectorType &y,
                                          const typename LAC::VectorType &y_dot,
                                          const double alpha);
+
+  void assemble_aux_matrices (const double t,
+                              const typename LAC::VectorType &y,
+                              const typename LAC::VectorType &y_dot,
+                              const double alpha);
   void refine_mesh ();
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
@@ -194,8 +201,12 @@ private:
   mutable typename LAC::VectorType        distributed_solution;
   mutable typename LAC::VectorType        distributed_solution_dot;
 
-
   mutable TimerOutput                               computing_timer;
+
+  const unsigned int n_aux_matrices;
+  std::vector<shared_ptr<typename LAC::BlockMatrix> >  aux_matrix;
+  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > aux_matrix_sp;
+
 
 
   ErrorHandler<1>       eh;

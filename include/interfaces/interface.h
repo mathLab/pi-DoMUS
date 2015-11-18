@@ -277,8 +277,10 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const typename LAC::BlockMatrix &,
                                         const typename LAC::BlockMatrix &,
+                                        const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
                                         LinearOperator<typename LAC::VectorType> &,
                                         LinearOperator<typename LAC::VectorType> &) const;
+
 
   virtual void assemble_local_system (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                       Scratch &scratch,
@@ -296,6 +298,7 @@ public:
   virtual UpdateFlags get_residual_flags() const;
 
   virtual UpdateFlags get_jacobian_preconditioner_flags() const;
+
 
   virtual UpdateFlags get_face_flags() const;
 
@@ -319,12 +322,44 @@ public:
               FEValuesCache<dim,spacedim> &fe_cache) const;
 
 
+  // auxiliary matrices ///////////////////////////////////////////////////////
+  // TODO aux_mtrices energy
+
+  virtual void get_aux_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                         Scratch &scratch,
+                                         CopyPreconditioner &data,
+                                         std::vector<std::vector<double> > &local_residuals) const;
+
+  virtual void get_aux_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                         Scratch &scratch,
+                                         CopyPreconditioner &data,
+                                         std::vector<std::vector<Sdouble> > &local_residuals) const;
+
+  virtual void assemble_local_aux_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                            Scratch &scratch,
+                                            CopyPreconditioner &data) const;
+
+  //  virtual void set_aux_matrix_update_flags();
+
+  UpdateFlags get_aux_matrix_flags(const unsigned int &i) const;
+
+  const Table<2,DoFTools::Coupling> &get_aux_matrix_coupling(const unsigned int &i) const;
+  virtual unsigned int get_number_of_aux_matrices() const;
+
+  std::vector<UpdateFlags> aux_matrix_update_flags;
+  std::vector<Table<2,DoFTools::Coupling> > aux_matrix_coupling;
+  //////////////////////////////////////////////////////////////////////////////
+
 
 
 protected:
+
+
+
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
   mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
   mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
+
   std::string str_diff_comp;
   std::vector<unsigned int> _diff_comp;
 
@@ -357,6 +392,7 @@ protected:
   mutable unsigned int dofs_per_cell;
   mutable unsigned int n_q_points;
   mutable unsigned int n_face_q_points;
+
 
 };
 

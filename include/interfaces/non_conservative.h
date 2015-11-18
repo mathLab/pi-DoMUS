@@ -68,6 +68,24 @@ public:
   {
     static_cast<const Implementation *>(this)->preconditioner_residual(cell, scratch, data, local_residual);
   }
+
+// aux matrices ////////////////////////////////////////////////////////////////
+
+  virtual void get_aux_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                         Scratch &scratch,
+                                         CopyPreconditioner &data,
+                                         std::vector<std::vector<double> > &local_residuals) const
+  {
+    static_cast<const Implementation *>(this)->aux_matrix_residuals(cell, scratch, data, local_residuals);
+  }
+
+  virtual void get_aux_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                         Scratch &scratch,
+                                         CopyPreconditioner &data,
+                                         std::vector<std::vector<Sdouble> > &local_residuals) const
+  {
+    static_cast<const Implementation *>(this)->aux_matrix_residuals(cell, scratch, data, local_residuals);
+  }
 };
 
 #endif

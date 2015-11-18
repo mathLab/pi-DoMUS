@@ -35,6 +35,7 @@ class FreeSwellingThreeFields : public ConservativeInterface<dim,spacedim,dim+2,
   typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,spacedim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,spacedim> CopySystem;
+  typedef BlockSparseMatrix<double> MAT;
 
 public:
 
