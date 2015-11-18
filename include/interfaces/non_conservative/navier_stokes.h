@@ -15,41 +15,53 @@
  *     \end{cases}
  *  \f]
  *  where \f$ \epsilon(u) = \frac{\nabla u + [\nabla u]^t}{2}. \f$
+ *
+ *
+ * In the code we adopt the following notations:
+ * - Mp := block resulting from \f$ ( \partial_t p, q ) \f$
+ * - Ap := block resulting from f$ \nu ( \nabla p,\nabla q ) \f$
+ * - Kp := block resulting from f$ ( u \cdot \nabla p, q) \f$
+ * - Fp := Mp + Ap + Kp
+ *
+ * where:
+ * - p = pressure
+ * - q = test function for the pressure
+ * - u = velocity
+ * - v = test function for the velocity
  */
 
 #include "interfaces/non_conservative.h"
 
-#include <deal2lkit/parsed_function.h>
-
-#include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_precondition.h>
-
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/packaged_operation.h>
-
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include <deal2lkit/parsed_function.h>
 #include <deal2lkit/fe_values_cache.h>
 #include <deal2lkit/parsed_function.h>
 
-using namespace DOFUtilities;
 
 template <int dim>
 class NavierStokes : public NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >
 {
 public:
   typedef FEValuesCache<dim,dim> Scratch;
+
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
-  typedef TrilinosWrappers::MPI::BlockVector VEC;
+
+  // Types:
+  typedef TrilinosWrappers::MPI::BlockVector BVEC;
+  typedef TrilinosWrappers::MPI::Vector VEC;
   typedef TrilinosWrappers::BlockSparseMatrix MAT;
 
-  NavierStokes(std::string prec="default");
+  NavierStokes();
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -66,20 +78,27 @@ public:
                        CopySystem &,
                        std::vector<Number> &local_residual) const;
 
-  void compute_system_operators(const DoFHandler<dim> &,
-                                const TrilinosWrappers::BlockSparseMatrix &,
-                                const TrilinosWrappers::BlockSparseMatrix &,
-                                const std::vector<shared_ptr<MAT> >,
-                                LinearOperator<VEC> &,
-                                LinearOperator<VEC> &) const;
-
   template<typename Number>
   void aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &,
                             Scratch &,
                             CopyPreconditioner &,
-                            std::vector<std::vector<Number> > &) const
-  {};
+                            std::vector<std::vector<Number> > &local_residual) const;
 
+  /**
+   * specify the number of auxiliry matrices that the problem requires.
+   * @return number of auxiliary matrices.
+   */
+  virtual unsigned int get_number_of_aux_matrices() const
+  {
+    return 4; // Ap Mp Kp Fp
+  }
+
+  virtual void compute_system_operators(const DoFHandler<dim> &,
+                                        const MAT &,
+                                        const MAT &,
+                                        const std::vector<shared_ptr<MAT> >,
+                                        LinearOperator<BVEC> &,
+                                        LinearOperator<BVEC> &) const;
 
 private:
 
@@ -123,86 +142,157 @@ private:
    */
   double amg_p_aggregation_threshold;
 
+  /**
+   * Name of the preconditioner:
+   */
   std::string prec_name;
 
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
+  /**
+   * Invert Mp using inverse_operator
+   */
+  bool invert_Mp;
+
+  /**
+   * Invert Kp using inverse_operator
+   */
+  bool invert_Kp;
+
+  /**
+   * Invert Ap using inverse_operator
+   */
+  bool invert_Ap;
+
+  /**
+   * Invert Fp using inverse_operator
+   */
+  bool invert_Fp;
+
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Fp_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Kp_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Kp_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Ap_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
 
 };
 
 template<int dim>
-NavierStokes<dim>::NavierStokes(std::string prec) :
+NavierStokes<dim>::
+NavierStokes()
+  :
   NonConservativeInterface<dim,dim,dim+1,NavierStokes<dim> >("Navier Stokes",
                                                              "FESystem[FE_Q(2)^d-FE_Q(1)]",
-                                                             "u,u,p", "1,1; 1,0", "1,0; 0,1","1,0"),
-  prec_name(prec)
+                                                             "u,u,p",
+                                                             "1,1; 1,0",
+                                                             "0,0; 0,1",
+                                                             "1,0")
 {}
 
+template <int dim>
+void
+NavierStokes<dim>::
+declare_parameters (ParameterHandler &prm)
+{
+  NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::declare_parameters(prm);
+  this->add_parameter(prm, &rho,
+                      "rho [kg m^3]", "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &nu,
+                      "nu [Pa s]", "1.0", Patterns::Double(0.0));
+  this->add_parameter(prm, &gamma,
+                      "grad-div stabilization", "1.0", Patterns::Double());
+  this->add_parameter(prm, &prec_name,  "Preconditioner","stokes",
+                      Patterns::Selection("stokes|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
+                      "Available preconditioners: \n"
+                      " - stokes  -> S^-1 = Mp^-1 \n"
+                      " - elman-1 -> S^-1 = Ap (BBt)^-1 \n"
+                      " - elman-2 -> S^-1 = Ap Fp^-1 Mp \n"
+                      " - BFBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1\n"
+                      " - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B diag(A)^-1 Bt)^-1\n"
+                      " - cah-cha -> S^-1 = Mp^-1 + Ap^-1\n");
+  this->add_parameter(prm, &amg_higher_order,
+                      "Amg Higher Order", "true", Patterns::Bool());
+  this->add_parameter(prm, &amg_smoother_sweeps,
+                      "Amg Smoother Sweeps", "2", Patterns::Integer(0));
+  this->add_parameter(prm, &amg_aggregation_threshold,
+                      "Amg Aggregation Threshold", "0.02", Patterns::Double(0.0));
+  this->add_parameter(prm, &amg_p_smoother_sweeps,
+                      "Amg P Smoother Sweeps","2", Patterns::Integer(0));
+  this->add_parameter(prm, &amg_p_aggregation_threshold,
+                      "Amg P Aggregation Threshold", "0.02", Patterns::Double(0.0));
+  this->add_parameter(prm, &invert_Ap,
+                      "Invert Ap using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &invert_Mp,
+                      "Invert Mp using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &invert_Fp,
+                      "Invert Fp using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &invert_Kp,
+                      "Invert Kp using inverse_operator", "true", Patterns::Bool());
+}
+
+template <int dim>
+void
+NavierStokes<dim>::
+parse_parameters_call_back ()
+{
+  NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::parse_parameters_call_back();
+}
 
 template <int dim>
 template<typename Number>
-void NavierStokes<dim>::preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                Scratch &fe_cache,
-                                                CopyPreconditioner &data,
-                                                std::vector<Number> &local_residual) const
+void
+NavierStokes<dim>::
+preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                        Scratch &fe_cache,
+                        CopyPreconditioner &data,
+                        std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
   fe_cache.reinit(cell);
 
-  fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
-  fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
 
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
 
-  auto &ps          = fe_cache.get_values(
-                        "solution",     "p",        pressure,       alpha);
-
-  auto &grad_ps = fe_cache.get_gradients(
-                    "solution",     "grad_p",   pressure,       alpha);
+  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &ps_dot = fe_cache.get_values("solution_dot", "p_dot", pressure, alpha);
+  auto &grad_ps = fe_cache.get_gradients("solution", "grad_p", pressure, alpha);
+  auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
 
   const unsigned int n_q_points = ps.size();
 
-  // Jacobian:
+// Jacobian:
   auto &JxW = fe_cache.get_JxW_values();
 
-  // Init residual to 0
+// Init residual to 0
   for (unsigned int i=0; i<local_residual.size(); ++i)
     local_residual[i] = 0;
 
   auto &fev = fe_cache.get_current_fe_values();
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      // variables:
-      const Tensor<1, dim, Number> &grad_p      = grad_ps[q];
-      const Number                 &p           = ps[q];
+// variables:
+      const Number &p = ps[q];
+      const Number &p_dot = ps_dot[q];
+      const Tensor<1, dim, Number> &grad_p = grad_ps[q];
+      const Tensor<1, dim, Number> &u = us[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
-          // test functions:
-          auto m      = fev[pressure     ].value(i,q);
-          auto grad_q = fev[pressure     ].gradient(i,q);
+// test functions:
+          auto m = fev[ pressure ].value(i,q);
+          auto grad_m = fev[ pressure ].gradient(i,q);
 
-          // compute residual:
-
-          if (  prec_name=="BFBt_identity"  ||
-                prec_name=="BFBt_diagA"     ||
-                prec_name=="cahouet-chabard"||
-                prec_name=="elman"
-             )
-            {
-              local_residual[i] +=  ( grad_p*grad_q )*JxW[q];
-            }
+// compute residual:
+          local_residual[i] += 0;
         }
 
     }
 
 }
-
 
 template <int dim>
 template<typename Number>
@@ -218,9 +308,9 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
   fe_cache.reinit(cell);
 
-  fe_cache.cache_local_solution_vector("solution",      *this->solution,      alpha);
-  fe_cache.cache_local_solution_vector("_solution",      this->old_solution,      dummy);
-  fe_cache.cache_local_solution_vector("solution_dot",  *this->solution_dot,  alpha);
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("old_solution",this->old_solution, dummy);
+  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
 
@@ -228,129 +318,153 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
   const FEValuesExtractors::Scalar pressure(dim);
 
 
-  // velocity:
-  auto &us          = fe_cache.get_values(                "solution",     "u",      velocity,       alpha);
-  auto &_us          = fe_cache.get_values(                "_solution",     "u",      velocity,       dummy);
-  auto &div_us      = fe_cache.get_divergences(           "solution",     "div_u",  velocity,       alpha);
-  auto &sym_grad_us = fe_cache.get_symmetric_gradients(   "solution",     "sym_grad_u",      velocity,       alpha);
-  auto &grad_us     = fe_cache.get_gradients(   "solution",     "grad_u",          velocity,       alpha);
-  auto &us_dot      = fe_cache.get_values(                "solution_dot", "u_dot",  velocity,       alpha);
+// velocity:
+  auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
+  auto &div_us = fe_cache.get_divergences("solution", "div_u", velocity, alpha);
+  auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "sym_grad_u", velocity, alpha);
+  auto &grad_us = fe_cache.get_gradients("solution", "grad_u", velocity, alpha);
+  auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
-  // pressure:
-  auto &ps = fe_cache.get_values(                "solution",     "p",      pressure,       alpha);
-  auto &grad_ps = fe_cache.get_gradients(                "solution",     "p",      pressure,       alpha);
+// pressure:
+  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &grad_ps = fe_cache.get_gradients("solution", "p", pressure, alpha);
 
-  // Jacobian:
+// Jacobian:
   auto &JxW = fe_cache.get_JxW_values();
 
   const unsigned int n_q_points = ps.size();
 
-  // Init residual to 0
+// Init residual to 0
   for (unsigned int i=0; i<local_residual.size(); ++i)
     local_residual[i] = 0;
 
   auto &fev = fe_cache.get_current_fe_values();
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      // variables:
-      //    velocity:
-      const Tensor<1, dim, Number>  &u          = us[q];
-      const Tensor<1, dim, double>  &_u         = _us[q];
-      const Number                  &div_u      = div_us[q];
-      const Tensor<1, dim, Number>  &u_dot      = us_dot[q];
+// variables:
+// velocity:
+      const Tensor<1, dim, Number> &u = us[q];
+      const Number &div_u = div_us[q];
+      const Tensor<1, dim, Number> &u_dot = us_dot[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
-      const Tensor <2, dim, Number> &grad_u     = grad_us[q];
+      const Tensor <2, dim, Number> &grad_u = grad_us[q];
 
-      //    pressure:
-      const Number                  &p          = ps[q];
-      const Tensor<1, dim, Number>  &grad_p     = grad_ps[q];
+// pressure:
+      const Number &p = ps[q];
+      const Tensor<1, dim, Number> &grad_p = grad_ps[q];
 
       for (unsigned int i=0; i<local_residual.size(); ++i)
         {
-          // test functions:
-          //    velocity:
-          auto v      = fev[velocity    ].value(i,q);
-          auto grad_v = fev[velocity    ].gradient(i,q);
+// test functions:
+// velocity:
+          auto v = fev[velocity ].value(i,q);
+          auto grad_v = fev[velocity ].gradient(i,q);
           auto sym_grad_v = fev[velocity].symmetric_gradient(i,q);
-          auto div_v  = fev[velocity    ].divergence(i,q);
+          auto div_v = fev[velocity ].divergence(i,q);
 
-          //    pressure:
-          auto m      = fev[pressure    ].value(i,q);
-          auto grad_m = fev[pressure    ].gradient(i,q);
+// pressure:
+          auto m = fev[pressure ].value(i,q);
+          auto grad_m = fev[pressure ].gradient(i,q);
 
-          // compute residual:
-          if (prec_name=="elman")
-            {
-              local_residual[i] += (
-                                     u_dot * v +
-                                     scalar_product(_u*grad_u, v) +
-                                     gamma * div_u * div_v +
-                                     nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                     (1./rho)*p*div_v +
-                                     m * div_u +
-                                     alpha * m * p +
-                                     nu*inner( grad_p,grad_m ) +
-                                     (_u*grad_p) * m
-                                   )*JxW[q];
-            }
-          else
-            {
-              local_residual[i] += (
-                                     u_dot * v +
-                                     scalar_product(_u*grad_u, v) +
-                                     gamma * div_u * div_v +
-                                     nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                     (1./rho)*p*div_v +
-                                     m * div_u +
-                                     m * p
-                                   )*JxW[q];
-            }
+// compute residual:
+          local_residual[i] += (
+                                 u_dot * v +
+                                 scalar_product(u*grad_u, v) +
+                                 gamma * div_u * div_v +
+                                 nu * scalar_product(sym_grad_u,sym_grad_v) -
+                                 1.0/rho * ( p * div_v + div_u * m)
+                               )*JxW[q];
         }
     }
 }
 
-
-
-
 template <int dim>
+template<typename Number>
 void
 NavierStokes<dim>::
-declare_parameters (ParameterHandler &prm)
+aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                     Scratch &fe_cache,
+                     CopyPreconditioner &data,
+                     std::vector<std::vector<Number> > &local_residuals) const
 {
-  NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::declare_parameters(prm);
-  this->add_parameter(prm, &rho,         "rho [kg m^3]",  "1.0", Patterns::Double(0.0));
-  this->add_parameter(prm, &nu,          "nu [Pa s]",     "1.0", Patterns::Double(0.0));
-  this->add_parameter(prm, &gamma,       "grad-div stabilization",     "1.0", Patterns::Double(0.0));
-  this->add_parameter(prm, &prec_name,   "Preconditioner","default",
-                      Patterns::Selection("default|diag|elman|BFBt_identity|BFBt_diagA|cahouet-chabard"));
-  this->add_parameter(prm, &amg_higher_order,   "Amg Higher Order","true",
-                      Patterns::Bool());
-  this->add_parameter(prm, &amg_smoother_sweeps,   "Amg Smoother Sweeps","2",
-                      Patterns::Integer(0));
-  this->add_parameter(prm, &amg_aggregation_threshold,       "Amg Aggregation Threshold",     "0.02", Patterns::Double(0.0));
+  Number alpha = this->alpha;
+  fe_cache.reinit(cell);
 
-  this->add_parameter(prm, &amg_p_smoother_sweeps,   "Amg P Smoother Sweeps","2",
-                      Patterns::Integer(0));
-  this->add_parameter(prm, &amg_p_aggregation_threshold,       "Amg P Aggregation Threshold",     "0.02", Patterns::Double(0.0));
+  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+
+  this->fix_solution_dot_derivative(fe_cache, alpha);
+
+  const FEValuesExtractors::Vector velocity(0);
+  const FEValuesExtractors::Scalar pressure(dim);
+
+  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &ps_dot = fe_cache.get_values("solution_dot", "p_dot", pressure, alpha);
+  auto &grad_ps = fe_cache.get_gradients("solution", "grad_p", pressure, alpha);
+  auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
+  auto &div_us = fe_cache.get_divergences("solution", "div_u", velocity, alpha);
+
+  auto &JxW = fe_cache.get_JxW_values();
+
+  const unsigned int n_q_points = ps.size();
+
+  auto &fev = fe_cache.get_current_fe_values();
+
+// Init residual to 0
+  for (unsigned int aux=0; aux<get_number_of_aux_matrices(); ++aux)
+    for (unsigned int i=0; i<local_residuals[0].size(); ++i)
+      local_residuals[aux][i] = 0;
+
+  for (unsigned int q=0; q<n_q_points; ++q)
+    {
+      // variables:
+      const Number &p = ps[q];
+      const Number &p_dot = ps_dot[q];
+      const Tensor<1, dim, Number> &grad_p = grad_ps[q];
+      const Tensor<1, dim, Number> &u = us[q];
+      const Number &div_u = div_us[q];
+
+      for (unsigned int i=0; i<local_residuals[0].size(); ++i)
+        {
+          // test functions:
+          auto v = fev[velocity ].value(i,q);
+          auto div_v = fev[velocity ].divergence(i,q);
+          auto m = fev[ pressure ].value(i,q);
+          auto grad_m = fev[ pressure ].gradient(i,q);
+
+
+// compute residuals:
+          local_residuals[0][i] += ( // Ap
+                                     nu * scalar_product( grad_p,grad_m )
+                                   )*JxW[q];
+
+          local_residuals[1][i] += ( // Kp
+                                     scalar_product( u,grad_p) * m +
+                                     gamma * div_u * div_v
+                                   )*JxW[q];
+
+          local_residuals[2][i] += ( // Mp
+                                     m * p_dot
+                                   )*JxW[q];
+
+          local_residuals[3][i] += ( // Fp
+                                     nu * scalar_product( grad_p,grad_m ) +
+                                     scalar_product( u,grad_p) * m +
+                                     m * p_dot
+                                   )*JxW[q];
+        }
+    }
 }
 
 template <int dim>
 void
 NavierStokes<dim>::
-parse_parameters_call_back ()
-{
-  NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::parse_parameters_call_back();
-}
-
-
-template <int dim>
-void
-NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
-                                            const TrilinosWrappers::BlockSparseMatrix &matrix,
-                                            const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-                                            const std::vector<shared_ptr<MAT> >,
-                                            LinearOperator<VEC> &system_op,
-                                            LinearOperator<VEC> &prec_op) const
+compute_system_operators(const DoFHandler<dim> &dh,
+                         const MAT &matrix,
+                         const MAT &preconditioner_matrix,
+                         const std::vector<shared_ptr<MAT> > aux_matrices,
+                         LinearOperator<BVEC> &system_op,
+                         LinearOperator<BVEC> &prec_op) const
 {
   auto alpha = this->alpha;
 
@@ -360,7 +474,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                     constant_modes);
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
   Amg_data.constant_modes = constant_modes;
-  // Amg_data.elliptic = true;
+// Amg_data.elliptic = true;
   Amg_data.higher_order_elements = amg_higher_order;
   Amg_data.smoother_sweeps = amg_smoother_sweeps;
   Amg_data.aggregation_threshold = amg_aggregation_threshold;
@@ -371,187 +485,161 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
                                     constant_modes_p);
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
-  Amg_data_p.elliptic = true;
-  // Amg_data_p.higher_order_elements = true;
+  Amg_data_p.elliptic = false;
+// Amg_data_p.higher_order_elements = true;
   Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
   Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
-  Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-  Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
-
-
-
-  // SYSTEM MATRIX:
-  auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-  auto Bt = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-  // auto B = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-  auto B =  transpose_operator(Bt);
-  auto C = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
+// SYSTEM MATRIX:
+  auto A = linear_operator< VEC >( matrix.block(0,0) );
+  auto Bt = linear_operator< VEC >( matrix.block(0,1) );
+  auto B = linear_operator< VEC >( matrix.block(1,0) );
+  // auto B = transpose_operator(Bt);
+  auto C = linear_operator< VEC >(aux_matrices[0]->block(1,1));
   auto ZeroP = null_operator(C);
 
-  system_op  = block_operator<2, 2, VEC >({{
+  system_op = block_operator<2, 2, BVEC >({{
       {{ A, Bt }} ,
       {{ B, ZeroP }}
     }
   });
 
-  // PRECONDITIONER
-  Amg_preconditioner->initialize (matrix.block(0,0),
-                                  Amg_data);
+// PRECONDITIONER
+
   static ReductionControl solver_control_cg(50000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_cg);
+  static SolverCG<VEC> solver_CG(solver_control_cg);
 
   static ReductionControl solver_control_gmres(50000, 1e-8);
-  static SolverGMRES<TrilinosWrappers::MPI::Vector> solver_GMRES(solver_control_gmres);
+  static SolverGMRES<VEC> solver_GMRES(solver_control_gmres);
 
   static SolverControl solver_control_fgmres (30, 1e-8);
-  PrimitiveVectorMemory<TrilinosWrappers::MPI::Vector> mem;
-  static SolverFGMRES<TrilinosWrappers::MPI::Vector>
-  solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<TrilinosWrappers::MPI::Vector>:: AdditionalData(30, true));
+  PrimitiveVectorMemory<VEC> mem;
+  static SolverFGMRES<VEC>
+  solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<VEC>:: AdditionalData(30, true));
 
+  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+  Amg_preconditioner->initialize (matrix.block(0,0), Amg_data);
+  auto A_inv = inverse_operator( A, solver_GMRES, *Amg_preconditioner);
 
+  LinearOperator<VEC> P00, P01, P10, P11, Schur_inv;
 
-  auto A_inv     = inverse_operator( A, solver_GMRES, *Amg_preconditioner);
-
+  auto Ap= linear_operator<VEC>(aux_matrices[0]->block(1,1));
+  auto Kp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
+  auto Mp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
+  auto Fp = linear_operator<VEC>(aux_matrices[3]->block(1,1));
 
   Assert(prec_name != "", ExcNotInitialized());
-  if (prec_name=="default")
+  if (prec_name=="stokes")
     {
-      Mp_preconditioner->initialize (matrix.block(1,1));
-      auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   ( matrix.block(1,1) );
-      auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
+      Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
+      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      auto Mp_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
-        }
-      });
-
+      Schur_inv = Mp_inv;
     }
-  else if (prec_name=="diag")
+  else if (prec_name=="cah-cha")
     {
-      Mp_preconditioner->initialize (matrix.block(1,1));
-      auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   ( matrix.block(1,1) );
-      auto Schur_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = null_operator(B);
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
+      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Ap_preconditioner->initialize (aux_matrices[1]->block(1,1),  Amg_data_p);
+      LinearOperator<VEC> Ap_inv;
+      if (invert_Ap)
+        {
+          Ap_inv  = inverse_operator( Ap, solver_CG, *Ap_preconditioner);
         }
-      });
-
-    }
-  else if (prec_name=="cahouet-chabard")
-    {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),    Amg_data_p);
-      auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   (preconditioner_matrix.block(1,1));
-
-      Mp_preconditioner->initialize (matrix.block(1,1));
-      auto Mp    = linear_operator< TrilinosWrappers::MPI::Vector >
-                   (matrix.block(1,1) );
-
-
-      auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-      auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
-      auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
-
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
+      else
+        {
+          Ap_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Ap_preconditioner);
         }
-      });
+
+      Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
+      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      auto Mp = linear_operator<VEC>( aux_matrices[2]->block(1,1) );
+      auto Mp_inv  = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
+
+      Schur_inv = Mp_inv + Ap_inv;
     }
-  else if (prec_name=="BFBt_identity")
+  else if (prec_name=="BFBt_id")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
-      auto BBt       = B*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
-      auto Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
-
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
+      auto BBt = B*Bt;
+      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> BBt_inv;
+      if (invert_Ap)
+        {
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
         }
-      });
+      else
+        {
+          BBt_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Ap_preconditioner);
+        }
+
+      Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
     }
-  else if (prec_name=="BFBt_diagA")
+  else if (prec_name=="BFBt_dA")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
 
-
-      auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-      inv_diag_A.vmult = [&matrix](TrilinosWrappers::MPI::Vector &v, const TrilinosWrappers::MPI::Vector &u)
+      auto inv_diag_A = linear_operator< VEC >( matrix.block(0,0) );
+      inv_diag_A.vmult = [&matrix](VEC &v, const VEC &u)
       {
         for (auto i : v.locally_owned_elements())
           v(i)=u(i)/matrix.block(0,0)(i,i);
       };
 
-      auto BBt       = B*inv_diag_A*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
-      auto Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
+      auto BBt = B*inv_diag_A*Bt;
+      auto BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
 
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
-        }
-      });
+      Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
     }
-  else if (prec_name=="elman")
+  else if (prec_name=="elman-1")
     {
-      auto Ap=linear_operator<TrilinosWrappers::MPI::Vector>(matrix.block(1,1));
-
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),
-                                     Amg_data_p);
-      auto BBt       = B*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
-
-      auto Schur_inv = Ap*BBt_inv;
-
-      auto P00 = A_inv;
-      auto P01 = null_operator(Bt);
-      auto P10 = Schur_inv * B * A_inv;
-      auto P11 = -1 * Schur_inv;
-
-      prec_op = block_operator<2, 2, VEC >({{
-          {{ P00, P01 }} ,
-          {{ P10, P11 }}
+      auto BBt = B*Bt;
+      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> BBt_inv;
+      if (invert_Ap)
+        {
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
         }
-      });
+      else
+        {
+          BBt_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Ap_preconditioner);
+        }
+
+      Schur_inv = Ap*BBt_inv;
+    }
+  else if (prec_name=="elman-2")
+    {
+      Fp_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Fp_preconditioner->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> Fp_inv;
+      if (invert_Fp)
+        {
+          Fp_inv = inverse_operator( Fp, solver_GMRES, *Fp_preconditioner);
+        }
+      else
+        {
+          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Fp_preconditioner );
+        }
+
+      Schur_inv = Ap * Fp_inv * Mp;
     }
   else
     {
       AssertThrow(false, ExcMessage("Preconditioner not recognized."));
     }
 
+  P00 = A_inv;
+  P01 = null_operator(Bt);
+  P10 = Schur_inv * B * A_inv;
+  P11 = -1 * Schur_inv;
+
+  prec_op = block_operator<2, 2, BVEC >({{
+      {{ P00, P01 }} ,
+      {{ P10, P11 }}
+    }
+  });
 
 }
 
