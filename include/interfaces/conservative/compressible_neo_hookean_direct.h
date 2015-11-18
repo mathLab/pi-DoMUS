@@ -1,7 +1,3 @@
-/*! \addtogroup equations
- *  @{
- */
-
 #ifndef _compressible_neo_hookean_h_
 #define _compressible_neo_hookean_h_
 
@@ -24,12 +20,12 @@
 
 
 template <int dim, int spacedim>
-class CompressibleNeoHookeanInterface : public ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >
+class CompressibleNeoHookeanInterface : public ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim>, LADealII >
 {
   typedef FEValuesCache<dim,spacedim> Scratch;
   typedef Assembly::CopyData::piDoMUSPreconditioner<dim,dim> CopyPreconditioner;
   typedef Assembly::CopyData::piDoMUSSystem<dim,dim> CopySystem;
-  typedef TrilinosWrappers::MPI::BlockVector VEC;
+  typedef BlockVector<double> VEC;
 
 public:
 
@@ -79,7 +75,7 @@ private:
 
 template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::CompressibleNeoHookeanInterface() :
-  ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
+  ConservativeInterface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim>,LADealII >("Compressible NeoHookean Interface",
       "FESystem[FE_Q(1)^d]",
       "u,u,u", "1", "1","1")
 {};
@@ -153,7 +149,7 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::system_energy(const typename
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
 {
-  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::declare_parameters(prm);
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim>, LADealII >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }
@@ -161,65 +157,64 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (Paramete
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::parse_parameters_call_back ()
 {
-  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::parse_parameters_call_back();
+  ConservativeInterface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim>, LADealII >::parse_parameters_call_back();
   mu = E/(2.0*(1.+nu));
   lambda = (E *nu)/((1.+nu)*(1.-2.*nu));
 }
 
-template <int dim, int spacedim>
-void
-CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
-    const TrilinosWrappers::BlockSparseMatrix &matrix,
-    const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-    LinearOperator<VEC> &system_op,
-    LinearOperator<VEC> &prec_op) const
-{
-
-  std::vector<std::vector<bool> > constant_modes;
-  FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
-                                    constant_modes);
-
-  Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
-  Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
-
-//  Mp_preconditioner->initialize (preconditioner_matrix.block(0,0));
-  Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
-                                  Amg_data);
-
-
-  auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-
-  static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-  auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
-
-  auto P00 = A_inv;
-
-  // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<1, 1, VEC >({{
-      {{ A }}
-    }
-  });
-
-
-  //const auto S = linear_operator<VEC>(matrix);
-
-  prec_op = block_operator<1, 1, VEC >({{
-      {{ P00}} ,
-    }
-  });
-}
+// template <int dim, int spacedim>
+// void
+// CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+//     const TrilinosWrappers::BlockSparseMatrix &matrix,
+//     const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
+//     LinearOperator<VEC> &system_op,
+//     LinearOperator<VEC> &prec_op) const
+// {
+//
+//   std::vector<std::vector<bool> > constant_modes;
+//   FEValuesExtractors::Vector displacement(0);
+//   DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
+//                                     constant_modes);
+//
+//   Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
+//   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+//
+//   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+//   Amg_data.constant_modes = constant_modes;
+//   Amg_data.elliptic = true;
+//   Amg_data.higher_order_elements = true;
+//   Amg_data.smoother_sweeps = 2;
+//   Amg_data.aggregation_threshold = 0.02;
+//
+// //  Mp_preconditioner->initialize (preconditioner_matrix.block(0,0));
+//   Amg_preconditioner->initialize (preconditioner_matrix.block(0,0),
+//                                   Amg_data);
+//
+//
+//   auto A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
+//
+//   static ReductionControl solver_control_pre(5000, 1e-8);
+//   static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
+//   auto A_inv     = inverse_operator( A, solver_CG, *Amg_preconditioner);
+//
+//   auto P00 = A_inv;
+//
+//   // ASSEMBLE THE PROBLEM:
+//   system_op  = block_operator<1, 1, VEC >({{
+//       {{ A }}
+//     }
+//   });
+//
+//
+//   //const auto S = linear_operator<VEC>(matrix);
+//
+//   prec_op = block_operator<1, 1, VEC >({{
+//       {{ P00}} ,
+//     }
+//   });
+// }
 
 
 template class CompressibleNeoHookeanInterface <3,3>;
 
 #endif
-/*! @} */
