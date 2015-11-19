@@ -167,6 +167,16 @@ private:
    */
   bool invert_Fp;
 
+  /**
+   * Solver tolerance for CG
+   */
+  double CG_solver_tolerance;
+
+  /**
+   * Solver tolerance for GMRES
+   */
+  double GMRES_solver_tolerance;
+
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Fp_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -227,6 +237,12 @@ declare_parameters (ParameterHandler &prm)
                       "Invert Fp using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Kp,
                       "Invert Kp using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &CG_solver_tolerance,
+                      "CG Solver tolerance", "1e-8",
+                      Patterns::Double(0.0));
+  this->add_parameter(prm, &GMRES_solver_tolerance,
+                      "GMRES Solver tolerance", "1e-8",
+                      Patterns::Double(0.0));
 }
 
 template <int dim>
@@ -304,12 +320,9 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                 std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
-  double dummy = 0.0;
-
   fe_cache.reinit(cell);
 
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("old_solution",this->old_solution, dummy);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -450,6 +463,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
           local_residuals[3][i] += ( // Fp
                                      nu * scalar_product( grad_p,grad_m ) +
                                      scalar_product( u,grad_p) * m +
+                                     gamma * div_u * div_v +
                                      m * p_dot
                                    )*JxW[q];
         }
@@ -506,16 +520,12 @@ compute_system_operators(const DoFHandler<dim> &dh,
 
 // PRECONDITIONER
 
-  static ReductionControl solver_control_cg(50000, 1e-8);
+  static ReductionControl solver_control_cg(matrix.m(), CG_solver_tolerance);
   static SolverCG<VEC> solver_CG(solver_control_cg);
 
-  static ReductionControl solver_control_gmres(50000, 1e-8);
+  static ReductionControl solver_control_gmres(matrix.m(), GMRES_solver_tolerance);
   static SolverGMRES<VEC> solver_GMRES(solver_control_gmres);
 
-  static SolverControl solver_control_fgmres (30, 1e-8);
-  PrimitiveVectorMemory<VEC> mem;
-  static SolverFGMRES<VEC>
-  solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<VEC>:: AdditionalData(30, true));
 
   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
   Amg_preconditioner->initialize (matrix.block(0,0), Amg_data);

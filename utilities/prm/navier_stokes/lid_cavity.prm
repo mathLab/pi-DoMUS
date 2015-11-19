@@ -12,19 +12,22 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = -200.0
-  set nu [Pa s]                        = 200
+  set nu [Pa s]                        = 200.0
   set rho [kg m^3]                     = 1.0
+
+  set GMRES Solver tolerance          = 1e-2
+  set CG Solver tolerance             = 1e-2
 
   set Invert Ap using inverse_operator = true
   set Invert Fp using inverse_operator = true
   set Invert Kp using inverse_operator = true
   set Invert Mp using inverse_operator = true
 
-  set Amg Aggregation Threshold        = 0.02
+  set Amg Aggregation Threshold        = 0.5
   set Amg Smoother Sweeps              = 2
   set Amg Higher Order                 = true
 
-  set Amg P Aggregation Threshold      = 0.2
+  set Amg P Aggregation Threshold      = 0.5
   set Amg P Smoother Sweeps            = 2
 
 
@@ -36,12 +39,13 @@ subsection Navier Stokes
   # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
   # diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  set Preconditioner                   = elman-1
+  set Preconditioner                   = elman-2
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
+set Solver tolerance                              = 1e-8
 set Adaptive refinement                            = false
-set Initial global refinement                      = 3
+set Initial global refinement                      = 4
 set Maximum number of time steps                   = 10000
 set Number of cycles                               = 1
 set Timer output file                              = timer.txt
@@ -62,7 +66,7 @@ subsection Dirichlet boundary conditions
   set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 % \
                                 2 = 0 ; 0 ; 0 % \
-                                3 = t<1?(t^2)*k:k ; 0 ; 0
+                                3 = 1 ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -115,18 +119,18 @@ end
 
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_dot
-  set Initial step size                             = 1e-6
+  set Initial step size                             = 1e-8
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 3
+  set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-2
+  set Seconds between each output                   = 1e-3
   set Use local tolerances                          = false
 end
 

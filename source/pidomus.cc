@@ -119,6 +119,12 @@ declare_parameters (ParameterHandler &prm)
                   "Overwrite Newton's iterations",
                   "true",
                   Patterns::Bool());
+
+  add_parameter(  prm,
+                  &solver_tolerance,
+                  "Linear solver tolerance",
+                  "1e-8",
+                  Patterns::Double(0.0));
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -855,8 +861,6 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
 {
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
-
-  const double solver_tolerance = 1e-8;
 
   typedef dealii::BlockSparseMatrix<double> sMAT;
   typedef dealii::BlockVector<double> sVEC;
