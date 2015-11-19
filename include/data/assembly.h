@@ -7,13 +7,12 @@
  *       like WorkStream.
  */
 
-#ifndef _ASSEMBLY_
-#define _ASSEMBLY_
+#ifndef _pidomus_copy_data_h
+#define _pidomus_copy_data_h
 
 #include <deal.II/fe/fe_values.h>
 #include "Sacado.hpp"
 #include <deal2lkit/fe_values_cache.h>
-#include <deal2lkit/any_data.h>
 
 using namespace dealii;
 using namespace deal2lkit;
@@ -21,82 +20,47 @@ using namespace deal2lkit;
 typedef Sacado::Fad::DFad<double> Sdouble;
 typedef Sacado::Fad::DFad<Sdouble> SSdouble;
 
-namespace Assembly
+struct CopyData
 {
-  namespace CopyData
-  {
-    template <int dim, int spacedim>
-    struct piDoMUSPreconditioner
-    {
-      piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe,
-                             const unsigned int &n_aux);
-      piDoMUSPreconditioner (const piDoMUSPreconditioner &data);
+  CopyData (const unsigned int &dofs_per_cell,,
+            const unsigned int &n_matrices);
+  CopyData (const CopyData &data);
 
-      FullMatrix<double>                    local_matrix;
-      std::vector<types::global_dof_index>  local_dof_indices;
-      std::vector<Sdouble>                  sacado_residual;
-      std::vector<double>                   double_residual;
-      std::vector<std::vector<double> >     double_residuals;
-      std::vector<std::vector<Sdouble> >    sacado_residuals;
-      std::vector<FullMatrix<double> >      local_matrices;
-    };
+  FullMatrix<double>                    local_matrix;
+  std::vector<types::global_dof_index>  local_dof_indices;
+  std::vector<Sdouble>                  sacado_residual;
+  std::vector<double>                   double_residual;
+  std::vector<std::vector<double> >     double_residuals;
+  std::vector<std::vector<Sdouble> >    sacado_residuals;
+  std::vector<FullMatrix<double> >      local_matrices;
+};
 
-    template <int dim, int spacedim>
-    piDoMUSPreconditioner<dim, spacedim>::
-    piDoMUSPreconditioner (const FiniteElement<dim, spacedim> &fe,
-                           const unsigned int &n_aux)
-      :
-      local_matrix       (fe.dofs_per_cell,
-                          fe.dofs_per_cell),
-      local_dof_indices  (fe.dofs_per_cell),
-      sacado_residual    (fe.dofs_per_cell),
-      double_residual    (fe.dofs_per_cell),
-      double_residuals   (n_aux, std::vector<double>(fe.dofs_per_cell)),
-      sacado_residuals   (n_aux, std::vector<Sdouble>(fe.dofs_per_cell)),
-      local_matrices     (n_aux, local_matrix)
-    {}
 
-    template <int dim, int spacedim>
-    piDoMUSPreconditioner<dim, spacedim>::
-    piDoMUSPreconditioner (const piDoMUSPreconditioner &data)
-      :
-      local_matrix       (data.local_matrix),
-      local_dof_indices  (data.local_dof_indices),
-      sacado_residual    (data.sacado_residual),
-      double_residual    (data.double_residual),
-      double_residuals   (data.double_residuals),
-      sacado_residuals   (data.sacado_residuals),
-      local_matrices     (data.local_matrices)
-    {}
+CopyData<dim, spacedim>::
+CopyData (const unsigned int &dofs_per_cell,
+          const unsigned int &n_matrices)
+  :
+  local_matrix       (dofs_per_cell,
+                      dofs_per_cell),
+  local_dof_indices  (dofs_per_cell),
+  sacado_residual    (dofs_per_cell),
+  double_residual    (dofs_per_cell),
+  double_residuals   (n_matrices),
+  sacado_residuals   (n_matrices),
+  local_matrices     (n_matrices, local_matrix)
+{}
 
-    template <int dim, int spacedim>
-    struct piDoMUSSystem : public piDoMUSPreconditioner<dim, spacedim>
-    {
-      piDoMUSSystem (const FiniteElement<dim, spacedim> &fe,
-                     const unsigned int &n_aux);
-      piDoMUSSystem (const piDoMUSSystem<dim, spacedim> &data);
+CopyData<dim, spacedim>::
+CopyData (const CopyData &data)
+  :
+  local_matrix       (data.local_matrix),
+  local_dof_indices  (data.local_dof_indices),
+  sacado_residual    (data.sacado_residual),
+  double_residual    (data.double_residual),
+  double_residuals   (data.double_residuals),
+  sacado_residuals   (data.sacado_residuals),
+  local_matrices     (data.local_matrices)
+{}
 
-      Vector<double> local_rhs;
-    };
-
-    template <int dim, int spacedim>
-    piDoMUSSystem<dim, spacedim>::
-    piDoMUSSystem (const FiniteElement<dim, spacedim> &fe,
-                   const unsigned int &n_aux)
-      :
-      piDoMUSPreconditioner<dim, spacedim> (fe, n_aux),
-      local_rhs (fe.dofs_per_cell)
-    {}
-
-    template <int dim, int spacedim>
-    piDoMUSSystem<dim, spacedim>::
-    piDoMUSSystem (const piDoMUSSystem<dim, spacedim> &data)
-      :
-      piDoMUSPreconditioner<dim, spacedim> (data),
-      local_rhs (data.local_rhs)
-    {}
-
-  }
-}
 
 #endif
