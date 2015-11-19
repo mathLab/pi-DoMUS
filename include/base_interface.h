@@ -30,29 +30,27 @@
 
 #include <deal.II/lac/linear_operator.h>
 
-#include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
-#include <deal2lkit/any_data.h>
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
 
 #include "data/assembly.h"
 #include "lac/lac_type.h"
-#include <deal.II/base/sacado_product_type.h>
+
 
 template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
-class Interface : public ParsedFiniteElement<dim,spacedim>
+class BaseInterface : public ParsedFiniteElement<dim,spacedim>
 {
 
 public:
 
-  virtual ~Interface() {};
+  virtual ~BaseInterface() {};
 
-  Interface(const std::string &name="",
-            const std::string &default_fe="FE_Q(1)",
-            const std::string &default_component_names="u",
-            const std::string &default_differential_components="") :
+  BaseInterface(const std::string &name="",
+                const std::string &default_fe="FE_Q(1)",
+                const std::string &default_component_names="u",
+                const std::string &default_differential_components="") :
     ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                       n_components),
     forcing_terms("Forcing terms", default_component_names, ""),
@@ -265,9 +263,9 @@ protected:
 template <int dim, int spacedim, int n_components, typename LAC>
 template<typename Number>
 void
-Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
-                                                 const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                                 FEValuesCache<dim,spacedim> &fe_cache) const
+BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
+                                                     const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                                     FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell);
   fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
@@ -280,10 +278,10 @@ Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
 template <int dim, int spacedim, int n_components, typename LAC>
 template<typename Number>
 void
-Interface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
-                                                 const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                                 const unsigned int face_no,
-                                                 FEValuesCache<dim,spacedim> &fe_cache) const
+BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
+                                                     const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                                     const unsigned int face_no,
+                                                     FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell, face_no);
   fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
