@@ -921,6 +921,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
   if (use_direct_solver == false)
     {
       assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
+      assemble_aux_matrices(t, src_yy, src_yp, alpha);
 
       energy.compute_system_operators(*dof_handler,
                                       jacobian_matrix, jacobian_preconditioner_matrix,
