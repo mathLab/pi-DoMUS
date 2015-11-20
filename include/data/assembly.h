@@ -38,8 +38,8 @@ CopyData (const unsigned int &dofs_per_cell,
           const unsigned int &n_matrices)
   :
   local_dof_indices  (dofs_per_cell),
-  double_residuals   (n_matrices),
-  sacado_residuals   (n_matrices),
+  double_residuals   (n_matrices, std::vector<double>(dofs_per_cell)),
+  sacado_residuals   (n_matrices, std::vector<Sdouble>(dofs_per_cell)),
   local_matrices     (n_matrices,
                       FullMatrix<double>(dofs_per_cell,
                                          dofs_per_cell))
