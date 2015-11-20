@@ -221,6 +221,8 @@ public:
 
 protected:
 
+  template <typename T>
+  void init_to_zero(std::vector<T> &vec) const;
 
 
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
@@ -302,6 +304,14 @@ BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
   this->fix_solution_dot_derivative(fe_cache, alpha);
 }
 
-
+template<int dim, int spacedim, int n_components, typename LAC>
+template<typename T>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
+init_to_zero(std::vector<typename T> &vec)
+{
+  for (unsigned int i=0; i<vec.size(), ++i)
+    vec[i] = 0;
+}
 
 #endif
