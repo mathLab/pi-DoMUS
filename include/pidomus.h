@@ -232,7 +232,7 @@ private:
   bool use_direct_solver;
 
   /**
-   * Solver tollerance for the equation:
+   * Solver tolerance for the equation:
    * \f[ \mathcal{J}(F)[u] = R[u] \f]
    */
   double solver_tolerance;
