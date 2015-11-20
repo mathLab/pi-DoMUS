@@ -45,13 +45,13 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                      ConstraintMatrix &constraints) const
 {
   if (this->operator()()->has_support_points())
-    dirichlet_bcs.interpolate_boundary_values(dof_handler,constraints);
+    dirichlet_bcs.interpolate_boundary_values(*get_mapping(),dof_handler,constraints);
   else
     {
       const QGauss<dim-1> quad(this->operator()()->degree+1);
-      dirichlet_bcs.project_boundary_values(dof_handler,quad,constraints);
+      dirichlet_bcs.project_boundary_values(*get_mapping(),dof_handler,quad,constraints);
     }
-  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,constraints);
+  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,*get_mapping(),constraints);
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>

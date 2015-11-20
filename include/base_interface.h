@@ -58,14 +58,17 @@ public:
     dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
     str_diff_comp(default_differential_components),
     old_t(-1.0)
-  {};
+  {
+    n_matrices = get_number_of_matrices();
+    mapping = set_mapping();
+  };
 
   virtual void declare_parameters (ParameterHandler &prm);
   virtual void parse_parameters_call_back ();
   const std::vector<unsigned int> get_differential_blocks() const;
 
   /**
-   * update time of all parsed mapped functions
+   * set time to @p t for forcing terms and boundary conditions
    */
   virtual void set_time (const double &t) const;
 
@@ -132,31 +135,39 @@ public:
    */
   virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                             FEValuesCache<dim,spacedim> &,
-                            std::vector<Sdouble> &) const;
+                            std::vector<Sdouble> &,
+			    bool compute_only_system_matrix) const;
 
   /**
    * Definition of energies
    */
   virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                             FEValuesCache<dim,spacedim> &,
-                            std::vector<SSdouble> &) const;
+                            std::vector<SSdouble> &,
+			    bool compute_only_system_matrix) const;
 
 
   /**
    * Definition of residulas
    */
-  virtual void get_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                     FEValuesCache<dim,spacedim> &scratch,
-                                     std::vector<std::vector<double> > &local_residuals) const;
+  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+			      FEValuesCache<dim,spacedim> &scratch,
+			      std::vector<std::vector<double> > &local_residuals,
+			      bool compute_only_system_matrix) const;
 
 
   /**
    * Definition of residulas
    */
-  virtual void get_matrix_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                     FEValuesCache<dim,spacedim> &scratch,
-                                     std::vector<std::vector<Sdouble> > &local_residuals) const;
+  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+			      FEValuesCache<dim,spacedim> &scratch,
+			      std::vector<std::vector<Sdouble> > &local_residuals
+			      bool compute_only_system_matrix) const;
 
+/**
+ * This function can be overloaded to directly implement the local
+ * matrices (i.e. as it is usally done in standard FE codes)
+ */
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
@@ -175,15 +186,14 @@ public:
                                         LinearOperator<typename LAC::VectorType> &) const;
 
 
-  virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
-                                                         const typename LAC::VectorType &) const;
-  virtual UpdateFlags get_residual_flags() const;
+ shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
+virtual shared_ptr<Mapping<dim,spacedim> > set_mapping() const;
 
   virtual UpdateFlags get_face_flags() const;
 
   virtual void set_matrices_update_flags();
 
-  UpdateFlags get_aux_matrix_flags(const unsigned int &i) const;
+  UpdateFlags get_matrix_flags(const unsigned int &i) const;
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
 
@@ -252,9 +262,11 @@ protected:
   unsigned int n_q_points;
   unsigned int n_face_q_points;
 
+unsigned int n_matrices;
+
   std::vector<UpdateFlags> matrices_update_flags;
   std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
-
+shared_ptr<Mapping<dim,spacedim> >  mapping;
 
 
 
