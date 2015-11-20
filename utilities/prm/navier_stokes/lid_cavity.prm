@@ -12,8 +12,8 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.0001
-  set rho [kg m^3]                     = 10000
+  set nu [Pa s]                        = 100000
+  set rho [kg m^3]                     = 0.00001
 
   set GMRES Solver tolerance          = 1e-8
   set CG Solver tolerance             = 1e-8
@@ -39,7 +39,7 @@ subsection Navier Stokes
   # - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
   # diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  set Preconditioner                   = no-viscosity
+  set Preconditioner                   = stokes
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>

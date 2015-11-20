@@ -76,7 +76,6 @@ public:
                                          CopyPreconditioner &data,
                                          std::vector<std::vector<double> > &local_residuals) const
   {
-    std::cout << "eccoci1" << std::endl;
     static_cast<const Implementation *>(this)->aux_matrix_residuals(cell, scratch, data, local_residuals);
   }
 
@@ -85,7 +84,6 @@ public:
                                          CopyPreconditioner &data,
                                          std::vector<std::vector<Sdouble> > &local_residuals) const
   {
-    std::cout << "eccoci2" << std::endl;
     static_cast<const Implementation *>(this)->aux_matrix_residuals(cell, scratch, data, local_residuals);
   }
 };

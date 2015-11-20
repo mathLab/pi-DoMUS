@@ -426,12 +426,10 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
   const unsigned int n_q_points = ps.size();
 
   auto &fev = fe_cache.get_current_fe_values();
-  std::cout << "compute0" << get_number_of_aux_matrices()  << std::endl;
 // Init residual to 0
   for (unsigned int aux=0; aux<get_number_of_aux_matrices(); ++aux)
     for (unsigned int i=0; i<local_residuals[0].size(); ++i)
       local_residuals[aux][i] = 0;
-  std::cout << "compute1" << std::endl;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       // variables:
@@ -440,7 +438,6 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
       const Tensor<1, dim, Number> &grad_p = grad_ps[q];
       const Tensor<1, dim, Number> &u = us[q];
       const Number &div_u = div_us[q];
-      std::cout << "compute2" << std::endl;
       for (unsigned int i=0; i<local_residuals[0].size(); ++i)
         {
           // test functions:
@@ -460,7 +457,6 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      gamma * div_u * div_v
                                    )*JxW[q];
 
-          std::cout << "compute3" << std::endl;
           local_residuals[2][i] += ( // Mp
                                      m * p
                                    )*JxW[q];

@@ -12,8 +12,8 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.001
-  set rho [kg m^3]                     = 1.0
+  set nu [Pa s]                        = 100000
+  set rho [kg m^3]                     = 0.00001
 
   set GMRES Solver tolerance          = 1e-10
   set CG Solver tolerance             = 1e-10
