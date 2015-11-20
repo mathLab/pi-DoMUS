@@ -28,7 +28,7 @@ struct CopyData
 
   std::vector<types::global_dof_index>  local_dof_indices;
   std::vector<std::vector<double> >     double_residuals;
-  std::vector<std::vector<Sdouble> >    sacado_residuals;
+  std::vector<std::vector<Sdouble> >    sacado_residuals; //TODO REMOVE
   std::vector<FullMatrix<double> >      local_matrices;
 };
 

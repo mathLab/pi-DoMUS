@@ -36,50 +36,37 @@ public:
   }
 
 
-  virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                            FEValuesCache<dim,spacedim> &scratch,
-                            std::vector<Sdouble> &energies,
-                            bool compute_only_system_matrix) const
+  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                          FEValuesCache<dim,spacedim> &scratch,
+                                          std::vector<Sdouble> &energies,
+                                          std::vector<std::vector<double> > &local_residuals,
+                                          bool compute_only_system_matrix) const
   {
     init_to_zero(energies);
-    static_cast<const Implementation *>(this)->set_energies(cell, scratch, energies,
-                                                            compute_only_system_matrix);
+    init_to_zero(local_residuals);
+    static_cast<const Implementation *>(this)->set_energies_and_residuals(cell,
+        scratch,
+        energies,
+        local_residuals,
+        compute_only_system_matrix);
   }
 
 
-  virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                            FEValuesCache<dim,spacedim> &scratch,
-                            std::vector<SSdouble> &energies,
-                            bool compute_only_system_matrix) const
+  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                          FEValuesCache<dim,spacedim> &scratch,
+                                          std::vector<SSdouble> &energies,
+                                          std::vector<std::vector<Sdouble> > &local_residuals,
+                                          bool compute_only_system_matrix) const
   {
     init_to_zero(energies);
-    static_cast<const Implementation *>(this)->set_energies(cell, scratch, energies,
-                                                            compute_only_system_matrix);
-  }
-
-
-
-  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                              FEValuesCache<dim,spacedim> &scratch,
-                              std::vector<std::vector<double> > &local_residuals,
-                              bool compute_only_system_matrix) const;
-  {
     init_to_zero(local_residuals);
-    static_cast<const Implementation *>(this)->set_residuals(cell, scratch,
-                                                             local_residuals,
-                                                             compute_only_system_matrix);
+    static_cast<const Implementation *>(this)->set_energies_and_residuals(cell,
+        scratch,
+        energies,
+        local_residuals,
+        compute_only_system_matrix);
   }
 
-  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                              FEValuesCache<dim,spacedim> &scratch,
-                              std::vector<std::vector<Sdouble> > &local_residuals,
-                              bool compute_only_system_matrix) const;
-  {
-    init_to_zero(local_residuals);
-    static_cast<const Implementation *>(this)->set_residuals(cell, scratch,
-                                                             local_residuals,
-                                                             compute_only_system_matrix);
-  }
 };
 
 #endif

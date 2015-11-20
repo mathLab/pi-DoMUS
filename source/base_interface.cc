@@ -194,9 +194,11 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
   cell->get_dof_indices (data.local_dof_indices);
 
   std::vector<SSdouble> energies(n_aux_matrices);
-  get_energies(cell, scratch, energies, false);
-
-  get_residuals(cell, scratch, data.sacado_residuals, false);
+  get_energies_and_residuals(cell,
+                             scratch,
+                             energies,
+                             data.sacado_residuals,
+                             false);
 
   for (unsigned n=0; n<n_matrices; ++n)
     for (unsigned int i=0; i<dofs_per_cell; ++i)

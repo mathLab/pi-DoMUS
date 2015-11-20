@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef _N_FIELDS_LINEAR_PROBLEM_
-#define _N_FIELDS_LINEAR_PROBLEM_
+#ifndef __pi-DoMUS_h_
+#define __pi-DoMUS_h_
 
 
 #include <deal.II/base/timer.h>
@@ -27,7 +27,7 @@
 // #include <deal.II/lac/precondition.h>
 
 #include "data/assembly.h"
-#include "interfaces/interface.h"
+#include "base_interface.h"
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/parsed_grid_refinement.h>
@@ -50,9 +50,6 @@ using namespace deal2lkit;
 template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
 class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
-  typedef typename Assembly::CopyData::piDoMUSSystem<dim, spacedim> SystemCopyData;
-  typedef typename Assembly::CopyData::piDoMUSPreconditioner<dim, spacedim> PreconditionerCopyData;
-  typedef FEValuesCache<dim, spacedim> Scratch;
 
   // This is a class required to make tests
   template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
@@ -61,7 +58,7 @@ class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC:
 public:
 
 
-  piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
+  piDoMUS (const BaseInterface<dim, spacedim, n_components, LAC> &energy,
            const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
@@ -145,32 +142,21 @@ private:
   void make_grid_fe();
   void setup_dofs (const bool &first_run = true);
 
-  void assemble_jacobian_matrix (const double t,
-                                 const typename LAC::VectorType &y,
-                                 const typename LAC::VectorType &y_dot,
-                                 const double alpha);
-
-  void assemble_jacobian_preconditioner (const double t,
-                                         const typename LAC::VectorType &y,
-                                         const typename LAC::VectorType &y_dot,
-                                         const double alpha);
-
-  void assemble_aux_matrices (const double t,
-                              const typename LAC::VectorType &y,
-                              const typename LAC::VectorType &y_dot,
-                              const double alpha);
+  void assemble_matrices (const double t,
+                          const typename LAC::VectorType &y,
+                          const typename LAC::VectorType &y_dot,
+                          const double alpha);
   void refine_mesh ();
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
   const MPI_Comm &comm;
-  const Interface<dim, spacedim, n_components, LAC>    &energy;
+  const BaseInterface<dim, spacedim, n_components, LAC>    &energy;
 
   unsigned int n_cycles;
   unsigned int current_cycle;
   unsigned int initial_global_refinement;
   unsigned int max_time_iterations;
-  double fixed_alpha;
 
   std::string timer_file_name;
 
@@ -186,12 +172,6 @@ private:
 
   ConstraintMatrix                          constraints;
 
-  typename LAC::BlockSparsityPattern       jacobian_matrix_sp;
-  typename LAC::BlockSparsityPattern       jacobian_preconditioner_matrix_sp;
-
-  typename LAC::BlockMatrix       jacobian_matrix;
-  typename LAC::BlockMatrix       jacobian_preconditioner_matrix;
-
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
   LinearOperator<typename LAC::VectorType> jacobian_op;
 
@@ -203,11 +183,9 @@ private:
 
   mutable TimerOutput                               computing_timer;
 
-  const unsigned int n_aux_matrices;
-  std::vector<shared_ptr<typename LAC::BlockMatrix> >  aux_matrix;
-  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > aux_matrix_sp;
-
-
+  const unsigned int n_matrices;
+  std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
+  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrices_sp;
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim, spacedim>   pgg;

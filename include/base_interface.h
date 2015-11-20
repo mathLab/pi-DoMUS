@@ -131,38 +131,22 @@ public:
 
 
   /**
-   * Definition of energies
+   * Definition of energies and residuals
    */
-  virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-                            FEValuesCache<dim,spacedim> &,
-                            std::vector<Sdouble> &,
-                            bool compute_only_system_matrix) const;
+  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                          FEValuesCache<dim,spacedim> &,
+                                          std::vector<Sdouble> &,
+                                          std::vector<std::vector<double> > &local_residuals,
+                                          bool compute_only_system_matrix) const;
 
   /**
-   * Definition of energies
+   * Definition of energies and residuals
    */
-  virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-                            FEValuesCache<dim,spacedim> &,
-                            std::vector<SSdouble> &,
-                            bool compute_only_system_matrix) const;
-
-
-  /**
-   * Definition of residulas
-   */
-  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                              FEValuesCache<dim,spacedim> &scratch,
-                              std::vector<std::vector<double> > &local_residuals,
-                              bool compute_only_system_matrix) const;
-
-
-  /**
-   * Definition of residulas
-   */
-  virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                              FEValuesCache<dim,spacedim> &scratch,
-                              std::vector<std::vector<Sdouble> > &local_residuals
-                              bool compute_only_system_matrix) const;
+  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+                                          FEValuesCache<dim,spacedim> &,
+                                          std::vector<SSdouble> &,
+                                          std::vector<std::vector<Sdouble> > &local_residuals,
+                                          bool compute_only_system_matrix) const;
 
   /**
    * This function can be overloaded to directly implement the local
@@ -171,8 +155,6 @@ public:
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
-
-
 
   /**
    * Compute linear operators needed by the problem
