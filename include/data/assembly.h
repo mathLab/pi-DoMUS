@@ -51,8 +51,8 @@ namespace Assembly
       local_dof_indices  (fe.dofs_per_cell),
       sacado_residual    (fe.dofs_per_cell),
       double_residual    (fe.dofs_per_cell),
-      double_residuals   (n_aux),
-      sacado_residuals   (n_aux),
+      double_residuals   (n_aux, std::vector<double>(fe.dofs_per_cell)),
+      sacado_residuals   (n_aux, std::vector<Sdouble>(fe.dofs_per_cell)),
       local_matrices     (n_aux, local_matrix)
     {}
 
