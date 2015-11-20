@@ -341,7 +341,6 @@ assemble_local_aux_matrices (const typename DoFHandler<dim,spacedim>::active_cel
 
   cell->get_dof_indices (data.local_dof_indices);
 //  data.local_matrix = 0;
-
   get_aux_matrix_residuals(cell, scratch, data, data.sacado_residuals);
 
   for (unsigned aux=0; aux<get_number_of_aux_matrices(); ++aux)

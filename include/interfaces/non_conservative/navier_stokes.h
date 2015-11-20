@@ -67,22 +67,26 @@ public:
   void parse_parameters_call_back ();
 
   template<typename Number>
-  void preconditioner_residual(const typename DoFHandler<dim>::active_cell_iterator &,
-                               Scratch &,
-                               CopyPreconditioner &,
-                               std::vector<Number> &local_residual) const;
+  void preconditioner_residual(
+    const typename DoFHandler<dim>::active_cell_iterator &,
+    Scratch &,
+    CopyPreconditioner &,
+    std::vector<Number> &local_residual) const;
 
   template<typename Number>
-  void system_residual(const typename DoFHandler<dim>::active_cell_iterator &,
-                       Scratch &,
-                       CopySystem &,
-                       std::vector<Number> &local_residual) const;
+  void system_residual(
+    const typename DoFHandler<dim>::active_cell_iterator &,
+    Scratch &,
+    CopySystem &,
+    std::vector<Number> &local_residual) const;
 
   template<typename Number>
-  void aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &,
-                            Scratch &,
-                            CopyPreconditioner &,
-                            std::vector<std::vector<Number> > &local_residual) const;
+  void
+  aux_matrix_residuals(
+    const typename DoFHandler<dim>::active_cell_iterator &,
+    Scratch &,
+    CopyPreconditioner &,
+    std::vector<std::vector<Number> > &local_residual) const;
 
   /**
    * specify the number of auxiliry matrices that the problem requires.
@@ -167,6 +171,16 @@ private:
    */
   bool invert_Fp;
 
+  /**
+   * Solver tolerance for CG
+   */
+  double CG_solver_tolerance;
+
+  /**
+   * Solver tolerance for GMRES
+   */
+  double GMRES_solver_tolerance;
+
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Fp_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
@@ -201,7 +215,7 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &gamma,
                       "grad-div stabilization", "1.0", Patterns::Double());
   this->add_parameter(prm, &prec_name,  "Preconditioner","stokes",
-                      Patterns::Selection("stokes|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
+                      Patterns::Selection("stokes|no-viscosity|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
                       "Available preconditioners: \n"
                       " - stokes  -> S^-1 = Mp^-1 \n"
                       " - elman-1 -> S^-1 = Ap (BBt)^-1 \n"
@@ -227,6 +241,12 @@ declare_parameters (ParameterHandler &prm)
                       "Invert Fp using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Kp,
                       "Invert Kp using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &CG_solver_tolerance,
+                      "CG Solver tolerance", "1e-8",
+                      Patterns::Double(0.0));
+  this->add_parameter(prm, &GMRES_solver_tolerance,
+                      "GMRES Solver tolerance", "1e-8",
+                      Patterns::Double(0.0));
 }
 
 template <int dim>
@@ -304,12 +324,9 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                 std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
-  double dummy = 0.0;
-
   fe_cache.reinit(cell);
 
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("old_solution",this->old_solution, dummy);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -368,11 +385,11 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 // compute residual:
           local_residual[i] += (
-                                 u_dot * v +
-                                 scalar_product(u*grad_u, v) +
+                                 rho * u_dot * v +
+                                 rho * scalar_product(u*grad_u, v) +
                                  gamma * div_u * div_v +
                                  nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                 1.0/rho * ( p * div_v + div_u * m)
+                                 ( p * div_v + div_u * m)
                                )*JxW[q];
         }
     }
@@ -409,12 +426,10 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
   const unsigned int n_q_points = ps.size();
 
   auto &fev = fe_cache.get_current_fe_values();
-
 // Init residual to 0
   for (unsigned int aux=0; aux<get_number_of_aux_matrices(); ++aux)
     for (unsigned int i=0; i<local_residuals[0].size(); ++i)
       local_residuals[aux][i] = 0;
-
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       // variables:
@@ -423,7 +438,6 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
       const Tensor<1, dim, Number> &grad_p = grad_ps[q];
       const Tensor<1, dim, Number> &u = us[q];
       const Number &div_u = div_us[q];
-
       for (unsigned int i=0; i<local_residuals[0].size(); ++i)
         {
           // test functions:
@@ -435,7 +449,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 // compute residuals:
           local_residuals[0][i] += ( // Ap
-                                     nu * scalar_product( grad_p,grad_m )
+                                     scalar_product( grad_p,grad_m )
                                    )*JxW[q];
 
           local_residuals[1][i] += ( // Kp
@@ -444,13 +458,14 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                    )*JxW[q];
 
           local_residuals[2][i] += ( // Mp
-                                     m * p_dot
+                                     m * p
                                    )*JxW[q];
 
           local_residuals[3][i] += ( // Fp
                                      nu * scalar_product( grad_p,grad_m ) +
                                      scalar_product( u,grad_p) * m +
-                                     m * p_dot
+                                     gamma * div_u * div_v +
+                                     alpha * m * p
                                    )*JxW[q];
         }
     }
@@ -486,15 +501,13 @@ compute_system_operators(const DoFHandler<dim> &dh,
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
   Amg_data_p.elliptic = false;
-// Amg_data_p.higher_order_elements = true;
   Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
   Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
 // SYSTEM MATRIX:
   auto A = linear_operator< VEC >( matrix.block(0,0) );
   auto Bt = linear_operator< VEC >( matrix.block(0,1) );
-  auto B = linear_operator< VEC >( matrix.block(1,0) );
-  // auto B = transpose_operator(Bt);
+  auto B = transpose_operator(Bt);
   auto C = linear_operator< VEC >(aux_matrices[0]->block(1,1));
   auto ZeroP = null_operator(C);
 
@@ -506,16 +519,12 @@ compute_system_operators(const DoFHandler<dim> &dh,
 
 // PRECONDITIONER
 
-  static ReductionControl solver_control_cg(50000, 1e-8);
+  static ReductionControl solver_control_cg(matrix.m(), CG_solver_tolerance);
   static SolverCG<VEC> solver_CG(solver_control_cg);
 
-  static ReductionControl solver_control_gmres(50000, 1e-8);
+  static ReductionControl solver_control_gmres(matrix.m(), GMRES_solver_tolerance);
   static SolverGMRES<VEC> solver_GMRES(solver_control_gmres);
 
-  static SolverControl solver_control_fgmres (30, 1e-8);
-  PrimitiveVectorMemory<VEC> mem;
-  static SolverFGMRES<VEC>
-  solver_FGMRES(solver_control_fgmres, mem, SolverFGMRES<VEC>:: AdditionalData(30, true));
 
   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
   Amg_preconditioner->initialize (matrix.block(0,0), Amg_data);
@@ -532,10 +541,26 @@ compute_system_operators(const DoFHandler<dim> &dh,
   if (prec_name=="stokes")
     {
       Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1),1.3);
       auto Mp_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
-      Schur_inv = Mp_inv;
+      Schur_inv = 1/nu * Mp_inv;
+    }
+  else if (prec_name=="no-viscosity")
+    {
+      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
+      LinearOperator<VEC> Ap_inv;
+      if (invert_Ap)
+        {
+          Ap_inv  = inverse_operator( Ap, solver_CG, *Ap_preconditioner);
+        }
+      else
+        {
+          Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Ap_preconditioner);
+        }
+
+      Schur_inv = rho * alpha * Ap_inv;
     }
   else if (prec_name=="cah-cha")
     {

@@ -4,16 +4,19 @@
 
 subsection Navier Stokes
   set Block coupling                   = 1,1; 1,0
-  set Preconditioner block coupling    = 0,0; 0,1
+  set Preconditioner block coupling    = 0,1; 1,1
   set Block of differential components = 1,0
 
   set Blocking of the finite element   = u,u,p
 
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
-  set grad-div stabilization           = -200.0
-  set nu [Pa s]                        = 200
-  set rho [kg m^3]                     = 1.0
+  set grad-div stabilization           = 0.0
+  set nu [Pa s]                        = 0.01
+  set rho [kg m^3]                     = 1
+
+  set GMRES Solver tolerance          = 1e-8
+  set CG Solver tolerance             = 1e-8
 
   set Invert Ap using inverse_operator = true
   set Invert Fp using inverse_operator = true
@@ -24,7 +27,7 @@ subsection Navier Stokes
   set Amg Smoother Sweeps              = 2
   set Amg Higher Order                 = true
 
-  set Amg P Aggregation Threshold      = 0.2
+  set Amg P Aggregation Threshold      = 0.5
   set Amg P Smoother Sweeps            = 2
 
 
@@ -32,14 +35,15 @@ subsection Navier Stokes
   # - stokes  -> S^-1 = Mp^-1
   # - elman-1 -> S^-1 = Ap (BBt)^-1
   # - elman-2 -> S^-1 = Ap Fp^-1 Mp
-  # - BDBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
-  # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
+  # - BFBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
+  # - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
   # diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  set Preconditioner                   = elman-1
+  set Preconditioner                   = elman-2
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
+set Linear solver tolerance                        = 1e-8
 set Adaptive refinement                            = false
 set Initial global refinement                      = 3
 set Maximum number of time steps                   = 10000
@@ -50,19 +54,12 @@ set Overwrite Newton's iterations                  = false
 set Print some useful informations about processes = true
 end
 
-subsection Forcing terms
-  set IDs and component masks = 0 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0
-  set Known component names   = u,u,p
-  set Used constants          = k=1
-end
-
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
   set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 % \
                                 2 = 0 ; 0 ; 0 % \
-                                3 = t<1?(t^2)*k:k ; 0 ; 0
+                                3 = k ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -115,17 +112,18 @@ end
 
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_dot
-  set Initial step size                             = 1e-6
+  set Initial condition type after restart          = use_y_dot
+  set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 3
-  set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-3
+  set Maximum order of BDF                          = 5
+  set Min step size                                 = 5e-3
+  set Relative error tolerance                      = 1e-2
   set Seconds between each output                   = 1e-2
   set Use local tolerances                          = false
 end
