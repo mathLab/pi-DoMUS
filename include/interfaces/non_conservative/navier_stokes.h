@@ -465,7 +465,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      nu * scalar_product( grad_p,grad_m ) +
                                      scalar_product( u,grad_p) * m +
                                      gamma * div_u * div_v +
-                                     m * p_dot
+                                     alpha * m * p
                                    )*JxW[q];
         }
     }
@@ -501,15 +501,13 @@ compute_system_operators(const DoFHandler<dim> &dh,
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
   Amg_data_p.elliptic = false;
-// Amg_data_p.higher_order_elements = true;
   Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
   Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
 // SYSTEM MATRIX:
   auto A = linear_operator< VEC >( matrix.block(0,0) );
   auto Bt = linear_operator< VEC >( matrix.block(0,1) );
-  auto B = linear_operator< VEC >( matrix.block(1,0) );
-  // auto B = transpose_operator(Bt);
+  auto B = transpose_operator(Bt);
   auto C = linear_operator< VEC >(aux_matrices[0]->block(1,1));
   auto ZeroP = null_operator(C);
 
@@ -543,7 +541,7 @@ compute_system_operators(const DoFHandler<dim> &dh,
   if (prec_name=="stokes")
     {
       Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1),1.3);
       auto Mp_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
       Schur_inv = 1/nu * Mp_inv;
