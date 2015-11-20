@@ -211,7 +211,7 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &gamma,
                       "grad-div stabilization", "1.0", Patterns::Double());
   this->add_parameter(prm, &prec_name,  "Preconditioner","stokes",
-                      Patterns::Selection("stokes|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
+                      Patterns::Selection("stokes|no-viscosity|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
                       "Available preconditioners: \n"
                       " - stokes  -> S^-1 = Mp^-1 \n"
                       " - elman-1 -> S^-1 = Ap (BBt)^-1 \n"
@@ -381,11 +381,11 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 // compute residual:
           local_residual[i] += (
-                                 u_dot * v +
-                                 scalar_product(u*grad_u, v) +
+                                 rho * u_dot * v +
+                                 rho * scalar_product(u*grad_u, v) +
                                  gamma * div_u * div_v +
                                  nu * scalar_product(sym_grad_u,sym_grad_v) -
-                                 1.0/rho * ( p * div_v + div_u * m)
+                                 ( p * div_v + div_u * m)
                                )*JxW[q];
         }
     }
@@ -422,12 +422,12 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
   const unsigned int n_q_points = ps.size();
 
   auto &fev = fe_cache.get_current_fe_values();
-
+std::cout << "compute0" << get_number_of_aux_matrices()  << std::endl;
 // Init residual to 0
   for (unsigned int aux=0; aux<get_number_of_aux_matrices(); ++aux)
     for (unsigned int i=0; i<local_residuals[0].size(); ++i)
       local_residuals[aux][i] = 0;
-
+std::cout << "compute1" << std::endl;
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       // variables:
@@ -436,7 +436,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
       const Tensor<1, dim, Number> &grad_p = grad_ps[q];
       const Tensor<1, dim, Number> &u = us[q];
       const Number &div_u = div_us[q];
-
+std::cout << "compute2" << std::endl;
       for (unsigned int i=0; i<local_residuals[0].size(); ++i)
         {
           // test functions:
@@ -448,7 +448,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 // compute residuals:
           local_residuals[0][i] += ( // Ap
-                                     nu * scalar_product( grad_p,grad_m )
+                                     scalar_product( grad_p,grad_m )
                                    )*JxW[q];
 
           local_residuals[1][i] += ( // Kp
@@ -456,8 +456,9 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      gamma * div_u * div_v
                                    )*JxW[q];
 
+          std::cout << "compute3" << std::endl;
           local_residuals[2][i] += ( // Mp
-                                     m * p_dot
+                                     m * p
                                    )*JxW[q];
 
           local_residuals[3][i] += ( // Fp
@@ -545,8 +546,24 @@ compute_system_operators(const DoFHandler<dim> &dh,
       Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
       auto Mp_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
 
-      Schur_inv = Mp_inv;
+      Schur_inv = 1/nu * Mp_inv;
     }
+  else if (prec_name=="no-viscosity")
+      {
+        Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
+        Ap_preconditioner->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
+        LinearOperator<VEC> Ap_inv;
+        if (invert_Ap)
+          {
+            Ap_inv  = inverse_operator( Ap, solver_CG, *Ap_preconditioner);
+          }
+        else
+          {
+            Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Ap_preconditioner);
+          }
+
+        Schur_inv = rho * alpha * Ap_inv;
+      }
   else if (prec_name=="cah-cha")
     {
       Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
