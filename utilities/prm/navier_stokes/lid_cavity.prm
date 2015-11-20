@@ -12,15 +12,15 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.01
+  set nu [Pa s]                        = 0.1
   set rho [kg m^3]                     = 1
 
-  set GMRES Solver tolerance          = 1e-8
-  set CG Solver tolerance             = 1e-8
+  set GMRES Solver tolerance          = 1e-10
+  set CG Solver tolerance             = 1e-10
 
   set Invert Ap using inverse_operator = true
   set Invert Fp using inverse_operator = true
-  set Invert Kp using inverse_operator = true
+  set Invert Np using inverse_operator = true
   set Invert Mp using inverse_operator = true
 
   set Amg Aggregation Threshold        = 0.02
@@ -39,7 +39,8 @@ subsection Navier Stokes
   # - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
   # diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  set Preconditioner                   = elman-2
+  # set Preconditioner                   = stokes
+  set Preconditioner = stokes
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
@@ -59,7 +60,7 @@ subsection Dirichlet boundary conditions
   set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 % \
                                 2 = 0 ; 0 ; 0 % \
-                                3 = k ; 0 ; 0
+                                3 = t<1.0 ? t*k : k ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -111,20 +112,21 @@ subsection Error Tables
 end
 
 subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0
-  set Ignore algebraic terms for error computations = false
+  set Initial condition type                        = use_y_diff
+  set Ignore algebraic terms for error computations = true
+  set Maximum order of BDF                          = 2
+  set Absolute error tolerance                      = 1e-3
+  set Final time                                    = 2
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_dot
   set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
+  set Initial step size                             = 1e-2
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-3
   set Relative error tolerance                      = 1e-2
-  set Seconds between each output                   = 1e-2
+  set Seconds between each output                   = 1e-1
   set Use local tolerances                          = false
 end
 

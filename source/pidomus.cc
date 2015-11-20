@@ -381,14 +381,14 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const 
 
 //  pcout << std::endl;
 
-  auto id = solution.locally_owned_elements();
-  for (unsigned int i = 0; i < id.n_elements(); ++i)
-    {
-      auto j = id.nth_index_in_set(i);
-      if (constraints.is_constrained(j))
-        jacobian_matrix.set(j, j, 1.0);
-    }
-  compress(jacobian_matrix, VectorOperation::insert);
+  // auto id = solution.locally_owned_elements();
+  // for (unsigned int i = 0; i < id.n_elements(); ++i)
+  //   {
+  //     auto j = id.nth_index_in_set(i);
+  //     if (constraints.is_constrained(j))
+  //       jacobian_matrix.set(j, j, 1.0);
+  //   }
+  // compress(jacobian_matrix, VectorOperation::insert);
 
   computing_timer.exit_section();
 }

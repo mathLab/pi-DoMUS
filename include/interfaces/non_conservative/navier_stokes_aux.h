@@ -92,7 +92,7 @@ private:
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Amg_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Kp_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>    Np_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
 
 };
@@ -356,7 +356,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 
   Mp_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
   Amg_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-  Kp_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
+  Np_preconditioner.reset  (new TrilinosWrappers::PreconditionAMG());
 
   // AUX MATRICES
 
@@ -436,8 +436,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="cahouet-chabard")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1),    Amg_data_p);
-      auto Kp    = linear_operator< TrilinosWrappers::MPI::Vector >
+      Np_preconditioner->initialize (preconditioner_matrix.block(1,1),    Amg_data_p);
+      auto Np    = linear_operator< TrilinosWrappers::MPI::Vector >
                    (preconditioner_matrix.block(1,1));
 
       Mp_preconditioner->initialize (matrix.block(1,1));
@@ -446,8 +446,8 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
 
 
       auto Mp_inv    = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
-      auto Kp_inv    = inverse_operator( Kp, solver_CG, *Kp_preconditioner);
-      auto Schur_inv = nu * Mp_inv + alpha * Kp_inv;
+      auto Np_inv    = inverse_operator( Np, solver_CG, *Np_preconditioner);
+      auto Schur_inv = nu * Mp_inv + alpha * Np_inv;
 
       auto P00 = A_inv;
       auto P01 = null_operator(Bt);
@@ -462,9 +462,9 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_identity")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Np_preconditioner->initialize (preconditioner_matrix.block(1,1));
       auto BBt       = B*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Np_preconditioner);
       auto Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
 
       auto P00 = A_inv;
@@ -480,7 +480,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
     }
   else if (prec_name=="BFBt_diagA")
     {
-      Kp_preconditioner->initialize (preconditioner_matrix.block(1,1));
+      Np_preconditioner->initialize (preconditioner_matrix.block(1,1));
 
 
       auto inv_diag_A  = linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
@@ -491,7 +491,7 @@ NavierStokes<dim>::compute_system_operators(const DoFHandler<dim> &dh,
       };
 
       auto BBt       = B*inv_diag_A*Bt;
-      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Kp_preconditioner);
+      auto BBt_inv   = inverse_operator( BBt, solver_CG, *Np_preconditioner);
       auto Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
 
       auto P00 = A_inv;
