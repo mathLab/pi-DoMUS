@@ -136,7 +136,7 @@ public:
   virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                             FEValuesCache<dim,spacedim> &,
                             std::vector<Sdouble> &,
-			    bool compute_only_system_matrix) const;
+                            bool compute_only_system_matrix) const;
 
   /**
    * Definition of energies
@@ -144,30 +144,30 @@ public:
   virtual void get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                             FEValuesCache<dim,spacedim> &,
                             std::vector<SSdouble> &,
-			    bool compute_only_system_matrix) const;
+                            bool compute_only_system_matrix) const;
 
 
   /**
    * Definition of residulas
    */
   virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-			      FEValuesCache<dim,spacedim> &scratch,
-			      std::vector<std::vector<double> > &local_residuals,
-			      bool compute_only_system_matrix) const;
+                              FEValuesCache<dim,spacedim> &scratch,
+                              std::vector<std::vector<double> > &local_residuals,
+                              bool compute_only_system_matrix) const;
 
 
   /**
    * Definition of residulas
    */
   virtual void get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-			      FEValuesCache<dim,spacedim> &scratch,
-			      std::vector<std::vector<Sdouble> > &local_residuals
-			      bool compute_only_system_matrix) const;
+                              FEValuesCache<dim,spacedim> &scratch,
+                              std::vector<std::vector<Sdouble> > &local_residuals
+                              bool compute_only_system_matrix) const;
 
-/**
- * This function can be overloaded to directly implement the local
- * matrices (i.e. as it is usally done in standard FE codes)
- */
+  /**
+   * This function can be overloaded to directly implement the local
+   * matrices (i.e. as it is usally done in standard FE codes)
+   */
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
@@ -186,8 +186,8 @@ public:
                                         LinearOperator<typename LAC::VectorType> &) const;
 
 
- shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
-virtual shared_ptr<Mapping<dim,spacedim> > set_mapping() const;
+  shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
+  virtual shared_ptr<Mapping<dim,spacedim> > set_mapping() const;
 
   virtual UpdateFlags get_face_flags() const;
 
@@ -262,11 +262,11 @@ protected:
   unsigned int n_q_points;
   unsigned int n_face_q_points;
 
-unsigned int n_matrices;
+  unsigned int n_matrices;
 
   std::vector<UpdateFlags> matrices_update_flags;
   std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
-shared_ptr<Mapping<dim,spacedim> >  mapping;
+  shared_ptr<Mapping<dim,spacedim> >  mapping;
 
 
 

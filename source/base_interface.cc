@@ -127,8 +127,8 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-	     FEValuesCache<dim,spacedim> &,
-	     std::vector<SSdouble> &) const
+             FEValuesCache<dim,spacedim> &,
+             std::vector<SSdouble> &) const
 {
   Assert(false, ExcPureFunctionCalled ());
 }
@@ -138,8 +138,8 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-	     FEValuesCache<dim,spacedim> &,
-	     std::vector<Sdouble> &) const
+             FEValuesCache<dim,spacedim> &,
+             std::vector<Sdouble> &) const
 {
   Assert(false, ExcPureFunctionCalled ());
 }
@@ -151,8 +151,8 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-	       FEValuesCache<dim,spacedim> &,
-	       std::vector<std::vector<Sdouble> > &) const
+               FEValuesCache<dim,spacedim> &,
+               std::vector<std::vector<Sdouble> > &) const
 {
   Assert(false, ExcPureFunctionCalled ());
 }
@@ -161,8 +161,8 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_residuals (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-	       FEValuesCache<dim,spacedim> &,
-	       std::vector<std::vector<double> > &) const
+               FEValuesCache<dim,spacedim> &,
+               std::vector<std::vector<double> > &) const
 {
   Assert(false, ExcPureFunctionCalled ());
 }
@@ -174,9 +174,9 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 compute_system_operators(const DoFHandler<dim,spacedim> &,
-			 const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
-			 LinearOperator<typename LAC::VectorType> &,
-			 LinearOperator<typename LAC::VectorType> &) const
+                         const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
+                         LinearOperator<typename LAC::VectorType> &,
+                         LinearOperator<typename LAC::VectorType> &) const
 {
   Assert(false, ExcPureFunctionCalled ());
 }
@@ -186,8 +186,8 @@ template<int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-			 FEValuesCache<dim,spacedim> &scratch,
-			 CopyData &data) const
+                         FEValuesCache<dim,spacedim> &scratch,
+                         CopyData &data) const
 {
   const unsigned dofs_per_cell = data.local_dof_indices.size();
 
@@ -195,15 +195,15 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
 
   std::vector<SSdouble> energies(n_aux_matrices);
   get_energies(cell, scratch, energies, false);
-  
+
   get_residuals(cell, scratch, data.sacado_residuals, false);
 
   for (unsigned n=0; n<n_matrices; ++n)
     for (unsigned int i=0; i<dofs_per_cell; ++i)
       {
-	data.sacado_residuals[n][i] += energies[n].dx(i);
-	for (unsigned int j=0; j<dofs_per_cell; ++j)
-	  data.local_matrices[n](i,j) = data.sacado_residuals[n][i].dx(j);
+        data.sacado_residuals[n][i] += energies[n].dx(i);
+        for (unsigned int j=0; j<dofs_per_cell; ++j)
+          data.local_matrices[n](i,j) = data.sacado_residuals[n][i].dx(j);
       }
 }
 
@@ -285,9 +285,9 @@ BaseInterface<dim,spacedim,n_components,LAC>::fix_solution_dot_derivative(FEValu
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::initialize_data(const typename LAC::VectorType &solution,
-                                                          const typename LAC::VectorType &solution_dot,
-                                                          const double t,
-                                                          const double alpha) const
+    const typename LAC::VectorType &solution_dot,
+    const double t,
+    const double alpha) const
 {
   if (old_t < t)
     {
