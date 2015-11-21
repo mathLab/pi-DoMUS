@@ -20,8 +20,8 @@
  * In the code we adopt the following notations:
  * - Mp := block resulting from \f$ ( \partial_t p, q ) \f$
  * - Ap := block resulting from f$ \nu ( \nabla p,\nabla q ) \f$
- * - Kp := block resulting from f$ ( u \cdot \nabla p, q) \f$
- * - Fp := Mp + Ap + Kp
+ * - Np := block resulting from f$ ( u \cdot \nabla p, q) \f$
+ * - Fp := Mp + Ap + Np
  *
  * where:
  * - p = pressure
@@ -94,7 +94,7 @@ public:
    */
   virtual unsigned int get_number_of_aux_matrices() const
   {
-    return 4; // Ap Mp Kp Fp
+    return 4; // Ap Mp Np Fp
   }
 
   virtual void compute_system_operators(const DoFHandler<dim> &,
@@ -157,9 +157,9 @@ private:
   bool invert_Mp;
 
   /**
-   * Invert Kp using inverse_operator
+   * Invert Np using inverse_operator
    */
-  bool invert_Kp;
+  bool invert_Np;
 
   /**
    * Invert Ap using inverse_operator
@@ -182,11 +182,8 @@ private:
   double GMRES_solver_tolerance;
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Fp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> Mp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Kp_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Ap_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> T_preconditioner;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner_2;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> jacobi_preconditioner;
 
 };
 
@@ -215,9 +212,10 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &gamma,
                       "grad-div stabilization", "1.0", Patterns::Double());
   this->add_parameter(prm, &prec_name,  "Preconditioner","stokes",
-                      Patterns::Selection("stokes|no-viscosity|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
+                      Patterns::Selection("stokes|low-nu|elman-1|elman-2|BFBt_id|BFBt_dA|cah-cha"),
                       "Available preconditioners: \n"
-                      " - stokes  -> S^-1 = Mp^-1 \n"
+                      " - stokes  -> S^-1 = 1/nu * Mp^-1 \n"
+                      " - low-nu  -> S^-1 = rho * alpha * Mp^-1 \n"
                       " - elman-1 -> S^-1 = Ap (BBt)^-1 \n"
                       " - elman-2 -> S^-1 = Ap Fp^-1 Mp \n"
                       " - BFBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1\n"
@@ -239,8 +237,8 @@ declare_parameters (ParameterHandler &prm)
                       "Invert Mp using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Fp,
                       "Invert Fp using inverse_operator", "true", Patterns::Bool());
-  this->add_parameter(prm, &invert_Kp,
-                      "Invert Kp using inverse_operator", "true", Patterns::Bool());
+  this->add_parameter(prm, &invert_Np,
+                      "Invert Np using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &CG_solver_tolerance,
                       "CG Solver tolerance", "1e-8",
                       Patterns::Double(0.0));
@@ -452,7 +450,7 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      scalar_product( grad_p,grad_m )
                                    )*JxW[q];
 
-          local_residuals[1][i] += ( // Kp
+          local_residuals[1][i] += ( // Np
                                      scalar_product( u,grad_p) * m +
                                      gamma * div_u * div_v
                                    )*JxW[q];
@@ -533,77 +531,77 @@ compute_system_operators(const DoFHandler<dim> &dh,
   LinearOperator<VEC> P00, P01, P10, P11, Schur_inv;
 
   auto Ap= linear_operator<VEC>(aux_matrices[0]->block(1,1));
-  auto Kp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
+  auto Np= linear_operator<VEC>(aux_matrices[2]->block(1,1));
   auto Mp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
   auto Fp = linear_operator<VEC>(aux_matrices[3]->block(1,1));
 
   Assert(prec_name != "", ExcNotInitialized());
   if (prec_name=="stokes")
     {
-      Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1),1.3);
-      auto Mp_inv = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
+      jacobi_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
+      jacobi_preconditioner->initialize (aux_matrices[2]->block(1,1),1.3);
+      auto Mp_inv = inverse_operator( Mp, solver_CG, *jacobi_preconditioner);
 
       Schur_inv = 1/nu * Mp_inv;
     }
-  else if (prec_name=="no-viscosity")
+  else if (prec_name=="low-nu")
     {
-      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
       LinearOperator<VEC> Ap_inv;
       if (invert_Ap)
         {
-          Ap_inv  = inverse_operator( Ap, solver_CG, *Ap_preconditioner);
+          Ap_inv  = inverse_operator( Ap, solver_CG, *Amg_preconditioner_2);
         }
       else
         {
-          Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Ap_preconditioner);
+          Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
         }
 
       Schur_inv = rho * alpha * Ap_inv;
     }
   else if (prec_name=="cah-cha")
     {
-      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Ap_preconditioner->initialize (aux_matrices[1]->block(1,1),  Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[1]->block(1,1),  Amg_data_p);
       LinearOperator<VEC> Ap_inv;
       if (invert_Ap)
         {
-          Ap_inv  = inverse_operator( Ap, solver_CG, *Ap_preconditioner);
+          Ap_inv  = inverse_operator( Ap, solver_CG, *Amg_preconditioner_2);
         }
       else
         {
-          Ap_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Ap_preconditioner);
+          Ap_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
         }
 
-      Mp_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-      Mp_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      jacobi_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
+      jacobi_preconditioner->initialize (aux_matrices[2]->block(1,1));
       auto Mp = linear_operator<VEC>( aux_matrices[2]->block(1,1) );
-      auto Mp_inv  = inverse_operator( Mp, solver_CG, *Mp_preconditioner);
+      auto Mp_inv  = inverse_operator( Mp, solver_CG, *jacobi_preconditioner);
 
       Schur_inv = Mp_inv + Ap_inv;
     }
   else if (prec_name=="BFBt_id")
     {
       auto BBt = B*Bt;
-      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
       LinearOperator<VEC> BBt_inv;
       if (invert_Ap)
         {
-          BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
         }
       else
         {
-          BBt_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Ap_preconditioner);
+          BBt_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
         }
 
       Schur_inv = BBt_inv * B * A * Bt * BBt_inv;
     }
   else if (prec_name=="BFBt_dA")
     {
-      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
 
       auto inv_diag_A = linear_operator< VEC >( matrix.block(0,0) );
       inv_diag_A.vmult = [&matrix](VEC &v, const VEC &u)
@@ -613,39 +611,39 @@ compute_system_operators(const DoFHandler<dim> &dh,
       };
 
       auto BBt = B*inv_diag_A*Bt;
-      auto BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
+      auto BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
 
       Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
     }
   else if (prec_name=="elman-1")
     {
       auto BBt = B*Bt;
-      Ap_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Ap_preconditioner->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
       LinearOperator<VEC> BBt_inv;
       if (invert_Ap)
         {
-          BBt_inv  = inverse_operator( BBt, solver_CG, *Ap_preconditioner);
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
         }
       else
         {
-          BBt_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Ap_preconditioner);
+          BBt_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
         }
 
       Schur_inv = Ap*BBt_inv;
     }
   else if (prec_name=="elman-2")
     {
-      Fp_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-      Fp_preconditioner->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
       LinearOperator<VEC> Fp_inv;
       if (invert_Fp)
         {
-          Fp_inv = inverse_operator( Fp, solver_GMRES, *Fp_preconditioner);
+          Fp_inv = inverse_operator( Fp, solver_GMRES, *Amg_preconditioner_2);
         }
       else
         {
-          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Fp_preconditioner );
+          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Amg_preconditioner_2 );
         }
 
       Schur_inv = Ap * Fp_inv * Mp;
