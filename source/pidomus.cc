@@ -348,9 +348,9 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
        local_copy,
        FEValuesCache<dim,spacedim> (*mapping,
                                     *fe, quadrature_formula,
-                                    interface.get_jacobian_preconditioner_flags(),  /*interface.aux_matrix_flags(i),*/
+                                    interface.get_matrices_update_flags(),
                                     face_quadrature_formula,
-                                    UpdateFlags(0)),
+                                    interface.get_face_update_flags()),
        Assembly::CopyData::
        piDoMUSPreconditioner<dim, spacedim> (*fe,n_matrices));
 
@@ -631,7 +631,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                                                data.sacado_residuals,
                                                true);
 
-    this->interfece.get_residuals(cell, scratch, data.double_residuals, true);
+    this->interface.get_residuals(cell, scratch, data.double_residuals, true);
 
     // apply conservative loads
     this->interface.apply_forcing_terms(cell, scratch, data.double_residuals[0]);

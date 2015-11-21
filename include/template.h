@@ -15,18 +15,29 @@ public:
 
   // interface with the Interface :)
 
-  virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
+   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
                                         LinearOperator<typename LAC::VectorType> &,
                                         LinearOperator<typename LAC::VectorType> &) const;
 
 
-  virtual void set_matrices_update_flags();
-  virtual unsigned int get_number_of_matrices() const;
+  // this function allows to define the update_flags.
+  // by default they are
+  //  update_quadrature_points |
+  //  update_JxW_values |
+  //  update_values |
+  //  update_gradients
+  //  UpdateFlags get_matrices_update_flags() const;
 
-  virtual shared_ptr<Mapping<dim,spacedim> > set_mapping () const;
+  //   UpdateFlags get_face_update_flags() const;
+   
+   shared_ptr<Mapping<dim,spacedim> > set_mapping () const;
 
-  void set_matrices_coupling ();
+   // set the number of matrices to be assembled
+   unsigned int get_number_of_matrices() const;
+
+
+   set_matrices_coupling ();
 
   template <typename EnergyType, typename ResidualType>
   void set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -35,6 +46,9 @@ public:
                                   std::vector<std::vector<ResidualType> > &local_residuals,
                                   bool compute_only_system_matrix) const;
 };
+
+
+
 
 template <int dim, int spacedim>
 template <typename EnergyType, typename ResidualType>

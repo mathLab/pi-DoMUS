@@ -252,9 +252,9 @@ BaseInterface<dim,spacedim,n_components,LAC>::get_jacobian_preconditioner_flags(
 
 template <int dim, int spacedim, int n_components, typename LAC>
 UpdateFlags
-BaseInterface<dim,spacedim,n_components,LAC>::get_face_flags() const
+BaseInterface<dim,spacedim,n_components,LAC>::get_face_update_flags() const
 {
-  return get_jacobian_flags();
+  return UpdateFlags(0);
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -330,14 +330,15 @@ get_differential_blocks() const
   return _diff_comp;
 }
 
-
-// auxiliary matrices //////////////////////////////////////////////////////////
 template<int dim, int spacedim, int n_components, typename LAC>
 UpdateFlags
 BaseInterface<dim,spacedim,n_components,LAC>::
-get_matrix_flags(const unsigned int &i) const
+get_matrices_update_flags() const
 {
-  return matrices_update_flags[i];
+  return (update_quadrature_points |
+          update_JxW_values |
+          update_values |
+          update_gradients);
 }
 
 template<int dim, int spacedim, int n_components, typename LAC>

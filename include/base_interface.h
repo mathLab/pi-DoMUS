@@ -171,11 +171,9 @@ public:
   shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
   virtual shared_ptr<Mapping<dim,spacedim> > set_mapping() const;
 
-  virtual UpdateFlags get_face_flags() const;
+  virtual UpdateFlags get_face_update_flags() const;
 
-  virtual void set_matrices_update_flags();
-
-  UpdateFlags get_matrix_flags(const unsigned int &i) const;
+  virtual UpdateFlags get_matrices_update_flags() const;
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
 
