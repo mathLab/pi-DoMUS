@@ -147,6 +147,11 @@ private:
   double amg_p_aggregation_threshold;
 
   /**
+   * AMG elliptic:
+   */
+  bool amg_p_elliptic;
+
+  /**
    * Name of the preconditioner:
    */
   std::string prec_name;
@@ -185,6 +190,25 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner_2;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> jacobi_preconditioner;
 
+  /**
+   * Compute Ap
+   */
+  bool compute_Ap;
+
+  /**
+   * Compute Np
+   */
+  bool compute_Np;
+
+  /**
+   * Compute Mp
+   */
+  bool compute_Mp;
+
+  /**
+   * Compute Fp
+   */
+  bool compute_Fp;
 };
 
 template<int dim>
@@ -196,7 +220,11 @@ NavierStokes()
                                                              "u,u,p",
                                                              "1,1; 1,0",
                                                              "0,0; 0,1",
-                                                             "1,0")
+                                                             "1,0"),
+  compute_Ap(false),
+  compute_Np(false),
+  compute_Mp(false),
+  compute_Fp(false)
 {}
 
 template <int dim>
@@ -231,6 +259,8 @@ declare_parameters (ParameterHandler &prm)
                       "Amg P Smoother Sweeps","2", Patterns::Integer(0));
   this->add_parameter(prm, &amg_p_aggregation_threshold,
                       "Amg P Aggregation Threshold", "0.02", Patterns::Double(0.0));
+  this->add_parameter(prm, &amg_p_elliptic,
+                      "Amg P Elliptic", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Ap,
                       "Invert Ap using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Mp,
@@ -253,6 +283,37 @@ NavierStokes<dim>::
 parse_parameters_call_back ()
 {
   NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::parse_parameters_call_back();
+
+  if (prec_name == "stokes")
+    {
+      compute_Mp = true;
+    }
+  else if (prec_name == "low-nu")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "elman-1")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "elman-2")
+    {
+      compute_Fp = true;
+    }
+  else if (prec_name == "BFBt_id")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "BFBt_dA")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "cah-cha")
+    {
+      compute_Ap = true;
+      compute_Mp = true;
+    }
+
 }
 
 template <int dim>
@@ -446,25 +507,29 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 
 // compute residuals:
-          local_residuals[0][i] += ( // Ap
-                                     scalar_product( grad_p,grad_m )
-                                   )*JxW[q];
+          if (compute_Ap)
+            local_residuals[0][i] += ( // Ap
+                                       scalar_product( grad_p,grad_m )
+                                     )*JxW[q];
 
-          local_residuals[1][i] += ( // Np
-                                     scalar_product( u,grad_p) * m +
-                                     gamma * div_u * div_v
-                                   )*JxW[q];
+          if (compute_Np)
+            local_residuals[1][i] += ( // Np
+                                       scalar_product( u,grad_p) * m +
+                                       gamma * div_u * div_v
+                                     )*JxW[q];
 
-          local_residuals[2][i] += ( // Mp
-                                     m * p
-                                   )*JxW[q];
+          if (compute_Mp)
+            local_residuals[2][i] += ( // Mp
+                                       m * p
+                                     )*JxW[q];
 
-          local_residuals[3][i] += ( // Fp
-                                     nu * scalar_product( grad_p,grad_m ) +
-                                     scalar_product( u,grad_p) * m +
-                                     gamma * div_u * div_v +
-                                     alpha * m * p
-                                   )*JxW[q];
+          if (compute_Fp)
+            local_residuals[3][i] += ( // Fp
+                                       nu * scalar_product( grad_p,grad_m ) +
+                                       scalar_product( u,grad_p) * m +
+                                       gamma * div_u * div_v +
+                                       alpha * m * p
+                                     )*JxW[q];
         }
     }
 }
@@ -498,7 +563,7 @@ compute_system_operators(const DoFHandler<dim> &dh,
                                     constant_modes_p);
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
-  Amg_data_p.elliptic = false;
+  Amg_data_p.elliptic = amg_p_elliptic;
   Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
   Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
@@ -530,9 +595,9 @@ compute_system_operators(const DoFHandler<dim> &dh,
 
   LinearOperator<VEC> P00, P01, P10, P11, Schur_inv;
 
-  auto Ap= linear_operator<VEC>(aux_matrices[0]->block(1,1));
-  auto Np= linear_operator<VEC>(aux_matrices[2]->block(1,1));
-  auto Mp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
+  auto Ap = linear_operator<VEC>(aux_matrices[0]->block(1,1));
+  auto Np = linear_operator<VEC>(aux_matrices[1]->block(1,1));
+  auto Mp = linear_operator<VEC>(aux_matrices[2]->block(1,1));
   auto Fp = linear_operator<VEC>(aux_matrices[3]->block(1,1));
 
   Assert(prec_name != "", ExcNotInitialized());
@@ -560,10 +625,43 @@ compute_system_operators(const DoFHandler<dim> &dh,
 
       Schur_inv = rho * alpha * Ap_inv;
     }
+  else if (prec_name=="elman-1")
+    {
+      auto BBt = B*Bt;
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> BBt_inv;
+      if (invert_Ap)
+        {
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
+        }
+      else
+        {
+          BBt_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
+        }
+
+      Schur_inv = Ap*BBt_inv;
+    }
+  else if (prec_name=="elman-2")
+    {
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> Fp_inv;
+      if (invert_Fp)
+        {
+          Fp_inv = inverse_operator( Fp, solver_GMRES, *Amg_preconditioner_2);
+        }
+      else
+        {
+          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Amg_preconditioner_2 );
+        }
+
+      Schur_inv = Ap * Fp_inv * Mp;
+    }
   else if (prec_name=="cah-cha")
     {
       Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize (aux_matrices[1]->block(1,1),  Amg_data_p);
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
       LinearOperator<VEC> Ap_inv;
       if (invert_Ap)
         {
@@ -571,7 +669,7 @@ compute_system_operators(const DoFHandler<dim> &dh,
         }
       else
         {
-          Ap_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
+          Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
         }
 
       jacobi_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
@@ -614,39 +712,6 @@ compute_system_operators(const DoFHandler<dim> &dh,
       auto BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
 
       Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
-    }
-  else if (prec_name=="elman-1")
-    {
-      auto BBt = B*Bt;
-      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
-      LinearOperator<VEC> BBt_inv;
-      if (invert_Ap)
-        {
-          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
-        }
-      else
-        {
-          BBt_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
-        }
-
-      Schur_inv = Ap*BBt_inv;
-    }
-  else if (prec_name=="elman-2")
-    {
-      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
-      LinearOperator<VEC> Fp_inv;
-      if (invert_Fp)
-        {
-          Fp_inv = inverse_operator( Fp, solver_GMRES, *Amg_preconditioner_2);
-        }
-      else
-        {
-          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Amg_preconditioner_2 );
-        }
-
-      Schur_inv = Ap * Fp_inv * Mp;
     }
   else
     {

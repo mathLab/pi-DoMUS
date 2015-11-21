@@ -12,7 +12,7 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.1
+  set nu [Pa s]                        = 0.00025
   set rho [kg m^3]                     = 1
 
   set GMRES Solver tolerance          = 1e-10
@@ -29,24 +29,25 @@ subsection Navier Stokes
 
   set Amg P Aggregation Threshold      = 0.5
   set Amg P Smoother Sweeps            = 2
+  set Amg P Elliptic                   = true
 
 
   # Available preconditioners:
-  # - stokes  -> S^-1 = Mp^-1
+  # - stokes  -> S^-1 = 1/nu * Mp^-1
+  # - low-nu  -> S^-1 = rho * alpha * Mp^-1
   # - elman-1 -> S^-1 = Ap (BBt)^-1
   # - elman-2 -> S^-1 = Ap Fp^-1 Mp
-  # - BFBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
-  # - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
-  # diag(A)^-1 Bt)^-1
+  # - BDBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
+  # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
+  #                     diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  # set Preconditioner                   = stokes
-  set Preconditioner = stokes
+  set Preconditioner = low-nu
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
 set Linear solver tolerance                        = 1e-8
 set Adaptive refinement                            = false
-set Initial global refinement                      = 3
+set Initial global refinement                      = 4
 set Maximum number of time steps                   = 10000
 set Number of cycles                               = 1
 set Timer output file                              = timer.txt
@@ -123,7 +124,6 @@ subsection IDA Solver Parameters
   set Initial step size                             = 1e-2
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-3
   set Relative error tolerance                      = 1e-2
   set Seconds between each output                   = 1e-1

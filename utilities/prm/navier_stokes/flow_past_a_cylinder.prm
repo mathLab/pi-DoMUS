@@ -3,41 +3,43 @@
 ################################################################################
 
 subsection Navier Stokes
-  set Block coupling                   = 1,1; 1,0
-  set Preconditioner block coupling    = 0,1; 1,1
-  set Block of differential components = 1,0
+set Block coupling                   = 1,1; 1,0
+set Preconditioner block coupling    = 0,1; 1,1
+set Block of differential components = 1,0
 
-  set Blocking of the finite element   = u,u,p
+set Blocking of the finite element   = u,u,p
 
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
+set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
-  set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 100
-  set rho [kg m^3]                     = 1
+set grad-div stabilization           = 0.0
+set nu [Pa s]                        = 0.00025
+set rho [kg m^3]                     = 1
 
-  set GMRES Solver tolerance          = 1e-10
-  set CG Solver tolerance             = 1e-10
+set GMRES Solver tolerance          = 1e-10
+set CG Solver tolerance             = 1e-10
 
-  set Invert Ap using inverse_operator = true
-  set Invert Fp using inverse_operator = true
-  set Invert Np using inverse_operator = true
-  set Invert Mp using inverse_operator = true
+set Invert Ap using inverse_operator = true
+set Invert Fp using inverse_operator = true
+set Invert Np using inverse_operator = true
+set Invert Mp using inverse_operator = true
 
-  set Amg Aggregation Threshold        = 0.02
-  set Amg Smoother Sweeps              = 2
-  set Amg Higher Order                 = true
+set Amg Aggregation Threshold        = 0.02
+set Amg Smoother Sweeps              = 2
+set Amg Higher Order                 = true
 
-  set Amg P Aggregation Threshold      = 0.5
-  set Amg P Smoother Sweeps            = 3
+set Amg P Aggregation Threshold      = 0.5
+set Amg P Smoother Sweeps            = 2
+set Amg P Elliptic                   = true
 
 
   # Available preconditioners:
-  # - stokes  -> S^-1 = Mp^-1
+  # - stokes  -> S^-1 = 1/nu * Mp^-1
+  # - low-nu  -> S^-1 = rho * alpha * Mp^-1
   # - elman-1 -> S^-1 = Ap (BBt)^-1
   # - elman-2 -> S^-1 = Ap Fp^-1 Mp
   # - BDBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
   # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
-  # diag(A)^-1 Bt)^-1
+  #                     diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
   set Preconditioner                   = stokes
 end
@@ -127,7 +129,6 @@ subsection IDA Solver Parameters
   set Initial step size                             = 1e-2
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-3
   set Relative error tolerance                      = 1e-2
   set Seconds between each output                   = 1e-2
@@ -135,7 +136,8 @@ subsection IDA Solver Parameters
 end
 
 subsection Output Parameters
-  set Incremental run prefix =
+  set Incremental run prefix         =
+  set Files to save in run directory =
   set Output format          = vtu
   set Output partitioning    = false
   set Problem base name      = solution
