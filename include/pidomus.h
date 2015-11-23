@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __pi-DoMUS_h_
-#define __pi-DoMUS_h_
+#ifndef __pi_DoMUS_h_
+#define __pi_DoMUS_h_
 
 
 #include <deal.II/base/timer.h>
@@ -46,10 +46,12 @@
 
 using namespace dealii;
 using namespace deal2lkit;
+using namespace pidomus;
 
 template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
 class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
+
 
   // This is a class required to make tests
   template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
@@ -151,7 +153,7 @@ private:
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
   const MPI_Comm &comm;
-  const BaseInterface<dim, spacedim, n_components, LAC>    &energy;
+  const BaseInterface<dim, spacedim, n_components, LAC>    &interface;
 
   unsigned int n_cycles;
   unsigned int current_cycle;

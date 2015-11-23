@@ -26,6 +26,12 @@
 #define _pidomus_base_interface_h_
 
 #include <deal.II/lac/linear_operator.h>
+/* #include <deal.II/lac/linear_operator.h> */
+/* #include <deal.II/lac/block_linear_operator.h> */
+/* #include <deal.II/lac/packaged_operation.h> */
+/* #include <deal.II/lac/solver_cg.h> */
+#include <deal.II/base/sacado_product_type.h>
+
 
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/parsed_function.h>
@@ -35,6 +41,7 @@
 #include "copy_data.h"
 #include "lac/lac_type.h"
 
+using namespace pidomus;
 
 template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
 class BaseInterface : public ParsedFiniteElement<dim,spacedim>
@@ -62,12 +69,13 @@ public:
 
   virtual void parse_parameters_call_back ();
   /**
-   * returns the vector @p
-    const std::vector<unsigned int> get_differential_blocks() const;
+   * returns the vector @p of differential blocks
+   */
+  const std::vector<unsigned int> get_differential_blocks() const;
 
-    /**
-     * set time to @p t for forcing terms and boundary conditions
-     */
+  /**
+   * set time to @p t for forcing terms and boundary conditions
+   */
   virtual void set_time (const double &t) const;
 
 
@@ -196,13 +204,15 @@ public:
 
 
 
-  const table<2,DoFTools::Coupling> &get_matrix_coupling(const unsigned int &i) const;
+  const Table<2,DoFTools::Coupling> &get_matrix_coupling(const unsigned int &i) const;
   virtual unsigned int get_number_of_matrices() const;
 
 protected:
 
   template <typename T>
-  void init_to_zero(std::vector<T> &vec) const;
+  void init_to_zero(std::vector<T> &vec);
+
+  virtual void set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &couplings) const;
 
 
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
@@ -288,9 +298,9 @@ template<int dim, int spacedim, int n_components, typename LAC>
 template<typename T>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-init_to_zero(std::vector<typename T> &vec)
+init_to_zero(std::vector<T> &vec)
 {
-  for (unsigned int i=0; i<vec.size(), ++i)
+  for (unsigned int i=0; i<vec.size(); ++i)
     vec[i] = 0;
 }
 

@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/conservative/compressible_neo_hookean.h"
+#include "interfaces/compressible_neo_hookean_iterative.h"
 #include "tests.h"
 
 using namespace dealii;

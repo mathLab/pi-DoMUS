@@ -15,37 +15,32 @@
 
 using namespace dealii;
 using namespace deal2lkit;
-
-struct CopyData
+namespace pidomus
 {
-  CopyData (const unsigned int &dofs_per_cell,
-            const unsigned int &n_matrices);
-  CopyData (const CopyData &data);
+  struct CopyData
+  {
+    CopyData (const unsigned int &dofs_per_cell,
+              const unsigned int &n_matrices)
+      :
+      local_dof_indices  (dofs_per_cell),
+      local_residual     (dofs_per_cell),
+      local_matrices     (n_matrices,
+                          FullMatrix<double>(dofs_per_cell,
+                                             dofs_per_cell))
+    {};
 
-  std::vector<types::global_dof_index>  local_dof_indices;
-  std::vector<double>                   double_residual;
-  std::vector<FullMatrix<double> >      local_matrices;
-};
+    CopyData (const CopyData &data)
+      :
+      local_dof_indices  (data.local_dof_indices),
+      local_residual     (data.local_residual),
+      local_matrices     (data.local_matrices)
+    {};
 
+    std::vector<types::global_dof_index>  local_dof_indices;
+    std::vector<double>                   local_residual;
+    std::vector<FullMatrix<double> >      local_matrices;
+  };
 
-CopyData<dim, spacedim>::
-CopyData (const unsigned int &dofs_per_cell,
-          const unsigned int &n_matrices)
-  :
-  local_dof_indices  (dofs_per_cell),
-  local_residual     (dofs_per_cell),
-  local_matrices     (n_matrices,
-                      FullMatrix<double>(dofs_per_cell,
-                                         dofs_per_cell))
-{}
-
-CopyData<dim, spacedim>::
-CopyData (const CopyData &data)
-  :
-  local_dof_indices  (data.local_dof_indices),
-  local_residual     (data.local_residual),
-  local_matrices     (data.local_matrices)
-{}
-
+}
 
 #endif

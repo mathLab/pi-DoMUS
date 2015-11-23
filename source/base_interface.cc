@@ -22,6 +22,7 @@
 using namespace dealii;
 using namespace deal2lkit;
 
+
 template <int dim, int spacedim, int n_components, typename LAC>
 BaseInterface<dim,spacedim,n_components,LAC>::
 BaseInterface(const std::string &name,
@@ -36,15 +37,19 @@ BaseInterface(const std::string &name,
   dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions", default_component_names, ""),
   str_diff_comp(default_differential_components),
   old_t(-1.0)
+{}
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
+set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &couplings) const
 {
-  n_matrices = get_number_of_matrices();
-  mapping = SP(new MappingQ<dim,spacedim>(set_mapping_degree());
-               matrices_coupling = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
-               set_matrices_coupling(matrices_coupling);
+  Assert(false,ExcPureFunctionCalled());
 }
 
 
-          template <int dim, int spacedim, int n_components, typename LAC>
+
+template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 apply_neumann_bcs (
@@ -66,12 +71,12 @@ apply_neumann_bcs (
           auto &JxW = scratch.get_JxW_values();
           for (unsigned int q=0; q<q_points.size(); ++q)
             {
-              Vector<double> T(dim);
+              Vector<double> T(n_components);
               neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
               const Tensor<1,spacedim> normal_vector = fev.normal_vector(q);
 
               for (unsigned int i=0; i<local_residual.size(); ++i)
-                for (unsigned int c=0; c<n; ++c)
+                for (unsigned int c=0; c<n_components; ++c)
                   for (unsigned int s=0; s<spacedim; ++s)
                     local_residual[i] -= T[c]*normal_vector[s]*
                                          fev.shape_value_component(i,q,c)*JxW[q];
@@ -158,7 +163,7 @@ get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
                            FEValuesCache<dim,spacedim> &,
                            std::vector<SSdouble> &energies,
                            std::vector<std::vector<Sdouble> > &local_residuals,
-                           bool compute_only_system_matrix) const;
+                           bool compute_only_system_matrix) const
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -172,7 +177,7 @@ get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
                            FEValuesCache<dim,spacedim> &,
                            std::vector<Sdouble> &energies,
                            std::vector<std::vector<double> > &local_residuals,
-                           bool compute_only_system_matrix) const;
+                           bool compute_only_system_matrix) const
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -205,7 +210,7 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
 
   std::vector<SSdouble> energies(n_matrices);
   std::vector<std::vector<Sdouble> > residuals(n_matrices,
-                                               std::vector<Sdouble>(fe->dofs_per_cell));
+                                               std::vector<Sdouble>(dofs_per_cell));
   get_energies_and_residuals(cell,
                              scratch,
                              energies,

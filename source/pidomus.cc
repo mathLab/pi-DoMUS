@@ -184,7 +184,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
 
-  mapping = interface.get_mapping(*dof_handler, solution);
+  mapping = interface.get_mapping();
 
   dofs_per_block.clear();
   dofs_per_block.resize(interface.n_blocks());
@@ -320,7 +320,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
 
 
   auto local_copy = [this]
-                    (const CopyData & data)
+                    (const pidomus::CopyData & data)
   {
 
     for (unsigned int i=0; i<n_matrices; ++i)
@@ -332,7 +332,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
                          FEValuesCache<dim,spacedim> &scratch,
-                         CopyData & data)
+                         pidomus::CopyData & data)
   {
     this->interface.assemble_local_matrices(cell, scratch, data);
   };
@@ -351,7 +351,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
                                     interface.get_matrices_update_flags(),
                                     face_quadrature_formula,
                                     interface.get_face_update_flags()),
-       CopyData<dim, spacedim> (fe->dofs_per_cell,n_matrices));
+       pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
   for (unsigned int i=0; i<n_matrices; ++i)
     matrices[i]->compress(VectorOperation::add);
@@ -609,7 +609,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 
   dst = 0;
 
-  auto local_copy = [&dst, this] (const CopyData & data)
+  auto local_copy = [&dst, this] (const pidomus::CopyData & data)
   {
     this->constraints.distribute_local_to_global (data.local_residual,
                                                   data.local_dof_indices,
@@ -619,7 +619,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
                          FEValuesCache<dim,spacedim> &scratch,
-                         CopyData & data)
+                         pidomus::CopyData & data)
   {
     cell->get_dof_indices (data.local_dof_indices);
 
@@ -654,10 +654,10 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
        FEValuesCache<dim,spacedim>(*mapping,
                                    *fe,
                                    quadrature_formula,
-                                   interface.get_jacobian_flags(),
+                                   interface.get_matrices_update_flags(),
                                    face_quadrature_formula,
-                                   interface.get_face_flags()),
-       CopyData(fe->dofs_per_cell,n_matrices));
+                                   interface.get_face_update_flags()),
+       pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
 //   constraints.distribute(dst);
 
@@ -700,7 +700,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
     {
 
       SparseDirectUMFPACK inverse;
-      inverse.factorize((sMAT &) jacobian_matrix);
+      inverse.factorize((sMAT &) *matrices[0]);
       inverse.vmult((sVEC &)dst, (sVEC &)src);
 
     }
@@ -708,7 +708,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
     {
 
       PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (jacobian_matrix.m(), solver_tolerance);
+      SolverControl solver_control (matrices[0]->m(), solver_tolerance);
 
       SolverFGMRES<typename LAC::VectorType>
       solver(solver_control, mem,
