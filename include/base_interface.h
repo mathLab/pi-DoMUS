@@ -143,7 +143,7 @@ public:
    */
   virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                           FEValuesCache<dim,spacedim> &,
-                                          std::vector<SSdouble> & energies,
+                                          std::vector<SSdouble> &energies,
                                           std::vector<std::vector<Sdouble> > &local_residuals,
                                           bool compute_only_system_matrix) const;
 

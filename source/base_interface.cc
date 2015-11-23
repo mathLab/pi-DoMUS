@@ -67,21 +67,21 @@ apply_neumann_bcs (
           for (unsigned int q=0; q<q_points.size(); ++q)
             {
               Vector<double> T(dim);
-	      neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
-	      const Tensor<1,spacedim> normal_vector = fev.normal_vector(q);
-	      
-	      for (unsigned int i=0; i<local_residual.size(); ++i)
-		for (unsigned int c=0; c<n; ++c)
-		  for (unsigned int s=0; s<spacedim; ++s)
-		    local_residual[i] -= T[c]*normal_vector[s]*
-		      fev.shape_value_component(i,q,c)*JxW[q];
-	      
+              neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
+              const Tensor<1,spacedim> normal_vector = fev.normal_vector(q);
+
+              for (unsigned int i=0; i<local_residual.size(); ++i)
+                for (unsigned int c=0; c<n; ++c)
+                  for (unsigned int s=0; s<spacedim; ++s)
+                    local_residual[i] -= T[c]*normal_vector[s]*
+                                         fev.shape_value_component(i,q,c)*JxW[q];
+
             }// end loop over quadrature points
-	  
+
         } // endif face->at_boundary
-      
+
       break;
-      
+
     }// end loop over faces
 
 }// end function definition
@@ -155,10 +155,10 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-			   FEValuesCache<dim,spacedim> &,
-			   std::vector<SSdouble> & energies,
-			   std::vector<std::vector<Sdouble> > &local_residuals,
-			   bool compute_only_system_matrix) const;
+                           FEValuesCache<dim,spacedim> &,
+                           std::vector<SSdouble> &energies,
+                           std::vector<std::vector<Sdouble> > &local_residuals,
+                           bool compute_only_system_matrix) const;
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -169,10 +169,10 @@ template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-			   FEValuesCache<dim,spacedim> &,
-			   std::vector<Sdouble> & energies,
-			   std::vector<std::vector<double> > &local_residuals,
-			   bool compute_only_system_matrix) const;
+                           FEValuesCache<dim,spacedim> &,
+                           std::vector<Sdouble> &energies,
+                           std::vector<std::vector<double> > &local_residuals,
+                           bool compute_only_system_matrix) const;
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -205,7 +205,7 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
 
   std::vector<SSdouble> energies(n_matrices);
   std::vector<std::vector<Sdouble> > residuals(n_matrices,
-					       std::vector<Sdouble>(fe->dofs_per_cell));
+                                               std::vector<Sdouble>(fe->dofs_per_cell));
   get_energies_and_residuals(cell,
                              scratch,
                              energies,

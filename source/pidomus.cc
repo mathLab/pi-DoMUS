@@ -625,7 +625,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 
     std::vector<Sdouble> energies(n_matrices);
     std::vector<std::vector<double> > residuals(n_matrices,
-						std::vector<double>(fe->dofs_per_cell));
+                                                std::vector<double>(fe->dofs_per_cell));
     this->interface.get_energies_and_residuals(cell,
                                                scratch,
                                                energies,
