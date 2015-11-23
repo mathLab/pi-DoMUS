@@ -32,7 +32,7 @@
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
 
-#include "data/assembly.h"
+#include "copy_data.h"
 #include "lac/lac_type.h"
 
 
@@ -42,17 +42,17 @@ class BaseInterface : public ParsedFiniteElement<dim,spacedim>
 
 public:
 
-/**
- * virtual destructor.
- */
+  /**
+   * virtual destructor.
+   */
   virtual ~BaseInterface() {};
 
-/**
- * Constructor. It takes the name of the subsection within the
- * parameter file, the finite element used to discretize the system,
- * the name of the components and a string were the block of
- * differential and algebraic components are specified.
- */
+  /**
+   * Constructor. It takes the name of the subsection within the
+   * parameter file, the finite element used to discretize the system,
+   * the name of the components and a string were the block of
+   * differential and algebraic components are specified.
+   */
   BaseInterface(const std::string &name="",
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
@@ -61,13 +61,13 @@ public:
   virtual void declare_parameters (ParameterHandler &prm);
 
   virtual void parse_parameters_call_back ();
-/**
- * returns the vector @p 
-  const std::vector<unsigned int> get_differential_blocks() const;
-
   /**
-   * set time to @p t for forcing terms and boundary conditions
-   */
+   * returns the vector @p
+    const std::vector<unsigned int> get_differential_blocks() const;
+
+    /**
+     * set time to @p t for forcing terms and boundary conditions
+     */
   virtual void set_time (const double &t) const;
 
 
@@ -82,11 +82,11 @@ public:
    *
    * This function is used to applies Dirichlet boundary conditions.
    * It takes as argument a DoF handler @p dof_handler and a constraint
-   * matrix @p constraints. 
-   * 
+   * matrix @p constraints.
+   *
    */
   void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                                    ConstraintMatrix &constraints) const;
+                            ConstraintMatrix &constraints) const;
 
   /**
    * Applies Neumann boundary conditions
@@ -134,7 +134,7 @@ public:
    */
   virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                           FEValuesCache<dim,spacedim> &,
-                                          std::vector<Sdouble> &,
+                                          std::vector<Sdouble> &energies,
                                           std::vector<std::vector<double> > &local_residuals,
                                           bool compute_only_system_matrix) const;
 
@@ -143,7 +143,7 @@ public:
    */
   virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                           FEValuesCache<dim,spacedim> &,
-                                          std::vector<SSdouble> &,
+                                          std::vector<SSdouble> & energies,
                                           std::vector<std::vector<Sdouble> > &local_residuals,
                                           bool compute_only_system_matrix) const;
 

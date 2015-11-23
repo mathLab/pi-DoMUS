@@ -320,7 +320,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
 
 
   auto local_copy = [this]
-                    (const PreconditionerCopyData & data)
+                    (const CopyData & data)
   {
 
     for (unsigned int i=0; i<n_matrices; ++i)
@@ -351,8 +351,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
                                     interface.get_matrices_update_flags(),
                                     face_quadrature_formula,
                                     interface.get_face_update_flags()),
-       Assembly::CopyData::
-       piDoMUSPreconditioner<dim, spacedim> (*fe,n_matrices));
+       CopyData<dim, spacedim> (fe->dofs_per_cell,n_matrices));
 
   for (unsigned int i=0; i<n_matrices; ++i)
     matrices[i]->compress(VectorOperation::add);
@@ -610,9 +609,9 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 
   dst = 0;
 
-  auto local_copy = [&dst, this] (const SystemCopyData & data)
+  auto local_copy = [&dst, this] (const CopyData & data)
   {
-    this->constraints.distribute_local_to_global (data.double_residuals[0],
+    this->constraints.distribute_local_to_global (data.local_residual,
                                                   data.local_dof_indices,
                                                   dst);
   };
@@ -625,19 +624,21 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
     cell->get_dof_indices (data.local_dof_indices);
 
     std::vector<Sdouble> energies(n_matrices);
+    std::vector<std::vector<double> > residuals(n_matrices,
+						std::vector<double>(fe->dofs_per_cell));
     this->interface.get_energies_and_residuals(cell,
                                                scratch,
                                                energies,
-                                               data.sacado_residuals,
+                                               residuals,
                                                true);
 
-    this->interface.get_residuals(cell, scratch, data.double_residuals, true);
-
     // apply conservative loads
-    this->interface.apply_forcing_terms(cell, scratch, data.double_residuals[0]);
+    this->interface.apply_forcing_terms(cell, scratch, residuals[0]);
 
     if (cell->at_boundary())
-      this->interface.apply_neumann_bcs(cell, scratch, data.double_residuals[0]);
+      this->interface.apply_neumann_bcs(cell, scratch, residuals[0]);
+
+    data.local_residual = residuals[0];
   };
 
   typedef
@@ -656,7 +657,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                                    interface.get_jacobian_flags(),
                                    face_quadrature_formula,
                                    interface.get_face_flags()),
-       CopyData(*fe,n_matrices));
+       CopyData(fe->dofs_per_cell,n_matrices));
 
 //   constraints.distribute(dst);
 

@@ -15,10 +15,10 @@ public:
 
   // interface with the Interface :)
 
-   void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                        const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
-                                        LinearOperator<typename LAC::VectorType> &,
-                                        LinearOperator<typename LAC::VectorType> &) const;
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
+                                const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
+                                LinearOperator<typename LAC::VectorType> &,
+                                LinearOperator<typename LAC::VectorType> &) const;
 
 
   // this function allows to define the update_flags.
@@ -37,40 +37,40 @@ public:
   //
   // UpdateFlags get_face_update_flags() const;
 
-   // this function defines the order of the mapping used when
-   // Dirichlet boundary conditions are applied, when the Initial
-   // solution is interpolated, when the solution vector is stored in
-   // vtu format and when the the error_from_exact is performed.
-   // By default it returns 1;
-   //
-   // unsigned int set_order_of_mapping () const;
+  // this function defines the order of the mapping used when
+  // Dirichlet boundary conditions are applied, when the Initial
+  // solution is interpolated, when the solution vector is stored in
+  // vtu format and when the the error_from_exact is performed.
+  // By default it returns 1;
+  //
+  // unsigned int set_order_of_mapping () const;
 
-   // set the number of matrices to be assembled
-   unsigned int get_number_of_matrices() const
-   {
-     return 2;
-   }
+  // set the number of matrices to be assembled
+  unsigned int get_number_of_matrices() const
+  {
+    return 2;
+  }
 
-   // Coupling between the blocks of the finite elements in the system:
-   //  0: No coupling
-   //  1: Full coupling
-   //  2: Coupling only on faces
-   void set_matrices_coupling (std::vector<Table<2,DoFTools::Coupling> > &couplings) const
-   {
-     std::string system_coupling="1";
-     couplings[0]=this->to_coupling(system_coupling);
-     
-     std::string prec_coupling="1";
-     couplings[1]=this->to_coupling(prec_coupling);
-     
-  //    std::string system_coupling="1,1;1,0";
-  //    couplings[0]=this->to_coupling(system_coupling);
-  //    
-  //    std::string prec_coupling="1,0;0,1";
-  //    couplings[1]=this->to_coupling(prec_coupling);
-     
-   } 
-       
+  // Coupling between the blocks of the finite elements in the system:
+  //  0: No coupling
+  //  1: Full coupling
+  //  2: Coupling only on faces
+  void set_matrices_coupling (std::vector<Table<2,DoFTools::Coupling> > &couplings) const
+  {
+    std::string system_coupling="1";
+    couplings[0]=this->to_coupling(system_coupling);
+
+    std::string prec_coupling="1";
+    couplings[1]=this->to_coupling(prec_coupling);
+
+    //    std::string system_coupling="1,1;1,0";
+    //    couplings[0]=this->to_coupling(system_coupling);
+    //
+    //    std::string prec_coupling="1,0;0,1";
+    //    couplings[1]=this->to_coupling(prec_coupling);
+
+  }
+
 
   template <typename EnergyType, typename ResidualType>
   void set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,

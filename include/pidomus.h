@@ -26,7 +26,7 @@
 
 // #include <deal.II/lac/precondition.h>
 
-#include "data/assembly.h"
+#include "copy_data.h"
 #include "base_interface.h"
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
