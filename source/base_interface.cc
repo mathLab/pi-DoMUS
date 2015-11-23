@@ -23,6 +23,28 @@ using namespace dealii;
 using namespace deal2lkit;
 
 template <int dim, int spacedim, int n_components, typename LAC>
+BaseInterface<dim,spacedim,n_components,LAC>::
+  BaseInterface(const std::string &name,
+                const std::string &default_fe,
+                const std::string &default_component_names,
+                const std::string &default_differential_components) :
+    ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
+                                      n_components),
+    forcing_terms("Forcing terms", default_component_names, ""),
+    neumann_bcs("Neumann boundary conditions", default_component_names, ""),
+dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
+dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions", default_component_names, ""),
+    str_diff_comp(default_differential_components),
+    old_t(-1.0)
+  {
+    n_matrices = get_number_of_matrices();
+    mapping = SP(new MappingQ<dim,spacedim>(set_mapping_degree());
+    matrices_coupling = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
+    set_matrices_coupling(matrices_coupling);
+  }
+
+
+template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
 apply_neumann_bcs (
@@ -51,7 +73,8 @@ apply_neumann_bcs (
 
               for (unsigned int i=0; i<local_residual.size(); ++i)
                 for (unsigned int c=0; c<n_components; ++c)
-                  local_residual[i] -= T[c]*fev.shape_value_component(i,q,c)*JxW[q];
+                  local_residual[i] -= T[c]*fev.normal_vector
+		    fev.shape_value_component(i,q,c)*JxW[q];
 
             }
           break;
@@ -218,43 +241,18 @@ BaseInterface<dim,spacedim,n_components,LAC>::get_mapping() const
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
-shared_ptr<Mapping<dim,spacedim> >
-BaseInterface<dim,spacedim,n_components,LAC>::set_mapping() const
+unsigned int
+BaseInterface<dim,spacedim,n_components,LAC>::set_mapping_degree() const
 {
-  return shared_ptr<Mapping<dim,spacedim> >(new MappingQ<dim,spacedim>(1));
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-UpdateFlags
-BaseInterface<dim,spacedim,n_components,LAC>::get_jacobian_flags() const
-{
-  return (update_quadrature_points |
-          update_JxW_values |
-          update_values |
-          update_gradients);
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-UpdateFlags
-BaseInterface<dim,spacedim,n_components,LAC>::get_residual_flags() const
-{
-  return get_jacobian_flags();
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-UpdateFlags
-BaseInterface<dim,spacedim,n_components,LAC>::get_jacobian_preconditioner_flags() const
-{
-  return (update_JxW_values |
-          update_values |
-          update_gradients);
+  return 1;
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
 UpdateFlags
 BaseInterface<dim,spacedim,n_components,LAC>::get_face_update_flags() const
 {
-  return UpdateFlags(0);
+  return (update_values         | update_quadrature_points  |
+	  update_normal_vectors | update_JxW_values);
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -345,7 +343,7 @@ template<int dim, int spacedim, int n_components, typename LAC>
 unsigned int
 BaseInterface<dim,spacedim,n_components,LAC>::get_number_of_matrices() const
 {
-  return n_matrices;
+  Assert(false,ExcPureFunctionCalled());
 }
 
 template class BaseInterface<2, 2, 1, LATrilinos>;

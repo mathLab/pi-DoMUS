@@ -4,7 +4,7 @@
 #include "interface.h"
 
 template <int dim, int spacedim>
-class ProblemTemplate : public Interface<dim,spacedim,/*n_components*/ dim, ProblemTemplate<dim,spacedim> /*LAC*/ >
+class ProblemTemplate : public Interface<dim,spacedim,/*n_components=*/dim, ProblemTemplate<dim,spacedim> /*LAC=LATrilinos*/ >
 {
 public:
   ~ProblemTemplate () {};
@@ -23,21 +23,54 @@ public:
 
   // this function allows to define the update_flags.
   // by default they are
-  //  update_quadrature_points |
+  //  (update_quadrature_points |
   //  update_JxW_values |
   //  update_values |
-  //  update_gradients
+  //  update_gradients)
+  //
   //  UpdateFlags get_matrices_update_flags() const;
 
-  //   UpdateFlags get_face_update_flags() const;
-   
-   shared_ptr<Mapping<dim,spacedim> > set_mapping () const;
+  // this function allows to set particular update_flags on the face
+  // by default it returns
+  // (update_values         | update_quadrature_points  |
+  //  update_normal_vectors | update_JxW_values);
+  //
+  // UpdateFlags get_face_update_flags() const;
+
+   // this function defines the order of the mapping used when
+   // Dirichlet boundary conditions are applied, when the Initial
+   // solution is interpolated, when the solution vector is stored in
+   // vtu format and when the the error_from_exact is performed.
+   // By default it returns 1;
+   //
+   // unsigned int set_order_of_mapping () const;
 
    // set the number of matrices to be assembled
-   unsigned int get_number_of_matrices() const;
+   unsigned int get_number_of_matrices() const
+   {
+     return 2;
+   }
 
-
-   set_matrices_coupling ();
+   // Coupling between the blocks of the finite elements in the system:
+   //  0: No coupling
+   //  1: Full coupling
+   //  2: Coupling only on faces
+   void set_matrices_coupling (std::vector<Table<2,DoFTools::Coupling> > &couplings) const
+   {
+     std::string system_coupling="1";
+     couplings[0]=this->to_coupling(system_coupling);
+     
+     std::string prec_coupling="1";
+     couplings[1]=this->to_coupling(prec_coupling);
+     
+  //    std::string system_coupling="1,1;1,0";
+  //    couplings[0]=this->to_coupling(system_coupling);
+  //    
+  //    std::string prec_coupling="1,0;0,1";
+  //    couplings[1]=this->to_coupling(prec_coupling);
+     
+   } 
+       
 
   template <typename EnergyType, typename ResidualType>
   void set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,

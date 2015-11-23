@@ -14,15 +14,12 @@
  *    - Finite Elements
  *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
  *    - Initial conditions ( y(0) and d/dt y (0) )
- *  - System Matrix:
- *    - coupling (coupling variable is a matrix of zeroes and ones: if the row
- *      and the coloumn are indipendent there will be 0, otherwise 1)
- *  - Preconditioner:
- *    - preconditioner coupling (same as above)
+ *  - Couplings:
+ *    - coupling variable is a matrix of zeroes and ones: if the row
+ *      and the coloumn are indipendent there will be 0, otherwise 1
  *  - @p default_differential_components : this variable is a list of ones and
  *    zeroes. 1 in the case the corresponding variable should be differentiable
  *    and 0 otherwise.
- *  TODO: add flags
  */
 
 #ifndef _pidomus_base_interface_h_
@@ -45,26 +42,27 @@ class BaseInterface : public ParsedFiniteElement<dim,spacedim>
 
 public:
 
+/**
+ * virtual destructor.
+ */
   virtual ~BaseInterface() {};
 
+/**
+ * Constructor. It takes the name of the subsection within the
+ * parameter file, the finite element used to discretize the system,
+ * the name of the components and a string were the block of
+ * differential and algebraic components are specified.
+ */
   BaseInterface(const std::string &name="",
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
-                const std::string &default_differential_components="") :
-    ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
-                                      n_components),
-    forcing_terms("Forcing terms", default_component_names, ""),
-    neumann_bcs("Neumann boundary conditions", default_component_names, ""),
-    dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
-    str_diff_comp(default_differential_components),
-    old_t(-1.0)
-  {
-    n_matrices = get_number_of_matrices();
-    mapping = set_mapping();
-  };
+                const std::string &default_differential_components="");
 
   virtual void declare_parameters (ParameterHandler &prm);
+
   virtual void parse_parameters_call_back ();
+/**
+ * returns the vector @p 
   const std::vector<unsigned int> get_differential_blocks() const;
 
   /**
@@ -84,9 +82,10 @@ public:
    *
    * This function is used to applies Dirichlet boundary conditions.
    * It takes as argument a DoF handler @p dof_handler and a constraint
-   * matrix @p constraints.
+   * matrix @p constraints. 
+   * 
    */
-  virtual void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+  void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                                     ConstraintMatrix &constraints) const;
 
   /**
@@ -169,7 +168,8 @@ public:
 
 
   shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
-  virtual shared_ptr<Mapping<dim,spacedim> > set_mapping() const;
+
+  virtual unsigned int set_mapping_degree() const;
 
   virtual UpdateFlags get_face_update_flags() const;
 
