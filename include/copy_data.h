@@ -18,7 +18,7 @@ using namespace deal2lkit;
 
 struct CopyData
 {
-  CopyData (const unsigned int &dofs_per_cell,,
+  CopyData (const unsigned int &dofs_per_cell,
             const unsigned int &n_matrices);
   CopyData (const CopyData &data);
 
