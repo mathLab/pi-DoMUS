@@ -123,7 +123,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
       auto J = determinant(F);
       auto lnJ = std::log (J);
 
-      auto psi = (mu/2.)*(Ic-dim) - mu*lnJ + (lambda/2.)*(lnJ)*(lnJ);
+      EnergyType psi = (mu/2.)*(Ic-dim) - mu*lnJ + (lambda/2.)*(lnJ)*(lnJ);
 
       energies[0] += (psi)*JxW[q];
 
