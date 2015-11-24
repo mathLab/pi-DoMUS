@@ -71,7 +71,7 @@ CompressibleNeoHookeanInterface():
   Interface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
       "FESystem[FE_Q(1)^d]",
       "u,u,u","1")
-{};
+{}
 
 
 template <int dim, int spacedim>
@@ -117,7 +117,6 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
   auto &us = fe_cache.get_values("solution", "u", displacement, et);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, et);
 
-  auto &fev = fe_cache.get_current_fe_values();
   const unsigned int n_q_points = us.size();
   auto &JxW = fe_cache.get_JxW_values();
 
@@ -149,7 +148,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 
 template <int dim, int spacedim>
 void
-CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &,
     const std::vector<shared_ptr<MAT> > matrices,
     LinearOperator<BVEC> &system_op,
     LinearOperator<BVEC> &prec_op) const

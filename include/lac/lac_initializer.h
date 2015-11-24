@@ -55,6 +55,7 @@ public:
   void ghosted(BlockVector<double> &, bool fast=false)
   {
     Assert(false, ExcInternalError("You tried to create a ghosted vector in a serial run."));
+    (void)fast;
   };
 
   /**

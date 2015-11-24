@@ -305,8 +305,8 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
-  
- typename LAC::VectorType tmp(solution);
+
+  typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
 
   if (we_are_parallel)
@@ -314,15 +314,15 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
       distributed_solution = tmp;
       distributed_solution_dot = solution_dot;
       interface.initialize_data(distributed_solution,
-				distributed_solution_dot, t, alpha);
+                                distributed_solution_dot, t, alpha);
     }
   else
     {
       interface.initialize_data(tmp,
-				solution_dot, t, alpha);
+                                solution_dot, t, alpha);
     }
-  
-  
+
+
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
   CellFilter;
@@ -471,7 +471,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::
 get_solution()
 {
   return solution;
-};
+}
 
 /* ------------------------ RUN ------------------------ */
 
@@ -573,11 +573,11 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
 
 template <int dim, int spacedim, int n_components, typename LAC>
 bool
-piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
-    const unsigned int step_number,
-    const double h,
-    typename LAC::VectorType &solution,
-    typename LAC::VectorType &solution_dot)
+piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double /*t*/,
+    const unsigned int /*step_number*/,
+    const double /*h*/,
+    typename LAC::VectorType &/*solution*/,
+    typename LAC::VectorType &/*solution_dot*/)
 {
   return false;
 }
@@ -604,14 +604,14 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
-  
- typename LAC::VectorType tmp(solution);
+
+  typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
 
   distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
   interface.initialize_data(distributed_solution,
-			    distributed_solution_dot, t, 0.0);
+                            distributed_solution_dot, t, 0.0);
   dst = 0;
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
@@ -675,11 +675,11 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 
 template <int dim, int spacedim, int n_components, typename LAC>
 int
-piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
-    const typename LAC::VectorType &y,
-    const typename LAC::VectorType &y_dot,
+piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double /*t*/,
+    const typename LAC::VectorType &/*y*/,
+    const typename LAC::VectorType &/*y_dot*/,
     const typename LAC::VectorType &,
-    const double alpha,
+    const double /*alpha*/,
     const typename LAC::VectorType &src,
     typename LAC::VectorType &dst) const
 {

@@ -53,7 +53,7 @@ init()
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &couplings) const
+set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &) const
 {
   Assert(false,ExcPureFunctionCalled());
 }
@@ -68,6 +68,8 @@ apply_neumann_bcs (
   FEValuesCache<dim,spacedim> &scratch,
   std::vector<double> &local_residual) const
 {
+
+
   double dummy = 0.0;
 
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
@@ -80,6 +82,7 @@ apply_neumann_bcs (
           auto &fev = scratch.get_current_fe_values();
           auto &q_points = scratch.get_quadrature_points();
           auto &JxW = scratch.get_JxW_values();
+
           for (unsigned int q=0; q<q_points.size(); ++q)
             {
               Vector<double> T(n_components);
@@ -94,9 +97,9 @@ apply_neumann_bcs (
 
             }// end loop over quadrature points
 
-        } // endif face->at_boundary
+          break;
 
-      break;
+        } // endif face->at_boundary
 
     }// end loop over faces
 
@@ -172,9 +175,9 @@ void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                            FEValuesCache<dim,spacedim> &,
-                           std::vector<SSdouble> &energies,
-                           std::vector<std::vector<Sdouble> > &local_residuals,
-                           bool compute_only_system_matrix) const
+                           std::vector<SSdouble> &,
+                           std::vector<std::vector<Sdouble> > &,
+                           bool) const
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -186,9 +189,9 @@ void
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                            FEValuesCache<dim,spacedim> &,
-                           std::vector<Sdouble> &energies,
-                           std::vector<std::vector<double> > &local_residuals,
-                           bool compute_only_system_matrix) const
+                           std::vector<Sdouble> &,
+                           std::vector<std::vector<double> > &,
+                           bool) const
 
 {
   Assert(false, ExcPureFunctionCalled ());
@@ -379,6 +382,7 @@ unsigned int
 BaseInterface<dim,spacedim,n_components,LAC>::get_number_of_matrices() const
 {
   Assert(false,ExcPureFunctionCalled());
+  return 0;
 }
 
 template class BaseInterface<2, 2, 1, LATrilinos>;

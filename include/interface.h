@@ -64,8 +64,6 @@ public:
         energies,
         local_residuals,
         compute_only_system_matrix);
-    std::cout << energies[0] << std::endl <<std::endl <<std::flush;
-    //std::cout << energies[1] << std::endl <<std::endl <<std::flush;
 
   }
 
