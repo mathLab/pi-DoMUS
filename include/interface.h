@@ -44,13 +44,6 @@ public:
                                           std::vector<std::vector<double> > &local_residuals,
                                           bool compute_only_system_matrix) const
   {
-    for (unsigned int i=0; i<energies.size(); ++i)
-      energies[i] = 0.0;
-    for (unsigned int i=0; i<local_residuals.size(); ++i)
-      for (unsigned int j=0; j<local_residuals[0].size(); ++j)
-        local_residuals[i][j] = 0.0;
-    //    init_to_zero(energies);
-    //    init_to_zero(local_residuals);
     static_cast<const Implementation *>(this)->set_energies_and_residuals(cell,
         scratch,
         energies,
@@ -66,20 +59,13 @@ public:
                                           std::vector<std::vector<Sdouble> > &local_residuals,
                                           bool compute_only_system_matrix) const
   {
-    for (unsigned int i=0; i<energies.size(); ++i)
-      energies[i] = 0.0;
-    for (unsigned int i=0; i<local_residuals.size(); ++i)
-      for (unsigned int j=0; j<local_residuals[0].size(); ++j)
-        local_residuals[i][j] = 0.0;
-    // init_to_zero(energies);
-    // init_to_zero(local_residuals);
     static_cast<const Implementation *>(this)->set_energies_and_residuals(cell,
         scratch,
         energies,
         local_residuals,
         compute_only_system_matrix);
-    //    std::cout << energies[0] << std::endl <<std::endl <<std::flush;
-    std::cout << energies[1] << std::endl <<std::endl <<std::flush;
+    std::cout << energies[0] << std::endl <<std::endl <<std::flush;
+    //std::cout << energies[1] << std::endl <<std::endl <<std::flush;
 
   }
 

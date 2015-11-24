@@ -304,11 +304,25 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
   update_all(t);
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-  distributed_solution = solution;
-  distributed_solution_dot = solution_dot;
 
-  interface.initialize_data(distributed_solution,
-                            distributed_solution_dot, t, alpha);
+  
+ typename LAC::VectorType tmp(solution);
+  constraints.distribute(tmp);
+
+  if (we_are_parallel)
+    {
+      distributed_solution = tmp;
+      distributed_solution_dot = solution_dot;
+      interface.initialize_data(distributed_solution,
+				distributed_solution_dot, t, alpha);
+    }
+  else
+    {
+      interface.initialize_data(tmp,
+				solution_dot, t, alpha);
+    }
+  
+  
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
   CellFilter;
@@ -355,15 +369,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
 
   for (unsigned int i=0; i<n_matrices; ++i)
     matrices[i]->compress(VectorOperation::add);
-//   //TODO
-//   auto id = solution.locally_owned_elements();
-//   for (unsigned int i = 0; i < id.n_elements(); ++i)
-//     {
-//       auto j = id.nth_index_in_set(i);
-//       if (constraints.is_constrained(j))
-//         jacobian_matrix.set(j, j, 1.0);
-//     }
-//   compress(jacobian_matrix, VectorOperation::insert);
 
   computing_timer.exit_section();
 }
@@ -598,15 +603,15 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
-  typename LAC::VectorType tmp(solution);
+
+  
+ typename LAC::VectorType tmp(solution);
   constraints.distribute(tmp);
 
   distributed_solution = tmp;
   distributed_solution_dot = solution_dot;
-
   interface.initialize_data(distributed_solution,
-                            distributed_solution_dot, t, 0.0);
-
+			    distributed_solution_dot, t, 0.0);
   dst = 0;
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
