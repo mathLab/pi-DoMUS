@@ -19,8 +19,8 @@
  *
  * In the code we adopt the following notations:
  * - Mp := block resulting from \f$ ( \partial_t p, q ) \f$
- * - Ap := block resulting from f$ \nu ( \nabla p,\nabla q ) \f$
- * - Np := block resulting from f$ ( u \cdot \nabla p, q) \f$
+ * - Ap := block resulting from \f$ \nu ( \nabla p,\nabla q ) \f$
+ * - Np := block resulting from \f$ ( u \cdot \nabla p, q) \f$
  * - Fp := Mp + Ap + Np
  *
  * where:
@@ -28,6 +28,14 @@
  * - q = test function for the pressure
  * - u = velocity
  * - v = test function for the velocity
+ *
+ * Notes on preconditioners:
+ * - stokes: This preconditioner uses the mass matrix of pressure block as inverse for the Schur block.
+ * This is a preconditioner suitable for problems wher the viscosity is higher than the density. \f[ S^-1 = \frac{1}{\nu} M_p \f]
+ * - low-nu: This preconditioner uses the stifness matrix of pressure block as inverse for the Schur block. \f[ S^-1 = \rho \frac{1}{\Delta t} A_p \f]
+ * - cah-cha: This preconditioner implement the Schur block suggested by Cahouet and Chabard in \cite FLD:FLD1650080802 . \f[ S^-1 = \frac{1}{\nu} M_p + \rho \frac{1}{\Delta t} A_p \f]
+ *
+ *
  */
 
 #include "interfaces/non_conservative.h"
@@ -147,6 +155,11 @@ private:
   double amg_p_aggregation_threshold;
 
   /**
+   * AMG elliptic:
+   */
+  bool amg_p_elliptic;
+
+  /**
    * Name of the preconditioner:
    */
   std::string prec_name;
@@ -185,6 +198,30 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG>  Amg_preconditioner_2;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> jacobi_preconditioner;
 
+  /**
+   * Compute Ap
+   */
+  bool compute_Ap;
+
+  /**
+   * Compute Np
+   */
+  bool compute_Np;
+
+  /**
+   * Compute Mp
+   */
+  bool compute_Mp;
+
+  /**
+   * Compute Fp
+   */
+  bool compute_Fp;
+
+  /**
+   * Choose how to handle the non linear term \f$ (\nabla u)u \f$.
+   */
+  std::string Np_formulation;
 };
 
 template<int dim>
@@ -196,7 +233,11 @@ NavierStokes()
                                                              "u,u,p",
                                                              "1,1; 1,0",
                                                              "0,0; 0,1",
-                                                             "1,0")
+                                                             "1,0"),
+  compute_Ap(false),
+  compute_Np(false),
+  compute_Mp(false),
+  compute_Fp(false)
 {}
 
 template <int dim>
@@ -231,6 +272,14 @@ declare_parameters (ParameterHandler &prm)
                       "Amg P Smoother Sweeps","2", Patterns::Integer(0));
   this->add_parameter(prm, &amg_p_aggregation_threshold,
                       "Amg P Aggregation Threshold", "0.02", Patterns::Double(0.0));
+  this->add_parameter(prm, &amg_p_elliptic,
+                      "Amg P Elliptic", "true", Patterns::Bool());
+  this->add_parameter(prm, &Np_formulation,  "how to handle Np","RHS",
+                      Patterns::Selection("none|RHS|lin_grad|lin_u"),
+                      "none: use grad_u u in the jacobian matrix \n"
+                      "RHS: move grad_u u to the RHS \n"
+                      "lin_grad: linearize grad_u u using grad_u evaluated at the previous time step\n"
+                      "lin_u: linearize grad_u u using u evaluated at the previous time step\n");
   this->add_parameter(prm, &invert_Ap,
                       "Invert Ap using inverse_operator", "true", Patterns::Bool());
   this->add_parameter(prm, &invert_Mp,
@@ -253,6 +302,39 @@ NavierStokes<dim>::
 parse_parameters_call_back ()
 {
   NonConservativeInterface<dim,dim,dim+1, NavierStokes<dim> >::parse_parameters_call_back();
+
+  if (prec_name == "stokes")
+    {
+      compute_Mp = true;
+    }
+  else if (prec_name == "low-nu")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "elman-1")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "elman-2")
+    {
+      compute_Fp = true;
+      compute_Ap = true;
+      compute_Mp = true;
+    }
+  else if (prec_name == "BFBt_id")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "BFBt_dA")
+    {
+      compute_Ap = true;
+    }
+  else if (prec_name == "cah-cha")
+    {
+      compute_Ap = true;
+      compute_Mp = true;
+    }
+
 }
 
 template <int dim>
@@ -322,9 +404,12 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
                 std::vector<Number> &local_residual) const
 {
   Number alpha = this->alpha;
+  double dummy_alpha = 0.0;
+
   fe_cache.reinit(cell);
 
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
+  fe_cache.cache_local_solution_vector("solution_", this->old_solution, dummy_alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
 
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -335,9 +420,11 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 // velocity:
   auto &us = fe_cache.get_values("solution", "u", velocity, alpha);
+  auto &us_ = fe_cache.get_values("solution_", "u_", velocity, dummy_alpha);
   auto &div_us = fe_cache.get_divergences("solution", "div_u", velocity, alpha);
   auto &sym_grad_us = fe_cache.get_symmetric_gradients("solution", "sym_grad_u", velocity, alpha);
   auto &grad_us = fe_cache.get_gradients("solution", "grad_u", velocity, alpha);
+  auto &grad_us_ = fe_cache.get_gradients("solution_", "grad_u_", velocity, dummy_alpha);
   auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", velocity, alpha);
 
 // pressure:
@@ -359,10 +446,12 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
 // variables:
 // velocity:
       const Tensor<1, dim, Number> &u = us[q];
+      const Tensor<1, dim, double> &u_ = us_[q];
       const Number &div_u = div_us[q];
       const Tensor<1, dim, Number> &u_dot = us_dot[q];
       const Tensor <2, dim, Number> &sym_grad_u = sym_grad_us[q];
       const Tensor <2, dim, Number> &grad_u = grad_us[q];
+      const Tensor <2, dim, double> &grad_u_ = grad_us_[q];
 
 // pressure:
       const Number &p = ps[q];
@@ -382,9 +471,19 @@ system_residual(const typename DoFHandler<dim>::active_cell_iterator &cell,
           auto grad_m = fev[pressure ].gradient(i,q);
 
 // compute residual:
+          Tensor<1, dim, Number> Np_term;
+          if (Np_formulation=="RHS")
+            Np_term = grad_u_ * u_;
+          else if (Np_formulation=="lin_grad")
+            Np_term = grad_u_ * u;
+          else if (Np_formulation=="lin_grad")
+            Np_term = grad_u * u_;
+          else
+            Np_term = grad_u * u;
+
           local_residual[i] += (
                                  rho * u_dot * v +
-                                 rho * scalar_product(u*grad_u, v) +
+                                 rho * scalar_product(Np_term,v) +
                                  gamma * div_u * div_v +
                                  nu * scalar_product(sym_grad_u,sym_grad_v) -
                                  ( p * div_v + div_u * m)
@@ -446,25 +545,29 @@ aux_matrix_residuals(const typename DoFHandler<dim>::active_cell_iterator &cell,
 
 
 // compute residuals:
-          local_residuals[0][i] += ( // Ap
-                                     scalar_product( grad_p,grad_m )
-                                   )*JxW[q];
+          if (compute_Ap)
+            local_residuals[0][i] += ( // Ap
+                                       scalar_product( grad_p,grad_m )
+                                     )*JxW[q];
 
-          local_residuals[1][i] += ( // Np
-                                     scalar_product( u,grad_p) * m +
-                                     gamma * div_u * div_v
-                                   )*JxW[q];
+          if (compute_Np)
+            local_residuals[1][i] += ( // Np
+                                       scalar_product( u,grad_p) * m +
+                                       gamma * div_u * div_v
+                                     )*JxW[q];
 
-          local_residuals[2][i] += ( // Mp
-                                     m * p
-                                   )*JxW[q];
+          if (compute_Mp)
+            local_residuals[2][i] += ( // Mp
+                                       m * p
+                                     )*JxW[q];
 
-          local_residuals[3][i] += ( // Fp
-                                     nu * scalar_product( grad_p,grad_m ) +
-                                     scalar_product( u,grad_p) * m +
-                                     gamma * div_u * div_v +
-                                     alpha * m * p
-                                   )*JxW[q];
+          if (compute_Fp)
+            local_residuals[3][i] += ( // Fp
+                                       nu * scalar_product( grad_p,grad_m ) +
+                                       scalar_product( u,grad_p) * m +
+                                       gamma * div_u * div_v +
+                                       alpha * m * p
+                                     )*JxW[q];
         }
     }
 }
@@ -498,7 +601,7 @@ compute_system_operators(const DoFHandler<dim> &dh,
                                     constant_modes_p);
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_p;
   Amg_data_p.constant_modes = constant_modes_p;
-  Amg_data_p.elliptic = false;
+  Amg_data_p.elliptic = amg_p_elliptic;
   Amg_data_p.smoother_sweeps = amg_p_smoother_sweeps;
   Amg_data_p.aggregation_threshold = amg_p_aggregation_threshold;
 
@@ -529,11 +632,16 @@ compute_system_operators(const DoFHandler<dim> &dh,
   auto A_inv = inverse_operator( A, solver_GMRES, *Amg_preconditioner);
 
   LinearOperator<VEC> P00, P01, P10, P11, Schur_inv;
+  LinearOperator<VEC> Ap, Np, Mp, Fp;
 
-  auto Ap= linear_operator<VEC>(aux_matrices[0]->block(1,1));
-  auto Np= linear_operator<VEC>(aux_matrices[2]->block(1,1));
-  auto Mp= linear_operator<VEC>(aux_matrices[2]->block(1,1));
-  auto Fp = linear_operator<VEC>(aux_matrices[3]->block(1,1));
+  if (compute_Ap)
+    Ap = linear_operator<VEC>(aux_matrices[0]->block(1,1));
+  if (compute_Np)
+    Np = linear_operator<VEC>(aux_matrices[1]->block(1,1));
+  if (compute_Mp)
+    Mp = linear_operator<VEC>(aux_matrices[2]->block(1,1));
+  if (compute_Fp)
+    Fp = linear_operator<VEC>(aux_matrices[3]->block(1,1));
 
   Assert(prec_name != "", ExcNotInitialized());
   if (prec_name=="stokes")
@@ -558,12 +666,45 @@ compute_system_operators(const DoFHandler<dim> &dh,
           Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
         }
 
-      Schur_inv = rho * alpha * Ap_inv;
+      Schur_inv = 1/(rho * alpha) * Ap_inv;
+    }
+  else if (prec_name=="elman-1")
+    {
+      auto BBt = B*Bt;
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> BBt_inv;
+      if (invert_Ap)
+        {
+          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
+        }
+      else
+        {
+          BBt_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
+        }
+
+      Schur_inv = Ap*BBt_inv;
+    }
+  else if (prec_name=="elman-2")
+    {
+      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
+      Amg_preconditioner_2->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
+      LinearOperator<VEC> Fp_inv;
+      if (invert_Fp)
+        {
+          Fp_inv = inverse_operator( Fp, solver_GMRES, *Amg_preconditioner_2);
+        }
+      else
+        {
+          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Amg_preconditioner_2 );
+        }
+
+      Schur_inv = Ap * Fp_inv * Mp;
     }
   else if (prec_name=="cah-cha")
     {
       Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize (aux_matrices[1]->block(1,1),  Amg_data_p);
+      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1),  Amg_data_p);
       LinearOperator<VEC> Ap_inv;
       if (invert_Ap)
         {
@@ -571,15 +712,15 @@ compute_system_operators(const DoFHandler<dim> &dh,
         }
       else
         {
-          Ap_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
+          Ap_inv = linear_operator<VEC>(aux_matrices[0]->block(1,1), *Amg_preconditioner_2);
         }
 
       jacobi_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-      jacobi_preconditioner->initialize (aux_matrices[2]->block(1,1));
+      jacobi_preconditioner->initialize (aux_matrices[2]->block(1,1), 1.3);
       auto Mp = linear_operator<VEC>( aux_matrices[2]->block(1,1) );
       auto Mp_inv  = inverse_operator( Mp, solver_CG, *jacobi_preconditioner);
 
-      Schur_inv = Mp_inv + Ap_inv;
+      Schur_inv = 1/nu * Mp_inv + 1/(rho * alpha) * Ap_inv;
     }
   else if (prec_name=="BFBt_id")
     {
@@ -614,39 +755,6 @@ compute_system_operators(const DoFHandler<dim> &dh,
       auto BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
 
       Schur_inv = BBt_inv * B * inv_diag_A *A * inv_diag_A * Bt * BBt_inv;
-    }
-  else if (prec_name=="elman-1")
-    {
-      auto BBt = B*Bt;
-      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize (aux_matrices[0]->block(1,1), Amg_data_p);
-      LinearOperator<VEC> BBt_inv;
-      if (invert_Ap)
-        {
-          BBt_inv  = inverse_operator( BBt, solver_CG, *Amg_preconditioner_2);
-        }
-      else
-        {
-          BBt_inv = linear_operator<VEC>(aux_matrices[1]->block(1,1), *Amg_preconditioner_2);
-        }
-
-      Schur_inv = Ap*BBt_inv;
-    }
-  else if (prec_name=="elman-2")
-    {
-      Amg_preconditioner_2.reset (new TrilinosWrappers::PreconditionAMG());
-      Amg_preconditioner_2->initialize( aux_matrices[3]->block(1,1), Amg_data_p);
-      LinearOperator<VEC> Fp_inv;
-      if (invert_Fp)
-        {
-          Fp_inv = inverse_operator( Fp, solver_GMRES, *Amg_preconditioner_2);
-        }
-      else
-        {
-          Fp_inv = linear_operator<VEC>(aux_matrices[3]->block(1,1), *Amg_preconditioner_2 );
-        }
-
-      Schur_inv = Ap * Fp_inv * Mp;
     }
   else
     {

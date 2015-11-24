@@ -12,14 +12,14 @@ subsection Navier Stokes
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
 
   set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.1
+  set nu [Pa s]                        = 0.0025
   set rho [kg m^3]                     = 1
 
-  set GMRES Solver tolerance          = 1e-10
-  set CG Solver tolerance             = 1e-10
+  set GMRES Solver tolerance          = 1e-12
+  set CG Solver tolerance             = 1e-12
 
-  set Invert Ap using inverse_operator = true
-  set Invert Fp using inverse_operator = true
+  set Invert Ap using inverse_operator = false
+  set Invert Fp using inverse_operator = false
   set Invert Np using inverse_operator = true
   set Invert Mp using inverse_operator = true
 
@@ -29,18 +29,20 @@ subsection Navier Stokes
 
   set Amg P Aggregation Threshold      = 0.5
   set Amg P Smoother Sweeps            = 2
+  set Amg P Elliptic                   = true
 
+  set how to handle Np                 = RHS
 
   # Available preconditioners:
-  # - stokes  -> S^-1 = Mp^-1
+  # - stokes  -> S^-1 = 1/nu * Mp^-1
+  # - low-nu  -> S^-1 = rho * alpha * Mp^-1
   # - elman-1 -> S^-1 = Ap (BBt)^-1
   # - elman-2 -> S^-1 = Ap Fp^-1 Mp
-  # - BFBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
-  # - BFBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
-  # diag(A)^-1 Bt)^-1
+  # - BDBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
+  # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
+  #                     diag(A)^-1 Bt)^-1
   # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  # set Preconditioner                   = stokes
-  set Preconditioner = stokes
+  set Preconditioner = low-nu
 end
 
 subsection piDoMUS<2, 2, 3, LATrilinos>
@@ -57,10 +59,7 @@ end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
-                                1 = 0 ; 0 ; 0 % \
-                                2 = 0 ; 0 ; 0 % \
-                                3 = t<1.0 ? t*k : k ; 0 ; 0
+  set IDs and expressions     = 0 = 0 ; 0 ; 0 % 1 = 0 ; 0 ; 0 % 2 = 0 ; 0 ; 0 % 3 = t<.5 ? 2*t*k : k ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -112,21 +111,23 @@ subsection Error Tables
 end
 
 subsection IDA Solver Parameters
+  set Initial time                                  = 0
+  set Final time                                    = 20
+
   set Initial condition type                        = use_y_diff
   set Ignore algebraic terms for error computations = true
-  set Maximum order of BDF                          = 2
+  set Maximum order of BDF                          = 3
   set Absolute error tolerance                      = 1e-3
-  set Final time                                    = 2
+
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
   set Initial condition type after restart          = use_y_dot
   set Initial step size                             = 1e-2
-  set Initial time                                  = 0
+
   set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-3
   set Relative error tolerance                      = 1e-2
-  set Seconds between each output                   = 1e-1
+  set Seconds between each output                   = 1e-2
   set Use local tolerances                          = false
 end
 
