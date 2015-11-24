@@ -42,6 +42,17 @@ BaseInterface(const std::string &name,
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
+init()
+{
+  n_matrices = get_number_of_matrices();
+  mapping = SP(new MappingQ<dim,spacedim>(set_mapping_degree()));
+  matrices_coupling = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
+  set_matrices_coupling(matrices_coupling);
+}
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
 set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &couplings) const
 {
   Assert(false,ExcPureFunctionCalled());
@@ -225,6 +236,36 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
           data.local_matrices[n](i,j) = residuals[n][i].dx(j);
       }
 }
+
+template<int dim, int spacedim, int n_components, typename LAC>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
+get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                           FEValuesCache<dim,spacedim> &scratch,
+                           CopyData &data) const
+{
+  const unsigned dofs_per_cell = data.local_dof_indices.size();
+
+  cell->get_dof_indices (data.local_dof_indices);
+
+  std::vector<Sdouble> energies(n_matrices);
+  std::vector<std::vector<double> > residuals(n_matrices,
+                                              std::vector<double>(dofs_per_cell));
+  get_energies_and_residuals(cell,
+                             scratch,
+                             energies,
+                             residuals,
+                             true);
+
+  for (unsigned int i=0; i<dofs_per_cell; ++i)
+    residuals[0][i] += energies[0].dx(i);
+
+
+  data.local_residual = residuals[0];
+
+
+}
+
 
 
 template <int dim, int spacedim, int n_components, typename LAC>

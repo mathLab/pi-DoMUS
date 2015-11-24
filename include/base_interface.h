@@ -65,6 +65,8 @@ public:
                 const std::string &default_component_names="u",
                 const std::string &default_differential_components="");
 
+  void init ();
+
   virtual void declare_parameters (ParameterHandler &prm);
 
   virtual void parse_parameters_call_back ();
@@ -163,6 +165,10 @@ public:
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
 
+  virtual void get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                          FEValuesCache<dim,spacedim> &scratch,
+                                          CopyData &data) const;
+
   /**
    * Compute linear operators needed by the problem
    *
@@ -254,11 +260,11 @@ protected:
   unsigned int n_q_points;
   unsigned int n_face_q_points;
 
-  unsigned int n_matrices;
+  mutable unsigned int n_matrices;
 
-  std::vector<UpdateFlags> matrices_update_flags;
-  std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
-  shared_ptr<Mapping<dim,spacedim> >  mapping;
+//  std::vector<UpdateFlags> matrices_update_flags;
+  mutable  std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
+  mutable  shared_ptr<Mapping<dim,spacedim> >  mapping;
 
 
 

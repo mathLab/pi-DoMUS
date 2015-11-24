@@ -55,8 +55,8 @@ subsection Exact solution
   set Variable names      = x,y,z,t
 end
 subsection Forcing terms
-  set IDs and component masks =
-  set IDs and expressions     =
+  set IDs and component masks = 1=u
+  set IDs and expressions     = 1=1;0;0
   set Known component names   = u,u,u
   set Used constants          =
 end
@@ -90,7 +90,7 @@ subsection Initial solution_dot
 end
 subsection Neumann boundary conditions
   set IDs and component masks = 1=u
-  set IDs and expressions     = 1=t;0;0
+  set IDs and expressions     = 1=0.5;0;0
   set Known component names   = u,u,u
   set Used constants          =
 end

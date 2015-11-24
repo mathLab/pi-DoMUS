@@ -108,7 +108,6 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
                            std::vector<std::vector<ResidualType> > &,
                            bool compute_only_system_matrix) const
 {
-
   const FEValuesExtractors::Vector displacement(0);
 
   ////////// conservative section
@@ -144,6 +143,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
       (void)compute_only_system_matrix;
 
     }
+
 
 }
 

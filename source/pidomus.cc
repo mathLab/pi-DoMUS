@@ -611,6 +611,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
   {
+
     this->constraints.distribute_local_to_global (data.local_residual,
                                                   data.local_dof_indices,
                                                   dst);
@@ -621,24 +622,14 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                          FEValuesCache<dim,spacedim> &scratch,
                          pidomus::CopyData & data)
   {
-    cell->get_dof_indices (data.local_dof_indices);
-
-    std::vector<Sdouble> energies(n_matrices);
-    std::vector<std::vector<double> > residuals(n_matrices,
-                                                std::vector<double>(fe->dofs_per_cell));
-    this->interface.get_energies_and_residuals(cell,
-                                               scratch,
-                                               energies,
-                                               residuals,
-                                               true);
-
+    this->interface.get_local_system_residual(cell,scratch,data);
     // apply conservative loads
-    this->interface.apply_forcing_terms(cell, scratch, residuals[0]);
+    this->interface.apply_forcing_terms(cell, scratch, data.local_residual);
 
     if (cell->at_boundary())
-      this->interface.apply_neumann_bcs(cell, scratch, residuals[0]);
+      this->interface.apply_neumann_bcs(cell, scratch, data.local_residual);
 
-    data.local_residual = residuals[0];
+
   };
 
   typedef
