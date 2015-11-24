@@ -215,11 +215,31 @@ public:
 
 protected:
 
-  template <typename T>
-  void init_to_zero(std::vector<T> &vec);
+  void build_couplings();
 
-  virtual void set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &couplings) const;
+  /**
+   * Define the coupling of each matrix among its blocks.  By default it
+   * sets a fully coupling among each block.  If you want to specify the
+   * coupling you need to override this function and implement it
+   * according to the following example
+   * @code
+   * void set_matrices_coupling(std::vector<std::string &couplings) const
+   * {
+   *   // suppose we have 2 matrices (system and preconditioner)
+   *   // we are solving incompressible Stokes equations
+   *   couplings[0] = "1,1;1,0"; // first block is the velocity, the second is the pressure
+   *   couplings[1] = "1,0;0,1";
+   * }
+   */
+  virtual void set_matrices_coupling(std::vector<std::string> &couplings) const;
 
+  void convert_string_to_int(const std::string &str_coupling,
+                             std::vector<std::vector<unsigned int> > &int_coupling) const;
+
+  /**
+   * Convert integer table into a coupling table.
+   */
+  Table<2, DoFTools::Coupling> to_coupling(const std::vector<std::vector<unsigned int> > &table) const;
 
   mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
   mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
@@ -262,9 +282,8 @@ protected:
 
   mutable unsigned int n_matrices;
 
-//  std::vector<UpdateFlags> matrices_update_flags;
-  mutable  std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
-  mutable  shared_ptr<Mapping<dim,spacedim> >  mapping;
+  std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
+  shared_ptr<Mapping<dim,spacedim> >  mapping;
 
 
 
@@ -298,16 +317,6 @@ BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
-}
-
-template<int dim, int spacedim, int n_components, typename LAC>
-template<typename T>
-void
-BaseInterface<dim,spacedim,n_components,LAC>::
-init_to_zero(std::vector<T> &vec)
-{
-  for (unsigned int i=0; i<vec.size(); ++i)
-    vec[i] = 0;
 }
 
 #endif

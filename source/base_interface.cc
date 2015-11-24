@@ -47,18 +47,115 @@ init()
   n_matrices = get_number_of_matrices();
   mapping = SP(new MappingQ<dim,spacedim>(set_mapping_degree()));
   matrices_coupling = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
-  set_matrices_coupling(matrices_coupling);
+  build_couplings();
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-set_matrices_coupling(std::vector<Table<2,DoFTools::Coupling> > &) const
+build_couplings()
 {
-  Assert(false,ExcPureFunctionCalled());
+  std::vector<std::string> str_couplings(n_matrices);
+  set_matrices_coupling(str_couplings);
+
+  for (unsigned int i=0; i<n_matrices; ++i)
+    {
+      std::vector<std::vector<unsigned int> > int_couplings;
+
+      convert_string_to_int(str_couplings[i], int_couplings);
+
+      matrices_coupling[i] = to_coupling(int_couplings);
+    }
 }
 
 
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
+convert_string_to_int(const std::string &str_coupling,
+                      std::vector<std::vector<unsigned int> > &int_coupling) const
+{
+  std::vector<std::string> rows = Utilities::split_string_list(str_coupling, ';');
+  for (unsigned int r=0; r<rows.size(); ++r)
+    {
+      std::vector<std::string> str_comp = Utilities::split_string_list(rows[r], ',');
+      std::vector<unsigned int> int_comp(str_comp.size());
+      for (unsigned int i=0; i<str_comp.size(); ++i)
+        int_comp[i] = Utilities::string_to_int(str_comp[i]);
+
+      int_coupling.push_back(int_comp);
+    }
+}
+
+template <int dim, int spacedim, int n_components, typename LAC>
+Table<2,DoFTools::Coupling>
+BaseInterface<dim,spacedim,n_components,LAC>::
+to_coupling(const std::vector<std::vector<unsigned int> > &coupling_table) const
+{
+  const unsigned int nc = n_components;
+  const unsigned int nb = this->n_blocks();
+
+  Table<2,DoFTools::Coupling> out_coupling(nc, nc);
+
+  std::vector<DoFTools::Coupling> m(3);
+  m[0] = DoFTools::none;
+  m[1] = DoFTools::always;
+  m[2] = DoFTools::nonzero;
+
+  if (coupling_table.size() == nc)
+    for (unsigned int i=0; i<nc; ++i)
+      {
+        AssertThrow(coupling_table[i].size() == nc, ExcDimensionMismatch(coupling_table[i].size(), nc));
+        for (unsigned int j=0; j<nc; ++j)
+          out_coupling[i][j] = m[coupling_table[i][j]];
+      }
+  else if (coupling_table.size() == nb)
+    for (unsigned int i=0; i<nc; ++i)
+      {
+        AssertThrow(coupling_table[this->component_blocks[i]].size() == nb,
+                    ExcDimensionMismatch(coupling_table[this->component_blocks[i]].size(), nb));
+        for (unsigned int j=0; j<nc; ++j)
+          out_coupling[i][j] = m[coupling_table[this->component_blocks[i]][this->component_blocks[j]]];
+      }
+  else if (coupling_table.size() == 0)
+    for (unsigned int i=0; i<nc; ++i)
+      {
+        for (unsigned int j=0; j<nc; ++j)
+          out_coupling[i][j] = m[1];
+      }
+  else
+    AssertThrow(false, ExcMessage("You tried to construct a coupling with the wrong number of elements."));
+
+  return out_coupling;
+}
+
+
+template <int dim, int spacedim, int n_components, typename LAC>
+void
+BaseInterface<dim,spacedim,n_components,LAC>::
+set_matrices_coupling(std::vector<std::string> &str_couplings) const
+{
+  std::string ones = print(std::vector<std::string>(this->n_blocks(),"1"));
+
+  for (unsigned int m=0; m<n_matrices; ++m)
+    {
+      for (unsigned int b=0; b<this->n_blocks()-1; ++b)
+        {
+          str_couplings[m] += ones;
+          str_couplings[m] += ";";
+        }
+      str_couplings[m] += ones;
+    }
+}
+
+
+template <int dim, int spacedim, int n_components, typename LAC>
+const Table<2,DoFTools::Coupling> &
+BaseInterface<dim,spacedim,n_components,LAC>::
+get_matrix_coupling(const unsigned int &i) const
+{
+  return matrices_coupling[i];
+}
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void

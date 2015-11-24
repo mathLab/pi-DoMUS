@@ -253,8 +253,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
       initializer(*matrices_sp[i],
                   *dof_handler,
                   constraints,
-                  interface.get_preconditioner_coupling());
-      /*  interface.get_matrices_coupling(i));*/ //TODO
+                  interface.get_matrix_coupling(i));
       matrices[i]->reinit(*matrices_sp[i]);
     }
 

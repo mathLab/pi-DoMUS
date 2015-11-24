@@ -25,24 +25,15 @@ public:
 
   // interface with the Interface :)
 
-  void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<MAT> >,
-                                LinearOperator<BVEC> &,
-                                LinearOperator<BVEC> &) const;
-
-  unsigned int get_number_of_matrices() const;
-
-  // Coupling between the blocks of the finite elements in the system:
-  //  0: No coupling
-  //  1: Full coupling
-  //  2: Coupling only on faces
-  void set_matrices_coupling (std::vector<Table<2,DoFTools::Coupling> > &couplings) const
+  unsigned int get_number_of_matrices() const
   {
-    std::vector<std::vector<unsigned int> > system_coupling(1,std::vector<unsigned int>(1,1));
-    couplings[0]=this->to_coupling(system_coupling);
+    return 2;
+  }
 
-    std::vector<std::vector<unsigned int> > prec_coupling(1,std::vector<unsigned int>(1,1));
-    couplings[1]=this->to_coupling(prec_coupling);
+  void set_matrices_coupling (std::vector<std::string> &couplings) const
+  {
+    couplings[0] = "1";
+    couplings[1] = "1";
   };
 
 
@@ -52,6 +43,12 @@ public:
                                   std::vector<EnergyType> &energies,
                                   std::vector<std::vector<ResidualType> > &local_residuals,
                                   bool compute_only_system_matrix) const;
+
+
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
+                                const std::vector<shared_ptr<MAT> >,
+                                LinearOperator<BVEC> &,
+                                LinearOperator<BVEC> &) const;
 
 private:
   double E;
@@ -73,12 +70,6 @@ CompressibleNeoHookeanInterface():
       "u,u,u","1")
 {}
 
-
-template <int dim, int spacedim>
-unsigned int CompressibleNeoHookeanInterface<dim,spacedim>::get_number_of_matrices() const
-{
-  return 2;
-}
 
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
