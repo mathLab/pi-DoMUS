@@ -138,7 +138,7 @@ public:
    */
   typename LAC::VectorType get_solution();
 
-  void update_all(const double t);
+  void update_functions_and_constraints(const double t);
 
 private:
   void make_grid_fe();
@@ -173,6 +173,7 @@ private:
   shared_ptr<DoFHandler<dim, spacedim> >          dof_handler;
 
   ConstraintMatrix                          constraints;
+  ConstraintMatrix                          constraints_dot;
 
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
   LinearOperator<typename LAC::VectorType> jacobian_op;

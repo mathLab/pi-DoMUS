@@ -234,6 +234,14 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   interface.apply_dirichlet_bcs(*dof_handler, constraints);
   constraints.close ();
 
+  constraints_dot.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints_dot);
+
+  interface.apply_dirichlet_bcs(*dof_handler, constraints_dot);
+
+  constraints_dot.close ();
+
   ScopedLACInitializer initializer(dofs_per_block,
                                    partitioning,
                                    relevant_partitioning,
@@ -278,7 +286,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::update_all (const double t)
+void piDoMUS<dim, spacedim, n_components, LAC>::update_functions_and_constraints (const double t)
 {
   interface.set_time(t);
   constraints.clear();
@@ -288,6 +296,14 @@ void piDoMUS<dim, spacedim, n_components, LAC>::update_all (const double t)
   interface.apply_dirichlet_bcs(*dof_handler, constraints);
 
   constraints.close ();
+
+  constraints_dot.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints_dot);
+
+  interface.apply_dirichlet_bcs(*dof_handler, constraints_dot);
+
+  constraints_dot.close ();
 }
 
 
@@ -300,27 +316,20 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
     const double alpha)
 {
   computing_timer.enter_section ("   Assemble matrices");
-  update_all(t);
+  update_functions_and_constraints(t);
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
   typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
   constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
 
-  if (we_are_parallel)
-    {
-      distributed_solution = tmp;
-      distributed_solution_dot = solution_dot;
-      interface.initialize_data(distributed_solution,
-                                distributed_solution_dot, t, alpha);
-    }
-  else
-    {
-      interface.initialize_data(tmp,
-                                solution_dot, t, alpha);
-    }
-
+  distributed_solution = tmp;
+  distributed_solution_dot = tmp_dot;
+  interface.initialize_data(distributed_solution,
+                            distributed_solution_dot, t, alpha);
 
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
@@ -494,6 +503,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::run ()
         refine_mesh();
 
       constraints.distribute(solution);
+      constraints_dot.distribute(solution_dot);
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
       eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
@@ -536,19 +546,14 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
 {
   computing_timer.enter_section ("Postprocessing");
 
-  interface.set_time(t);
-  constraints.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
-
-  interface.apply_dirichlet_bcs(*dof_handler, constraints);
-
-  constraints.close ();
+  update_functions_and_constraints(t);
 
   typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
   constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
   distributed_solution = tmp;
-  distributed_solution_dot = solution_dot;
+  distributed_solution_dot = tmp_dot;
 
   std::stringstream suffix;
   suffix << "." << current_cycle << "." << step_number;
@@ -590,27 +595,22 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                                                     typename LAC::VectorType &dst)
 {
   computing_timer.enter_section ("Residual");
-  interface.set_time(t);
-  constraints.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
+  update_functions_and_constraints(t);
 
-  interface.apply_dirichlet_bcs(*dof_handler, constraints);
+  typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
+  constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
 
-  constraints.close ();
+  distributed_solution = tmp;
+  distributed_solution_dot = tmp_dot;
+  interface.initialize_data(distributed_solution,
+                            distributed_solution_dot, t, 0.0);
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
-
-  typename LAC::VectorType tmp(solution);
-  constraints.distribute(tmp);
-
-  distributed_solution = tmp;
-  distributed_solution_dot = solution_dot;
-  interface.initialize_data(distributed_solution,
-                            distributed_solution_dot, t, 0.0);
   dst = 0;
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
@@ -654,7 +654,6 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                                    interface.get_face_update_flags()),
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
-//   constraints.distribute(dst);
 
   dst.compress(VectorOperation::add);
 
