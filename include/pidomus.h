@@ -136,7 +136,7 @@ public:
   /**
    * This function is used to get back the solution.
    */
-  typename LAC::VectorType get_solution();
+  typename LAC::VectorType &get_solution();
 
   void update_functions_and_constraints(const double t);
 

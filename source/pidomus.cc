@@ -474,7 +474,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::make_grid_fe()
 /* ------------------------ OUTPUTS ------------------------ */
 
 template <int dim, int spacedim, int n_components, typename LAC>
-typename LAC::VectorType
+typename LAC::VectorType &
 piDoMUS<dim, spacedim, n_components, LAC>::
 get_solution()
 {
