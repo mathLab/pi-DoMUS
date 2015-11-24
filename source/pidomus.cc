@@ -147,7 +147,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedi
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-  timer_outfile("timer.txt"),
+  timer_outfile(timer_file_name),
   tcout (timer_outfile,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
@@ -656,11 +656,11 @@ get_solution()
 template <int dim, int spacedim, int n_components, typename LAC>
 void piDoMUS<dim, spacedim, n_components, LAC>::run ()
 {
-//  if(timer_file_name != "")
-//    timer_outfile.open(timer_file_name.c_str());
-//  else
-//    timer_outfile.open("/dev/null");
-//
+  if (timer_file_name != "")
+    timer_outfile.open(timer_file_name.c_str());
+  else
+    timer_outfile.open("/dev/null");
+
 
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
