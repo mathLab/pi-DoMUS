@@ -166,7 +166,6 @@ private:
   std::ofstream             timer_outfile;
   ConditionalOStream        tcout;
 
-  shared_ptr<Mapping<dim, spacedim> >             mapping;
 
   shared_ptr<parallel::distributed::Triangulation<dim, spacedim> > triangulation;
   shared_ptr<FiniteElement<dim, spacedim> >       fe;
@@ -188,7 +187,7 @@ private:
 
   const unsigned int n_matrices;
   std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
-  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrices_sp;
+  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim, spacedim>   pgg;

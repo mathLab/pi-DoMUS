@@ -150,7 +150,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const BaseInterface<dim, spa
                    TimerOutput::summary,
                    TimerOutput::wall_times),
 
-  n_matrices(interface.get_number_of_matrices()),
+  n_matrices(interface.n_matrices),
   eh("Error Tables", interface.get_component_names(),
      print(std::vector<std::string>(n_components, "L2,H1"), ";")),
 
@@ -169,7 +169,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const BaseInterface<dim, spa
   for (unsigned int i=0; i<n_matrices; ++i)
     {
       matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
-      matrices_sp.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
 }
 
@@ -183,8 +183,6 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   std::vector<unsigned int> sub_blocks = interface.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
-
-  mapping = interface.get_mapping();
 
   dofs_per_block.clear();
   dofs_per_block.resize(interface.n_blocks());
@@ -258,11 +256,11 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   for (unsigned int i=0; i < n_matrices; ++i)
     {
       matrices[i]->clear();
-      initializer(*matrices_sp[i],
+      initializer(*matrix_sparsities[i],
                   *dof_handler,
                   constraints,
                   interface.get_matrix_coupling(i));
-      matrices[i]->reinit(*matrices_sp[i]);
+      matrices[i]->reinit(*matrix_sparsities[i]);
     }
 
 
@@ -270,14 +268,14 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
     {
       if (fe->has_support_points())
         {
-          VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
-          VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution, solution);
+          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution_dot, solution_dot);
         }
       else
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
 
     }
@@ -368,9 +366,9 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_matrices (const double 
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim> (*mapping,
+       FEValuesCache<dim,spacedim> (interface.get_mapping(),
                                     *fe, quadrature_formula,
-                                    interface.get_matrices_update_flags(),
+                                    interface.get_cell_update_flags(),
                                     face_quadrature_formula,
                                     interface.get_face_update_flags()),
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
@@ -506,7 +504,7 @@ void piDoMUS<dim, spacedim, n_components, LAC>::run ()
       constraints_dot.distribute(solution_dot);
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
-      eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
+      eh.error_from_exact(interface.get_mapping(), *dof_handler, distributed_solution, exact_solution);
     }
 
   eh.output_table(pcout);
@@ -568,7 +566,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
     }
   data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear(*mapping);
+  data_out.write_data_and_clear(interface.get_mapping());
 
   computing_timer.exit_section ();
 }
@@ -626,7 +624,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                          FEValuesCache<dim,spacedim> &scratch,
                          pidomus::CopyData & data)
   {
-    this->interface.get_local_system_residual(cell,scratch,data);
+    this->interface.assemble_local_system_residual(cell,scratch,data);
     // apply conservative loads
     this->interface.apply_forcing_terms(cell, scratch, data.local_residual);
 
@@ -646,10 +644,10 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim>(*mapping,
+       FEValuesCache<dim,spacedim>(interface.get_mapping(),
                                    *fe,
                                    quadrature_formula,
-                                   interface.get_matrices_update_flags(),
+                                   interface.get_cell_update_flags(),
                                    face_quadrature_formula,
                                    interface.get_face_update_flags()),
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));

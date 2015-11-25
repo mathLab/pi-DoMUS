@@ -9,7 +9,7 @@
  *        and initial conditions.
  *        Moreover, it helps to write the system matrix and
  *        the preconditioner matrix.
- * Varibles:
+ * Variables:
  *  - General:
  *    - Finite Elements
  *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
@@ -60,7 +60,8 @@ public:
    * the name of the components and a string were the block of
    * differential and algebraic components are specified.
    */
-  BaseInterface(const std::string &name="",
+BaseInterface(const unsigned int &n_matrices,
+		const std::string &name="",
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
                 const std::string &default_differential_components="");
@@ -123,15 +124,9 @@ public:
   /**
    * Initialize all data required for the system
    *
-   * This function is used to initialize the varibale AnyData @p d
-   * that contains all data of the problem (solutions, DoF, quadrature
-   * points, solutions vector, etc ).
-   * It takes as argument the number of DoF per cell @p dofs_per_cell,
-   * the number of quadrature points @p n_q_points, the number of
-   * quadrature points per face @p n_face_q_points, the reference to
-   * solutions vectors @p sol and the reference to the AnyData @p d.
-   *
-   * TODO: add current_time and current_alpha
+   * This function is used to initialize the internal variables 
+   * according to the given arguments, which are 
+   * @p solution, @p solution_dot, @p t and @p alpha.
    */
   virtual void initialize_data(const typename LAC::VectorType &solution,
                                const typename LAC::VectorType &solution_dot,
@@ -142,20 +137,20 @@ public:
   /**
    * Definition of energies and residuals
    */
-  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+  virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                           FEValuesCache<dim,spacedim> &,
                                           std::vector<Sdouble> &energies,
                                           std::vector<std::vector<double> > &local_residuals,
-                                          bool compute_only_system_matrix) const;
+                                          bool compute_only_system_terms) const;
 
   /**
    * Definition of energies and residuals
    */
-  virtual void get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+  virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                           FEValuesCache<dim,spacedim> &,
                                           std::vector<SSdouble> &energies,
                                           std::vector<std::vector<Sdouble> > &local_residuals,
-                                          bool compute_only_system_matrix) const;
+                                          bool compute_only_system_terms) const;
 
   /**
    * This function can be overloaded to directly implement the local
@@ -165,7 +160,7 @@ public:
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
 
-  virtual void get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  virtual void assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                           FEValuesCache<dim,spacedim> &scratch,
                                           CopyData &data) const;
 
@@ -181,13 +176,11 @@ public:
                                         LinearOperator<typename LAC::VectorType> &) const;
 
 
-  shared_ptr<Mapping<dim,spacedim> > get_mapping() const;
-
-  virtual unsigned int set_mapping_degree() const;
+virtual const Mapping<dim,spacedim> & get_mapping() const;
 
   virtual UpdateFlags get_face_update_flags() const;
 
-  virtual UpdateFlags get_matrices_update_flags() const;
+  virtual UpdateFlags get_cell_update_flags() const;
 
   void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
 
@@ -211,7 +204,8 @@ public:
 
 
   const Table<2,DoFTools::Coupling> &get_matrix_coupling(const unsigned int &i) const;
-  virtual unsigned int get_number_of_matrices() const;
+
+const unsigned int n_matrices;
 
 protected:
 
@@ -223,7 +217,7 @@ protected:
    * coupling you need to override this function and implement it
    * according to the following example
    * @code
-   * void set_matrices_coupling(std::vector<std::string &couplings) const
+   * void set_matrix_couplings(std::vector<std::string &couplings) const
    * {
    *   // suppose we have 2 matrices (system and preconditioner)
    *   // we are solving incompressible Stokes equations
@@ -231,7 +225,7 @@ protected:
    *   couplings[1] = "1,0;0,1";
    * }
    */
-  virtual void set_matrices_coupling(std::vector<std::string> &couplings) const;
+  virtual void set_matrix_couplings(std::vector<std::string> &couplings) const;
 
   void convert_string_to_int(const std::string &str_coupling,
                              std::vector<std::vector<unsigned int> > &int_coupling) const;
@@ -280,11 +274,7 @@ protected:
   unsigned int n_q_points;
   unsigned int n_face_q_points;
 
-  mutable unsigned int n_matrices;
-
-  std::vector<Table<2,DoFTools::Coupling> > matrices_coupling;
-  shared_ptr<Mapping<dim,spacedim> >  mapping;
-
+  std::vector<Table<2,DoFTools::Coupling> > matrix_couplings;
 
 
 };

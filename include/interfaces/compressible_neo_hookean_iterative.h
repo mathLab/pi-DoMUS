@@ -8,13 +8,11 @@
 #include <deal.II/lac/packaged_operation.h>
 #include <deal.II/lac/solver_cg.h>
 
+typedef LATrilinos LAC;
 
 template <int dim, int spacedim>
-class CompressibleNeoHookeanInterface : public Interface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >
+  class CompressibleNeoHookeanInterface : public Interface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim>, LAC>
 {
-  typedef TrilinosWrappers::MPI::BlockVector BVEC;
-  typedef TrilinosWrappers::MPI::Vector VEC;
-  typedef TrilinosWrappers::BlockSparseMatrix MAT;
 
 public:
   ~CompressibleNeoHookeanInterface () {};
@@ -25,30 +23,19 @@ public:
 
   // interface with the Interface :)
 
-  unsigned int get_number_of_matrices() const
-  {
-    return 2;
-  }
-
-  void set_matrices_coupling (std::vector<std::string> &couplings) const
-  {
-    couplings[0] = "1";
-    couplings[1] = "1";
-  };
-
 
   template <typename EnergyType, typename ResidualType>
-  void set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                  FEValuesCache<dim,spacedim> &scratch,
-                                  std::vector<EnergyType> &energies,
-                                  std::vector<std::vector<ResidualType> > &local_residuals,
-                                  bool compute_only_system_matrix) const;
+  void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+			      FEValuesCache<dim,spacedim> &scratch,
+			      std::vector<EnergyType> &energies,
+			      std::vector<std::vector<ResidualType> > &local_residuals,
+			      bool compute_only_system_terms) const;
 
 
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<MAT> >,
-                                LinearOperator<BVEC> &,
-                                LinearOperator<BVEC> &) const;
+                                const std::vector<shared_ptr<LAC::BlockMatrix> >,
+                                LinearOperator<LAC::VectorType> &,
+                                LinearOperator<LAC::VectorType> &) const;
 
 private:
   double E;
@@ -65,9 +52,10 @@ private:
 template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::
 CompressibleNeoHookeanInterface():
-  Interface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
-      "FESystem[FE_Q(1)^d]",
-      "u,u,u","1")
+  Interface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >(2,
+									     "Compressible NeoHookean Interface",
+									     "FESystem[FE_Q(1)^d]",
+									     "u,u,u","1")
 {}
 
 
@@ -93,11 +81,11 @@ template <int dim, int spacedim>
 template <typename EnergyType, typename ResidualType>
 void
 CompressibleNeoHookeanInterface<dim,spacedim>::
-set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                           FEValuesCache<dim,spacedim> &fe_cache,
-                           std::vector<EnergyType> &energies,
-                           std::vector<std::vector<ResidualType> > &,
-                           bool compute_only_system_matrix) const
+energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+		       FEValuesCache<dim,spacedim> &fe_cache,
+		       std::vector<EnergyType> &energies,
+		       std::vector<std::vector<ResidualType> > &,
+		       bool compute_only_system_terms) const
 {
   const FEValuesExtractors::Vector displacement(0);
 
@@ -127,10 +115,10 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 
       energies[0] += (psi)*JxW[q];
 
-      if (!compute_only_system_matrix)
+      if (!compute_only_system_terms)
         energies[1] += 0.5*u*u*JxW[q];
 
-      (void)compute_only_system_matrix;
+      (void)compute_only_system_terms;
 
     }
 
@@ -140,33 +128,30 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 template <int dim, int spacedim>
 void
 CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &,
-    const std::vector<shared_ptr<MAT> > matrices,
-    LinearOperator<BVEC> &system_op,
-    LinearOperator<BVEC> &prec_op) const
+									const std::vector<shared_ptr<LAC::BlockMatrix> > matrices,
+									LinearOperator<LAC::VectorType> &system_op,
+									LinearOperator<LAC::VectorType> &prec_op) const
 {
 
   preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
   preconditioner->initialize(matrices[1]->block(0,0));
-  auto P = linear_operator<VEC>(matrices[1]->block(0,0));
+  auto P = linear_operator<LAC::VectorType::BlockType>(matrices[1]->block(0,0));
 
-  auto A  = linear_operator<VEC>( matrices[0]->block(0,0) );
+  auto A  = linear_operator<LAC::VectorType::BlockType>( matrices[0]->block(0,0) );
 
   static ReductionControl solver_control_pre(5000, 1e-4);
-  static SolverCG<VEC> solver_CG(solver_control_pre);
+  static SolverCG<LAC::VectorType::BlockType> solver_CG(solver_control_pre);
   auto P_inv     = inverse_operator( P, solver_CG, *preconditioner);
 
   auto P00 = P_inv;
 
   // ASSEMBLE THE PROBLEM:
-  system_op  = block_operator<1, 1, BVEC >({{
+  system_op  = block_operator<1, 1, LAC::VectorType>({{
       {{ A }}
     }
   });
 
-
-  //const auto S = linear_operator<VEC>(matrix);
-
-  prec_op = block_operator<1, 1, BVEC >({{
+  prec_op = block_operator<1, 1, LAC::VectorType>({{
       {{ P00}} ,
     }
   });

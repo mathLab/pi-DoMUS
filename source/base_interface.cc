@@ -25,12 +25,14 @@ using namespace deal2lkit;
 
 template <int dim, int spacedim, int n_components, typename LAC>
 BaseInterface<dim,spacedim,n_components,LAC>::
-BaseInterface(const std::string &name,
+BaseInterface(const unsigned int &nmat,
+	      const std::string &name,
               const std::string &default_fe,
               const std::string &default_component_names,
               const std::string &default_differential_components) :
   ParsedFiniteElement<dim,spacedim>(name, default_fe, default_component_names,
                                     n_components),
+  n_matrices(nmat),
   forcing_terms("Forcing terms", default_component_names, ""),
   neumann_bcs("Neumann boundary conditions", default_component_names, ""),
   dirichlet_bcs("Dirichlet boundary conditions", default_component_names, "0=ALL"),
@@ -44,9 +46,7 @@ void
 BaseInterface<dim,spacedim,n_components,LAC>::
 init()
 {
-  n_matrices = get_number_of_matrices();
-  mapping = SP(new MappingQ<dim,spacedim>(set_mapping_degree()));
-  matrices_coupling = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
+  matrix_couplings = std::vector<Table<2,DoFTools::Coupling> >(n_matrices);
   build_couplings();
 }
 
@@ -56,7 +56,7 @@ BaseInterface<dim,spacedim,n_components,LAC>::
 build_couplings()
 {
   std::vector<std::string> str_couplings(n_matrices);
-  set_matrices_coupling(str_couplings);
+  set_matrix_couplings(str_couplings);
 
   for (unsigned int i=0; i<n_matrices; ++i)
     {
@@ -64,7 +64,7 @@ build_couplings()
 
       convert_string_to_int(str_couplings[i], int_couplings);
 
-      matrices_coupling[i] = to_coupling(int_couplings);
+      matrix_couplings[i] = to_coupling(int_couplings);
     }
 }
 
@@ -133,7 +133,7 @@ to_coupling(const std::vector<std::vector<unsigned int> > &coupling_table) const
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-set_matrices_coupling(std::vector<std::string> &str_couplings) const
+set_matrix_couplings(std::vector<std::string> &str_couplings) const
 {
   std::string ones = print(std::vector<std::string>(this->n_blocks(),"1"));
 
@@ -154,7 +154,7 @@ const Table<2,DoFTools::Coupling> &
 BaseInterface<dim,spacedim,n_components,LAC>::
 get_matrix_coupling(const unsigned int &i) const
 {
-  return matrices_coupling[i];
+  return matrix_couplings[i];
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -184,13 +184,10 @@ apply_neumann_bcs (
             {
               Vector<double> T(n_components);
               neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
-              const Tensor<1,spacedim> normal_vector = fev.normal_vector(q);
-
+             
               for (unsigned int i=0; i<local_residual.size(); ++i)
                 for (unsigned int c=0; c<n_components; ++c)
-                  for (unsigned int s=0; s<spacedim; ++s)
-                    local_residual[i] -= T[c]*normal_vector[s]*
-                                         fev.shape_value_component(i,q,c)*JxW[q];
+		  local_residual[i] -= T[c]*fev.shape_value_component(i,q,c)*JxW[q];
 
             }// end loop over quadrature points
 
@@ -257,20 +254,20 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                      ConstraintMatrix &constraints) const
 {
   if (this->operator()()->has_support_points())
-    dirichlet_bcs.interpolate_boundary_values(*(this->get_mapping()),dof_handler,constraints);
+    dirichlet_bcs.interpolate_boundary_values(get_mapping(),dof_handler,constraints);
   else
     {
       const QGauss<dim-1> quad(this->operator()()->degree+1);
-      dirichlet_bcs.project_boundary_values(*(this->get_mapping()),dof_handler,quad,constraints);
+      dirichlet_bcs.project_boundary_values(get_mapping(),dof_handler,quad,constraints);
     }
-  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,*(this->get_mapping()),constraints);
+  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,get_mapping(),constraints);
 }
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                            FEValuesCache<dim,spacedim> &,
                            std::vector<SSdouble> &,
                            std::vector<std::vector<Sdouble> > &,
@@ -284,7 +281,7 @@ get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 template <int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-get_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
+assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                            FEValuesCache<dim,spacedim> &,
                            std::vector<Sdouble> &,
                            std::vector<std::vector<double> > &,
@@ -322,7 +319,7 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
   std::vector<SSdouble> energies(n_matrices);
   std::vector<std::vector<Sdouble> > residuals(n_matrices,
                                                std::vector<Sdouble>(dofs_per_cell));
-  get_energies_and_residuals(cell,
+  assemble_energies_and_residuals(cell,
                              scratch,
                              energies,
                              residuals,
@@ -340,7 +337,7 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
 template<int dim, int spacedim, int n_components, typename LAC>
 void
 BaseInterface<dim,spacedim,n_components,LAC>::
-get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                            FEValuesCache<dim,spacedim> &scratch,
                            CopyData &data) const
 {
@@ -351,7 +348,7 @@ get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_
   std::vector<Sdouble> energies(n_matrices);
   std::vector<std::vector<double> > residuals(n_matrices,
                                               std::vector<double>(dofs_per_cell));
-  get_energies_and_residuals(cell,
+  assemble_energies_and_residuals(cell,
                              scratch,
                              energies,
                              residuals,
@@ -369,17 +366,10 @@ get_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_
 
 
 template <int dim, int spacedim, int n_components, typename LAC>
-shared_ptr<Mapping<dim,spacedim> >
+const Mapping<dim,spacedim> &
 BaseInterface<dim,spacedim,n_components,LAC>::get_mapping() const
 {
-  return mapping;
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-unsigned int
-BaseInterface<dim,spacedim,n_components,LAC>::set_mapping_degree() const
-{
-  return 1;
+  return StaticMappingQ1<dim,spacedim>::mapping;
 }
 
 template <int dim, int spacedim, int n_components, typename LAC>
@@ -466,20 +456,12 @@ get_differential_blocks() const
 template<int dim, int spacedim, int n_components, typename LAC>
 UpdateFlags
 BaseInterface<dim,spacedim,n_components,LAC>::
-get_matrices_update_flags() const
+get_cell_update_flags() const
 {
   return (update_quadrature_points |
           update_JxW_values |
           update_values |
           update_gradients);
-}
-
-template<int dim, int spacedim, int n_components, typename LAC>
-unsigned int
-BaseInterface<dim,spacedim,n_components,LAC>::get_number_of_matrices() const
-{
-  Assert(false,ExcPureFunctionCalled());
-  return 0;
 }
 
 template class BaseInterface<2, 2, 1, LATrilinos>;
