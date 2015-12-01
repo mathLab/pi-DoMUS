@@ -65,9 +65,9 @@ using namespace deal2lkit;
 
 /* ------------------------ PARAMETERS ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 void
-piDoMUS<dim, spacedim, n_components, LAC>::
+piDoMUS<dim, spacedim, LAC>::
 declare_parameters (ParameterHandler &prm)
 {
   add_parameter(  prm,
@@ -119,17 +119,101 @@ declare_parameters (ParameterHandler &prm)
                   "Overwrite Newton's iterations",
                   "true",
                   Patterns::Bool());
-
-  add_parameter(  prm,
-                  &solver_tolerance,
-                  "Linear solver tolerance",
-                  "1e-8",
-                  Patterns::Double(0.0));
 }
 
-template <int dim, int spacedim, int n_components, typename LAC>
+
+template <int dim, int spacedim, typename LAC>
 void
-piDoMUS<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
+piDoMUS<dim,spacedim,LAC>::
+apply_neumann_bcs (
+  const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  FEValuesCache<dim,spacedim> &scratch,
+  std::vector<double> &local_residual) const
+{
+
+
+  double dummy = 0.0;
+
+  for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+    {
+      unsigned int face_id = cell->face(face)->boundary_id();
+      if (cell->face(face)->at_boundary() && neumann_bcs.acts_on_id(face_id))
+        {
+          interface.reinit(dummy, cell, face, scratch);
+
+          auto &fev = scratch.get_current_fe_values();
+          auto &q_points = scratch.get_quadrature_points();
+          auto &JxW = scratch.get_JxW_values();
+
+          for (unsigned int q=0; q<q_points.size(); ++q)
+            {
+              Vector<double> T(interface.n_components);
+              neumann_bcs.get_mapped_function(face_id)->vector_value(q_points[q], T);
+
+              for (unsigned int i=0; i<local_residual.size(); ++i)
+                for (unsigned int c=0; c<interface.n_components; ++c)
+                  local_residual[i] -= T[c]*fev.shape_value_component(i,q,c)*JxW[q];
+
+            }// end loop over quadrature points
+
+          break;
+
+        } // endif face->at_boundary
+
+    }// end loop over faces
+
+}// end function definition
+
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::
+apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                     FEValuesCache<dim,spacedim> &scratch,
+                     std::vector<double> &local_residual) const
+{
+  unsigned cell_id = cell->material_id();
+  if (forcing_terms.acts_on_id(cell_id))
+    {
+      double dummy = 0.0;
+      interface.reinit(dummy, cell, scratch);
+
+      auto &fev = scratch.get_current_fe_values();
+      auto &q_points = scratch.get_quadrature_points();
+      auto &JxW = scratch.get_JxW_values();
+      for (unsigned int q=0; q<q_points.size(); ++q)
+        for (unsigned int i=0; i<local_residual.size(); ++i)
+          for (unsigned int c=0; c<interface.n_components; ++c)
+            {
+              double B = forcing_terms.get_mapped_function(cell_id)->value(q_points[q],c);
+              local_residual[i] -= B*fev.shape_value_component(i,q,c)*JxW[q];
+            }
+    }
+}
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::
+apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                     ConstraintMatrix &constraints) const
+{
+  if (fe->has_support_points())
+    dirichlet_bcs.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
+  else
+    {
+      const QGauss<dim-1> quad(fe->degree+1);
+      dirichlet_bcs.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
+    }
+  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
+}
+
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim, spacedim, LAC>::parse_parameters_call_back()
 {
   use_direct_solver &= (typeid(typename LAC::BlockMatrix) == typeid(dealii::BlockSparseMatrix<double>));
 }
@@ -137,13 +221,13 @@ piDoMUS<dim, spacedim, n_components, LAC>::parse_parameters_call_back()
 
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
-piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedim, n_components, LAC> &energy,
-                                                    const MPI_Comm &communicator)
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::piDoMUS (const BaseInterface<dim, spacedim, LAC> &interface,
+                                      const MPI_Comm &communicator)
   :
   SundialsInterface<typename LAC::VectorType>(communicator),
   comm(communicator),
-  energy(energy),
+  interface(interface),
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
@@ -156,44 +240,59 @@ piDoMUS<dim, spacedim, n_components, LAC>::piDoMUS (const Interface<dim, spacedi
                    TimerOutput::summary,
                    TimerOutput::wall_times),
 
-  n_aux_matrices(energy.get_number_of_aux_matrices()),
-  eh("Error Tables", energy.get_component_names(),
-     print(std::vector<std::string>(n_components, "L2,H1"), ";")),
+  n_matrices(interface.n_matrices),
+  eh("Error Tables", interface.get_component_names(),
+     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
 
   pgg("Domain"),
 
   pgr("Refinement"),
 
-  exact_solution("Exact solution"),
-  initial_solution("Initial solution"),
-  initial_solution_dot("Initial solution_dot"),
+  exact_solution("Exact solution",
+                 interface.n_components),
+  initial_solution("Initial solution",
+                   interface.n_components),
+  initial_solution_dot("Initial solution_dot",
+                       interface.n_components),
+
+  forcing_terms("Forcing terms",
+                interface.n_components,
+                interface.get_component_names(), ""),
+  neumann_bcs("Neumann boundary conditions",
+              interface.n_components,
+              interface.get_component_names(), ""),
+  dirichlet_bcs("Dirichlet boundary conditions",
+                interface.n_components,
+                interface.get_component_names(), "0=ALL"),
+  dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
+                    interface.n_components,
+                    interface.get_component_names(), ""),
+
 
   data_out("Output Parameters", "vtu"),
   dae(*this),
   we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
 {
-  for (unsigned int i=0; i<n_aux_matrices; ++i)
+  for (unsigned int i=0; i<n_matrices; ++i)
     {
-      aux_matrix.push_back( SP( new typename LAC::BlockMatrix() ) );
-      aux_matrix_sp.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+      matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
 }
 
 
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_run)
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 {
   computing_timer.enter_section("Setup dof systems");
-  std::vector<unsigned int> sub_blocks = energy.get_component_blocks();
+  std::vector<unsigned int> sub_blocks = interface.pfe.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
 
-  mapping = energy.get_mapping(*dof_handler, solution);
-
   dofs_per_block.clear();
-  dofs_per_block.resize(energy.n_blocks());
+  dofs_per_block.resize(interface.pfe.n_blocks());
 
   DoFTools::count_dofs_per_block (*dof_handler, dofs_per_block,
                                   sub_blocks);
@@ -220,14 +319,14 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   IndexSet relevant_set;
   {
     global_partitioning = dof_handler->locally_owned_dofs();
-    for (unsigned int i = 0; i < energy.n_blocks(); ++i)
+    for (unsigned int i = 0; i < interface.pfe.n_blocks(); ++i)
       partitioning.push_back(global_partitioning.get_view( std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i, 0),
                                                            std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i + 1, 0)));
 
     DoFTools::extract_locally_relevant_dofs (*dof_handler,
                                              relevant_set);
 
-    for (unsigned int i = 0; i < energy.n_blocks(); ++i)
+    for (unsigned int i = 0; i < interface.pfe.n_blocks(); ++i)
       relevant_partitioning.push_back(relevant_set.get_view(std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i, 0),
                                                             std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i + 1, 0)));
   }
@@ -237,8 +336,16 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+  apply_dirichlet_bcs(*dof_handler, constraints);
   constraints.close ();
+
+  constraints_dot.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints_dot);
+
+  apply_dirichlet_bcs(*dof_handler, constraints_dot);
+
+  constraints_dot.close ();
 
   ScopedLACInitializer initializer(dofs_per_block,
                                    partitioning,
@@ -253,280 +360,112 @@ void piDoMUS<dim, spacedim, n_components, LAC>::setup_dofs (const bool &first_ru
       initializer.ghosted(distributed_solution_dot);
     }
 
-  jacobian_matrix.clear();
-  initializer(jacobian_matrix_sp,
-              *dof_handler,
-              constraints,
-              energy.get_coupling());
-
-  jacobian_matrix.reinit(jacobian_matrix_sp);
-
-  if (energy.get_jacobian_preconditioner_flags() != update_default)
+  for (unsigned int i=0; i < n_matrices; ++i)
     {
-      jacobian_preconditioner_matrix.clear();
-
-      initializer(jacobian_preconditioner_matrix_sp,
+      matrices[i]->clear();
+      initializer(*matrix_sparsities[i],
                   *dof_handler,
                   constraints,
-                  energy.get_preconditioner_coupling());
-
-      jacobian_preconditioner_matrix.reinit(jacobian_preconditioner_matrix_sp);
-
-      for (unsigned int i=0; i < n_aux_matrices; ++i)
-        {
-          aux_matrix[i]->clear();
-          initializer(*aux_matrix_sp[i],
-                      *dof_handler,
-                      constraints,
-                      energy.get_preconditioner_coupling());
-          /*  energy.get_aux_matrix_coupling(i));*/
-          aux_matrix[i]->reinit(*aux_matrix_sp[i]);
-        }
+                  interface.get_matrix_coupling(i));
+      matrices[i]->reinit(*matrix_sparsities[i]);
     }
+
 
   if (first_run)
     {
       if (fe->has_support_points())
         {
-          VectorTools::interpolate(*mapping, *dof_handler, initial_solution, solution);
-          VectorTools::interpolate(*mapping, *dof_handler, initial_solution_dot, solution_dot);
+          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution, solution);
+          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution_dot, solution_dot);
         }
       else
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          //VectorTools::project(*mapping, *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
 
     }
   computing_timer.exit_section();
 }
 
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_matrix (const double t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const double alpha)
+
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double &t)
 {
-  computing_timer.enter_section ("   Assemble system jacobian");
+  dirichlet_bcs.set_time(t);
+  dirichlet_bcs_dot.set_time(t);
+  forcing_terms.set_time(t);
+  neumann_bcs.set_time(t);
 
-  jacobian_matrix = 0;
-
-  energy.set_time(t);
   constraints.clear();
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+  apply_dirichlet_bcs(*dof_handler, constraints);
 
   constraints.close ();
 
+  constraints_dot.clear();
+  DoFTools::make_hanging_node_constraints (*dof_handler,
+                                           constraints_dot);
+
+  apply_dirichlet_bcs(*dof_handler, constraints_dot);
+
+  constraints_dot.close ();
+}
+
+
+
+
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
+                                                     const typename LAC::VectorType &solution,
+                                                     const typename LAC::VectorType &solution_dot,
+                                                     const double alpha)
+{
+  computing_timer.enter_section ("   Assemble matrices");
+  update_functions_and_constraints(t);
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
+
 
   typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
   constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
 
-  if (we_are_parallel)
-    {
-      distributed_solution = tmp;
-      distributed_solution_dot = solution_dot;
-
-      energy.initialize_data(distributed_solution,
-                             distributed_solution_dot, t, alpha);
-    }
-  else
-    {
-      energy.initialize_data(tmp,
-                             solution_dot, t, alpha);
-    }
-
-
-  auto local_copy = [ this ]
-                    (const SystemCopyData & data)
-  {
-    this->constraints.distribute_local_to_global (data.local_matrix,
-                                                  data.local_dof_indices,
-                                                  this->jacobian_matrix);
-  };
-
-  auto local_assemble = [ this ]
-                        (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
-                         Scratch & scratch,
-                         SystemCopyData & data)
-  {
-    this->energy.assemble_local_system(cell, scratch, data);
-  };
+  distributed_solution = tmp;
+  distributed_solution_dot = tmp_dot;
+  interface.initialize_data(distributed_solution,
+                            distributed_solution_dot, t, alpha);
 
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
   CellFilter;
-  WorkStream::
-  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->begin_active()),
-       CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   dof_handler->end()),
-       local_assemble,
-       local_copy,
-       Scratch(*mapping,
-               *fe,
-               quadrature_formula,
-               energy.get_jacobian_flags(),
-               face_quadrature_formula,
-               energy.get_face_flags()),
-       Assembly::CopyData::
-       piDoMUSSystem<dim, spacedim> (*fe,n_aux_matrices));
-
-  compress(jacobian_matrix, VectorOperation::add);
-
-//  pcout << std::endl;
-
-  // auto id = solution.locally_owned_elements();
-  // for (unsigned int i = 0; i < id.n_elements(); ++i)
-  //   {
-  //     auto j = id.nth_index_in_set(i);
-  //     if (constraints.is_constrained(j))
-  //       jacobian_matrix.set(j, j, 1.0);
-  //   }
-  // compress(jacobian_matrix, VectorOperation::insert);
-
-  computing_timer.exit_section();
-}
 
 
-
-
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::assemble_jacobian_preconditioner (const double t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const double alpha)
-{
-  if (energy.get_jacobian_preconditioner_flags() != update_default)
-    {
-      computing_timer.enter_section ("   Build preconditioner");
-      jacobian_preconditioner_matrix = 0;
-
-      energy.set_time(t);
-      constraints.clear();
-      DoFTools::make_hanging_node_constraints (*dof_handler,
-                                               constraints);
-
-      energy.apply_dirichlet_bcs(*dof_handler, constraints);
-
-      constraints.close ();
-
-
-      const QGauss<dim> quadrature_formula(fe->degree + 1);
-      const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-
-      typedef
-      FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
-      CellFilter;
-
-
-      distributed_solution = solution;
-      distributed_solution_dot = solution_dot;
-
-      energy.initialize_data(distributed_solution,
-                             distributed_solution_dot, t, alpha);
-
-
-      auto local_copy = [this]
-                        (const PreconditionerCopyData & data)
-      {
-        this->constraints.distribute_local_to_global (data.local_matrix,
-                                                      data.local_dof_indices,
-                                                      this->jacobian_preconditioner_matrix);
-      };
-
-      auto local_assemble = [ this ]
-                            (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
-                             Scratch & scratch,
-                             PreconditionerCopyData & data)
-      {
-        this->energy.assemble_local_preconditioner(cell, scratch, data);
-      };
-
-
-
-      WorkStream::
-      run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                       dof_handler->begin_active()),
-           CellFilter (IteratorFilters::LocallyOwnedCell(),
-                       dof_handler->end()),
-           local_assemble,
-           local_copy,
-           Scratch (*mapping,
-                    *fe, quadrature_formula,
-                    energy.get_jacobian_preconditioner_flags(),
-                    face_quadrature_formula,
-                    UpdateFlags(0)),
-           Assembly::CopyData::
-           piDoMUSPreconditioner<dim, spacedim> (*fe,n_aux_matrices));
-
-      jacobian_preconditioner_matrix.compress(VectorOperation::add);
-      computing_timer.exit_section();
-    }
-}
-
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::update_all (const double t)
-{
-  energy.set_time(t);
-  constraints.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
-
-  energy.apply_dirichlet_bcs(*dof_handler, constraints);
-
-  constraints.close ();
-}
-
-
-// aux matrices ////////////////////////////////////////////////////////////////
-
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::assemble_aux_matrices (const double t,
-    const typename LAC::VectorType &solution,
-    const typename LAC::VectorType &solution_dot,
-    const double alpha)
-{
-  computing_timer.enter_section ("   Assemble aux matrices");
-  update_all(t);
-  const QGauss<dim> quadrature_formula(fe->degree + 1);
-  const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-  distributed_solution = solution;
-  distributed_solution_dot = solution_dot;
-
-  energy.initialize_data(distributed_solution,
-                         distributed_solution_dot, t, alpha);
-  typedef
-  FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
-  CellFilter;
-
-
-  for (unsigned int i=0; i<n_aux_matrices; ++i)
-    *(aux_matrix[i]) = 0;
+  for (unsigned int i=0; i<n_matrices; ++i)
+    *(matrices[i]) = 0;
 
 
 
   auto local_copy = [this]
-                    (const PreconditionerCopyData & data)
+                    (const pidomus::CopyData & data)
   {
 
-    for (unsigned int i=0; i<n_aux_matrices; ++i)
+    for (unsigned int i=0; i<n_matrices; ++i)
       this->constraints.distribute_local_to_global (data.local_matrices[i],
                                                     data.local_dof_indices,
-                                                    *(this->aux_matrix[i]));
+                                                    *(this->matrices[i]));
   };
 
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
-                         Scratch & scratch,
-                         PreconditionerCopyData & data)
+                         FEValuesCache<dim,spacedim> &scratch,
+                         pidomus::CopyData & data)
   {
-    this->energy.assemble_local_aux_matrices(cell, scratch, data);
+    this->interface.assemble_local_matrices(cell, scratch, data);
   };
 
 
@@ -538,24 +477,24 @@ void piDoMUS<dim, spacedim, n_components, LAC>::assemble_aux_matrices (const dou
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Scratch (*mapping,
-                *fe, quadrature_formula,
-                energy.get_jacobian_preconditioner_flags(),  /*energy.aux_matrix_flags(i),*/
-                face_quadrature_formula,
-                UpdateFlags(0)),
-       Assembly::CopyData::
-       piDoMUSPreconditioner<dim, spacedim> (*fe,n_aux_matrices));
+       FEValuesCache<dim,spacedim> (interface.get_mapping(),
+                                    *fe, quadrature_formula,
+                                    interface.get_cell_update_flags(),
+                                    face_quadrature_formula,
+                                    interface.get_face_update_flags()),
+       pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
-  for (unsigned int i=0; i<n_aux_matrices; ++i)
-    aux_matrix[i]->compress(VectorOperation::add);
+  for (unsigned int i=0; i<n_matrices; ++i)
+    matrices[i]->compress(VectorOperation::add);
+
   computing_timer.exit_section();
 }
 
 
 /* ------------------------ MESH AND GRID ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
 
@@ -631,30 +570,30 @@ void piDoMUS<dim, spacedim, n_components, LAC>::refine_mesh ()
   computing_timer.exit_section();
 }
 
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::make_grid_fe()
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::make_grid_fe()
 {
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
-  energy.postprocess_newly_created_triangulation(*triangulation);
-  fe = SP(energy());
+  interface.postprocess_newly_created_triangulation(*triangulation);
+  fe = SP(interface.pfe());
   triangulation->refine_global (initial_global_refinement);
 }
 
 /* ------------------------ OUTPUTS ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
-typename LAC::VectorType
-piDoMUS<dim, spacedim, n_components, LAC>::
+template <int dim, int spacedim, typename LAC>
+typename LAC::VectorType &
+piDoMUS<dim, spacedim, LAC>::
 get_solution()
 {
   return solution;
-};
+}
 
 /* ------------------------ RUN ------------------------ */
 
-template <int dim, int spacedim, int n_components, typename LAC>
-void piDoMUS<dim, spacedim, n_components, LAC>::run ()
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::run ()
 {
   if (timer_file_name != "")
     timer_outfile.open(timer_file_name.c_str());
@@ -673,9 +612,10 @@ void piDoMUS<dim, spacedim, n_components, LAC>::run ()
         refine_mesh();
 
       constraints.distribute(solution);
+      constraints_dot.distribute(solution_dot);
 
       dae.start_ode(solution, solution_dot, max_time_iterations);
-      eh.error_from_exact(*mapping, *dof_handler, distributed_solution, exact_solution);
+      eh.error_from_exact(interface.get_mapping(), *dof_handler, distributed_solution, exact_solution);
     }
 
   eh.output_table(pcout);
@@ -688,129 +628,121 @@ void piDoMUS<dim, spacedim, n_components, LAC>::run ()
 
 /*** ODE Argument Interface ***/
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 shared_ptr<typename LAC::VectorType>
-piDoMUS<dim, spacedim, n_components, LAC>::create_new_vector() const
+piDoMUS<dim, spacedim, LAC>::create_new_vector() const
 {
   shared_ptr<typename LAC::VectorType> ret = SP(new typename LAC::VectorType(solution));
   return ret;
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 unsigned int
-piDoMUS<dim, spacedim, n_components, LAC>::n_dofs() const
+piDoMUS<dim, spacedim, LAC>::n_dofs() const
 {
   return dof_handler->n_dofs();
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 void
-piDoMUS<dim, spacedim, n_components, LAC>::output_step(const double  t,
-                                                       const typename LAC::VectorType &solution,
-                                                       const typename LAC::VectorType &solution_dot,
-                                                       const unsigned int step_number,
-                                                       const double /* h */ )
+piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
+                                         const typename LAC::VectorType &solution,
+                                         const typename LAC::VectorType &solution_dot,
+                                         const unsigned int step_number,
+                                         const double /* h */ )
 {
   computing_timer.enter_section ("Postprocessing");
 
-  energy.set_time(t);
-  constraints.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
-
-  energy.apply_dirichlet_bcs(*dof_handler, constraints);
-
-  constraints.close ();
+  update_functions_and_constraints(t);
 
   typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
   constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
   distributed_solution = tmp;
-  distributed_solution_dot = solution_dot;
+  distributed_solution_dot = tmp_dot;
 
   std::stringstream suffix;
   suffix << "." << current_cycle << "." << step_number;
   data_out.prepare_data_output( *dof_handler,
                                 suffix.str());
-  data_out.add_data_vector (distributed_solution, energy.get_component_names());
+  data_out.add_data_vector (distributed_solution, interface.get_component_names());
   std::vector<std::string> sol_dot_names =
-    Utilities::split_string_list( energy.get_component_names());
+    Utilities::split_string_list( interface.get_component_names());
   for (auto &name : sol_dot_names)
     {
       name += "_dot";
     }
   data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear(*mapping);
+  data_out.write_data_and_clear(interface.get_mapping());
 
   computing_timer.exit_section ();
 }
 
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 bool
-piDoMUS<dim, spacedim, n_components, LAC>::solver_should_restart(const double t,
-    const unsigned int step_number,
-    const double h,
-    typename LAC::VectorType &solution,
-    typename LAC::VectorType &solution_dot)
+piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double /*t*/,
+                                                   const unsigned int /*step_number*/,
+                                                   const double /*h*/,
+                                                   typename LAC::VectorType &/*solution*/,
+                                                   typename LAC::VectorType &/*solution_dot*/)
 {
   return false;
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 int
-piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
-                                                    const typename LAC::VectorType &solution,
-                                                    const typename LAC::VectorType &solution_dot,
-                                                    typename LAC::VectorType &dst)
+piDoMUS<dim, spacedim, LAC>::residual(const double t,
+                                      const typename LAC::VectorType &solution,
+                                      const typename LAC::VectorType &solution_dot,
+                                      typename LAC::VectorType &dst)
 {
   computing_timer.enter_section ("Residual");
-  energy.set_time(t);
-  constraints.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
+  update_functions_and_constraints(t);
 
-  energy.apply_dirichlet_bcs(*dof_handler, constraints);
+  typename LAC::VectorType tmp(solution);
+  typename LAC::VectorType tmp_dot(solution_dot);
+  constraints.distribute(tmp);
+  constraints_dot.distribute(tmp_dot);
 
-  constraints.close ();
+  distributed_solution = tmp;
+  distributed_solution_dot = tmp_dot;
+  interface.initialize_data(distributed_solution,
+                            distributed_solution_dot, t, 0.0);
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
-  typename LAC::VectorType tmp(solution);
-  constraints.distribute(tmp);
-
-  distributed_solution = tmp;
-  distributed_solution_dot = solution_dot;
-
-  energy.initialize_data(distributed_solution,
-                         distributed_solution_dot, t, 0.0);
 
   dst = 0;
 
-  auto local_copy = [&dst, this] (const SystemCopyData & data)
+  auto local_copy = [&dst, this] (const pidomus::CopyData & data)
   {
-    this->constraints.distribute_local_to_global (data.double_residual,
+
+    this->constraints.distribute_local_to_global (data.local_residual,
                                                   data.local_dof_indices,
                                                   dst);
   };
 
   auto local_assemble = [ this ]
                         (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
-                         Scratch & scratch,
-                         SystemCopyData & data)
+                         FEValuesCache<dim,spacedim> &scratch,
+                         pidomus::CopyData & data)
   {
-    cell->get_dof_indices (data.local_dof_indices);
-    this->energy.get_system_residual(cell, scratch, data, data.double_residual);
+    this->interface.assemble_local_system_residual(cell,scratch,data);
     // apply conservative loads
-    this->energy.apply_forcing_terms(cell, scratch, data, data.double_residual);
+    this->apply_forcing_terms(cell, scratch, data.local_residual);
 
     if (cell->at_boundary())
-      this->energy.apply_neumann_bcs(cell, scratch, data, data.double_residual);
+      this->apply_neumann_bcs(cell, scratch, data.local_residual);
+
+
   };
 
   typedef
@@ -823,15 +755,14 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       Scratch(*mapping,
-               *fe,
-               quadrature_formula,
-               energy.get_jacobian_flags(),
-               face_quadrature_formula,
-               energy.get_face_flags()),
-       SystemCopyData(*fe,n_aux_matrices));
+       FEValuesCache<dim,spacedim>(interface.get_mapping(),
+                                   *fe,
+                                   quadrature_formula,
+                                   interface.get_cell_update_flags(),
+                                   face_quadrature_formula,
+                                   interface.get_face_update_flags()),
+       pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
-//   constraints.distribute(dst);
 
   dst.compress(VectorOperation::add);
 
@@ -849,18 +780,20 @@ piDoMUS<dim, spacedim, n_components, LAC>::residual(const double t,
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 int
-piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
-    const typename LAC::VectorType &y,
-    const typename LAC::VectorType &y_dot,
-    const typename LAC::VectorType &,
-    const double alpha,
-    const typename LAC::VectorType &src,
-    typename LAC::VectorType &dst) const
+piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
+                                                   const typename LAC::VectorType &/*y*/,
+                                                   const typename LAC::VectorType &/*y_dot*/,
+                                                   const typename LAC::VectorType &,
+                                                   const double /*alpha*/,
+                                                   const typename LAC::VectorType &src,
+                                                   typename LAC::VectorType &dst) const
 {
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
+
+  const double solver_tolerance = 1e-8;
 
   typedef dealii::BlockSparseMatrix<double> sMAT;
   typedef dealii::BlockVector<double> sVEC;
@@ -870,7 +803,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
     {
 
       SparseDirectUMFPACK inverse;
-      inverse.factorize((sMAT &) jacobian_matrix);
+      inverse.factorize((sMAT &) *matrices[0]);
       inverse.vmult((sVEC &)dst, (sVEC &)src);
 
     }
@@ -878,7 +811,7 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
     {
 
       PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (jacobian_matrix.m(), solver_tolerance);
+      SolverControl solver_control (matrices[0]->m(), solver_tolerance);
 
       SolverFGMRES<typename LAC::VectorType>
       solver(solver_control, mem,
@@ -908,25 +841,22 @@ piDoMUS<dim, spacedim, n_components, LAC>::solve_jacobian_system(const double t,
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 int
-piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
-                                                          const typename LAC::VectorType &src_yy,
-                                                          const typename LAC::VectorType &src_yp,
-                                                          const typename LAC::VectorType &,
-                                                          const double alpha)
+piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
+                                            const typename LAC::VectorType &src_yy,
+                                            const typename LAC::VectorType &src_yp,
+                                            const typename LAC::VectorType &,
+                                            const double alpha)
 {
   computing_timer.enter_section ("   Setup Jacobian");
-  assemble_jacobian_matrix(t, src_yy, src_yp, alpha);
+  assemble_matrices(t, src_yy, src_yp, alpha);
   if (use_direct_solver == false)
     {
-      assemble_jacobian_preconditioner(t, src_yy, src_yp, alpha);
-      assemble_aux_matrices(t, src_yy, src_yp, alpha);
 
-      energy.compute_system_operators(*dof_handler,
-                                      jacobian_matrix, jacobian_preconditioner_matrix,
-                                      aux_matrix,
-                                      jacobian_op, jacobian_preconditioner_op);
+      interface.compute_system_operators(*dof_handler,
+                                         matrices,
+                                         jacobian_op, jacobian_preconditioner_op);
     }
 
   computing_timer.exit_section();
@@ -936,13 +866,13 @@ piDoMUS<dim, spacedim, n_components, LAC>::setup_jacobian(const double t,
 
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 typename LAC::VectorType &
-piDoMUS<dim, spacedim, n_components, LAC>::differential_components() const
+piDoMUS<dim, spacedim, LAC>::differential_components() const
 {
   static typename LAC::VectorType diff_comps;
   diff_comps.reinit(solution);
-  std::vector<unsigned int> block_diff = energy.get_differential_blocks();
+  std::vector<unsigned int> block_diff = interface.get_differential_blocks();
   for (unsigned int i = 0; i < block_diff.size(); ++i)
     diff_comps.block(i) = block_diff[i];
 
@@ -952,9 +882,9 @@ piDoMUS<dim, spacedim, n_components, LAC>::differential_components() const
 
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 void
-piDoMUS<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
+piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
 {
   for (unsigned int i = 0; i < global_partitioning.n_elements(); ++i)
     {
@@ -976,25 +906,9 @@ piDoMUS<dim, spacedim, n_components, LAC>::set_constrained_dofs_to_zero(typename
 // template class piDoMUS<1,2,3>;
 // template class piDoMUS<1,2,4>;
 
-template class piDoMUS<2, 2, 1>;
-template class piDoMUS<2, 2, 2>;
-template class piDoMUS<2, 2, 3>;
-template class piDoMUS<2, 2, 4>;
-template class piDoMUS<2, 2, 5>;
+template class piDoMUS<2, 2>;
 
-template class piDoMUS<2, 2, 6>;
-template class piDoMUS<2, 2, 7>;
-template class piDoMUS<2, 2, 8>;
-
-template class piDoMUS<2, 2, 1, LADealII>;
-template class piDoMUS<2, 2, 2, LADealII>;
-template class piDoMUS<2, 2, 3, LADealII>;
-template class piDoMUS<2, 2, 4, LADealII>;
-template class piDoMUS<2, 2, 5, LADealII>;
-template class piDoMUS<2, 2, 6, LADealII>;
-template class piDoMUS<2, 2, 7, LADealII>;
-template class piDoMUS<2, 2, 8, LADealII>;
-
+template class piDoMUS<2, 2, LADealII>;
 
 // template class piDoMUS<2,3,1>;
 // template class piDoMUS<2,3,2>;
@@ -1003,23 +917,7 @@ template class piDoMUS<2, 2, 8, LADealII>;
 
 
 
-template class piDoMUS<3, 3, 1>;
-template class piDoMUS<3, 3, 2>;
-template class piDoMUS<3, 3, 3>;
-template class piDoMUS<3, 3, 4>;
-template class piDoMUS<3, 3, 5>;
-template class piDoMUS<3, 3, 6>;
-template class piDoMUS<3, 3, 7>;
-template class piDoMUS<3, 3, 8>;
-
-
-template class piDoMUS<3, 3, 1, LADealII>;
-template class piDoMUS<3, 3, 2, LADealII>;
-template class piDoMUS<3, 3, 3, LADealII>;
-template class piDoMUS<3, 3, 4, LADealII>;
-template class piDoMUS<3, 3, 5, LADealII>;
-template class piDoMUS<3, 3, 6, LADealII>;
-template class piDoMUS<3, 3, 7, LADealII>;
-template class piDoMUS<3, 3, 8, LADealII>;
+template class piDoMUS<3, 3>;
+template class piDoMUS<3, 3, LADealII>;
 
 // template class piDoMUS<3>;;

@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/conservative/compressible_neo_hookean.h"
+#include "interfaces/compressible_neo_hookean_iterative.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -16,7 +16,8 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   CompressibleNeoHookeanInterface<dim,spacedim> cnh_body;
-  piDoMUS<dim,spacedim,dim> solver (cnh_body);
+  cnh_body.init();
+  piDoMUS<dim,spacedim> solver (cnh_body);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_01.prm", "used_parameters.prm");
 
 
