@@ -48,19 +48,19 @@ using namespace dealii;
 using namespace deal2lkit;
 using namespace pidomus;
 
-template <int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos>
+template <int dim, int spacedim = dim, typename LAC = LATrilinos>
 class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
 {
 
 
   // This is a class required to make tests
-  template<int fdim, int fspacedim, int fn_components, typename fn_LAC>
-  friend void test(piDoMUS<fdim, fspacedim, fn_components, fn_LAC> &);
+  template<int fdim, int fspacedim, typename fn_LAC>
+  friend void test(piDoMUS<fdim, fspacedim, fn_LAC> &);
 
 public:
 
 
-  piDoMUS (const BaseInterface<dim, spacedim, n_components, LAC> &energy,
+  piDoMUS (const BaseInterface<dim, spacedim, LAC> &energy,
            const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
@@ -138,7 +138,48 @@ public:
    */
   typename LAC::VectorType &get_solution();
 
-  void update_functions_and_constraints(const double t);
+  /**
+   * set time to @p t for forcing terms and boundary conditions
+   */
+  void update_functions_and_constraints(const double &t);
+
+
+
+
+  /**
+   * Applies Dirichlet boundary conditions
+   *
+   * This function is used to applies Dirichlet boundary conditions.
+   * It takes as argument a DoF handler @p dof_handler and a constraint
+   * matrix @p constraints.
+   *
+   */
+  void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+                            ConstraintMatrix &constraints) const;
+
+  /**
+   * Applies Neumann boundary conditions
+   *
+   */
+  void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                          FEValuesCache<dim,spacedim> &scratch,
+                          std::vector<double> &local_residual) const;
+
+
+  /**
+   * Applies CONSERVATIVE forcing terms.
+   * This function applies the conservative forcing terms, which can be
+   * defined by expressions in the parameter file.
+   *
+   * If the problem involves NON-conservative loads, they must be included
+   * in the residual formulation.
+   *
+   */
+  void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                            FEValuesCache<dim,spacedim> &scratch,
+                            std::vector<double> &local_residual) const;
+
+
 
 private:
   void make_grid_fe();
@@ -153,7 +194,7 @@ private:
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
   const MPI_Comm &comm;
-  const BaseInterface<dim, spacedim, n_components, LAC>    &interface;
+  const BaseInterface<dim, spacedim, LAC>    &interface;
 
   unsigned int n_cycles;
   unsigned int current_cycle;
@@ -193,10 +234,17 @@ private:
   ParsedGridGenerator<dim, spacedim>   pgg;
   ParsedGridRefinement  pgr;
 
-  ParsedFunction<spacedim, n_components>        exact_solution;
+  ParsedFunction<spacedim>        exact_solution;
 
-  ParsedFunction<spacedim, n_components>        initial_solution;
-  ParsedFunction<spacedim, n_components>        initial_solution_dot;
+  ParsedFunction<spacedim>        initial_solution;
+  ParsedFunction<spacedim>        initial_solution_dot;
+
+
+  mutable ParsedMappedFunctions<spacedim>  forcing_terms; // on the volume
+  mutable ParsedMappedFunctions<spacedim>  neumann_bcs;
+  mutable ParsedDirichletBCs<dim,spacedim> dirichlet_bcs;
+  mutable ParsedDirichletBCs<dim,spacedim> dirichlet_bcs_dot;
+
 
   ParsedDataOut<dim, spacedim>                  data_out;
 

@@ -43,8 +43,8 @@
 
 using namespace pidomus;
 
-template <int dim,int spacedim=dim, int n_components=1, typename LAC=LATrilinos>
-class BaseInterface : public ParsedFiniteElement<dim,spacedim>
+template <int dim,int spacedim=dim, typename LAC=LATrilinos>
+class BaseInterface : public ParameterAcceptor
 {
 
 public:
@@ -60,27 +60,24 @@ public:
    * the name of the components and a string were the block of
    * differential and algebraic components are specified.
    */
-BaseInterface(const unsigned int &n_matrices,
-		const std::string &name="",
+  BaseInterface(const unsigned int &n_comp,
+                const unsigned int &n_matrices,
+                const std::string &name="",
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
                 const std::string &default_differential_components="");
 
   void init ();
 
+
   virtual void declare_parameters (ParameterHandler &prm);
 
-  virtual void parse_parameters_call_back ();
+  virtual void parse_parameters_call_back() {};
+
   /**
    * returns the vector @p of differential blocks
    */
   const std::vector<unsigned int> get_differential_blocks() const;
-
-  /**
-   * set time to @p t for forcing terms and boundary conditions
-   */
-  virtual void set_time (const double &t) const;
-
 
   /**
    * This function is used to modify triangulation using boundary_id or manifold_id.
@@ -89,43 +86,10 @@ BaseInterface(const unsigned int &n_matrices,
   virtual void postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &tria) const;
 
   /**
-   * Applies Dirichlet boundary conditions
-   *
-   * This function is used to applies Dirichlet boundary conditions.
-   * It takes as argument a DoF handler @p dof_handler and a constraint
-   * matrix @p constraints.
-   *
-   */
-  void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-                            ConstraintMatrix &constraints) const;
-
-  /**
-   * Applies Neumann boundary conditions
-   *
-   */
-  void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                          FEValuesCache<dim,spacedim> &scratch,
-                          std::vector<double> &local_residual) const;
-
-
-  /**
-   * Applies CONSERVATIVE forcing terms.
-   * This function applies the conservative forcing terms, which can be
-   * defined by expressions in the parameter file.
-   *
-   * If the problem involves NON-conservative loads, they must be included
-   * in the residual formulation.
-   *
-   */
-  void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                            FEValuesCache<dim,spacedim> &scratch,
-                            std::vector<double> &local_residual) const;
-
-  /**
    * Initialize all data required for the system
    *
-   * This function is used to initialize the internal variables 
-   * according to the given arguments, which are 
+   * This function is used to initialize the internal variables
+   * according to the given arguments, which are
    * @p solution, @p solution_dot, @p t and @p alpha.
    */
   virtual void initialize_data(const typename LAC::VectorType &solution,
@@ -138,19 +102,19 @@ BaseInterface(const unsigned int &n_matrices,
    * Definition of energies and residuals
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-                                          FEValuesCache<dim,spacedim> &,
-                                          std::vector<Sdouble> &energies,
-                                          std::vector<std::vector<double> > &local_residuals,
-                                          bool compute_only_system_terms) const;
+                                               FEValuesCache<dim,spacedim> &,
+                                               std::vector<Sdouble> &energies,
+                                               std::vector<std::vector<double> > &local_residuals,
+                                               bool compute_only_system_terms) const;
 
   /**
    * Definition of energies and residuals
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
-                                          FEValuesCache<dim,spacedim> &,
-                                          std::vector<SSdouble> &energies,
-                                          std::vector<std::vector<Sdouble> > &local_residuals,
-                                          bool compute_only_system_terms) const;
+                                               FEValuesCache<dim,spacedim> &,
+                                               std::vector<SSdouble> &energies,
+                                               std::vector<std::vector<Sdouble> > &local_residuals,
+                                               bool compute_only_system_terms) const;
 
   /**
    * This function can be overloaded to directly implement the local
@@ -161,8 +125,8 @@ BaseInterface(const unsigned int &n_matrices,
                                         CopyData &data) const;
 
   virtual void assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                          FEValuesCache<dim,spacedim> &scratch,
-                                          CopyData &data) const;
+                                               FEValuesCache<dim,spacedim> &scratch,
+                                               CopyData &data) const;
 
   /**
    * Compute linear operators needed by the problem
@@ -176,7 +140,7 @@ BaseInterface(const unsigned int &n_matrices,
                                         LinearOperator<typename LAC::VectorType> &) const;
 
 
-virtual const Mapping<dim,spacedim> & get_mapping() const;
+  virtual const Mapping<dim,spacedim> &get_mapping() const;
 
   virtual UpdateFlags get_face_update_flags() const;
 
@@ -205,7 +169,16 @@ virtual const Mapping<dim,spacedim> & get_mapping() const;
 
   const Table<2,DoFTools::Coupling> &get_matrix_coupling(const unsigned int &i) const;
 
-const unsigned int n_matrices;
+  const unsigned int n_components;
+  const unsigned int n_matrices;
+
+  ParsedFiniteElement<dim,spacedim> pfe;
+
+  /**
+   * Return the component names.
+   */
+  std::string get_component_names() const;
+
 
 protected:
 
@@ -234,11 +207,6 @@ protected:
    * Convert integer table into a coupling table.
    */
   Table<2, DoFTools::Coupling> to_coupling(const std::vector<std::vector<unsigned int> > &table) const;
-
-  mutable ParsedMappedFunctions<spacedim,n_components>  forcing_terms; // on the volume
-  mutable ParsedMappedFunctions<spacedim,n_components>  neumann_bcs;
-  mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs;
-  mutable ParsedDirichletBCs<dim,spacedim,n_components> dirichlet_bcs_dot;
 
   std::string str_diff_comp;
 
@@ -279,12 +247,12 @@ protected:
 
 };
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
-                                                     const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                                     FEValuesCache<dim,spacedim> &fe_cache) const
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+                                        const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                        FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell);
   fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
@@ -294,13 +262,13 @@ BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
 }
 
 
-template <int dim, int spacedim, int n_components, typename LAC>
+template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,n_components,LAC>::reinit(const Number &alpha,
-                                                     const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                                     const unsigned int face_no,
-                                                     FEValuesCache<dim,spacedim> &fe_cache) const
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+                                        const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                        const unsigned int face_no,
+                                        FEValuesCache<dim,spacedim> &fe_cache) const
 {
   fe_cache.reinit(cell, face_no);
   fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);

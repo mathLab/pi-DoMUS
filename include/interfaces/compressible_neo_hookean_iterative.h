@@ -11,7 +11,7 @@
 typedef LATrilinos LAC;
 
 template <int dim, int spacedim>
-  class CompressibleNeoHookeanInterface : public Interface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim>, LAC>
+class CompressibleNeoHookeanInterface : public Interface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim>, LAC>
 {
 
 public:
@@ -26,10 +26,10 @@ public:
 
   template <typename EnergyType, typename ResidualType>
   void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-			      FEValuesCache<dim,spacedim> &scratch,
-			      std::vector<EnergyType> &energies,
-			      std::vector<std::vector<ResidualType> > &local_residuals,
-			      bool compute_only_system_terms) const;
+                              FEValuesCache<dim,spacedim> &scratch,
+                              std::vector<EnergyType> &energies,
+                              std::vector<std::vector<ResidualType> > &local_residuals,
+                              bool compute_only_system_terms) const;
 
 
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
@@ -52,17 +52,17 @@ private:
 template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::
 CompressibleNeoHookeanInterface():
-  Interface<dim,spacedim,dim,CompressibleNeoHookeanInterface<dim,spacedim> >(2,
-									     "Compressible NeoHookean Interface",
-									     "FESystem[FE_Q(1)^d]",
-									     "u,u,u","1")
+  Interface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim> >(dim,2,
+      "Compressible NeoHookean Interface",
+      "FESystem[FE_Q(1)^d]",
+      "u,u,u","1")
 {}
 
 
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (ParameterHandler &prm)
 {
-  Interface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::declare_parameters(prm);
+  Interface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim> >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }
@@ -70,7 +70,6 @@ void CompressibleNeoHookeanInterface<dim,spacedim>::declare_parameters (Paramete
 template <int dim, int spacedim>
 void CompressibleNeoHookeanInterface<dim,spacedim>::parse_parameters_call_back ()
 {
-  Interface<dim,spacedim,dim, CompressibleNeoHookeanInterface<dim,spacedim> >::parse_parameters_call_back();
   mu = E/(2.0*(1.+nu));
   lambda = (E *nu)/((1.+nu)*(1.-2.*nu));
 }
@@ -82,10 +81,10 @@ template <typename EnergyType, typename ResidualType>
 void
 CompressibleNeoHookeanInterface<dim,spacedim>::
 energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-		       FEValuesCache<dim,spacedim> &fe_cache,
-		       std::vector<EnergyType> &energies,
-		       std::vector<std::vector<ResidualType> > &,
-		       bool compute_only_system_terms) const
+                       FEValuesCache<dim,spacedim> &fe_cache,
+                       std::vector<EnergyType> &energies,
+                       std::vector<std::vector<ResidualType> > &,
+                       bool compute_only_system_terms) const
 {
   const FEValuesExtractors::Vector displacement(0);
 
@@ -128,9 +127,9 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 template <int dim, int spacedim>
 void
 CompressibleNeoHookeanInterface<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &,
-									const std::vector<shared_ptr<LAC::BlockMatrix> > matrices,
-									LinearOperator<LAC::VectorType> &system_op,
-									LinearOperator<LAC::VectorType> &prec_op) const
+    const std::vector<shared_ptr<LAC::BlockMatrix> > matrices,
+    LinearOperator<LAC::VectorType> &system_op,
+    LinearOperator<LAC::VectorType> &prec_op) const
 {
 
   preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
