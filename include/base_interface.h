@@ -2,7 +2,7 @@
  * Base Interface
  *
  * Goal: provide a derivable interface to solve a particular
- *       PDEs problem (time depending, first-order, non linear).
+ *       PDE problem (time depending, first-order, non linear).
  *
  * Usage: This class requires some arguments related to the setting
  *        of the problem: finite elements, boundary conditions,
@@ -56,13 +56,14 @@ public:
 
   /**
    * Constructor. It takes the name of the subsection within the
-   * parameter file, the finite element used to discretize the system,
-   * the name of the components and a string were the block of
-   * differential and algebraic components are specified.
+   * parameter file, the number of components, the number of matrices,
+   * the finite element used to discretize the system, the name of the
+   * components and a string were the block of differential and
+   * algebraic components are specified.
    */
-  BaseInterface(const unsigned int &n_comp,
-                const unsigned int &n_matrices,
-                const std::string &name="",
+  BaseInterface(const std::string &name="",
+                const unsigned int &n_comp=0,
+                const unsigned int &n_matrices=0,
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
                 const std::string &default_differential_components="");
@@ -72,16 +73,13 @@ public:
 
   virtual void declare_parameters (ParameterHandler &prm);
 
-  virtual void parse_parameters_call_back() {};
-
   /**
-   * returns the vector @p of differential blocks
+   * Return the vector @p of differential blocks
    */
   const std::vector<unsigned int> get_differential_blocks() const;
 
   /**
-   * This function is used to modify triangulation using boundary_id or manifold_id.
-   * In the case a signal is required, this is the function to modify.
+   * Postprocess the newly generated triangulation.
    */
   virtual void postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &tria) const;
 
@@ -99,7 +97,7 @@ public:
 
 
   /**
-   * Definition of energies and residuals
+   * Assemble energies and residuals
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -108,7 +106,7 @@ public:
                                                bool compute_only_system_terms) const;
 
   /**
-   * Definition of energies and residuals
+   * Assemble energies and residuals
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -117,8 +115,10 @@ public:
                                                bool compute_only_system_terms) const;
 
   /**
-   * This function can be overloaded to directly implement the local
-   * matrices (i.e. as it is usally done in standard FE codes)
+   * Assemble local matrices. The default implementation calls
+   * BaseInterface::assemble_energies_and_residuals and creates the
+   * local matrices by performing automatic differentiation on the
+   * results.
    */
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,

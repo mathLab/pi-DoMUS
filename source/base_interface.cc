@@ -25,9 +25,9 @@ using namespace deal2lkit;
 
 template <int dim, int spacedim, typename LAC>
 BaseInterface<dim,spacedim,LAC>::
-BaseInterface(const unsigned int &ncomp,
+BaseInterface(const std::string &name,
+              const unsigned int &ncomp,
               const unsigned int &nmat,
-              const std::string &name,
               const std::string &default_fe,
               const std::string &default_component_names,
               const std::string &default_differential_components) :

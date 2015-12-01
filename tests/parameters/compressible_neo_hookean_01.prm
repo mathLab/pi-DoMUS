@@ -1,6 +1,6 @@
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       aux_matrix_pidomus
-# D2K_GIT_SHORTREV=     4b0bb39
+# D2K_GIT_SHORTREV=     efc80e6
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= eeae199
 subsection Compressible NeoHookean Interface
@@ -115,7 +115,7 @@ subsection Time derivative of Dirichlet boundary conditions
   set Known component names   = u,u,u
   set Used constants          = 
 end
-subsection piDoMUS<3, 3, 3, LATrilinos>
+subsection piDoMUS<3, 3, LATrilinos>
   set Adaptive refinement                            = true
   set Initial global refinement                      = 1
   set Maximum number of time steps                   = 10000

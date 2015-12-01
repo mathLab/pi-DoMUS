@@ -21,13 +21,13 @@ public:
 
   virtual ~Interface() {};
 
-  Interface(const unsigned int &n_components,
-            const unsigned int &n_matrices,
-            const std::string &name="",
+  Interface(const std::string &name="",
+            const unsigned int &n_components=0,
+            const unsigned int &n_matrices=0,
             const std::string &default_fe="FE_Q(1)",
             const std::string &default_component_names="u",
             const std::string &default_differential_components="") :
-    BaseInterface<dim,spacedim,LAC>(n_components,n_matrices, name,
+    BaseInterface<dim,spacedim,LAC>(name, n_components,n_matrices,
                                     default_fe, default_component_names,
                                     default_differential_components) {};
 
@@ -35,12 +35,6 @@ public:
   {
     BaseInterface<dim,spacedim,LAC>::declare_parameters(prm);
   }
-
-  virtual void parse_parameters_call_back()
-  {
-    BaseInterface<dim,spacedim,LAC>::parse_parameters_call_back();
-  }
-
 
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                                FEValuesCache<dim,spacedim> &scratch,

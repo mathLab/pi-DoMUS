@@ -52,8 +52,8 @@ private:
 template <int dim, int spacedim>
 CompressibleNeoHookeanInterface<dim,spacedim>::
 CompressibleNeoHookeanInterface():
-  Interface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim> >(dim,2,
-      "Compressible NeoHookean Interface",
+  Interface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim> >("Compressible NeoHookean Interface",
+      dim,2,
       "FESystem[FE_Q(1)^d]",
       "u,u,u","1")
 {}
