@@ -123,7 +123,11 @@ public:
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
-
+  /**
+   * Assemble the local system residual associated to the given cell.
+   * This function is called to evaluate the local system residual at each
+   * Newton iteration.
+   */
   virtual void assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                                FEValuesCache<dim,spacedim> &scratch,
                                                CopyData &data) const;
