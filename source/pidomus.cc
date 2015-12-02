@@ -79,7 +79,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &n_cycles,
                   "Number of cycles",
-                  "3",
+                  "1",
                   Patterns::Integer (0));
 
   add_parameter(  prm,
@@ -119,6 +119,12 @@ declare_parameters (ParameterHandler &prm)
                   "Overwrite Newton's iterations",
                   "true",
                   Patterns::Bool());
+
+  add_parameter(  prm,
+                  &time_stepper,
+                  "Time stepper",
+                  "euler",
+                  Patterns::Selection("ida|euler"));
 }
 
 
@@ -270,7 +276,9 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const BaseInterface<dim, spacedim, LAC> &i
 
 
   data_out("Output Parameters", "vtu"),
-  dae(*this),
+  ida(*this),
+  euler(*this),
+
   we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
 {
   for (unsigned int i=0; i<n_matrices; ++i)
@@ -614,7 +622,11 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       constraints.distribute(solution);
       constraints_dot.distribute(solution_dot);
 
-      dae.start_ode(solution, solution_dot, max_time_iterations);
+      if (time_stepper == "ida")
+        ida.start_ode(solution, solution_dot, max_time_iterations);
+      else if (time_stepper == "euler")
+        euler.start_ode(solution);
+
       eh.error_from_exact(interface.get_mapping(), *dof_handler, distributed_solution, exact_solution);
     }
 
