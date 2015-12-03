@@ -3,36 +3,22 @@
 # and a library of objects depending on deal2lkit.
 #
 # The structure of the directory is assumed to be: 
-# ./source: containing implementations and one file with "int main()"
+# ./source: containing implementations and no files with "int main()"
 # ./include: containing all class declarations
 # ./tests: containing pairs of files: test.cc/test.output to test
+# ./main: containing files with "int main()", which are compiled to
+# one executable each
 #
 # If you set the environemnt variable DEAL2LKIT_DIR or D2K_DIR, 
 # everything will work out of the box
 ##
 
-# Set the name of the project and target
-# If your application follows the structure above, you don't need to 
-# specify anything else. 
 SET(TARGET pidomus)
-SET(_main source/main.cc)
 
-# Set the _main variable to empty if you don't want an executable
-# but only a library
-#SET(_main "")
-
-############################################################
-# Normally you shouldn't need to change anything below.
-############################################################
 # Declare all source files the target consists of:
 file(GLOB _files source/*cc)
+file(GLOB _mains main/*cc)
 
-# Don't compile the main file into the library
-IF(NOT "${_main}" STREQUAL "") 
-  LIST(REMOVE_ITEM _files
-    ${CMAKE_CURRENT_SOURCE_DIR}/${_main}
-    )
-ENDIF()
 
 INCLUDE_DIRECTORIES(include)
 
@@ -77,15 +63,23 @@ FOREACH(_build_type ${_d2_build_types})
     STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
 
     ADD_LIBRARY(${_lib} SHARED ${_files})
-    SET(_exe "${TARGET}${${_build_type}_postfix}")
-    MESSAGE("-- Configuring executable ${_exe}")
-    ADD_EXECUTABLE(${_exe} ${_main})
-    TARGET_LINK_LIBRARIES(${_exe} ${_lib})
-    D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+    FOREACH(_main ${_mains})
+	MESSAGE("-- Processing ${_main}")
+	GET_FILENAME_COMPONENT(_app_name ${_main} NAME_WE)
+    	SET(_exe "${_app_name}${_p}")
+    	MESSAGE("-- Configuring executable ${_exe}")
+    	ADD_EXECUTABLE(${_exe} ${_main})
+    	TARGET_LINK_LIBRARIES(${_exe} ${_lib})
+	D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+    ENDFOREACH()
 
     SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
 
     D2K_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
+    SET_TARGET_PROPERTIES(${_lib} PROPERTIES MACOSX_RPATH OFF
+	BUILD_WITH_INSTALL_RPATH OFF
+	INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib
+    )
   ENDIF()
 ENDFOREACH()
 
