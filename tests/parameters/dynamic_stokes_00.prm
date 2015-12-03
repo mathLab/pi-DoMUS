@@ -29,35 +29,35 @@ end
 
 subsection Initial solution
   set Function constants  =
-  set Function expression = 0; 0; cos(x)*cos(y)
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,t
 end
 
 subsection Initial solution_dot
   set Function constants  =
-  set Function expression = cos(x)*cos(y); sin(x)*sin(y); 0
+  set Function expression = 1; 1; 0
   set Variable names      = x,y,t
 end
 
 subsection Exact solution
   set Function constants  =
-  set Function expression = t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y)
+  set Function expression = t; t; 0
   set Variable names      = x,y,t
 end
 
 subsection Forcing terms
   set IDs and component masks = 0 = u
-  set IDs and expressions     = 0 = k*t*cos(x)*cos(y) + cos(x)*cos(y) - sin(x)*cos(y); k*t*sin(x)*sin(y) + sin(x)*sin(y) - sin(y)*cos(x); 0 
+  set IDs and expressions     = 0 = 0; 0; 0 
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=ALL % 1=ALL % 2=ALL % 3=ALL
-  set IDs and expressions     = 0=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                1=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                2=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                3=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y)
+  set IDs and expressions     = 0 = t; t; 0 % \
+                                1 = t; t; 0 % \
+                                2 = t; t; 0 % \
+                                3 = t; t; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end

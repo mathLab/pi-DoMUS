@@ -1,4 +1,4 @@
-#include "interfaces/compressible_neo_hookean.h"
+#include "interfaces/navier_stokes.h"
 #include "pidomus.h"
 
 #include "deal.II/base/numbers.h"
@@ -38,7 +38,13 @@ int main (int argc, char *argv[])
   );
 
   std::string pde_name="navier_stokes";
-  My_CLP.setOption("pde", &pde_name, "name of the PDE (heat, stokes, dynamic_stokes, or navier_stokes)");
+  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes or navier_stokes)");
+
+  bool trilinos = true;
+  My_CLP.setOption("trilinos","dealii", &trilinos, "select the vector type to use");
+
+  bool dynamic = true;
+  My_CLP.setOption("ut","static", &dynamic, "wait for a key press before starting the run");
 
   int spacedim = 2;
   My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
@@ -78,51 +84,80 @@ int main (int argc, char *argv[])
   Teuchos::oblackholestream blackhole;
   std::ostream &out = ( Utilities::MPI::this_mpi_process(comm) == 0 ? std::cout : blackhole );
 
+  std::string string_dynamic="";
+  if (dynamic)
+    string_dynamic="Dynamic";
+
+  bool stokes;
+  std::string string_pde_name="";
+  if (pde_name == "navier_stokes")
+    {
+      string_pde_name = "Navier Stokes";
+      stokes = false;
+    }
+  else if (pde_name == "stokes")
+    {
+      string_pde_name = "Stokes";
+      stokes = false;
+    }
+  else
+    {
+      AssertThrow(false, ExcNotImplemented());
+      return 1;
+    }
+
   My_CLP.printHelpMessage(argv[0], out);
 
   deallog.depth_console (0);
   try
     {
-      if (pde_name == "navier_stokes")
+      print_status(   string_dynamic+" "+string_pde_name+" Equations",
+                      prm_file,
+                      dim,
+                      spacedim,
+                      n_threads,
+                      comm,
+                      check_prm);
+
+      if (dim==2)
         {
-
-
-          print_status(   "Navier-Stokes Equation",
-                          prm_file,
-                          dim,
-                          spacedim,
-                          n_threads,
-                          comm,
-                          check_prm);
-
-          //  if (dim==2)
-          //    {
-          //      NavierStokes<2> energy;
-          //      piDoMUS<2,2> navier_stokes_equation ("",energy);
-          //      ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-          //      ParameterAcceptor::prm.log_parameters(deallog);
-          //      navier_stokes_equation.run ();
-          //    }
-          //  else
-          //    {
-          //      NavierStokes<3> energy;
-          //      piDoMUS<3,3> navier_stokes_equation ("",energy);
-          //      ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-          //      ParameterAcceptor::prm.log_parameters(deallog);
-          //      navier_stokes_equation.run ();
-          //    }
+          if (trilinos)
+            {
+              NavierStokes<2> energy(dynamic, stokes);
+              piDoMUS<2,2> navier_stokes_equation ("",energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
+          else
+            {
+              NavierStokes<2,2,LADealII> energy(dynamic, stokes);
+              piDoMUS<2,2,LADealII> navier_stokes_equation ("",energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
         }
       else
         {
-          out << std::endl
-              << "============================================================="
-              << std::endl
-              << " ERROR:"
-              << std::endl
-              << "  " << pde_name << " needs to be implemented or it is bad name."
-              << std::endl
-              << "=============================================================";
+          if (trilinos)
+            {
+              NavierStokes<3> energy(dynamic, stokes);
+              piDoMUS<3,3> navier_stokes_equation ("",energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
+          else
+            {
+              NavierStokes<3,3,LADealII> energy(dynamic, stokes);
+              piDoMUS<3,3,LADealII> navier_stokes_equation ("",energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              navier_stokes_equation.run ();
+            }
         }
+
       out << std::endl;
     }
   catch (std::exception &exc)
@@ -172,8 +207,6 @@ void print_status(  std::string name,
       << "============================================================="
       << std::endl
       << "     Name:  " << name
-      // << std::endl
-      // << "-------------------------------------------------------------"
       << std::endl
       << " Prm file:  " << prm_file
       << std::endl

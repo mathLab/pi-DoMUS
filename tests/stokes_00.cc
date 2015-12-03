@@ -5,11 +5,10 @@
 /**
  * Test:     Navier Stokes interface.
  * Method:   Direct
- * Problem:  Dynamic Stokes
+ * Problem:  Stokes
  * Exact solution:
  * \f[
- *    u=\big(\cos(x)\cos(y), \sin(x)\sin(y)\big)
- *    \textrm{ and }p=0;
+ *    u=(1, 1\) \textrm{ and } p=0;
  * \f]
  */
 
@@ -24,15 +23,15 @@ int main (int argc, char *argv[])
   deallog.depth_file(1);
   deallog.threshold_double(1.0e-3);
 
-  NavierStokes<2,2,LADealII> energy(true, false);
-  piDoMUS<2,2,LADealII> dynamic_stokes ("",energy);
+  NavierStokes<2,2,LADealII> energy(false, false);
+  piDoMUS<2,2,LADealII> stokes ("",energy);
   ParameterAcceptor::initialize(
-    SOURCE_DIR "/parameters/dynamic_stokes_00.prm",
+    SOURCE_DIR "/parameters/stokes_00.prm",
     "used_parameters.prm");
 
-  dynamic_stokes.run ();
+  stokes.run ();
 
-  auto sol = dynamic_stokes.get_solution();
+  auto sol = stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;

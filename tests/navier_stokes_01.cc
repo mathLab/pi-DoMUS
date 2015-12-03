@@ -4,12 +4,12 @@
 
 /**
  * Test:     Navier Stokes interface.
- * Method:   Direct
- * Problem:  Dynamic Stokes
+ * Method:   Euler
+ * Problem:  Non time depending Navier Stokes Equations
  * Exact solution:
  * \f[
- *    u=\big(\cos(x)\cos(y), \sin(x)\sin(y)\big)
- *    \textrm{ and }p=0;
+ *    u=\big( 2*(x^2)*y, -2*x*(y^2) \big)
+ *    \textrm{ and }p=xy;
  * \f]
  */
 
@@ -24,15 +24,15 @@ int main (int argc, char *argv[])
   deallog.depth_file(1);
   deallog.threshold_double(1.0e-3);
 
-  NavierStokes<2,2,LADealII> energy(true, false);
-  piDoMUS<2,2,LADealII> dynamic_stokes ("",energy);
+  NavierStokes<2,2> energy(false, true);
+  piDoMUS<2,2> navier_stokes ("",energy);
   ParameterAcceptor::initialize(
-    SOURCE_DIR "/parameters/dynamic_stokes_00.prm",
+    SOURCE_DIR "/parameters/navier_stokes_01.prm",
     "used_parameters.prm");
 
-  dynamic_stokes.run ();
+  navier_stokes.run ();
 
-  auto sol = dynamic_stokes.get_solution();
+  auto sol = navier_stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;
