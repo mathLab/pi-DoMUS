@@ -65,8 +65,8 @@ subsection IDA Solver Parameters
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_dot
-  set Initial condition type after restart          = use_y_diff
+  set Initial condition type                        = use_y_diff
+  set Initial condition type after restart          = use_y_dot
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
@@ -78,15 +78,15 @@ subsection IDA Solver Parameters
   set Use local tolerances                          = false
 end
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 0.000001
+  set Absolute error tolerance                     = 1e-6
   set Final time                                   = 1.000000
-  set Initial step size                            = 1e-4
   set Initial time                                 = 0.000000
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 5
   set Newton relaxation parameter                  = 1.000000
   set Relative error tolerance                     = 0.000000
+  set Step size                                    = 1e-2
   set Update continuously Jacobian                 = true
 end
 subsection Initial solution
@@ -134,7 +134,7 @@ subsection piDoMUS<3, 3, LATrilinos>
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Time stepper                                   = ida
+  set Time stepper                                   = euler
   set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end

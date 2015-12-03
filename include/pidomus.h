@@ -37,6 +37,7 @@
 #include <deal2lkit/parameter_acceptor.h>
 #include <deal2lkit/sundials_interface.h>
 #include <deal2lkit/ida_interface.h>
+#include <deal2lkit/imex_stepper.h>
 
 #include <deal2lkit/any_data.h>
 #include <deal2lkit/fe_values_cache.h>
@@ -248,7 +249,9 @@ private:
 
   ParsedDataOut<dim, spacedim>                  data_out;
 
-  IDAInterface<typename LAC::VectorType>  dae;
+  IDAInterface<typename LAC::VectorType>  ida;
+  IMEXStepper<typename LAC::VectorType> euler;
+
 
   std::vector<types::global_dof_index> dofs_per_block;
   IndexSet global_partitioning;
@@ -265,15 +268,20 @@ private:
    */
   double solver_tolerance;
 
-  /*
+  /**
    * Print all avaible information about processes.
    */
   bool verbose;
 
-  /*
+  /**
    * Overwrite newton's iterations: every time step shows only the last value.
    */
   bool overwrite_iter;
+
+  /**
+   * time stepper to be used
+   */
+  std::string time_stepper;
 
 };
 
