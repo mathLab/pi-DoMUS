@@ -1,4 +1,4 @@
-#include "interfaces/compressible_neo_hookean_iterative.h"
+#include "interfaces/compressible_neo_hookean.h"
 #include "pidomus.h"
 
 #include "deal.II/base/numbers.h"
@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
           //  if (dim==2)
           //    {
           //      NavierStokes<2> energy;
-          //      piDoMUS<2,2,3> navier_stokes_equation (energy);
+          //      piDoMUS<2,2> navier_stokes_equation ("",energy);
           //      ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
           //      ParameterAcceptor::prm.log_parameters(deallog);
           //      navier_stokes_equation.run ();
@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
           //  else
           //    {
           //      NavierStokes<3> energy;
-          //      piDoMUS<3,3,4> navier_stokes_equation (energy);
+          //      piDoMUS<3,3> navier_stokes_equation ("",energy);
           //      ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
           //      ParameterAcceptor::prm.log_parameters(deallog);
           //      navier_stokes_equation.run ();
