@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/conservative/compressible_neo_hookean_direct.h"
+#include "interfaces/compressible_neo_hookean.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -15,9 +15,10 @@ int main (int argc, char *argv[])
   const int dim = 3;
   const int spacedim = 3;
 
-  CompressibleNeoHookeanInterface<dim,spacedim> cnh_body;
-  piDoMUS<dim,spacedim,dim,LADealII> solver (cnh_body);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_direct_01.prm", "used_parameters.prm");
+  CompressibleNeoHookeanInterface<dim,spacedim,LADealII> cnh_body;
+  cnh_body.init();
+  piDoMUS<dim,spacedim,LADealII> solver ("",cnh_body);
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_03.prm", "used_parameters.prm");
 
 
   solver.run ();

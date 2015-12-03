@@ -228,9 +228,11 @@ piDoMUS<dim, spacedim, LAC>::parse_parameters_call_back()
 /* ------------------------ CONSTRUCTORS ------------------------ */
 
 template <int dim, int spacedim, typename LAC>
-piDoMUS<dim, spacedim, LAC>::piDoMUS (const BaseInterface<dim, spacedim, LAC> &interface,
+piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
+                                      const BaseInterface<dim, spacedim, LAC> &interface,
                                       const MPI_Comm &communicator)
   :
+  ParameterAcceptor(name),
   SundialsInterface<typename LAC::VectorType>(communicator),
   comm(communicator),
   interface(interface),
@@ -245,6 +247,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const BaseInterface<dim, spacedim, LAC> &i
                    tcout,
                    TimerOutput::summary,
                    TimerOutput::wall_times),
+  data_out("Output Parameters", "vtu"),
 
   n_matrices(interface.n_matrices),
   eh("Error Tables", interface.get_component_names(),
@@ -275,7 +278,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const BaseInterface<dim, spacedim, LAC> &i
                     interface.get_component_names(), ""),
 
 
-  data_out("Output Parameters", "vtu"),
   ida(*this),
   euler(*this),
 

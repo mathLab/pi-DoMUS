@@ -1,4 +1,4 @@
-#include "interfaces/compressible_neo_hookean_iterative.h"
+#include "interfaces/compressible_neo_hookean.h"
 #include "pidomus.h"
 
 #include "deal.II/base/numbers.h"

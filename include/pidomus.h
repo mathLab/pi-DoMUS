@@ -61,7 +61,8 @@ class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC:
 public:
 
 
-  piDoMUS (const BaseInterface<dim, spacedim, LAC> &energy,
+  piDoMUS (const std::string &name,
+           const BaseInterface<dim, spacedim, LAC> &energy,
            const MPI_Comm &comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
@@ -226,10 +227,11 @@ private:
   mutable typename LAC::VectorType        distributed_solution_dot;
 
   mutable TimerOutput                               computing_timer;
+  ParsedDataOut<dim, spacedim>                  data_out;
 
   const unsigned int n_matrices;
-  std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
   std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;
+  std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
 
   ErrorHandler<1>       eh;
   ParsedGridGenerator<dim, spacedim>   pgg;
@@ -247,7 +249,6 @@ private:
   mutable ParsedDirichletBCs<dim,spacedim> dirichlet_bcs_dot;
 
 
-  ParsedDataOut<dim, spacedim>                  data_out;
 
   IDAInterface<typename LAC::VectorType>  ida;
   IMEXStepper<typename LAC::VectorType> euler;
