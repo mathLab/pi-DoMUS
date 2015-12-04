@@ -84,6 +84,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   ResidualType et = 0; // dummy number to define the type of variables
   this->reinit (et, cell, fe_cache);
   auto &us = fe_cache.get_values("solution", "u", concentration, et);
+  auto &uts = fe_cache.get_values("solution_dot", "ut", concentration, et);
   auto &gradus = fe_cache.get_gradients("solution", "gradu", concentration, et);
 
   const unsigned int n_q_points = us.size();
@@ -100,6 +101,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
         {
           ///////////////////////// energetic contribution
           auto &u = us[q];
+          auto &ut = uts[q];
           auto &gradu = gradus[q];
 
           auto &b = convection_values[q];
