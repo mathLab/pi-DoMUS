@@ -73,15 +73,14 @@ void
 ScalarReactionDiffusionConvection<dim,spacedim,LAC>::
 energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                        FEValuesCache<dim,spacedim> &fe_cache,
-                       std::vector<EnergyType> &energies,
+                       std::vector<EnergyType> &,
                        std::vector<std::vector<ResidualType> > &residuals,
                        bool compute_only_system_terms) const
 {
   const FEValuesExtractors::Scalar concentration(0);
 
-  ////////// conservative section
-  //
-  ResidualType et = 0; // dummy number to define the type of variables
+
+  ResidualType et = this->alpha; // dummy number to define the type of variables
   this->reinit (et, cell, fe_cache);
   auto &us = fe_cache.get_values("solution", "u", concentration, et);
   auto &uts = fe_cache.get_values("solution_dot", "ut", concentration, et);
@@ -95,25 +94,28 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &fev = fe_cache.get_current_fe_values();
   convection.vector_value_list(fev.get_quadrature_points(), convection_values);
 
-  for (unsigned int i=0; i<residuals[0].size(); ++i)
+  for (unsigned int q=0; q<n_q_points; ++q)
     {
-      for (unsigned int q=0; q<n_q_points; ++q)
-        {
-          ///////////////////////// energetic contribution
-          auto &u = us[q];
-          auto &ut = uts[q];
-          auto &gradu = gradus[q];
 
-          auto &b = convection_values[q];
+      auto &u = us[q];
+      auto &ut = uts[q];
+
+      auto &gradu = gradus[q];
+
+      auto &b = convection_values[q];
+      for (unsigned int i=0; i<residuals[0].size(); ++i)
+        {
 
           // test functions:
-          const auto &v = fev[concentration].value(i,q);
-          const auto &gradv = fev[concentration].gradient(i,q);
+          auto v = fev[concentration].value(i,q);
+          auto gradv = fev[concentration].gradient(i,q);
+
+          residuals[0][i] += (ut*v +
+                              nu*(gradu*gradv)
+                             )*JxW[q];
 
           for (unsigned int d=0; d<dim; ++d)
-            residuals[0][i] += (u*v +
-                                nu*(gradu*gradv) +
-                                u*gradu[d]*b(d)*v)*JxW[q];
+            residuals[0][i] += (u*gradu[d]*b[d]*v)*JxW[q];
 
         }
     }
