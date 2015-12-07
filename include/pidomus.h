@@ -222,9 +222,11 @@ private:
 
   typename LAC::VectorType        solution;
   typename LAC::VectorType        solution_dot;
+  typename LAC::VectorType        explicit_solution;
 
   mutable typename LAC::VectorType        distributed_solution;
   mutable typename LAC::VectorType        distributed_solution_dot;
+  mutable typename LAC::VectorType        distributed_explicit_solution;
 
   mutable TimerOutput                               computing_timer;
   ParsedDataOut<dim, spacedim>                  data_out;
@@ -283,6 +285,11 @@ private:
    * time stepper to be used
    */
   std::string time_stepper;
+
+  /**
+   * previous time step
+   */
+  double old_t;
 
 };
 

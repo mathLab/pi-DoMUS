@@ -281,7 +281,9 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   ida(*this),
   euler(*this),
 
-  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
+
+  old_t(-std::numeric_limits<double>::max())
 {
   for (unsigned int i=0; i<n_matrices; ++i)
     {
@@ -364,10 +366,12 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 
   initializer(solution);
   initializer(solution_dot);
+  initializer(explicit_solution);
   if (we_are_parallel)
     {
       initializer.ghosted(distributed_solution);
       initializer.ghosted(distributed_solution_dot);
+      initializer.ghosted(distributed_explicit_solution);
     }
 
   for (unsigned int i=0; i < n_matrices; ++i)
@@ -394,6 +398,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
           //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
           //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
+      explicit_solution = solution;
+      distributed_explicit_solution = solution;
 
     }
   computing_timer.exit_section();
@@ -447,8 +453,19 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 
   distributed_solution = tmp;
   distributed_solution_dot = tmp_dot;
+
+  if (old_t < t)
+    {
+      explicit_solution.reinit(solution);
+      distributed_explicit_solution.reinit(distributed_solution);
+      old_t = t;
+    }
+
+
   interface.initialize_data(distributed_solution,
-                            distributed_solution_dot, t, alpha);
+                            distributed_solution_dot,
+                            distributed_explicit_solution,
+                            t, alpha);
 
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
@@ -576,6 +593,7 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
       sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
       sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
     }
+  old_t = -std::numeric_limits<double>::max();
 
   computing_timer.exit_section();
 }
@@ -727,8 +745,19 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
 
   distributed_solution = tmp;
   distributed_solution_dot = tmp_dot;
+
+  if (old_t < t)
+    {
+      explicit_solution.reinit(solution);
+      distributed_explicit_solution.reinit(distributed_solution);
+      old_t = t;
+    }
+
+
   interface.initialize_data(distributed_solution,
-                            distributed_solution_dot, t, 0.0);
+                            distributed_solution_dot,
+                            distributed_explicit_solution,
+                            t, 0.0);
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
