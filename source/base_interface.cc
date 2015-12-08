@@ -35,8 +35,7 @@ BaseInterface(const std::string &name,
   n_components(ncomp),
   n_matrices(nmat),
   pfe(name,default_fe,default_component_names,n_components),
-  str_diff_comp(default_differential_components),
-  old_t(-1.0)
+  str_diff_comp(default_differential_components)
 {}
 
 template <int dim, int spacedim, typename LAC>
@@ -320,17 +319,14 @@ template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::initialize_data(const typename LAC::VectorType &solution,
                                                  const typename LAC::VectorType &solution_dot,
+                                                 const typename LAC::VectorType &explicit_solution,
                                                  const double t,
                                                  const double alpha) const
 {
-  if (old_t < t)
-    {
-      old_solution.reinit(solution);
-      old_t = t;
-    }
 
   this->solution = &solution;
   this->solution_dot = &solution_dot;
+  this->explicit_solution = &explicit_solution;
   this->alpha = alpha;
   this->t = t;
 }

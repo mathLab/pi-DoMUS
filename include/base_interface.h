@@ -87,11 +87,12 @@ public:
    * Initialize all data required for the system
    *
    * This function is used to initialize the internal variables
-   * according to the given arguments, which are
-   * @p solution, @p solution_dot, @p t and @p alpha.
+   * according to the given arguments, which are @p solution,
+   * @p solution_dot, @p explicit_solution, @p t and @p alpha.
    */
   virtual void initialize_data(const typename LAC::VectorType &solution,
                                const typename LAC::VectorType &solution_dot,
+                               const typename LAC::VectorType &explicit_solution,
                                const double t,
                                const double alpha) const;
 
@@ -230,7 +231,7 @@ protected:
   /**
    * Solution vector evaluated at time t-dt
    */
-  mutable typename LAC::VectorType old_solution;
+  mutable const typename LAC::VectorType *explicit_solution;
 
   /**
    * Time derivative solution vector evaluated at time t
@@ -241,12 +242,6 @@ protected:
    * Current time step
    */
   mutable double t;
-
-  /**
-   * Previous time step
-   */
-  mutable double old_t;
-
   mutable double alpha;
   unsigned int dofs_per_cell;
   unsigned int n_q_points;
@@ -264,8 +259,9 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
                                         const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
+  double dummy=0;
   fe_cache.reinit(cell);
-  fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
+  fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
@@ -280,8 +276,9 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
                                         const unsigned int face_no,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
+  double dummy=0;
   fe_cache.reinit(cell, face_no);
-  fe_cache.cache_local_solution_vector("old_solution", this->old_solution, alpha);
+  fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
   fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
