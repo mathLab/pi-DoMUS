@@ -212,7 +212,9 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
       const QGauss<dim-1> quad(fe->degree+1);
       dirichlet_bcs.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
     }
-  dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
+  unsigned int codim = spacedim - dim;
+  if (codim == 0)
+    dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
 }
 
 
@@ -395,8 +397,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       else
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
       explicit_solution = solution;
       distributed_explicit_solution = solution;
@@ -531,15 +533,16 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
   if (adaptive_refinement)
     {
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-      KellyErrorEstimator<dim>::estimate (*dof_handler,
-                                          QGauss < dim - 1 > (fe->degree + 1),
-                                          typename FunctionMap<dim>::type(),
-                                          distributed_solution,
-                                          estimated_error_per_cell,
-                                          ComponentMask(),
-                                          0,
-                                          0,
-                                          triangulation->locally_owned_subdomain());
+      KellyErrorEstimator<dim,spacedim>::estimate (interface.get_mapping(),
+                                                   *dof_handler,
+                                                   QGauss <dim-1> (fe->degree + 1),
+                                                   typename FunctionMap<spacedim>::type(),
+                                                   distributed_solution,
+                                                   estimated_error_per_cell,
+                                                   ComponentMask(),
+                                                   0,
+                                                   0,
+                                                   triangulation->locally_owned_subdomain());
 
       pgr.mark_cells(estimated_error_per_cell, *triangulation);
     }
@@ -547,8 +550,8 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 
   if (typeid(typename LAC::VectorType) == typeid(pVEC))
     {
-      parallel::distributed::SolutionTransfer<dim, pVEC> sol_tr(*dof_handler);
-      parallel::distributed::SolutionTransfer<dim, pVEC> sol_dot_tr(*dof_handler);
+      parallel::distributed::SolutionTransfer<dim, pVEC,DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
+      parallel::distributed::SolutionTransfer<dim, pVEC,DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
       typename LAC::VectorType sol (distributed_solution);
       typename LAC::VectorType sol_dot (distributed_solution_dot);
       sol = solution;
@@ -574,8 +577,8 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
     }
   else
     {
-      SolutionTransfer<dim, sVEC> sol_tr(*dof_handler);
-      SolutionTransfer<dim, sVEC> sol_dot_tr(*dof_handler);
+      SolutionTransfer<dim, sVEC,DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
+      SolutionTransfer<dim, sVEC, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
 
       typename LAC::VectorType tmp (solution);
       typename LAC::VectorType tmp_dot (solution_dot);
@@ -937,30 +940,11 @@ piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorTy
     }
 }
 
-// template class piDoMUS<1>;
-
-//template class piDoMUS<1,1,1>;
-//template class piDoMUS<1,1,2>;
-//template class piDoMUS<1,1,3>;
-//template class piDoMUS<1,1,4>;
-
-// template class piDoMUS<1,2,1>;
-// template class piDoMUS<1,2,2>;
-// template class piDoMUS<1,2,3>;
-// template class piDoMUS<1,2,4>;
-
-template class piDoMUS<2, 2>;
+template class piDoMUS<2, 2, LATrilinos>;
+template class piDoMUS<2, 3, LATrilinos>;
+template class piDoMUS<3, 3, LATrilinos>;
 
 template class piDoMUS<2, 2, LADealII>;
-
-// template class piDoMUS<2,3,1>;
-// template class piDoMUS<2,3,2>;
-// template class piDoMUS<2,3,3>;
-// template class piDoMUS<2,3,4>;
-
-
-
-template class piDoMUS<3, 3>;
+template class piDoMUS<2, 3, LADealII>;
 template class piDoMUS<3, 3, LADealII>;
 
-// template class piDoMUS<3>;;
