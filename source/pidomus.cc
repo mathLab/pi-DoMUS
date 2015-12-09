@@ -395,8 +395,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       else
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          //VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
       explicit_solution = solution;
       distributed_explicit_solution = solution;

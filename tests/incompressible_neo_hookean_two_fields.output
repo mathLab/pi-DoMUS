@@ -1,0 +1,61 @@
+
+DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.0.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.1.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.2.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.3.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.4.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.5.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.6.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.7.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.8.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.9.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
+DEAL:PrepareOutput::Will write on file: ./solution.0.10.vtu
+DEAL:AddingData::Added data: u,u,u,p
+DEAL:AddingData::Added data: u_dot,u_dot,u_dot,p_dot
+DEAL:WritingData::Wrote output file.
+DEAL:WritingData::Reset output.
