@@ -201,7 +201,7 @@ protected:
    * coupling you need to override this function and implement it
    * according to the following example
    * @code
-   * void set_matrix_couplings(std::vector<std::string &couplings) const
+   * void set_matrix_couplings(std::vector<std::string> &couplings) const
    * {
    *   // suppose we have 2 matrices (system and preconditioner)
    *   // we are solving incompressible Stokes equations
