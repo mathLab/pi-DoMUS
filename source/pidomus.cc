@@ -523,24 +523,25 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 /* ------------------------ MESH AND GRID ------------------------ */
 
 template <int dim, int spacedim, typename LAC>
-void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LATrilinos::VectorType &y,
-    LATrilinos::VectorType &y_dot,
-    LATrilinos::VectorType &distributed_y,
-    LATrilinos::VectorType &distributed_y_dot,
-    bool adaptive_refinement)
+void piDoMUS<dim, spacedim, LAC>::
+refine_and_transfer_solutions(LATrilinos::VectorType &y,
+                              LATrilinos::VectorType &y_dot,
+                              LATrilinos::VectorType &distributed_y,
+                              LATrilinos::VectorType &distributed_y_dot,
+                              bool adaptive_refinement)
 {
   distributed_y = y;
   distributed_y_dot = y_dot;
+
   parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
-  parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
-  LATrilinos::VectorType sol (distributed_y);
-  LATrilinos::VectorType sol_dot (distributed_y_dot);
-  // sol = y;
-  // sol_dot = y_dot;
+
+  std::vector<const LATrilinos::VectorType *> old_sols (2);
+  old_sols[0] = &distributed_y;
+  old_sols[1] = &distributed_y_dot;
 
   triangulation->prepare_coarsening_and_refinement();
-  sol_tr.prepare_for_coarsening_and_refinement (sol);
-  sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
+  sol_tr.prepare_for_coarsening_and_refinement (old_sols);
+
   if (adaptive_refinement)
     triangulation->execute_coarsening_and_refinement ();
   else
@@ -548,31 +549,36 @@ void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LATrilinos::Vect
 
   setup_dofs(false);
 
-  LATrilinos::VectorType tmp (y);
-  LATrilinos::VectorType tmp_dot (y_dot);
+  LATrilinos::VectorType new_sol (y);
+  LATrilinos::VectorType new_sol_dot (y_dot);
 
-  sol_tr.interpolate (tmp);
-  sol_dot_tr.interpolate (tmp_dot);
-  y = tmp;
-  y_dot = tmp_dot;
+  std::vector<LATrilinos::VectorType *> new_sols (2);
+  new_sols[0] = &new_sol;
+  new_sols[1] = &new_sol_dot;
+
+  sol_tr.interpolate (new_sols);
+
+  y = new_sol;
+  y_dot = new_sol_dot;
 }
 
 template <int dim, int spacedim, typename LAC>
-void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LADealII::VectorType &y,
-    LADealII::VectorType &y_dot,
-    LADealII::VectorType &,
-    LADealII::VectorType &,
-    bool adaptive_refinement)
+void piDoMUS<dim, spacedim, LAC>::
+refine_and_transfer_solutions(LADealII::VectorType &y,
+                              LADealII::VectorType &y_dot,
+                              LADealII::VectorType &,
+                              LADealII::VectorType &,
+                              bool adaptive_refinement)
 {
   SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
-  SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
 
-  LADealII::VectorType tmp (y);
-  LADealII::VectorType tmp_dot (y_dot);
+  std::vector<LADealII::VectorType> old_sols (2);
+  old_sols[0] = y;
+  old_sols[1] = y_dot;
 
   triangulation->prepare_coarsening_and_refinement();
-  sol_tr.prepare_for_coarsening_and_refinement (tmp);
-  sol_dot_tr.prepare_for_coarsening_and_refinement(tmp_dot);
+  sol_tr.prepare_for_coarsening_and_refinement (old_sols);
+
   if (adaptive_refinement)
     triangulation->execute_coarsening_and_refinement ();
   else
@@ -580,8 +586,13 @@ void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LADealII::Vector
 
   setup_dofs(false);
 
-  sol_tr.interpolate (tmp, y);
-  sol_dot_tr.interpolate (tmp_dot, y_dot);
+  LADealII::VectorType new_sol(y);
+  LADealII::VectorType new_sol_dot(y_dot);
+  std::vector<LADealII::VectorType> new_sols (2);
+  new_sols[0].reinit(y);
+  new_sols[1].reinit(y_dot);
+
+  sol_tr.interpolate (old_sols, new_sols);
 }
 
 template <int dim, int spacedim, typename LAC>
