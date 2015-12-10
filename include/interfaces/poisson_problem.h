@@ -107,14 +107,13 @@ PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,
 {
 
   preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  preconditioner->initialize(matrices[1]->block(0,0));
-  auto P = linear_operator<LATrilinos::VectorType::BlockType>(matrices[0]->block(0,0));
+  preconditioner->initialize(matrices[0]->block(0,0));
 
   auto A  = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0) );
 
-  static ReductionControl solver_control_pre(5000, 1e-4);
-  static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
-  auto P_inv     = inverse_operator( P, solver_CG, *preconditioner);
+  LinearOperator<LATrilinos::VectorType::BlockType> P_inv;
+
+  P_inv = linear_operator<LATrilinos::VectorType::BlockType>(matrices[0]->block(0,0), *preconditioner);
 
   auto P00 = P_inv;
 
@@ -129,19 +128,5 @@ PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,
     }
   });
 }
-
-
-template class PoissonProblem <2,2, LADealII>;
-template class PoissonProblem <2,3, LADealII>;
-template class PoissonProblem <3,3, LADealII>;
-
-
-template class PoissonProblem <2,2, LATrilinos>;
-template class PoissonProblem <2,3, LATrilinos>;
-template class PoissonProblem <3,3, LATrilinos>;
-
-
-
-
 
 #endif
