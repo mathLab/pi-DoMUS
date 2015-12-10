@@ -523,6 +523,68 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 /* ------------------------ MESH AND GRID ------------------------ */
 
 template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LATrilinos::VectorType &y,
+    LATrilinos::VectorType &y_dot,
+    LATrilinos::VectorType &distributed_y,
+    LATrilinos::VectorType &distributed_y_dot,
+    bool adaptive_refinement)
+{
+  distributed_y = y;
+  distributed_y_dot = y_dot;
+  parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
+  parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
+  LATrilinos::VectorType sol (distributed_y);
+  LATrilinos::VectorType sol_dot (distributed_y_dot);
+  // sol = y;
+  // sol_dot = y_dot;
+
+  triangulation->prepare_coarsening_and_refinement();
+  sol_tr.prepare_for_coarsening_and_refinement (sol);
+  sol_dot_tr.prepare_for_coarsening_and_refinement(sol_dot);
+  if (adaptive_refinement)
+    triangulation->execute_coarsening_and_refinement ();
+  else
+    triangulation->refine_global (1);
+
+  setup_dofs(false);
+
+  LATrilinos::VectorType tmp (y);
+  LATrilinos::VectorType tmp_dot (y_dot);
+
+  sol_tr.interpolate (tmp);
+  sol_dot_tr.interpolate (tmp_dot);
+  y = tmp;
+  y_dot = tmp_dot;
+}
+
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::refine_and_transfer_solutions(LADealII::VectorType &y,
+    LADealII::VectorType &y_dot,
+    LADealII::VectorType &,
+    LADealII::VectorType &,
+    bool adaptive_refinement)
+{
+  SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
+  SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
+
+  LADealII::VectorType tmp (y);
+  LADealII::VectorType tmp_dot (y_dot);
+
+  triangulation->prepare_coarsening_and_refinement();
+  sol_tr.prepare_for_coarsening_and_refinement (tmp);
+  sol_dot_tr.prepare_for_coarsening_and_refinement(tmp_dot);
+  if (adaptive_refinement)
+    triangulation->execute_coarsening_and_refinement ();
+  else
+    triangulation->refine_global (1);
+
+  setup_dofs(false);
+
+  sol_tr.interpolate (tmp, y);
+  sol_dot_tr.interpolate (tmp_dot, y_dot);
+}
+
+template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
@@ -547,55 +609,12 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
       pgr.mark_cells(estimated_error_per_cell, *triangulation);
     }
 
+  refine_and_transfer_solutions(solution,
+                                solution_dot,
+                                distributed_solution,
+                                distributed_solution_dot,
+                                adaptive_refinement);
 
-  if (typeid(typename LAC::VectorType) == typeid(pVEC))
-    {
-      parallel::distributed::SolutionTransfer<dim, pVEC,DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
-      parallel::distributed::SolutionTransfer<dim, pVEC,DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
-      typename LAC::VectorType sol (distributed_solution);
-      typename LAC::VectorType sol_dot (distributed_solution_dot);
-      sol = solution;
-      sol_dot = solution_dot;
-
-      triangulation->prepare_coarsening_and_refinement();
-      sol_tr.prepare_for_coarsening_and_refinement ((pVEC &)sol);
-      sol_dot_tr.prepare_for_coarsening_and_refinement((pVEC &)sol_dot);
-      if (adaptive_refinement)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
-
-      setup_dofs(false);
-
-      typename LAC::VectorType tmp (solution);
-      typename LAC::VectorType tmp_dot (solution_dot);
-
-      sol_tr.interpolate ((pVEC &)tmp);
-      sol_dot_tr.interpolate ((pVEC &)tmp_dot);
-      solution = tmp;
-      solution_dot = tmp_dot;
-    }
-  else
-    {
-      SolutionTransfer<dim, sVEC,DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
-      SolutionTransfer<dim, sVEC, DoFHandler<dim,spacedim> > sol_dot_tr(*dof_handler);
-
-      typename LAC::VectorType tmp (solution);
-      typename LAC::VectorType tmp_dot (solution_dot);
-
-      triangulation->prepare_coarsening_and_refinement();
-      sol_tr.prepare_for_coarsening_and_refinement ((sVEC &)tmp);
-      sol_dot_tr.prepare_for_coarsening_and_refinement((sVEC &)tmp_dot);
-      if (adaptive_refinement)
-        triangulation->execute_coarsening_and_refinement ();
-      else
-        triangulation->refine_global (1);
-
-      setup_dofs(false);
-
-      sol_tr.interpolate ((sVEC &)tmp, (sVEC &)solution);
-      sol_dot_tr.interpolate ((sVEC &)tmp_dot, (sVEC &)solution_dot);
-    }
   old_t = -std::numeric_limits<double>::max();
 
   computing_timer.exit_section();

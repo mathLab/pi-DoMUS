@@ -162,7 +162,7 @@ void print_status(  std::string name,
                     bool check_prm)
 {
   int numprocs  = Utilities::MPI::n_mpi_processes(comm);
-  int myid      = Utilities::MPI::this_mpi_process(comm);
+  //  int myid      = Utilities::MPI::this_mpi_process(comm);
 
   Teuchos::oblackholestream blackhole;
   std::ostream &out = ( Utilities::MPI::this_mpi_process(comm) == 0 ? std::cout : blackhole );
