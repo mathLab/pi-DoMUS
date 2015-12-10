@@ -360,41 +360,12 @@ get_cell_update_flags() const
           update_gradients);
 }
 
+
 template class BaseInterface<2, 2, LATrilinos>;
+template class BaseInterface<2, 3, LATrilinos>;
 template class BaseInterface<3, 3, LATrilinos>;
 
-
 template class BaseInterface<2, 2, LADealII>;
+template class BaseInterface<2, 3, LADealII>;
 template class BaseInterface<3, 3, LADealII>;
 
-
-// template class BaseInterface<2, 2, 2, LATrilinos>;
-// template class BaseInterface<2, 2, 2, LADealII>;
-// template class BaseInterface<2, 2, 3, LATrilinos>;
-// template class BaseInterface<2, 2, 3, LADealII>;
-// template class BaseInterface<2, 2, 4, LATrilinos>;
-// template class BaseInterface<2, 2, 4, LADealII>;
-// template class BaseInterface<2, 2, 5, LATrilinos>;
-// template class BaseInterface<2, 2, 5, LADealII>;
-// template class BaseInterface<2, 2, 6, LATrilinos>;
-// template class BaseInterface<2, 2, 6, LADealII>;
-// template class BaseInterface<2, 2, 7, LATrilinos>;
-// template class BaseInterface<2, 2, 7, LADealII>;
-// template class BaseInterface<2, 2, 8, LATrilinos>;
-// template class BaseInterface<2, 2, 8, LADealII>;
-// template class BaseInterface<3, 3, 1, LATrilinos>;
-// template class BaseInterface<3, 3, 1, LADealII>;
-// template class BaseInterface<3, 3, 2, LATrilinos>;
-// template class BaseInterface<3, 3, 2, LADealII>;
-// template class BaseInterface<3, 3, 3, LATrilinos>;
-// template class BaseInterface<3, 3, 3, LADealII>;
-// template class BaseInterface<3, 3, 4, LATrilinos>;
-// template class BaseInterface<3, 3, 4, LADealII>;
-// template class BaseInterface<3, 3, 5, LATrilinos>;
-// template class BaseInterface<3, 3, 5, LADealII>;
-// template class BaseInterface<3, 3, 6, LATrilinos>;
-// template class BaseInterface<3, 3, 6, LADealII>;
-// template class BaseInterface<3, 3, 7, LATrilinos>;
-// template class BaseInterface<3, 3, 7, LADealII>;
-// template class BaseInterface<3, 3, 8, LATrilinos>;
-// template class BaseInterface<3, 3, 8, LADealII>;
