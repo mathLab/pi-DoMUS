@@ -193,6 +193,20 @@ private:
                           const double alpha);
   void refine_mesh ();
 
+  void refine_and_transfer_solutions (LADealII::VectorType &y,
+                                      LADealII::VectorType &y_dot,
+                                      LADealII::VectorType &distributed_y,
+                                      LADealII::VectorType &distributed_y_dot,
+                                      bool adaptive_refinement);
+
+
+  void refine_and_transfer_solutions (LATrilinos::VectorType &y,
+                                      LATrilinos::VectorType &y_dot,
+                                      LATrilinos::VectorType &distributed_y,
+                                      LATrilinos::VectorType &distributed_y_dot,
+                                      bool adaptive_refinement);
+
+
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
   const MPI_Comm &comm;
