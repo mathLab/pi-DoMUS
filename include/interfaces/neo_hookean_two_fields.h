@@ -46,7 +46,7 @@ public:
                               bool compute_only_system_terms) const;
 
 
- void compute_system_operators(const DoFHandler<dim,spacedim> &,
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
@@ -114,7 +114,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::energies_and_residuals(cons
 
       EnergyType psi = (mu/2.)*(Ic-dim)-p*(J-1.);
       energies[0] += (psi)*JxW[q];
-      if(!compute_only_system_terms)
+      if (!compute_only_system_terms)
         energies[1] += (scalar_product(grad_u,grad_u) + 0.5*p*p)*JxW[q];
     }
 }
@@ -137,9 +137,9 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::set_matrix_couplings(std::v
 template <int dim, int spacedim, typename LAC>
 void
 NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
-                               const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
-                               LinearOperator<LATrilinos::VectorType> & system_op,
-                               LinearOperator<LATrilinos::VectorType> & prec_op) const
+    const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+    LinearOperator<LATrilinos::VectorType> &system_op,
+    LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
