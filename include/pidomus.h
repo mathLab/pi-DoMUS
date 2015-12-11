@@ -283,7 +283,7 @@ private:
    * Solver tolerance for the equation:
    * \f[ \mathcal{J}(F)[u] = R[u] \f]
    */
-  double solver_tolerance;
+  double jacobian_solver_tolerance;
 
   /**
    * Print all avaible information about processes.

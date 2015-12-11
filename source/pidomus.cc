@@ -89,18 +89,22 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Integer (0));
 
   add_parameter(  prm,
+                  &jacobian_solver_tolerance,
+                  "Jacobian solver tolerance",
+                  "1e-8",
+                  Patterns::Double (0.0));
+
+  add_parameter(  prm,
                   &timer_file_name,
                   "Timer output file",
                   "timer.txt",
                   Patterns::FileName());
-
 
   add_parameter(  prm,
                   &adaptive_refinement,
                   "Adaptive refinement",
                   "true",
                   Patterns::Bool());
-
 
   add_parameter(  prm,
                   &use_direct_solver,
@@ -869,8 +873,6 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
   computing_timer.enter_section ("   Solve system");
   set_constrained_dofs_to_zero(dst);
 
-  const double solver_tolerance = 1e-8;
-
   typedef dealii::BlockSparseMatrix<double> sMAT;
   typedef dealii::BlockVector<double> sVEC;
 
@@ -887,7 +889,8 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
     {
 
       PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (matrices[0]->m(), solver_tolerance);
+      SolverControl solver_control (matrices[0]->m(),
+                                    jacobian_solver_tolerance);
 
       SolverFGMRES<typename LAC::VectorType>
       solver(solver_control, mem,
