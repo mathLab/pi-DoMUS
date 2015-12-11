@@ -85,7 +85,7 @@ subsection IMEX Parameters
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 5
   set Newton relaxation parameter                  = 1.000000
-  set Relative error tolerance                     = 0.000000
+  set Relative error tolerance                     = 0.0
   set Step size                                    = 0.1
   set Update continuously Jacobian                 = true
   set Norm used for non linear iterations          = l2
