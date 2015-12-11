@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
 
   NeoHookeanTwoFieldsInterface<dim,spacedim,LADealII> energy;
   piDoMUS<dim,spacedim,LADealII> n_problem ("",energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/incompressible_neo_hookean_two_fields.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/incompressible_neo_hookean_two_fields_01.prm", "used_parameters.prm");
 
   n_problem.run ();
 
