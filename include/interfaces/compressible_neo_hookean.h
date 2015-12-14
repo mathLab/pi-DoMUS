@@ -1,7 +1,7 @@
 #ifndef _pidoums_compressible_neo_hookean_h_
 #define _pidoums_compressible_neo_hookean_h_
 
-#include "interface.h"
+#include "pde_system_interface.h"
 
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
@@ -11,7 +11,7 @@
 //typedef LATrilinos LAC;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
-class CompressibleNeoHookeanInterface : public Interface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC>
+class CompressibleNeoHookeanInterface : public PDESystemInterface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC>
 {
 
 public:
@@ -21,7 +21,7 @@ public:
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
 
-  // interface with the Interface :)
+  // interface with the PDESystemInterface :)
 
 
   template <typename EnergyType, typename ResidualType>
@@ -52,7 +52,7 @@ private:
 template <int dim, int spacedim, typename LAC>
 CompressibleNeoHookeanInterface<dim,spacedim, LAC>::
 CompressibleNeoHookeanInterface():
-  Interface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC >("Compressible NeoHookean Interface",
+  PDESystemInterface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC >("Compressible NeoHookean PDESystemInterface",
       dim,2,
       "FESystem[FE_Q(1)^d]",
       "u,u,u","1")
@@ -62,7 +62,7 @@ CompressibleNeoHookeanInterface():
 template <int dim, int spacedim, typename LAC>
 void CompressibleNeoHookeanInterface<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
 {
-  Interface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
+  PDESystemInterface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
   this->add_parameter(prm, &E, "Young's modulus", "10.0", Patterns::Double(0.0));
   this->add_parameter(prm, &nu, "Poisson's ratio", "0.3", Patterns::Double(0.0));
 }

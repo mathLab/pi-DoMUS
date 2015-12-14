@@ -16,7 +16,6 @@ int main (int argc, char *argv[])
   const int spacedim = 3;
 
   CompressibleNeoHookeanInterface<dim,spacedim,LADealII> cnh_body;
-  cnh_body.init();
   piDoMUS<dim,spacedim,LADealII> solver ("",cnh_body);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/compressible_neo_hookean_03.prm", "used_parameters.prm");
 

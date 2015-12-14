@@ -5,7 +5,7 @@
 #ifndef _neo_hookean_two_fields_interface_h_
 #define _neo_hookean_two_fields_interface_h_
 
-#include "interface.h"
+#include "pde_system_interface.h"
 #include <deal2lkit/parsed_function.h>
 
 
@@ -24,7 +24,7 @@
 
 
 template <int dim, int spacedim, typename LAC>
-class NeoHookeanTwoFieldsInterface : public Interface<dim,spacedim, NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC>
+class NeoHookeanTwoFieldsInterface : public PDESystemInterface<dim,spacedim, NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC>
 {
 public:
 
@@ -35,9 +35,7 @@ public:
 
   void set_matrix_couplings(std::vector<std::string> &couplings) const;
 
-  /* these functions MUST have the follwowing names
-   *  because they are called by the ConservativeInterface class
-   */
+
   template <typename EnergyType, typename ResidualType>
   void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                               FEValuesCache<dim,spacedim> &scratch,
@@ -62,15 +60,12 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::NeoHookeanTwoFieldsInterface() :
-  Interface<dim,spacedim,NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC >("NeoHookean Interface",
+  PDESystemInterface<dim,spacedim,NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC >("NeoHookean PDESystemInterface",
       dim+1,2,
       "FESystem[FE_Q(2)^d-FE_Q(1)]",
       "u,u,u,p",
       "1,0")
-{
-  this->init();
-}
-
+{}
 
 
 template <int dim, int spacedim,typename LAC>
@@ -120,7 +115,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::energies_and_residuals(cons
 template <int dim, int spacedim, typename LAC>
 void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
 {
-  Interface<dim,spacedim, NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
+  PDESystemInterface<dim,spacedim, NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
   this->add_parameter(prm, &mu, "Shear modulus", "10.0", Patterns::Double(0.0));
 }
 
