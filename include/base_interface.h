@@ -287,11 +287,12 @@ protected:
 template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
+  Number alpha = this->alpha;
   fe_cache.reinit(cell);
   fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
@@ -303,12 +304,13 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
 template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         const unsigned int face_no,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
+  Number alpha = this->alpha;
   fe_cache.reinit(cell, face_no);
   fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
