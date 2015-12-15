@@ -54,7 +54,7 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 7=c
-  set IDs and expressions     = 7=0;0;0;0;11.470*t
+  set IDs and expressions     = 7=0;0;0;0;114.701*t
   set Known component names   = u,u,u,p,c
   set Used constants          = 
 end
