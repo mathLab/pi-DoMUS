@@ -15,16 +15,20 @@ public:
 
   // interface with the PDESystemInterface :)
   template <typename EnergyType, typename ResidualType>
-  void set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-                                  FEValuesCache<dim,spacedim> &scratch,
-                                  std::vector<EnergyType> &energies,
-                                  std::vector<std::vector<ResidualType> > &local_residuals,
-                                  bool compute_only_system_matrix) const;
+  void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                              FEValuesCache<dim,spacedim> &scratch,
+                              std::vector<EnergyType> &energies,
+                              std::vector<std::vector<ResidualType> > &local_residuals,
+                              bool compute_only_system_terms) const;
 
+
+  // this function is needed only for the iterative solver
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<typename LAC::BlockMatrix> >,
-                                LinearOperator<typename LAC::VectorType> &,
-                                LinearOperator<typename LAC::VectorType> &) const;
+                                const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+                                LinearOperator<LATrilinos::VectorType> &,
+                                LinearOperator<LATrilinos::VectorType> &) const;
+
+
 
   ////////////// optimization part
 
@@ -62,12 +66,45 @@ public:
 
   // const Mapping<dim,spacedim> & get_mapping () const;
 
+private:
+// additional variables such as preconditioners
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
+
 };
 
+///////// constructor
+
+template <int dim, int spacedim, typename LAC>
+ProblemTemplate<dim,spacedim,LAC>::ProblemTemplate():
+  PDESystemInterface<dim,spacedim,ProblemTemplate<dim,spacedim,LAC>,LAC>
+  (\* section name in parameter file *\ "ProblemTemplate Parameters",
+   \* n componenets *\ dim,
+   \* n matrices *\ 2,
+   \* finite element type *\ "FESystem[FE_Q(1)^d]",
+   \* component names *\ "u,u,u",
+   \* differential (1) and algebraic components (0) needed by IDA *\ "1")
+{}
+
+//////// additional parameters
+template <int dim, int spacedim, typename LAC>
+void ProblemTemplate<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
+{
+  PDESystemInterface<dim,spacedim, ProblemTemplate<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
+
+  this->add_parameter(....);
+}
+
+template <int dim, int spacedim, typename LAC>
+void CompressibleNeoHookeanInterface<dim,spacedim,LAC>::parse_parameters_call_back ()
+{
+  // some operations with the just parsed parameters
+  ... ;
+}
 
 
+///// definition of energies and residuals
 
-template <int dim, int spacedim>
+template <int dim, int spacedim, typename LAC>
 template <typename EnergyType, typename ResidualType>
 void
 ProblemTemplate<dim,spacedim>::
@@ -135,6 +172,39 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 
 }
 
+
+
+template <int dim, int spacedim, typename LAC>
+void
+ProblemTemplate<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &,
+                                                            const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+                                                            LinearOperator<LATrilinos::VectorType> &system_op,
+                                                            LinearOperator<LATrilinos::VectorType> &prec_op) const
+{
+
+  preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
+  preconditioner->initialize(matrices[1]->block(0,0));
+  auto P = linear_operator<LATrilinos::VectorType::BlockType>(matrices[1]->block(0,0));
+
+  auto A  = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0) );
+
+  static ReductionControl solver_control_pre(5000, 1e-4);
+  static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
+  auto P_inv     = inverse_operator( P, solver_CG, *preconditioner);
+
+  auto P00 = P_inv;
+
+  // ASSEMBLE THE PROBLEM:
+  system_op  = block_operator<1, 1, LATrilinos::VectorType>({{
+      {{ A }}
+    }
+  });
+
+  prec_op = block_operator<1, 1, LATrilinos::VectorType>({{
+      {{ P00}} ,
+    }
+  });
+}
 
 
 
