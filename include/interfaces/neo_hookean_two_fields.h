@@ -60,7 +60,7 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::NeoHookeanTwoFieldsInterface() :
-  PDESystemInterface<dim,spacedim,NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC >("NeoHookean PDESystemInterface",
+  PDESystemInterface<dim,spacedim,NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>, LAC >("NeoHookean Parameters",
       dim+1,2,
       "FESystem[FE_Q(2)^d-FE_Q(1)]",
       "u,u,u,p",

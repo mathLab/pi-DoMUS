@@ -52,7 +52,7 @@ private:
 template <int dim, int spacedim, typename LAC>
 CompressibleNeoHookeanInterface<dim,spacedim, LAC>::
 CompressibleNeoHookeanInterface():
-  PDESystemInterface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC >("Compressible NeoHookean PDESystemInterface",
+  PDESystemInterface<dim,spacedim,CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC >("Compressible NeoHookean Parameters",
       dim,2,
       "FESystem[FE_Q(1)^d]",
       "u,u,u","1")
@@ -156,12 +156,6 @@ CompressibleNeoHookeanInterface<dim,spacedim,LAC>::compute_system_operators(cons
     }
   });
 }
-
-
-template class CompressibleNeoHookeanInterface <3,3, LADealII>;
-template class CompressibleNeoHookeanInterface <3,3, LATrilinos>;
-
-
 
 
 #endif
