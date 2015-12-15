@@ -3,7 +3,7 @@
 # D2K_GIT_SHORTREV=     d34309a
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= eeae199
-subsection Compressible NeoHookean Interface
+subsection Compressible NeoHookean Parameters
   set Block of differential components = 1
   set Blocking of the finite element   = u,u,u
   set Finite element space             = FESystem[FE_Q(1)^d]

@@ -1,7 +1,7 @@
 #ifndef _pidoums_compressible_neo_hookean_h_
 #define _pidoums_compressible_neo_hookean_h_
 
-#include "interface.h"
+#include "pde_system_interface.h"
 
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
@@ -12,7 +12,7 @@
 //typedef LATrilinos LAC;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
-class ScalarReactionDiffusionConvection : public Interface<dim,spacedim, ScalarReactionDiffusionConvection<dim,spacedim,LAC>, LAC>
+class ScalarReactionDiffusionConvection : public PDESystemInterface<dim,spacedim, ScalarReactionDiffusionConvection<dim,spacedim,LAC>, LAC>
 {
 
 public:
@@ -21,7 +21,7 @@ public:
 
   void declare_parameters (ParameterHandler &prm);
 
-  // interface with the Interface :)
+  // interface with the PDESystemInterface :)
 
 
   template <typename EnergyType, typename ResidualType>
@@ -49,20 +49,18 @@ private:
 template <int dim, int spacedim, typename LAC>
 ScalarReactionDiffusionConvection<dim,spacedim, LAC>::
 ScalarReactionDiffusionConvection():
-  Interface<dim,spacedim,ScalarReactionDiffusionConvection<dim,spacedim,LAC>, LAC >("Scalar Reaction Diffusion Convection",
+  PDESystemInterface<dim,spacedim,ScalarReactionDiffusionConvection<dim,spacedim,LAC>, LAC >("Scalar Reaction Diffusion Convection",
       1,1,
       "FE_Q(2)",
       "u", "1"),
   convection("Convection parameter", dim, "cos(pi*x)*sin(pi*y); -sin(pi*x)*cos(pi*y)")
-{
-  this->init();
-}
+{}
 
 
 template <int dim, int spacedim, typename LAC>
 void ScalarReactionDiffusionConvection<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
 {
-  Interface<dim,spacedim, ScalarReactionDiffusionConvection<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
+  PDESystemInterface<dim,spacedim, ScalarReactionDiffusionConvection<dim,spacedim,LAC>,LAC >::declare_parameters(prm);
   this->add_parameter(prm, &nu, "Diffusion coefficient", "1.0", Patterns::Double(0.0));
 }
 

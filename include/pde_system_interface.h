@@ -1,11 +1,11 @@
 /*
- *  Interface
+ *  PDESystemInterface
  *
  *
  */
 
-#ifndef _pidomus_interface_h
-#define _pidomus_interface_h
+#ifndef _pidomus_pde_system_interface_h
+#define _pidomus_pde_system_interface_h
 
 #include "base_interface.h"
 
@@ -13,23 +13,26 @@ using namespace deal2lkit;
 using namespace pidomus;
 
 template<int dim, int spacedim, class Implementation,  typename LAC=LATrilinos>
-class Interface : public BaseInterface<dim,spacedim,LAC>
+class PDESystemInterface : public BaseInterface<dim,spacedim,LAC>
 {
 
 
 public:
 
-  virtual ~Interface() {};
+  virtual ~PDESystemInterface() {};
 
-  Interface(const std::string &name="",
-            const unsigned int &n_components=0,
-            const unsigned int &n_matrices=0,
-            const std::string &default_fe="FE_Q(1)",
-            const std::string &default_component_names="u",
-            const std::string &default_differential_components="") :
+  PDESystemInterface(const std::string &name="",
+                     const unsigned int &n_components=0,
+                     const unsigned int &n_matrices=0,
+                     const std::string &default_fe="FE_Q(1)",
+                     const std::string &default_component_names="u",
+                     const std::string &default_differential_components="") :
     BaseInterface<dim,spacedim,LAC>(name, n_components,n_matrices,
                                     default_fe, default_component_names,
-                                    default_differential_components) {};
+                                    default_differential_components)
+  {
+    static_cast<Implementation *>(this)->init();
+  }
 
   virtual void declare_parameters(ParameterHandler &prm)
   {

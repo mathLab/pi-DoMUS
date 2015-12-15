@@ -1,7 +1,7 @@
 #ifndef _pidoums_poisson_h_
 #define _pidoums_poisson_h_
 
-#include "interface.h"
+#include "pde_system_interface.h"
 
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
@@ -11,14 +11,14 @@
 //typedef LATrilinos LAC;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
-class PoissonProblem : public Interface<dim,spacedim, PoissonProblem<dim,spacedim,LAC>, LAC>
+class PoissonProblem : public PDESystemInterface<dim,spacedim, PoissonProblem<dim,spacedim,LAC>, LAC>
 {
 
 public:
   ~PoissonProblem () {};
   PoissonProblem ();
 
-  // interface with the Interface :)
+  // interface with the PDESystemInterface :)
 
 
   template <typename EnergyType, typename ResidualType>
@@ -43,13 +43,11 @@ private:
 template <int dim, int spacedim, typename LAC>
 PoissonProblem<dim,spacedim, LAC>::
 PoissonProblem():
-  Interface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>, LAC >("Poisson problem",
+  PDESystemInterface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>, LAC >("Poisson problem",
       1,1,
       "FESystem[FE_Q(1)]",
       "u","1")
-{
-  this->init();
-}
+{}
 
 
 

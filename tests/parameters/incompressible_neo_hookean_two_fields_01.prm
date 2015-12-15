@@ -92,7 +92,7 @@ subsection Initial solution_dot
   set Function expression = 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
-subsection NeoHookean Interface
+subsection NeoHookean Parameters
   set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_DGP(1)]
