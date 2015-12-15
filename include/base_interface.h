@@ -1,27 +1,3 @@
-/**
- * Base Interface
- *
- * Goal: provide a derivable interface to solve a particular
- *       PDE problem (time depending, first-order, non linear).
- *
- * Usage: This class requires some arguments related to the setting
- *        of the problem: finite elements, boundary conditions,
- *        and initial conditions.
- *        Moreover, it helps to write the system matrix and
- *        the preconditioner matrix.
- * Variables:
- *  - General:
- *    - Finite Elements
- *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
- *    - Initial conditions ( y(0) and d/dt y (0) )
- *  - Couplings:
- *    - coupling variable is a matrix of zeroes and ones: if the row
- *      and the coloumn are indipendent there will be 0, otherwise 1
- *  - @p default_differential_components : this variable is a list of ones and
- *    zeroes. 1 in the case the corresponding variable should be differentiable
- *    and 0 otherwise.
- */
-
 #ifndef _pidomus_base_interface_h_
 #define _pidomus_base_interface_h_
 
@@ -42,7 +18,54 @@
 #include "lac/lac_type.h"
 
 using namespace pidomus;
-
+/**
+ * Base Interface
+ *
+ * *Goal*: provide a derivable interface to solve a particular PDE
+ * System (time dependent, first-order, non linear).
+ *
+ * *Interface*: This class provides some default implementations of the
+ * standard requirements for Systems of PDEs (finite element
+ * definition, boundary and initial conditions, etc.) and provides an
+ * unified interface to fill the local (cell-wise) contributions of
+ * all matrices and residuals required for the definition of the problem.
+ *
+ * The underlying pi-DoMUS driver uses TBB and MPI to assemble
+ * matrices and vectors, and calls the virtual methods
+ * assemble_local_matrices() and assemble_local_residuals() of this
+ * class. If the user wishes to maximise efficiency, then these
+ * methods can be directly overloaded.
+ *
+ * Their default implementation exploit the Sacado package of the
+ * Trilinos library to automatically compute the local matrices taking
+ * the derivative of residuals and the hessian of the energies
+ * supplied by the assemble_energies_and_residuals() method. This
+ * method is overloaded for different types, and since these types
+ * cannot be inherited by derived classes using template arguments,
+ * the Curiously recurring template pattern strategy (CRTP) or F-bound
+ * polymorphism
+ * (https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+ * is used to allow the implementation in user derived classes of a
+ * single templated function energies_and_residuals() that is
+ * statically linked and called insied the method
+ * PDESystemInterface::assemble_energies_and_residuals().
+ *
+ * The user can directly overload the methods of this class (which
+ * cannot be templated), or derive their classes from PDESystemInterface
+ * instead, using CRTP, as in the following example:
+ *
+ * \code
+ * template<int dim, int spacedim, typename LAC>
+ * MyInterface : public PDESystemInterface<dim,spacedim, MyInterface<dim,spacedim,LAC>, LAC> {
+ * public:
+ *  template<typename Number>
+ *  void energies_and_residual(...);
+ * }
+ * \endcode
+ *
+ * The class PDESystemInterface is derived from BaseInterface, and implements
+ * CRTP.
+ */
 template <int dim,int spacedim=dim, typename LAC=LATrilinos>
 class BaseInterface : public ParameterAcceptor
 {
@@ -98,7 +121,9 @@ public:
 
 
   /**
-   * Assemble energies and residuals
+   * Assemble energies and residuals. To be used when computing only residual
+   * quantities, i.e., the energy here is a Sacado double, while the residual
+   * is a pure double.
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -107,7 +132,9 @@ public:
                                                bool compute_only_system_terms) const;
 
   /**
-   * Assemble energies and residuals
+   * Assemble energies and residuals. To be used when computing energetical
+   * quantities, i.e., the energy here is a SacadoSacado double, while the residual
+   * is a Sacado double.
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -124,6 +151,7 @@ public:
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
+
   /**
    * Assemble the local system residual associated to the given cell.
    * This function is called to evaluate the local system residual at each
@@ -137,13 +165,17 @@ public:
    * Compute linear operators needed by the problem
    *
    * This function is used to assemble linear operators related
-   * to the problem.
+   * to the problem. It is only needed if we use iterative solvers.
    */
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
                                         LinearOperator<typename LATrilinos::VectorType> &,
                                         LinearOperator<typename LATrilinos::VectorType> &) const;
 
+  /**
+   * Compute linear operators needed by the problem. When using deal.II vector and matrix types, this
+   * function is empty, since a direct solver is used by default.
+   */
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
                                 LinearOperator<typename LADealII::VectorType> &,
@@ -255,11 +287,12 @@ protected:
 template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
+  Number alpha = this->alpha;
   fe_cache.reinit(cell);
   fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
@@ -271,12 +304,13 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
 template <int dim, int spacedim, typename LAC>
 template<typename Number>
 void
-BaseInterface<dim,spacedim,LAC>::reinit(const Number &alpha,
+BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         const unsigned int face_no,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
+  Number alpha = this->alpha;
   fe_cache.reinit(cell, face_no);
   fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
   fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);

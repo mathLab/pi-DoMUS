@@ -368,4 +368,3 @@ template class BaseInterface<3, 3, LATrilinos>;
 template class BaseInterface<2, 2, LADealII>;
 template class BaseInterface<2, 3, LADealII>;
 template class BaseInterface<3, 3, LADealII>;
-

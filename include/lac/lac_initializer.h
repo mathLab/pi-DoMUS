@@ -127,7 +127,4 @@ inline void compress(dealii::BlockSparseMatrix<double> &,
                      VectorOperation::values )
 {
 }
-
-
-
 #endif
