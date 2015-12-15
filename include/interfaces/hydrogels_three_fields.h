@@ -49,10 +49,10 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  /* void compute_system_operators(const DoFHandler<dim,spacedim> &, */
-  /*                               const std::vector<shared_ptr<LATrilinos::BlockMatrix> >, */
-  /*                               LinearOperator<LATrilinos::VectorType> &, */
-  /*                               LinearOperator<LATrilinos::VectorType> &) const; */
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
+                                const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+                                LinearOperator<LATrilinos::VectorType> &,
+                                LinearOperator<LATrilinos::VectorType> &) const;
 
 
 
@@ -72,9 +72,9 @@ private:
   const double R=8.314;
 
 
-//  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> U_prec;
-//  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
-//  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> U_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
 
 };
 
@@ -174,86 +174,103 @@ template <int dim, int spacedim, typename LAC>
 
   mu0 = R*T*(std::log((l03-1.)/l03) + l0_3 + chi*l0_6) + G*Omega/l0;
 }
+
+
+template <int dim, int spacedim, typename LAC>
+  void
+  HydroGelThreeFields<dim,spacedim,LAC>::
+  compute_system_operators(const DoFHandler<dim,spacedim> &,
+			   const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+			   LinearOperator<LATrilinos::VectorType> & system_op,
+			   LinearOperator<LATrilinos::VectorType> & prec_op) const
+{
+
+  /* std::vector<std::vector<bool> > constant_modes; */
+  /* FEValuesExtractors::Vector velocity_components(0); */
+  /* DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components), */
+  /*                                   constant_modes); */
+
+  p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  U_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+
+//  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+//  Amg_data.constant_modes = constant_modes;
+//  Amg_data.elliptic = true;
+//  Amg_data.higher_order_elements = true;
+//  Amg_data.smoother_sweeps = 2;
+//  Amg_data.aggregation_threshold = 0.02;
 //
-//template <int dim, int spacedim>
-//void
-//HydroGelThreeFields<dim,spacedim>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
-//    const TrilinosWrappers::BlockSparseMatrix &matrix,
-//    const TrilinosWrappers::BlockSparseMatrix &preconditioner_matrix,
-//    LinearOperator<VEC> &system_op,
-//    LinearOperator<VEC> &prec_op) const
-//{
-//
-//  std::vector<std::vector<bool> > constant_modes;
-//  FEValuesExtractors::Vector velocity_components(0);
-//  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
-//                                    constant_modes);
-//
-//  p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-//  c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-//  U_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-//
-////  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-////  Amg_data.constant_modes = constant_modes;
-////  Amg_data.elliptic = true;
-////  Amg_data.higher_order_elements = true;
-////  Amg_data.smoother_sweeps = 2;
-////  Amg_data.aggregation_threshold = 0.02;
-////
-//
-//  U_prec->initialize (preconditioner_matrix.block(0,0));
-//  p_prec->initialize (preconditioner_matrix.block(1,1));
-//  c_prec->initialize (preconditioner_matrix.block(2,2));
-//
-//
-//  // SYSTEM MATRIX:
-//  auto A   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,0) );
-//  auto Bt  =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,1) );
-//  auto Z02 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(0,2) );
-//
-//  auto B   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,0) );
-//  auto Z11 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,1) );
-//  auto C   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(1,2) );
-//
-//  auto Z20 = 0*linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,0) );
-//  auto D   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,1) );
-//  auto E   =   linear_operator< TrilinosWrappers::MPI::Vector >( matrix.block(2,2) );
-//
-//  auto P0  =  linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(0,0));
-//  auto P1  =  linear_operator< TrilinosWrappers::MPI::Vector >(preconditioner_matrix.block(1,1));
-//  auto P2  =  linear_operator< TrilinosWrappers::MPI::Vector >(matrix.block(2,2));
-//
-//
-//  static ReductionControl solver_control_pre(5000, 1e-7);
-//  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-//
-//  auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
-//  auto P1_inv = inverse_operator( P1, solver_CG, *p_prec);
-//  auto P2_inv = inverse_operator( P2, solver_CG, *c_prec);
-//
-//
-////  auto P0_inv = linear_operator( matrix.block(0,0), *U_prec);
-////  auto P1_inv = linear_operator( matrix.block(1,1), *p_prec);
-////  auto P2_inv = linear_operator( matrix.block(2,2), *c_prec);
-//
-//
-//  // ASSEMBLE THE PROBLEM:
-//  const std::array<std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 3 >, 3 > matrix_array = {{
-//      {{ A,   Bt   , Z02 }},
-//      {{ B,   Z11  , C   }},
-//      {{ Z20, D    , E   }}
-//    }
-//  };
-//
-//  system_op  = block_operator<3, 3, VEC >(matrix_array);
-//
-//  const std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 3 > diagonal_array = {{ P0_inv, P1_inv, P2_inv }};
-//
-//  // system_op = linear_operator<VEC, VEC>(matrix);
-//
-//  prec_op = block_back_substitution<3, VEC>(matrix_array, diagonal_array);
-//
-//}
+
+  U_prec->initialize (matrices[1]->block(0,0));
+  p_prec->initialize (matrices[1]->block(1,1));
+  c_prec->initialize (matrices[1]->block(2,2));
+
+
+  // SYSTEM MATRIX:
+  auto A   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0) );
+  auto Bt  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,1) );
+  auto Z02 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,2) );
+
+  auto B   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,0) );
+  auto Z11 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1) );
+  auto C   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,2) );
+
+  auto Z20 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,0) );
+  auto D   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,1) );
+  auto E   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2) );
+
+  auto P0  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0));
+  auto P1  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(1,1));
+  auto P2  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2));
+
+
+  static ReductionControl solver_control_pre(5000, 1e-4);
+  static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
+
+  auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
+  auto P1_inv = inverse_operator( P1, solver_CG, *p_prec);
+  auto P2_inv = inverse_operator( P2, solver_CG, *c_prec);
+
+  auto P0_i = P0_inv;
+  auto P1_i = P1_inv;
+  auto P2_i = P2_inv;
+
+
+//  auto P0_inv = linear_operator( matrix.block(0,0), *U_prec);
+//  auto P1_inv = linear_operator( matrix.block(1,1), *p_prec);
+//  auto P2_inv = linear_operator( matrix.block(2,2), *c_prec);
+
+
+  const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
+      {{ A,   Bt   , Z02 }},
+      {{ B,   Z11  , C   }},
+      {{ Z20, D    , E   }}
+    }
+  };
+
+  auto sys_op = block_operator<3, 3, LATrilinos::VectorType>(matrix_array);
+  
+  system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
+
+    /* {{ */
+    /*   {{ A,   Bt   , Z02 }}, */
+    /*   {{ B,   Z11  , C   }}, */
+    /*   {{ Z20, D    , E   }} */
+    /*   }}); */
+
+  const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
+
+  // system_op = linear_operator<VEC, VEC>(matrix);
+
+  auto diag_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+  
+  //  prec_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(matrix_array, diagonal_array);
+  
+  auto p_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(sys_op, diag_op);
+
+  prec_op = p_op;
+}
 
 
 
