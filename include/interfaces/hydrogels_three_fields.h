@@ -28,7 +28,7 @@
 
 
 template <int dim, int spacedim, typename LAC>
-  class HydroGelThreeFields : public PDESystemInterface<dim,spacedim, HydroGelThreeFields<dim,spacedim,LAC>, LAC>
+class HydroGelThreeFields : public PDESystemInterface<dim,spacedim, HydroGelThreeFields<dim,spacedim,LAC>, LAC>
 {
 public:
 
@@ -72,38 +72,38 @@ private:
   const double R=8.314;
 
 
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> U_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
 
 };
 
 template <int dim, int spacedim, typename LAC>
-  HydroGelThreeFields<dim,spacedim,LAC>::HydroGelThreeFields() :
+HydroGelThreeFields<dim,spacedim,LAC>::HydroGelThreeFields() :
   PDESystemInterface<dim,spacedim,HydroGelThreeFields<dim,spacedim,LAC>, LAC>("Free Swelling Three Fields",
-										 dim+2,2,
-										 "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]",
-										 "u,u,u,p,c","1,0,0")
+      dim+2,2,
+      "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]",
+      "u,u,u,p,c","1,0,0")
 {}
 
 template <int dim, int spacedim, typename LAC>
- void
-  HydroGelThreeFields<dim,spacedim,LAC>::
-  set_matrix_couplings(std::vector<std::string> &couplings) const
+void
+HydroGelThreeFields<dim,spacedim,LAC>::
+set_matrix_couplings(std::vector<std::string> &couplings) const
 {
   couplings[0] = "1,1,0;1,0,1;0,1,1";
   couplings[1] = "1,0,0;0,1,0;0,0,1";
 }
 
 template <int dim, int spacedim, typename LAC>
-  template <typename EnergyType, typename ResidualType>
-  void
-  HydroGelThreeFields<dim,spacedim,LAC>::
-  energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
-			 FEValuesCache<dim,spacedim> &fe_cache,
-			 std::vector<EnergyType> &energies,
-			 std::vector<std::vector<ResidualType> > &,
-			 bool compute_only_system_terms) const
+template <typename EnergyType, typename ResidualType>
+void
+HydroGelThreeFields<dim,spacedim,LAC>::
+energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                       FEValuesCache<dim,spacedim> &fe_cache,
+                       std::vector<EnergyType> &energies,
+                       std::vector<std::vector<ResidualType> > &,
+                       bool compute_only_system_terms) const
 {
   EnergyType alpha = this->alpha;
   this->reinit(alpha, cell, fe_cache);
@@ -116,13 +116,13 @@ template <int dim, int spacedim, typename LAC>
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
-  
+
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
   const unsigned int n_q_points = us.size();
 
   auto &JxW = fe_cache.get_JxW_values();
-  
+
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       const Tensor<1, dim, EnergyType>  &u = us[q];
@@ -137,23 +137,23 @@ template <int dim, int spacedim, typename LAC>
 
       EnergyType psi = ( 0.5*G*l0_3*(l02*I - dim)
 
-                     + (l0_3*R*T/Omega)*((Omega*l03*c)*std::log((Omega*l03*c)/(1.+Omega*l03*c))
-                                         + chi*((Omega*l03*c)/(1.+Omega*l03*c)) )
+                         + (l0_3*R*T/Omega)*((Omega*l03*c)*std::log((Omega*l03*c)/(1.+Omega*l03*c))
+                                             + chi*((Omega*l03*c)/(1.+Omega*l03*c)) )
 
-                     - (mu0)*c - p*(J-l0_3-Omega*c)) ;
+                         - (mu0)*c - p*(J-l0_3-Omega*c)) ;
 
       energies[0] += psi*JxW[q];
 
       if (!compute_only_system_terms)
-	energies[1] += 0.5*(u*u
-			    +p*p
-			    +c*c)*JxW[q];
+        energies[1] += 0.5*(u*u
+                            +p*p
+                            +c*c)*JxW[q];
     }
 
 }
 
 template <int dim, int spacedim, typename LAC>
-  void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
+void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
 {
   PDESystemInterface<dim,spacedim, HydroGelThreeFields<dim,spacedim,LAC>, LAC>::declare_parameters(prm);
   this->add_parameter(prm, &T, "T", "298.0", Patterns::Double(0.0));
@@ -165,7 +165,7 @@ template <int dim, int spacedim, typename LAC>
 }
 
 template <int dim, int spacedim, typename LAC>
-  void HydroGelThreeFields<dim,spacedim,LAC>::parse_parameters_call_back ()
+void HydroGelThreeFields<dim,spacedim,LAC>::parse_parameters_call_back ()
 {
   l02 = l0*l0;
   l03 = l02*l0;
@@ -177,32 +177,32 @@ template <int dim, int spacedim, typename LAC>
 
 
 template <int dim, int spacedim, typename LAC>
-  void
-  HydroGelThreeFields<dim,spacedim,LAC>::
-  compute_system_operators(const DoFHandler<dim,spacedim> &,
-			   const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
-			   LinearOperator<LATrilinos::VectorType> & system_op,
-			   LinearOperator<LATrilinos::VectorType> & prec_op) const
+void
+HydroGelThreeFields<dim,spacedim,LAC>::
+compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+                         const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+                         LinearOperator<LATrilinos::VectorType> &system_op,
+                         LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
-  /* std::vector<std::vector<bool> > constant_modes; */
-  /* FEValuesExtractors::Vector velocity_components(0); */
-  /* DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components), */
-  /*                                   constant_modes); */
+  std::vector<std::vector<bool> > constant_modes;
+  FEValuesExtractors::Vector displacement(0);
+  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
+                                    constant_modes);
 
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-  U_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  U_prec.reset (new TrilinosWrappers::PreconditionAMG());
 
-//  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-//  Amg_data.constant_modes = constant_modes;
-//  Amg_data.elliptic = true;
-//  Amg_data.higher_order_elements = true;
-//  Amg_data.smoother_sweeps = 2;
-//  Amg_data.aggregation_threshold = 0.02;
-//
+  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
+  Amg_data.constant_modes = constant_modes;
+  Amg_data.elliptic = true;
+  Amg_data.higher_order_elements = true;
+  Amg_data.smoother_sweeps = 2;
+  Amg_data.aggregation_threshold = 0.02;
 
-  U_prec->initialize (matrices[1]->block(0,0));
+
+  U_prec->initialize (matrices[0]->block(0,0), Amg_data);
   p_prec->initialize (matrices[1]->block(1,1));
   c_prec->initialize (matrices[1]->block(2,2));
 
@@ -250,26 +250,26 @@ template <int dim, int spacedim, typename LAC>
   };
 
   auto sys_op = block_operator<3, 3, LATrilinos::VectorType>(matrix_array);
-  
+
   system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
 
-    /* {{ */
-    /*   {{ A,   Bt   , Z02 }}, */
-    /*   {{ B,   Z11  , C   }}, */
-    /*   {{ Z20, D    , E   }} */
-    /*   }}); */
+  /* {{ */
+  /*   {{ A,   Bt   , Z02 }}, */
+  /*   {{ B,   Z11  , C   }}, */
+  /*   {{ Z20, D    , E   }} */
+  /*   }}); */
 
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
 
   // system_op = linear_operator<VEC, VEC>(matrix);
 
   auto diag_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
-  
+
   //  prec_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(matrix_array, diagonal_array);
-  
+
   auto p_op = block_forward_substitution<>(
-					   BlockLinearOperator<LATrilinos::VectorType>(matrix_array),
-					   BlockLinearOperator<LATrilinos::VectorType>(diagonal_array));
+                BlockLinearOperator<LATrilinos::VectorType>(matrix_array),
+                BlockLinearOperator<LATrilinos::VectorType>(diagonal_array));
 
   prec_op = p_op;
 }
