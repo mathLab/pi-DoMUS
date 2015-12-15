@@ -1,27 +1,3 @@
-/**
- * Base Interface
- *
- * Goal: provide a derivable interface to solve a particular
- *       PDE problem (time depending, first-order, non linear).
- *
- * Usage: This class requires some arguments related to the setting
- *        of the problem: finite elements, boundary conditions,
- *        and initial conditions.
- *        Moreover, it helps to write the system matrix and
- *        the preconditioner matrix.
- * Variables:
- *  - General:
- *    - Finite Elements
- *    - Boundary conditions ( Dirichlet, Neumann, and Robin )
- *    - Initial conditions ( y(0) and d/dt y (0) )
- *  - Couplings:
- *    - coupling variable is a matrix of zeroes and ones: if the row
- *      and the coloumn are indipendent there will be 0, otherwise 1
- *  - @p default_differential_components : this variable is a list of ones and
- *    zeroes. 1 in the case the corresponding variable should be differentiable
- *    and 0 otherwise.
- */
-
 #ifndef _pidomus_base_interface_h_
 #define _pidomus_base_interface_h_
 
@@ -42,7 +18,54 @@
 #include "lac/lac_type.h"
 
 using namespace pidomus;
-
+/**
+ * Base Interface
+ *
+ * *Goal*: provide a derivable interface to solve a particular PDE
+ * System (time dependent, first-order, non linear).
+ *
+ * *Interface*: This class provides some default implementations of the
+ * standard requirements for Systems of PDEs (finite element
+ * definition, boundary and initial conditions, etc.) and provides an
+ * unified interface to fill the local (cell-wise) contributions of
+ * all matrices and residuals required for the definition of the problem.
+ *
+ * The underlying pi-DoMUS driver uses TBB and MPI to assemble
+ * matrices and vectors, and calls the virtual methods
+ * assemble_local_matrices() and assemble_local_residuals() of this
+ * class. If the user wishes to maximise efficiency, then these
+ * methods can be directly overloaded.
+ *
+ * Their default implementation exploit the Sacado package of the
+ * Trilinos library to automatically compute the local matrices taking
+ * the derivative of residuals and the hessian of the energies
+ * supplied by the assemble_energies_and_residuals() method. This
+ * method is overloaded for different types, and since these types
+ * cannot be inherited by derived classes using template arguments,
+ * the Curiously recurring template pattern strategy (CRTP) or F-bound
+ * polymorphism
+ * (https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+ * is used to allow the implementation in user derived classes of a
+ * single templated function energies_and_residuals() that is
+ * statically linked and called insied the method
+ * Interface::assemble_energies_and_residuals().
+ *
+ * The user can directly overload the methods of this class (which
+ * cannot be templated), or derive their classes from Interface
+ * instead, using CRTP, as in the following example:
+ *
+ * \code
+ * template<int dim, int spacedim, typename LAC>
+ * MyInterface : public Interface<dim,spacedim, MyInterface<dim,spacedim,LAC>, LAC> {
+ * public:
+ *  template<typename Number>
+ *  void energies_and_residual(...);
+ * }
+ * \endcode
+ *
+ * The class Interface is derived from BaseInterface, and implements
+ * CRTP.
+ */
 template <int dim,int spacedim=dim, typename LAC=LATrilinos>
 class BaseInterface : public ParameterAcceptor
 {

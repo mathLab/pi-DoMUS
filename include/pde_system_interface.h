@@ -13,13 +13,16 @@ using namespace deal2lkit;
 using namespace pidomus;
 
 /**
- * This is the class that users should derive from. This class implements the
- * Curiously Recursive Template algorithm to allow users to define non virtual
- * templated functions to fill local energy densities and residuals.
+ * This is the class that users should derive from. This class
+ * implements the Curiously Recursive Template algorithm (CRTP) or
+ * F-bound polymorphism
+ * (https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+ * to allow users to define non virtual templated functions to fill
+ * local energy densities and residuals.
  *
  * User derived classes need only to implement the function
- * Interface::energies_and_residuals, which can be a templated function on the
- * type of the energy and of the residual.
+ * Interface::energies_and_residuals(), which can be a templated
+ * function on the type of the energy and of the residual.
  *
  * This allows one to compute Jacobian matrices, residual vectors and scalar
  * energies all in the same place, by simply switching the type from double (to
