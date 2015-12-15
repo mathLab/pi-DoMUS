@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
 
   HydroGelThreeFields<dim,spacedim,LATrilinos> gel;
   piDoMUS<dim,spacedim,LATrilinos> solver ("piDoMUS",gel);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/hydrogels_three_fields_01.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/hydrogels_three_fields_03.prm", "used_parameters.prm");
 
 
   solver.run ();

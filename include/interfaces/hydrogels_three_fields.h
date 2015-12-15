@@ -92,7 +92,7 @@ HydroGelThreeFields<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
   couplings[0] = "1,1,0;1,0,1;0,1,1";
-  couplings[1] = "1,0,0;0,1,0;0,0,1";
+  couplings[1] = "0,0,0;0,1,0;0,0,0";
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -112,20 +112,18 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Scalar pressure(dim);
   const FEValuesExtractors::Scalar concentration(dim+1);
 
-  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
 
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
-  const unsigned int n_q_points = us.size();
+  const unsigned int n_q_points = ps.size();
 
   auto &JxW = fe_cache.get_JxW_values();
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      const Tensor<1, dim, EnergyType>  &u = us[q];
       const Tensor<2, dim, EnergyType>  &F = Fs[q];
       const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
       const EnergyType &c = cs[q];
@@ -145,9 +143,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       energies[0] += psi*JxW[q];
 
       if (!compute_only_system_terms)
-        energies[1] += 0.5*(u*u
-                            +p*p
-                            +c*c)*JxW[q];
+        energies[1] += 0.5*(p*p)*JxW[q];
     }
 
 }
@@ -204,7 +200,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);
   p_prec->initialize (matrices[1]->block(1,1));
-  c_prec->initialize (matrices[1]->block(2,2));
+  c_prec->initialize (matrices[0]->block(2,2));
 
 
   // SYSTEM MATRIX:
@@ -225,7 +221,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto P2  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2));
 
 
-  static ReductionControl solver_control_pre(5000, 1e-4);
+  static ReductionControl solver_control_pre(5000, 1e-3);
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
   auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
@@ -237,11 +233,6 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto P2_i = P2_inv;
 
 
-//  auto P0_inv = linear_operator( matrix.block(0,0), *U_prec);
-//  auto P1_inv = linear_operator( matrix.block(1,1), *p_prec);
-//  auto P2_inv = linear_operator( matrix.block(2,2), *c_prec);
-
-
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
       {{ A,   Bt   , Z02 }},
       {{ B,   Z11  , C   }},
@@ -249,29 +240,13 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
     }
   };
 
-  auto sys_op = block_operator<3, 3, LATrilinos::VectorType>(matrix_array);
-
   system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
-
-  /* {{ */
-  /*   {{ A,   Bt   , Z02 }}, */
-  /*   {{ B,   Z11  , C   }}, */
-  /*   {{ Z20, D    , E   }} */
-  /*   }}); */
 
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
 
-  // system_op = linear_operator<VEC, VEC>(matrix);
 
-  auto diag_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+  prec_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
 
-  //  prec_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(matrix_array, diagonal_array);
-
-  auto p_op = block_forward_substitution<>(
-                BlockLinearOperator<LATrilinos::VectorType>(matrix_array),
-                BlockLinearOperator<LATrilinos::VectorType>(diagonal_array));
-
-  prec_op = p_op;
 }
 
 
