@@ -126,7 +126,7 @@ subsection Time derivative of Dirichlet boundary conditions
   set Known component names   = u,u,u,p
   set Used constants          =
 end
-subsection piDoMUS<3, 3, LADealII>
+subsection piDoMUS<3, 3, LATrilinos>
   set Adaptive refinement                            = true
   set Initial global refinement                      = 1
   set Maximum number of time steps                   = 10000

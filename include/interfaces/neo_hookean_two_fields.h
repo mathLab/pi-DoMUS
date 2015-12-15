@@ -69,7 +69,7 @@ NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::NeoHookeanTwoFieldsInterface() :
       "1,0")
 {
   this->init();
-};
+}
 
 
 
@@ -78,16 +78,15 @@ template<typename EnergyType,typename ResidualType>
 void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
     FEValuesCache<dim,spacedim> &fe_cache,
     std::vector<EnergyType> &energies,
-    std::vector<std::vector<ResidualType> > &local_residuals,
+    std::vector<std::vector<ResidualType> > &,
     bool compute_only_system_terms) const
 {
   EnergyType alpha = this->alpha;
   this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
-  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
+
   auto &grad_us = fe_cache.get_gradients("solution", "u", displacement, alpha);
-  auto &us_dot = fe_cache.get_values("solution_dot", "u_dot", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   const FEValuesExtractors::Scalar pressure(dim);
@@ -102,8 +101,6 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::energies_and_residuals(cons
     {
       Tensor <1, dim, double> B;
 
-      const Tensor <1, dim, EnergyType> &u = us[q];
-      const Tensor <1, dim, EnergyType> &u_dot = us_dot[q];
       const EnergyType &p = ps[q];
       const Tensor <2, dim, EnergyType> &F = Fs[q];
       const Tensor<2, dim, EnergyType> C = transpose(F)*F;
