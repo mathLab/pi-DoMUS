@@ -267,7 +267,9 @@ template <int dim, int spacedim, typename LAC>
   
   //  prec_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(matrix_array, diagonal_array);
   
-  auto p_op = block_back_substitution<3, LATrilinos::VectorType::BlockType>(sys_op, diag_op);
+  auto p_op = block_forward_substitution<>(
+					   BlockLinearOperator<LATrilinos::VectorType>(matrix_array),
+					   BlockLinearOperator<LATrilinos::VectorType>(diagonal_array));
 
   prec_op = p_op;
 }
