@@ -48,22 +48,22 @@ using namespace pidomus;
  * is used to allow the implementation in user derived classes of a
  * single templated function energies_and_residuals() that is
  * statically linked and called insied the method
- * Interface::assemble_energies_and_residuals().
+ * PDESystemInterface::assemble_energies_and_residuals().
  *
  * The user can directly overload the methods of this class (which
- * cannot be templated), or derive their classes from Interface
+ * cannot be templated), or derive their classes from PDESystemInterface
  * instead, using CRTP, as in the following example:
  *
  * \code
  * template<int dim, int spacedim, typename LAC>
- * MyInterface : public Interface<dim,spacedim, MyInterface<dim,spacedim,LAC>, LAC> {
+ * MyInterface : public PDESystemInterface<dim,spacedim, MyInterface<dim,spacedim,LAC>, LAC> {
  * public:
  *  template<typename Number>
  *  void energies_and_residual(...);
  * }
  * \endcode
  *
- * The class Interface is derived from BaseInterface, and implements
+ * The class PDESystemInterface is derived from BaseInterface, and implements
  * CRTP.
  */
 template <int dim,int spacedim=dim, typename LAC=LATrilinos>

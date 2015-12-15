@@ -1,9 +1,3 @@
-/*
- *  PDESystemInterface
- *
- *
- */
-
 #ifndef _pidomus_pde_system_interface_h
 #define _pidomus_pde_system_interface_h
 
@@ -21,7 +15,7 @@ using namespace pidomus;
  * local energy densities and residuals.
  *
  * User derived classes need only to implement the function
- * Interface::energies_and_residuals(), which can be a templated
+ * PDESystemInterface::energies_and_residuals(), which can be a templated
  * function on the type of the energy and of the residual.
  *
  * This allows one to compute Jacobian matrices, residual vectors and scalar
