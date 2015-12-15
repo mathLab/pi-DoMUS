@@ -98,7 +98,9 @@ public:
 
 
   /**
-   * Assemble energies and residuals
+   * Assemble energies and residuals. To be used when computing only residual
+   * quantities, i.e., the energy here is a Sacado double, while the residual
+   * is a pure double.
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -107,7 +109,9 @@ public:
                                                bool compute_only_system_terms) const;
 
   /**
-   * Assemble energies and residuals
+   * Assemble energies and residuals. To be used when computing energetical
+   * quantities, i.e., the energy here is a SacadoSacado double, while the residual
+   * is a Sacado double.
    */
   virtual void assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &,
                                                FEValuesCache<dim,spacedim> &,
@@ -124,6 +128,7 @@ public:
   virtual void assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                         FEValuesCache<dim,spacedim> &scratch,
                                         CopyData &data) const;
+
   /**
    * Assemble the local system residual associated to the given cell.
    * This function is called to evaluate the local system residual at each
@@ -137,13 +142,17 @@ public:
    * Compute linear operators needed by the problem
    *
    * This function is used to assemble linear operators related
-   * to the problem.
+   * to the problem. It is only needed if we use iterative solvers.
    */
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
                                         LinearOperator<typename LATrilinos::VectorType> &,
                                         LinearOperator<typename LATrilinos::VectorType> &) const;
 
+  /**
+   * Compute linear operators needed by the problem. When using deal.II vector and matrix types, this
+   * function is empty, since a direct solver is used by default.
+   */
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
                                 LinearOperator<typename LADealII::VectorType> &,

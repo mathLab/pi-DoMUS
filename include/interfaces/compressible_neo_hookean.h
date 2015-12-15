@@ -157,5 +157,4 @@ CompressibleNeoHookeanInterface<dim,spacedim,LAC>::compute_system_operators(cons
   });
 }
 
-
 #endif

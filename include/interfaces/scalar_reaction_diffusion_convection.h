@@ -73,16 +73,18 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        FEValuesCache<dim,spacedim> &fe_cache,
                        std::vector<EnergyType> &,
                        std::vector<std::vector<ResidualType> > &residuals,
-                       bool compute_only_system_terms) const
+                       bool ) const
 {
   const FEValuesExtractors::Scalar concentration(0);
 
+  ResidualType alpha = this->alpha;
+  // Initialize the various solutions, derivatives, etc with the right type for
+  // alpha.
+  this->reinit (alpha, cell, fe_cache);
 
-  ResidualType et = this->alpha; // dummy number to define the type of variables
-  this->reinit (et, cell, fe_cache);
-  auto &us = fe_cache.get_values("solution", "u", concentration, et);
-  auto &uts = fe_cache.get_values("solution_dot", "ut", concentration, et);
-  auto &gradus = fe_cache.get_gradients("solution", "gradu", concentration, et);
+  auto &us = fe_cache.get_values("solution", "u", concentration, alpha);
+  auto &uts = fe_cache.get_values("solution_dot", "ut", concentration, alpha);
+  auto &gradus = fe_cache.get_gradients("solution", "gradu", concentration, alpha);
 
   const unsigned int n_q_points = us.size();
   auto &JxW = fe_cache.get_JxW_values();
@@ -114,13 +116,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
           for (unsigned int d=0; d<dim; ++d)
             residuals[0][i] += (u*gradu[d]*b[d]*v)*JxW[q];
-
         }
     }
-
-
-  (void)compute_only_system_terms;
-
 }
 
 
@@ -153,16 +150,8 @@ ScalarReactionDiffusionConvection<dim,spacedim,LAC>::compute_system_operators(co
   });
 
   prec_op = block_operator<1, 1, LATrilinos::VectorType>({{
-      {{ P00}} ,
+      {{ P00 }} ,
     }
   });
 }
-
-
-template class ScalarReactionDiffusionConvection <2,2, LADealII>;
-template class ScalarReactionDiffusionConvection <2,2, LATrilinos>;
-
-
-
-
 #endif

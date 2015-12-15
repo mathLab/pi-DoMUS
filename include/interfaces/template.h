@@ -173,7 +173,6 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 }
 
 
-
 template <int dim, int spacedim, typename LAC>
 void
 ProblemTemplate<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &,
