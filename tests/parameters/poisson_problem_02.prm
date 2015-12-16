@@ -81,6 +81,7 @@ subsection IMEX Parameters
   set Relative error tolerance                     = 0.000000
   set Step size                                    = 1e10
   set Update continuously Jacobian                 = true
+  set Norm used for non linear iterations          = l2
 end
 subsection Initial solution
   set Function constants  = 
