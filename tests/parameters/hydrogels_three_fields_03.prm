@@ -8,8 +8,8 @@ subsection Dirichlet boundary conditions
   set IDs and expressions     = 0=0;0;0;0;0 %\
                                 2=0;0;0;0;0 %\
                                 4=0;0;0;0;0
-  set Known component names   = u,u,u,p,c
-  set Used constants          =
+  set Known component names   = u,u,u,c,p
+  set Used constants          = 
 end
 subsection Domain
   set Colorize                      = true
@@ -35,8 +35,8 @@ subsection Error Tables
   set Error file format        = tex
   set Error precision          = 3
   set Output error tables      = true
-  set Solution names           = u,u,u,p,c
-  set Solution names for latex = u,u,u,p,c
+  set Solution names           = u,u,u,c,p
+  set Solution names for latex = u,u,u,c,p
   set Table names              = error
   set Write error files        = false
   subsection Table 0
@@ -54,14 +54,14 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 7=c
-  set IDs and expressions     = 7=0;0;0;0;-(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*t
-  set Known component names   = u,u,u,p,c
+  set IDs and expressions     = 7=0;0;0;-(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*t;0
+  set Known component names   = u,u,u,c,p
   set Used constants          = R=8.314, T=298.0, l0=1.5, chi=0.1, G=1e4, Omega=1e-5
 end
 subsection Free Swelling Three Fields
-  set Block of differential components = 1,0,0
-  set Blocking of the finite element   = u,u,u,p,c
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]
+  set Block of differential components = 0,0,0
+  set Blocking of the finite element   = u,u,u,c,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)-FE_DGQ(1)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
@@ -76,13 +76,13 @@ subsection IDA Solver Parameters
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_diff
   set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
+  set Initial step size                             = 1e-5
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-1
+  set Seconds between each output                   = 5e-3
   set Show output of time steps                     = true
   set Use local tolerances                          = false
 end
@@ -101,7 +101,7 @@ subsection IMEX Parameters
 end
 subsection Initial solution
   set Function constants  = G=1e4, l0=1.5, Omega=1e-5
-  set Function expression = 0; 0; 0; G/l0; (l0^3-1)/(Omega*l0^3)
+  set Function expression = 0; 0; 0; (l0^3-1)/(Omega*l0^3); G/l0
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
@@ -112,7 +112,7 @@ end
 subsection Neumann boundary conditions
   set IDs and component masks =
   set IDs and expressions     =
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u,c,p
   set Used constants          =
 end
 subsection Output Parameters
@@ -132,14 +132,14 @@ subsection Refinement
   set Top fraction                           = 0.300000
 end
 subsection Time derivative of Dirichlet boundary conditions
-  set IDs and component masks =
-  set IDs and expressions     =
-  set Known component names   = u,u,u,p,c
-  set Used constants          =
+  set IDs and component masks = 
+  set IDs and expressions     = 
+  set Known component names   = u,u,u,c,p
+  set Used constants          = 
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 0
+  set Initial global refinement                      = 1
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
