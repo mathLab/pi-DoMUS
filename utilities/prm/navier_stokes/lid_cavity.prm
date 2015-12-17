@@ -2,64 +2,53 @@
 #   This parameter files solves for a navier stokes problem on a lid cavity
 ################################################################################
 
-subsection Navier Stokes
-  set Block coupling                   = 1,1; 1,0
-  set Preconditioner block coupling    = 0,1; 1,1
-  set Block of differential components = 1,0
-
-  set Blocking of the finite element   = u,u,p
-
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
-
-  set grad-div stabilization           = 0.0
-  set nu [Pa s]                        = 0.0025
-  set rho [kg m^3]                     = 1
-
-  set GMRES Solver tolerance          = 1e-12
-  set CG Solver tolerance             = 1e-12
-
-  set Invert Ap using inverse_operator = false
-  set Invert Fp using inverse_operator = false
-  set Invert Np using inverse_operator = true
-  set Invert Mp using inverse_operator = true
-
-  set Amg Aggregation Threshold        = 0.02
-  set Amg Smoother Sweeps              = 2
-  set Amg Higher Order                 = true
-
-  set Amg P Aggregation Threshold      = 0.5
-  set Amg P Smoother Sweeps            = 2
-  set Amg P Elliptic                   = true
-
-  set how to handle Np                 = RHS
-
-  # Available preconditioners:
-  # - stokes  -> S^-1 = 1/nu * Mp^-1
-  # - low-nu  -> S^-1 = rho * alpha * Mp^-1
-  # - elman-1 -> S^-1 = Ap (BBt)^-1
-  # - elman-2 -> S^-1 = Ap Fp^-1 Mp
-  # - BDBt_id -> S^-1 = (BBt)^-1 B A Bt (BBt)^-1
-  # - BDBt_dA -> S^-1 = (B diag(A)^-1 Bt)^-1 B diag(A)^-1 A diag(A)^-1 Bt (B
-  #                     diag(A)^-1 Bt)^-1
-  # - cah-cha -> S^-1 = Mp^-1 + Ap^-1
-  set Preconditioner = low-nu
+subsection Navier Stokes Interface
+  set Amg P Aggregation Threshold          = 0.02
+  set Amg P Elliptic                       = true
+  set Amg P Smoother Sweeps                = 2
+  set Block of differential components     = 1,0
+  set Blocking of the finite element       = u,u,p
+  set CG Solver tolerance                  = 1e-8
+  set Enable convection term ((\nabla u)u) = true
+  set Enable dynamic term (\partial_t u)   = true
+  set Non linear term                      = grad_linear
+  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
+  set GMRES Solver tolerance               = 1e-8
+  set Invert Ap using inverse_operator     = false
+  set Invert Mp using inverse_operator     = false
+  set Preconditioner                       = low-nu
+  set div-grad stabilization parameter     = 1.0
+  set nu [Pa s]                            = 0.0024
+  set rho [kg m^3]                         = 1.0
 end
 
-subsection piDoMUS<2, 2, 3, LATrilinos>
-set Linear solver tolerance                        = 1e-8
-set Adaptive refinement                            = false
-set Initial global refinement                      = 3
-set Maximum number of time steps                   = 10000
-set Number of cycles                               = 1
-set Timer output file                              = timer.txt
-set Use direct solver if available                 = true
-set Overwrite Newton's iterations                  = false
-set Print some useful informations about processes = true
+subsection piDoMUS<2, 2, LADealII>
+  set Adaptive refinement                            = true
+  set Initial global refinement                      = 4
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Time stepper                                   = euler
+  set Timer output file                              = timer.txt
+  set Use direct solver if available                 = true
+end
+
+subsection piDoMUS<2, 2, LATrilinos>
+  set Adaptive refinement                            = true
+  set Initial global refinement                      = 5
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Time stepper                                   = euler
+  set Timer output file                              = timer.txt
+  set Use direct solver if available                 = true
 end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 % 1 = 0 ; 0 ; 0 % 2 = 0 ; 0 ; 0 % 3 = t<.5 ? 2*t*k : k ; 0 ; 0
+  set IDs and expressions     = 0 = 0 ; 0 ; 0 % 1 = 0 ; 0 ; 0 % 2 = 0 ; 0 ; 0 % 3 = 1 ; 0 ; 0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -111,24 +100,36 @@ subsection Error Tables
 end
 
 subsection IDA Solver Parameters
-  set Initial time                                  = 0
-  set Final time                                    = 20
-
-  set Initial condition type                        = use_y_diff
-  set Ignore algebraic terms for error computations = true
-  set Maximum order of BDF                          = 3
   set Absolute error tolerance                      = 1e-3
+  set Initial time                                  = 0
+  set Final time                                    = 0
 
+  set Ignore algebraic terms for error computations = true
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
+  set Initial condition type                        = use_y_diff
   set Initial condition type after restart          = use_y_dot
   set Initial step size                             = 1e-2
-
   set Maximum number of nonlinear iterations        = 10
+  set Maximum order of BDF                          = 3
   set Min step size                                 = 5e-3
   set Relative error tolerance                      = 1e-2
   set Seconds between each output                   = 1e-2
+  set Show output of time steps                     = true
   set Use local tolerances                          = false
+end
+
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 1.0e-5
+  set Final time                                   = 0
+  set Initial time                                 = 0
+  set Intervals between outputs                    = 1
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 5
+  set Newton relaxation parameter                  = 0.66
+  set Relative error tolerance                     = 0.0
+  set Step size                                    = 1.0e-1
+  set Update continuously Jacobian                 = false
 end
 
 subsection Output Parameters

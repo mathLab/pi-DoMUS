@@ -97,17 +97,17 @@ int main (int argc, char *argv[])
                           check_prm);
 
           if (dim==2)
-              {
-                ScalarReactionDiffusionConvection<2,2,LADealII> energy;
-                piDoMUS<2,2,LADealII> pidomus ("PiDomus",energy);
-                ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-                ParameterAcceptor::prm.log_parameters(deallog);
-                pidomus.run ();
-              }
+            {
+              ScalarReactionDiffusionConvection<2,2,LADealII> energy;
+              piDoMUS<2,2,LADealII> pidomus ("PiDomus",energy);
+              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+              ParameterAcceptor::prm.log_parameters(deallog);
+              pidomus.run ();
+            }
           else
-          {
-            AssertThrow(false, ExcNotImplemented());
-          }
+            {
+              AssertThrow(false, ExcNotImplemented());
+            }
           //    {
           //      NavierStokes<3> energy;
           //      piDoMUS<3,3> navier_stokes_equation ("",energy);

@@ -1,9 +1,15 @@
 #include "pidomus.h"
-#include "interfaces/conservative/stokes.h"
+#include "interfaces/navier_stokes.h"
 #include "tests.h"
 
-/*
- * Test the stokes interface with an exact solution.
+/**
+ * Test:     Navier Stokes interface.
+ * Method:   Direct
+ * Problem:  Stokes
+ * Exact solution:
+ * \f[
+ *    u=(x, -y\) \textrm{ and } p=x*y;
+ * \f]
  */
 
 using namespace dealii;
@@ -15,20 +21,21 @@ int main (int argc, char *argv[])
 
   initlog();
   deallog.depth_file(1);
+  deallog.threshold_double(1.0e-3);
 
-  const int dim = 2;
-  const int spacedim = 2;
+  NavierStokes<2,2,LADealII> energy(false, false);
+  piDoMUS<2,2,LADealII> stokes ("",energy);
+  ParameterAcceptor::initialize(
+    SOURCE_DIR "/parameters/stokes_01.prm",
+    "used_parameters.prm");
 
-  Stokes<dim> energy;
-  piDoMUS<dim,spacedim,dim+1> stokes_flow (energy);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/stokes_01.prm", "used_parameters.prm");
+  stokes.run ();
 
-  stokes_flow.run ();
-
-  auto sol = stokes_flow.get_solution();
+  auto sol = stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;
     }
+
   return 0;
 }

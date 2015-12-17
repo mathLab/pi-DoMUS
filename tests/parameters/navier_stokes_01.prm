@@ -4,62 +4,69 @@
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= af6f8d1
 
-subsection piDoMUS<2, 2, LADealII>
+subsection Navier Stokes Interface
+  set Amg P Aggregation Threshold          = 0.02
+  set Amg P Elliptic                       = true
+  set Amg P Smoother Sweeps                = 2
+  set Block of differential components     = 1,0
+  set Blocking of the finite element       = u,u,p
+  set CG Solver tolerance                  = 1e-12
+  set Enable convection term ((\nabla u)u) = true
+  set Enable dynamic term (\partial_t u)   = true
+  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
+  set GMRES Solver tolerance               = 1e-12
+  set Invert Ap using inverse_operator     = true
+  set Invert Mp using inverse_operator     = true
+
+  set Linearize using time                 = false
+  set Non linear term                      = grad_linear
+
+  set Preconditioner                       = default
+  set div-grad stabilization parameter     = 0.0
+  set nu [Pa s]                            = 10
+  set rho [kg m^3]                         = 1.0
+end
+
+subsection piDoMUS<2, 2, LATrilinos>
   set Adaptive refinement                            = false
-  set Initial global refinement                      = 4
+  set Initial global refinement                      = 3
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
-  set Print some useful informations about processes = false
+  set Print some useful informations about processes = true
   set Time stepper                                   = euler
   set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end
 
-subsection Navier Stokes Interface
-  set Block of differential components     = 1,0
-  set Blocking of the finite element       = u,u,p
-  set Enable convection term ((\nabla u)u) = false
-  set Enable dynamic term (\partial_t u)   = true
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set div-grad stabilization parameter     = 0.0
-  set nu [Pa s]                            = 1.0
-  set rho [kg m^3]                         = 1.0
-end
-
 subsection Initial solution
   set Function constants  =
-  set Function expression = 0; 0; cos(x)*cos(y)
-  set Variable names      = x,y,t
-end
-
-subsection Initial solution_dot
-  set Function constants  =
-  set Function expression = cos(x)*cos(y); sin(x)*sin(y); 0
+  set Function expression = 2*(x^2)*y; -2*x*(y^2); x*y
   set Variable names      = x,y,t
 end
 
 subsection Exact solution
   set Function constants  =
-  set Function expression = t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y)
+  set Function expression = 2*(x^2)*y; -2*x*(y^2); x*y
   set Variable names      = x,y,t
 end
 
 subsection Forcing terms
-  set IDs and component masks = 0 = u
-  set IDs and expressions     = 0 = k*t*cos(x)*cos(y) + cos(x)*cos(y) - sin(x)*cos(y); k*t*sin(x)*sin(y) + sin(x)*sin(y) - sin(y)*cos(x); 0 
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=-4*10*y + 4*(x^3)*(y^2) + y; \
+                                   4*10*x + 4*(x^2)*(y^3) + x; 0
   set Known component names   = u,u,p
-  set Used constants          = k=1
+  set Used constants          = k=10
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0=ALL % 1=ALL % 2=ALL % 3=ALL
-  set IDs and expressions     = 0=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                1=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                2=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y) % \
-                                3=t*cos(x)*cos(y); t*sin(x)*sin(y); cos(x)*cos(y)
+  set IDs and component masks = 0=ALL % 1=u % 2=u % 3=ALL
+  set IDs and expressions     = 0=2*(x^2)*y; -2*x*(y^2); x*y % \
+                                1=2*(x^2)*y; -2*x*(y^2); x*y % \
+                                2=2*(x^2)*y; -2*x*(y^2); x*y % \
+                                3=2*(x^2)*y; -2*x*(y^2); x*y
   set Known component names   = u,u,p
-  set Used constants          = k=1
+  set Used constants          = k=10
 end
 
 subsection Domain
@@ -97,9 +104,9 @@ subsection Error Tables
 end
 
 subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
-  set Initial time                                  = 1.0
-  set Final time                                    = 0.0
+  set Absolute error tolerance                      = 1e-6
+  set Initial time                                  = 0
+  set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -116,20 +123,28 @@ subsection IDA Solver Parameters
 end
 
 subsection IMEX Parameters
-  set Final time                                   = 1.0
+  set Final time                                   = 0.0
   set Initial time                                 = 0.0
 
   set Maximum number of inner nonlinear iterations = 10
   set Maximum number of outer nonlinear iterations = 15
   set Newton relaxation parameter                  = 1
 
-  set Absolute error tolerance                     = 1.0e-8
+  set Absolute error tolerance                     = 1.0e-12
   set Intervals between outputs                    = 1
-  set Relative error tolerance                     = 1.0e-6
-  set Step size                                    = 1.0e-1
+  set Relative error tolerance                     = 0.000000
+  set Step size                                    = 1.0e-2
   set Update continuously Jacobian                 = true
 end
 
+
+
+subsection Neumann boundary conditions
+  set IDs and component masks =
+  set IDs and expressions     =
+  set Known component names   = u,u,p
+  set Used constants          =
+end
 subsection Output Parameters
   set Files to save in run directory =
   set Incremental run prefix         =
@@ -138,4 +153,17 @@ subsection Output Parameters
   set Problem base name              = solution
   set Solution names                 = u
   set Subdivisions                   = 1
+end
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 0
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end
+subsection Time derivative of Dirichlet boundary conditions
+  set IDs and component masks =
+  set IDs and expressions     =
+  set Known component names   = u,u,p
+  set Used constants          =
 end
