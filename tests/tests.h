@@ -32,6 +32,16 @@
 #include <sstream>
 #include <iomanip>
 
+#if defined(DEBUG) && defined(DEAL_II_HAVE_FP_EXCEPTIONS)
+#  include <cfenv>
+#endif
+
+
+// silence extra diagnostics in the testsuite
+#ifdef DEAL_II_DISABLE_EXTRA_DIAGNOSTICS
+DEAL_II_DISABLE_EXTRA_DIAGNOSTICS
+#endif
+
 
 // implicitly use the deal.II namespace everywhere, without us having to say
 // so in each and every testcase
