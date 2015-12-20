@@ -581,8 +581,8 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     Schur_inv = identity_operator((C).reinit_range_vector);
 
   P00 = A_inv;
-  P01 = null_operator(Bt);
-  P10 = Schur_inv * B * A_inv;
+  P01 = A_inv * Bt * Schur_inv;
+  P10 = null_operator(B);
   P11 = -1 * Schur_inv;
 
   prec_op = block_operator<2, 2, VEC>({{
