@@ -59,11 +59,12 @@
  * - default: This preconditioner uses the mass matrix of pressure block as
  * inverse for the Schur block.
  * This is a preconditioner suitable for problems wher the viscosity is
- * higher than the density. \f[ S^-1 = \frac{1}{\nu} M_p \f]
+ * higher than the density. \f[ S^-1 = \nu M_p \f]
  * - identity: Identity matrix preconditioner
  * - low-nu: This preconditioner uses the stifness matrix of pressure block
  * as inverse for the Schur block. \f[ S^-1 = \rho \frac{1}{\Delta t} A_p \f]
- *
+ * - cah-cha:  Preconditioner suggested by J. Cahouet and J.-P. Chabard.
+ *  \f[ S^-1 =  \nu M_p  + \rho \frac{1}{\Delta t} A_p. \f]
  *
  */
 
@@ -256,11 +257,12 @@ declare_parameters (ParameterHandler &prm)
   PDESystemInterface<dim,spacedim, NavierStokes<dim,spacedim,LAC>,LAC>::
   declare_parameters(prm);
   this->add_parameter(prm, &prec_name,  "Preconditioner","default",
-                      Patterns::Selection("default|identity|low-nu"),
+                      Patterns::Selection("default|identity|low-nu|cah-cha"),
                       "Available preconditioners: \n"
-                      " - default  -> S^-1 = 1/nu * Mp^-1 \n"
+                      " - default  -> S^-1 = nu * Mp^-1 \n"
                       " - identity -> S^-1 = identity \n"
-                      " - low-nu   -> S^-1 = 1/(rho * alpha) * Ap^-1 \n");
+                      " - low-nu   -> S^-1 = rho * alpha * Ap^-1 \n"
+                      " - cah-cha  -> S^-1 = nu * Mp^-1 + rho * alpha * Ap^-1 ");
   this->add_parameter(prm, &dynamic,
                       "Enable dynamic term (\\partial_t u)", "true",
                       Patterns::Bool(),
@@ -328,11 +330,12 @@ void NavierStokes<dim,spacedim,LAC>::
 parse_parameters_call_back ()
 {
   if (prec_name == "default")
+    compute_Mp = true;
+  else if (prec_name == "low-nu")
+    compute_Ap = true;
+  else if (prec_name == "cah-cha")
     {
       compute_Mp = true;
-    }
-  else if (prec_name == "low-nu")
-    {
       compute_Ap = true;
     }
 }
@@ -574,11 +577,13 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
 
   if (prec_name=="default")
-    Schur_inv = 1/nu * Mp_inv;
+    Schur_inv = nu * Mp_inv;
   else if (prec_name=="low-nu")
-    Schur_inv = (1/(aplha*rho)) * Ap_inv;
+    Schur_inv = aplha*rho * Ap_inv;
   else if (prec_name=="identity")
     Schur_inv = identity_operator((C).reinit_range_vector);
+  else if (prec_name=="cha-cha")
+    Schur_inv = nu * Mp_inv + aplha * rho * Ap_inv;
 
   P00 = A_inv;
   P01 = A_inv * Bt * Schur_inv;
