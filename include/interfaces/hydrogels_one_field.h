@@ -102,17 +102,24 @@ HydroGelOneField<dim,spacedim,LAC>::
 energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                        FEValuesCache<dim,spacedim> &fe_cache,
                        std::vector<EnergyType> &energies,
-                       std::vector<std::vector<ResidualType> > &,
+                       std::vector<std::vector<ResidualType> > &residuals,
                        bool compute_only_system_terms) const
 {
   EnergyType alpha = this->alpha;
+
   this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
 
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
-
+  auto &fev = fe_cache.get_current_fe_values();
   auto &JxW = fe_cache.get_JxW_values();
+
+  const unsigned int n_q_points = JxW.size();
+
+  ResidualType rt = 0;
+  this->reinit (rt, cell, fe_cache);
+  auto &Fs_res = fe_cache.get_deformation_gradients("solution", "u", displacement, rt);
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
@@ -131,6 +138,15 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                          - (mu0)*(J*l03-1)/(Omega*l03)) ;
 
       energies[0] += psi*JxW[q];
+
+      auto &F_res = Fs_res[q];
+      const Tensor<2,dim,ResidualType> F_star = J*transpose(invert(F_res));
+
+      for (unsigned int i=0; i<residuals[0].size(); ++i)
+      {
+          auto grad_v = fev[displacement].gradient(i,q);
+          residuals[0] -= mu0*(this->t)*F_star*grad_v;
+      }
 
       //if (!compute_only_system_terms)
       //  energies[1] += 0.5*(u*u)*JxW[q];

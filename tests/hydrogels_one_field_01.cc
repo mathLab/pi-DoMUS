@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
   const int dim = 3;
   const int spacedim = 3;
 
-  HydroGelThreeFields<dim,spacedim,LADealII> gel;
+  HydroGelOneField<dim,spacedim,LADealII> gel;
   piDoMUS<dim,spacedim,LADealII> solver ("piDoMUS",gel);
   ParameterAcceptor::initialize(SOURCE_DIR "/parameters/hydrogels_one_field_01.prm",
                                 "used_parameters.prm");

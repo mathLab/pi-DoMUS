@@ -53,8 +53,8 @@ subsection Exact solution
   set Variable names      = x,y,z,t
 end
 subsection Forcing terms
-  set IDs and component masks = 7=c
-  set IDs and expressions     = 7=0;0;0;0;114.70
+  set IDs and component masks =
+  set IDs and expressions     =
   set Known component names   = u,u,u
   set Used constants          =
 end
@@ -101,18 +101,18 @@ subsection IMEX Parameters
 end
 subsection Initial solution
   set Function constants  = G=1e4, l0=1.5, Omega=1e-5
-  set Function expression = 0; 0; 0; G/l0; (l0^3-1)/(Omega*l0^3)
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
   set Function constants  =
-  set Function expression = 0; 0; 0; 0; 0
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Neumann boundary conditions
   set IDs and component masks =
   set IDs and expressions     =
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u
   set Used constants          =
 end
 subsection Output Parameters
@@ -134,7 +134,7 @@ end
 subsection Time derivative of Dirichlet boundary conditions
   set IDs and component masks =
   set IDs and expressions     =
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u
   set Used constants          =
 end
 subsection piDoMUS
