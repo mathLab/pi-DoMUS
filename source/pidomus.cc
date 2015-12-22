@@ -903,7 +903,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
       try
         {
           PrimitiveVectorMemory<typename LAC::VectorType> mem;
-          SolverControl solver_control (matrices[0]->m(),
+          ReductionControl solver_control (matrices[0]->m(),
                                         jacobian_solver_tolerance);
           SolverFGMRES<typename LAC::VectorType>
           solver(solver_control, mem,
@@ -918,7 +918,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
           if (double_preconditioner)
             {
               PrimitiveVectorMemory<typename LAC::VectorType> mem;
-              SolverControl solver_control (matrices[0]->m(),
+              ReductionControl solver_control (matrices[0]->m(),
                                             jacobian_solver_tolerance_finer);
               SolverFGMRES<typename LAC::VectorType>
               solver(solver_control, mem,
