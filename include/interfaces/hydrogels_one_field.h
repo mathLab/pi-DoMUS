@@ -69,10 +69,10 @@ private:
   const double R=8.314;
 
 
-/*  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
-*/
+  /*  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
+    mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
+    mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
+  */
 
 };
 
