@@ -231,7 +231,15 @@ private:
   ConstraintMatrix                          constraints;
   ConstraintMatrix                          constraints_dot;
 
+  /**
+   * Preconditioner used every time a preconditioner is requied.
+   */
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
+  /**
+   * Preconditioner used in the case the system does not converge using
+   * @p jacobian_preconditioner_op.
+   */
+  LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op_finer;
   LinearOperator<typename LAC::VectorType> jacobian_op;
 
   typename LAC::VectorType        solution;
@@ -284,6 +292,19 @@ private:
    * \f[ \mathcal{J}(F)[u] = R[u] \f]
    */
   double jacobian_solver_tolerance;
+
+  /**
+   * Solver tolerance for the equation:
+   * \f[ \mathcal{J}(F)[u] = R[u] \f]
+   * in the case the system does not converge using
+   * @p jacobian_preconditioner_op.
+   */
+  double jacobian_solver_tolerance_finer;
+
+  /**
+   * Use a finer preconditioner in the case the first has not converged.
+   */
+  bool double_preconditioner;
 
   /**
    * Print all avaible information about processes.
