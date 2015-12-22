@@ -22,8 +22,11 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include <deal2lkit/utilities.h>
+
 #include "lac/lac_type.h"
 
+using deal2lkit::DOFUtilities::inner;
 
 template <int dim, int spacedim, typename LAC>
 class HydroGelOneField : public PDESystemInterface<dim,spacedim, HydroGelOneField<dim,spacedim,LAC>, LAC>
@@ -140,12 +143,12 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       energies[0] += psi*JxW[q];
 
       auto &F_res = Fs_res[q];
-      const Tensor<2,dim,ResidualType> F_star = J*transpose(invert(F_res));
+      const Tensor<2,dim,ResidualType> F_star = J.val()*transpose(invert(F_res));
 
       for (unsigned int i=0; i<residuals[0].size(); ++i)
         {
           auto grad_v = fev[displacement].gradient(i,q);
-          residuals[0][i] -= mu0*(this->t)*F_star*grad_v*JxW[q];
+          residuals[0][i] -= mu0*(this->t)*inner(F_star,grad_v)*JxW[q];
         }
 
       //if (!compute_only_system_terms)
