@@ -135,7 +135,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                          + (l0_3*R*T/Omega)*((J*l03-1.)*std::log((J*l03-1.)/(J*l03))
                                              + chi*((J*l03-1.)/(J*l03)) )
 
-                         - (mu0)*(J*l03-1)/(Omega*l03)) ;
+                         - (mu0)*(J*l03-1.)/(Omega*l03)) ;
 
       energies[0] += psi*JxW[q];
 
@@ -143,10 +143,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const Tensor<2,dim,ResidualType> F_star = J*transpose(invert(F_res));
 
       for (unsigned int i=0; i<residuals[0].size(); ++i)
-      {
+        {
           auto grad_v = fev[displacement].gradient(i,q);
-          residuals[0] -= mu0*(this->t)*F_star*grad_v;
-      }
+          residuals[0][i] -= mu0*(this->t)*F_star*grad_v*JxW[q];
+        }
 
       //if (!compute_only_system_terms)
       //  energies[1] += 0.5*(u*u)*JxW[q];
