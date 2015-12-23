@@ -77,6 +77,11 @@ public:
   virtual shared_ptr<typename LAC::VectorType>
   create_new_vector() const;
 
+  /**
+   * Define the norm used in non linear solver.
+   */
+  virtual double vector_norm(typename LAC::VectorType &vector) const;
+
   /** Returns the number of degrees of freedom. Pure virtual function. */
   virtual unsigned int n_dofs() const;
 
