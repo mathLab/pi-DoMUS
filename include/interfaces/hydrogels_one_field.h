@@ -40,7 +40,6 @@ public:
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
 
-//  void set_matrix_couplings(std::vector<std::string> &couplings) const;
 
   template <typename EnergyType, typename ResidualType>
   void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -50,11 +49,11 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  /*void compute_system_operators(const DoFHandler<dim,spacedim> &,
+  void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
-  */
+
 
 
 private:
@@ -72,31 +71,18 @@ private:
   const double R=8.314;
 
 
-  /*  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
-    mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
-    mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
-  */
+  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
 
 };
 
 template <int dim, int spacedim, typename LAC>
 HydroGelOneField<dim,spacedim,LAC>::HydroGelOneField() :
   PDESystemInterface<dim,spacedim,HydroGelOneField<dim,spacedim,LAC>, LAC>("Free Swelling One Field",
-      dim,1,
+      dim,2,
       "FESystem[FE_Q(2)^d]",
       "u,u,u","1")
 {}
 
-/*
-template <int dim, int spacedim, typename LAC>
-void
-HydroGelOneField<dim,spacedim,LAC>::
-set_matrix_couplings(std::vector<std::string> &couplings) const
-{
-  couplings[0] = "1,1,0;1,0,1;0,1,1";
-  couplings[1] = "0,0,0;0,1,0;0,0,0";
-}
-*/
 
 template <int dim, int spacedim, typename LAC>
 template <typename EnergyType, typename ResidualType>
@@ -114,6 +100,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   const FEValuesExtractors::Vector displacement(0);
 
+  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
   auto &fev = fe_cache.get_current_fe_values();
   auto &JxW = fe_cache.get_JxW_values();
@@ -126,6 +113,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
+      auto &u = us[q];
       const Tensor<2, dim, EnergyType>  &F = Fs[q];
       const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
 
@@ -151,8 +139,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           residuals[0][i] += (mu0/Omega)*(this->t)*inner(F_star,grad_v)*JxW[q];
         }
 
-      //if (!compute_only_system_terms)
-      //  energies[1] += 0.5*(u*u)*JxW[q];
+      if (!compute_only_system_terms)
+        energies[1] += 0.5*(u*u)*JxW[q];
     }
 
 }
@@ -179,84 +167,37 @@ void HydroGelOneField<dim,spacedim,LAC>::parse_parameters_call_back ()
   mu0 = R*T*(std::log((l03-1.)/l03) + l0_3 + chi*l0_6) + G*Omega/l0;
 }
 
-/*
 template <int dim, int spacedim, typename LAC>
 void
-HydroGelOneField<dim,spacedim,LAC>::
-compute_system_operators(const DoFHandler<dim,spacedim> &dh,
-                         const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
-                         LinearOperator<LATrilinos::VectorType> &system_op,
-                         LinearOperator<LATrilinos::VectorType> &prec_op) const
+HydroGelOneField<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &,
+    const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+    LinearOperator<LATrilinos::VectorType> &system_op,
+    LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
-  std::vector<std::vector<bool> > constant_modes;
-  FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
-                                    constant_modes);
+  preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
+  preconditioner->initialize(matrices[1]->block(0,0));
+  auto P = linear_operator<LATrilinos::VectorType::BlockType>(matrices[1]->block(0,0));
 
-  p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-  c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
-  U_prec.reset (new TrilinosWrappers::PreconditionAMG());
+  auto A  = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0) );
 
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
-  Amg_data.elliptic = true;
-  Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
-
-
-  U_prec->initialize (matrices[0]->block(0,0), Amg_data);
-  p_prec->initialize (matrices[1]->block(1,1));
-  c_prec->initialize (matrices[0]->block(2,2));
-
-
-  // SYSTEM MATRIX:
-  auto A   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0) );
-  auto Bt  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,1) );
-  auto Z02 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,2) );
-
-  auto B   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,0) );
-  auto Z11 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1) );
-  auto C   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,2) );
-
-  auto Z20 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,0) );
-  auto D   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,1) );
-  auto E   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2) );
-
-  auto P0  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0));
-  auto P1  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(1,1));
-  auto P2  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2));
-
-
-  static ReductionControl solver_control_pre(5000, 1e-3);
+  static ReductionControl solver_control_pre(5000, 1e-4);
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
+  auto P_inv     = inverse_operator( P, solver_CG, *preconditioner);
 
-  auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
-  auto P1_inv = inverse_operator( P1, solver_CG, *p_prec);
-  auto P2_inv = inverse_operator( P2, solver_CG, *c_prec);
+  auto P00 = P_inv;
 
-  auto P0_i = P0_inv;
-  auto P1_i = P1_inv;
-  auto P2_i = P2_inv;
-
-
-  const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
-      {{ A,   Bt   , Z02 }},
-      {{ B,   Z11  , C   }},
-      {{ Z20, D    , E   }}
+  // ASSEMBLE THE PROBLEM:
+  system_op  = block_operator<1, 1, LATrilinos::VectorType>({{
+      {{ A }}
     }
-  };
+  });
 
-  system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
-
-  const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
-
-
-  prec_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
-
+  prec_op = block_operator<1, 1, LATrilinos::VectorType>({{
+      {{ P00}} ,
+    }
+  });
 }
-*/
 
 
 #endif
