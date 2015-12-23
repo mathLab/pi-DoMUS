@@ -59,7 +59,7 @@ subsection Forcing terms
   set Used constants          =
 end
 subsection Free Swelling One Field
-  set Block of differential components = 1
+  set Block of differential components = 0
   set Blocking of the finite element   = u,u,u
   set Finite element space             = FESystem[FE_Q(2)^d]
   set G                                = 1e4
@@ -82,7 +82,7 @@ subsection IDA Solver Parameters
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-1
+  set Seconds between each output                   = 0.05
   set Show output of time steps                     = true
   set Use local tolerances                          = false
 end
@@ -90,7 +90,7 @@ subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
   set Final time                                   = 1.01
   set Initial time                                 = 0
-  set Intervals between outputs                    = 0.1
+  set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 20
   set Newton relaxation parameter                  = 1.000000
