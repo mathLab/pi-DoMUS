@@ -1,13 +1,13 @@
 # Parameter file generated with
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     794e613
-# DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= c2570a1
+# DEAL_II_GIT_BRANCH=
+# DEAL_II_GIT_SHORTREV=
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u.N % 2=u.N % 4=u.N
-  set IDs and expressions     = 0=0;0;0;0;0 %\
-                                2=0;0;0;0;0 %\
-                                4=0;0;0;0;0
+  set IDs and expressions     = 0=0;0;0 %\
+                                2=0;0;0 %\
+                                4=0;0;0
   set Known component names   = u,u,u
   set Used constants          =
 end
@@ -31,7 +31,7 @@ subsection Domain
   set Output grid file name         =
 end
 subsection Error Tables
-  set Compute error            = false
+  set Compute error            = true
   set Error file format        = tex
   set Error precision          = 3
   set Output error tables      = true
@@ -49,7 +49,7 @@ subsection Error Tables
 end
 subsection Exact solution
   set Function constants  =
-  set Function expression = 0; 0; 0; 0; 0
+  set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Forcing terms
@@ -78,7 +78,7 @@ subsection IDA Solver Parameters
   set Initial condition type after restart          = use_y_dot
   set Initial step size                             = 1e-4
   set Initial time                                  = 0
-  set Maximum number of nonlinear iterations        = 10
+  set Maximum number of nonlinear iterations        = 20
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-3
@@ -88,19 +88,19 @@ subsection IDA Solver Parameters
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
-  set Final time                                   = 0
+  set Final time                                   = 1.01
   set Initial time                                 = 0
-  set Intervals between outputs                    = 1
+  set Intervals between outputs                    = 0.1
   set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 5
+  set Maximum number of outer nonlinear iterations = 20
   set Newton relaxation parameter                  = 1.000000
   set Norm used for non linear iterations          = l2
   set Relative error tolerance                     = 0.000000
-  set Step size                                    = 0.001000
+  set Step size                                    = 0.050000
   set Update continuously Jacobian                 = true
 end
 subsection Initial solution
-  set Function constants  = G=1e4, l0=1.5, Omega=1e-5
+  set Function constants  =
   set Function expression = 0; 0; 0
   set Variable names      = x,y,z,t
 end

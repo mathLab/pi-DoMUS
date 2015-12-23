@@ -148,7 +148,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       for (unsigned int i=0; i<residuals[0].size(); ++i)
         {
           auto grad_v = fev[displacement].gradient(i,q);
-          residuals[0][i] -= mu0*(this->t)*inner(F_star,grad_v)*JxW[q];
+          residuals[0][i] += (mu0/Omega)*(this->t)*inner(F_star,grad_v)*JxW[q];
         }
 
       //if (!compute_only_system_terms)
