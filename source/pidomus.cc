@@ -658,6 +658,13 @@ get_solution()
 /* ------------------------ RUN ------------------------ */
 
 template <int dim, int spacedim, typename LAC>
+double piDoMUS<dim, spacedim, LAC>::vector_norm(
+  typename LAC::VectorType &vector) const
+{
+  return vector.l2_norm();
+}
+
+template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
 {
   if (timer_file_name != "")
