@@ -174,14 +174,14 @@ HydroGelOneField<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<di
     LinearOperator<LATrilinos::VectorType> &system_op,
     LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
-
   preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
-  preconditioner->initialize(matrices[1]->block(0,0));
-  auto P = linear_operator<LATrilinos::VectorType::BlockType>(matrices[1]->block(0,0));
+  preconditioner->initialize(matrices[0]->block(0,0));
+
+  auto P = linear_operator<LATrilinos::VectorType::BlockType>(matrices[0]->block(0,0));
 
   auto A  = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0) );
 
-  static ReductionControl solver_control_pre(5000, 1e-4);
+  static ReductionControl solver_control_pre(5000, 1e-8);
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
   auto P_inv     = inverse_operator( P, solver_CG, *preconditioner);
 
@@ -194,7 +194,7 @@ HydroGelOneField<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<di
   });
 
   prec_op = block_operator<1, 1, LATrilinos::VectorType>({{
-      {{ P00}} ,
+      {{ P00 }} ,
     }
   });
 }

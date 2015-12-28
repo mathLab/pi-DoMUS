@@ -69,7 +69,7 @@ subsection Free Swelling One Field
   set l0                               = 1.5
 end
 subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
+  set Absolute error tolerance                      = 1e-6
   set Final time                                    = 1
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
@@ -81,7 +81,7 @@ subsection IDA Solver Parameters
   set Maximum number of nonlinear iterations        = 20
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-3
+  set Relative error tolerance                      = 1e-6
   set Seconds between each output                   = 0.1
   set Show output of time steps                     = true
   set Use local tolerances                          = false
@@ -90,13 +90,13 @@ subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
   set Final time                                   = 1.01
   set Initial time                                 = 0
-  set Intervals between outputs                    = 1
-  set Maximum number of inner nonlinear iterations = 10
-  set Maximum number of outer nonlinear iterations = 25
+  set Intervals between outputs                    = 10
+  set Maximum number of inner nonlinear iterations = 20
+  set Maximum number of outer nonlinear iterations = 40
   set Newton relaxation parameter                  = 1.000000
   set Norm used for non linear iterations          = l2
   set Relative error tolerance                     = 0.000000
-  set Step size                                    = 0.025000
+  set Step size                                    = 0.010000
   set Update continuously Jacobian                 = true
 end
 subsection Initial solution
@@ -145,7 +145,7 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Time stepper                                   = euler
+  set Time stepper                                   = ida
   set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end
