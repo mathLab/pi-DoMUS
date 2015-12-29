@@ -63,7 +63,6 @@ private:
   double chi;
   double l0;
 
-  double mu;
   double mu0;
   double l02;
   double l03;
@@ -157,7 +156,6 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &chi, "chi", "0.1", Patterns::Double(0.0));
   this->add_parameter(prm, &l0, "l0", "1.5", Patterns::Double(1.0));
   this->add_parameter(prm, &G, "G", "10e3", Patterns::Double(0.0));
-  this->add_parameter(prm, &mu, "mu", "-1.8e-22", Patterns::Double(-1000.0));
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -221,7 +219,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto P2  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2));
 
 
-  static ReductionControl solver_control_pre(5000, 1e-3);
+  static ReductionControl solver_control_pre(5000, 1e-8);
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
   auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
