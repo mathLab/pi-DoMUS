@@ -577,13 +577,13 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
 
   if (prec_name=="default")
-    Schur_inv = nu * Mp_inv;
+    Schur_inv = (gamma + nu) * Mp_inv;
   else if (prec_name=="low-nu")
-    Schur_inv = aplha*rho * Ap_inv;
+    Schur_inv = aplha * rho * Ap_inv;
   else if (prec_name=="identity")
     Schur_inv = identity_operator((C).reinit_range_vector);
   else if (prec_name=="cha-cha")
-    Schur_inv = nu * Mp_inv + aplha * rho * Ap_inv;
+    Schur_inv = (gamma + nu) * Mp_inv + aplha * rho * Ap_inv;
 
   P00 = A_inv;
   P01 = A_inv * Bt * Schur_inv;
