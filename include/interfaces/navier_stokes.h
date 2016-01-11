@@ -338,6 +338,10 @@ parse_parameters_call_back ()
       compute_Mp = true;
       compute_Ap = true;
     }
+
+  // p-q stabilization term:
+  if (gamma_p!=0.0)
+    compute_Mp = true;
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -460,10 +464,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           if (gamma!=0.0)
             res += gamma * div_u * div_v;
 
-          // p-q stabilization term:
-          if (gamma_p!=0.0)
-            res += gamma * p * q;
-
           // Diffusion term:
           res += nu * scalar_product(sym_grad_u, sym_grad_v);
 
@@ -515,10 +515,15 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   auto C  = linear_operator<BVEC>( matrices[0]->block(1,1) );
   auto ZeroP = null_operator(C);
 
+  if (gamma_p!=0.0)
+    C = linear_operator<BVEC>( matrices[1]->block(1,1) );
+  else
+    C = ZeroP;
+
   // ASSEMBLE THE PROBLEM:
   system_op = block_operator<2, 2, VEC>({{
       {{ A, Bt }} ,
-      {{ B, ZeroP }}
+      {{ B, C }}
     }
   });
 
