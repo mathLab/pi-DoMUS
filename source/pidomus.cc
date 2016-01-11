@@ -463,7 +463,11 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
   if (old_t < t)
     {
       explicit_solution.reinit(solution);
+      explicit_solution = solution;
+
       distributed_explicit_solution.reinit(distributed_solution);
+      distributed_explicit_solution = distributed_solution;
+
       old_t = t;
     }
 
@@ -786,7 +790,11 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   if (old_t < t)
     {
       explicit_solution.reinit(solution);
+      explicit_solution = solution;
+
       distributed_explicit_solution.reinit(distributed_solution);
+      distributed_explicit_solution = distributed_solution;
+
       old_t = t;
     }
 
