@@ -228,12 +228,17 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto Z21 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,1) );
 
 
-  static ReductionControl solver_control_pre(5000, 1e-8);
+  static ReductionControl solver_control_pre(5000, 1e-5);
+
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
   auto A_inv = inverse_operator( PA, solver_CG, *U_prec);
   auto E_inv = inverse_operator( PE, solver_CG, *c_prec);
   auto P_inv = inverse_operator( Pp, solver_CG, *p_prec);
+  /* auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec); */
+  /* auto E_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec); */
+  /* auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec); */
+
 
   auto P0_i = A_inv;
   auto P1_i = E_inv;
