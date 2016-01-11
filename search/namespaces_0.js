@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['assembly',['Assembly',['../namespace_assembly.html',1,'']]],
-  ['copydata',['CopyData',['../namespace_assembly_1_1_copy_data.html',1,'Assembly']]]
+  ['algorithms',['Algorithms',['http://www.dealii.org/developer/doxygen/deal.II/namespaceAlgorithms.html',1,'']]],
+  ['arpacksolver',['ArpackSolver',['http://www.dealii.org/developer/doxygen/deal.II/structArpackSolver_1_1AdditionalData.html',1,'']]],
+  ['events',['Events',['http://www.dealii.org/developer/doxygen/deal.II/namespaceAlgorithms_1_1Events.html',1,'Algorithms']]]
 ];

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>pi-DoMUS: Parallel Deal.II MUltiphysics Solver: piDoMUS&lt; dim, spacedim, n_components, LAC &gt; Class Template Reference</title>
+<title>pi-DoMUS: Parallel Deal.II MUltiphysics Solver: piDoMUS&lt; dim, spacedim, LAC &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -99,71 +99,92 @@ $(document).ready(function(){initNavTree('classpi_do_m_u_s.html','');});
 <a href="#friends">Friends</a> &#124;
 <a href="classpi_do_m_u_s-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piDoMUS&lt; dim, spacedim, n_components, LAC &gt; Class Template Reference</div>  </div>
+<div class="title">piDoMUS&lt; dim, spacedim, LAC &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="pidomus_8h_source.html">pidomus.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for piDoMUS&lt; dim, spacedim, n_components, LAC &gt;:</div>
+Inheritance diagram for piDoMUS&lt; dim, spacedim, LAC &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classpi_do_m_u_s.png" usemap="#piDoMUS&lt; dim, spacedim, n_components, LAC &gt;_map" alt=""/>
-  <map id="piDoMUS&lt; dim, spacedim, n_components, LAC &gt;_map" name="piDoMUS&lt; dim, spacedim, n_components, LAC &gt;_map">
+  <img src="classpi_do_m_u_s.png" usemap="#piDoMUS&lt; dim, spacedim, LAC &gt;_map" alt=""/>
+  <map id="piDoMUS&lt; dim, spacedim, LAC &gt;_map" name="piDoMUS&lt; dim, spacedim, LAC &gt;_map">
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4a902bf0b42cf72643467bf8fa532858"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a4a902bf0b42cf72643467bf8fa532858">piDoMUS</a> (const <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt; &amp;energy, const MPI_Comm &amp;comm=MPI_COMM_WORLD)</td></tr>
-<tr class="separator:a4a902bf0b42cf72643467bf8fa532858"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2611697a297b8bceedc93953fced8c4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#aa2611697a297b8bceedc93953fced8c4">declare_parameters</a> (ParameterHandler &amp;prm)</td></tr>
-<tr class="separator:aa2611697a297b8bceedc93953fced8c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4d7391fa75105ccadf68aedbb792bea"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#ad4d7391fa75105ccadf68aedbb792bea">parse_parameters_call_back</a> ()</td></tr>
-<tr class="separator:ad4d7391fa75105ccadf68aedbb792bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e76a83f9ea7ad9089ae1c8916c59937"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a3e76a83f9ea7ad9089ae1c8916c59937">run</a> ()</td></tr>
-<tr class="separator:a3e76a83f9ea7ad9089ae1c8916c59937"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a348c5c6193f2e35d853e3cba0c8a93b6"><td class="memItemLeft" align="right" valign="top">virtual shared_ptr&lt; typename LAC::VectorType &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a348c5c6193f2e35d853e3cba0c8a93b6">create_new_vector</a> () const </td></tr>
-<tr class="separator:a348c5c6193f2e35d853e3cba0c8a93b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab41552d022dc49f3e566007175000860"><td class="memItemLeft" align="right" valign="top">virtual unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#ab41552d022dc49f3e566007175000860">n_dofs</a> () const </td></tr>
-<tr class="memdesc:ab41552d022dc49f3e566007175000860"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of degrees of freedom.  <a href="#ab41552d022dc49f3e566007175000860">More...</a><br /></td></tr>
-<tr class="separator:ab41552d022dc49f3e566007175000860"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6886bdb1833ed5c0562cd5061673429f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a6886bdb1833ed5c0562cd5061673429f">output_step</a> (const double t, const typename LAC::VectorType &amp;solution, const typename LAC::VectorType &amp;solution_dot, const unsigned int step_number, const double h)</td></tr>
-<tr class="memdesc:a6886bdb1833ed5c0562cd5061673429f"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is called at the end of each iteration step for the ode solver.  <a href="#a6886bdb1833ed5c0562cd5061673429f">More...</a><br /></td></tr>
-<tr class="separator:a6886bdb1833ed5c0562cd5061673429f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b0fd78c4e98c4bc2a8c56810f23643d"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a2b0fd78c4e98c4bc2a8c56810f23643d">solver_should_restart</a> (const double t, const typename LAC::VectorType &amp;solution, const typename LAC::VectorType &amp;solution_dot, const unsigned int step_number, const double h)</td></tr>
-<tr class="memdesc:a2b0fd78c4e98c4bc2a8c56810f23643d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will check the behaviour of the solution.  <a href="#a2b0fd78c4e98c4bc2a8c56810f23643d">More...</a><br /></td></tr>
-<tr class="separator:a2b0fd78c4e98c4bc2a8c56810f23643d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb8b587e94d82632d6931980c8aa945f"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#afb8b587e94d82632d6931980c8aa945f">residual</a> (const double t, const typename LAC::VectorType &amp;src_yy, const typename LAC::VectorType &amp;src_yp, typename LAC::VectorType &amp;dst)</td></tr>
-<tr class="memdesc:afb8b587e94d82632d6931980c8aa945f"><td class="mdescLeft">&#160;</td><td class="mdescRight">For dae problems, we need a residual function.  <a href="#afb8b587e94d82632d6931980c8aa945f">More...</a><br /></td></tr>
-<tr class="separator:afb8b587e94d82632d6931980c8aa945f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a890af830c2a9fb5d318ba34fb90460d1"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a890af830c2a9fb5d318ba34fb90460d1">setup_jacobian</a> (const double t, const typename LAC::VectorType &amp;src_yy, const typename LAC::VectorType &amp;src_yp, const typename LAC::VectorType &amp;<a class="el" href="classpi_do_m_u_s.html#afb8b587e94d82632d6931980c8aa945f">residual</a>, const double alpha)</td></tr>
-<tr class="memdesc:a890af830c2a9fb5d318ba34fb90460d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup Jacobian system and preconditioner.  <a href="#a890af830c2a9fb5d318ba34fb90460d1">More...</a><br /></td></tr>
-<tr class="separator:a890af830c2a9fb5d318ba34fb90460d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9197e8508e6108f007de223dfc719c21"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a9197e8508e6108f007de223dfc719c21">solve_jacobian_system</a> (const double t, const typename LAC::VectorType &amp;y, const typename LAC::VectorType &amp;y_dot, const typename LAC::VectorType &amp;<a class="el" href="classpi_do_m_u_s.html#afb8b587e94d82632d6931980c8aa945f">residual</a>, const double alpha, const typename LAC::VectorType &amp;src, typename LAC::VectorType &amp;dst) const </td></tr>
-<tr class="memdesc:a9197e8508e6108f007de223dfc719c21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse of the Jacobian vector product.  <a href="#a9197e8508e6108f007de223dfc719c21">More...</a><br /></td></tr>
-<tr class="separator:a9197e8508e6108f007de223dfc719c21"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a239e59958e60fa110ac67a12b6f7accf"><td class="memItemLeft" align="right" valign="top">virtual LAC::VectorType &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a239e59958e60fa110ac67a12b6f7accf">differential_components</a> () const </td></tr>
-<tr class="memdesc:a239e59958e60fa110ac67a12b6f7accf"><td class="mdescLeft">&#160;</td><td class="mdescRight">And an identification of the differential components.  <a href="#a239e59958e60fa110ac67a12b6f7accf">More...</a><br /></td></tr>
-<tr class="separator:a239e59958e60fa110ac67a12b6f7accf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70d130562ea801d5222f270a339df6c3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a70d130562ea801d5222f270a339df6c3">piDoMUS</a> (const std::string &amp;name, const BaseInterface&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt; &amp;energy, const MPI_Comm &amp;comm=MPI_COMM_WORLD)</td></tr>
+<tr class="separator:a70d130562ea801d5222f270a339df6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cf85f5fba76671360ec79141f61ca9a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a1cf85f5fba76671360ec79141f61ca9a">declare_parameters</a> (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classParameterHandler.html">ParameterHandler</a> &amp;prm)</td></tr>
+<tr class="separator:a1cf85f5fba76671360ec79141f61ca9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc68896667d7cfcb4d1f3e2ca6cb93d0"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#acc68896667d7cfcb4d1f3e2ca6cb93d0">parse_parameters_call_back</a> ()</td></tr>
+<tr class="separator:acc68896667d7cfcb4d1f3e2ca6cb93d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bae8d015fe2dc3ad3448d479ec62a40"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a6bae8d015fe2dc3ad3448d479ec62a40">run</a> ()</td></tr>
+<tr class="separator:a6bae8d015fe2dc3ad3448d479ec62a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ede6227e853a308739febc14d0b4702"><td class="memItemLeft" align="right" valign="top">virtual shared_ptr&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a0ede6227e853a308739febc14d0b4702">create_new_vector</a> () const </td></tr>
+<tr class="separator:a0ede6227e853a308739febc14d0b4702"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0eba62cdf535bb99545dddc6ec65740"><td class="memItemLeft" align="right" valign="top">virtual unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#af0eba62cdf535bb99545dddc6ec65740">n_dofs</a> () const </td></tr>
+<tr class="memdesc:af0eba62cdf535bb99545dddc6ec65740"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of degrees of freedom.  <a href="#af0eba62cdf535bb99545dddc6ec65740">More...</a><br /></td></tr>
+<tr class="separator:af0eba62cdf535bb99545dddc6ec65740"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe38aa782fdf9599019fdfca8ef8a74e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#abe38aa782fdf9599019fdfca8ef8a74e">output_step</a> (const double t, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;solution, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;solution_dot, const unsigned int step_number, const double h)</td></tr>
+<tr class="memdesc:abe38aa782fdf9599019fdfca8ef8a74e"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is called at the end of each iteration step for the ode solver.  <a href="#abe38aa782fdf9599019fdfca8ef8a74e">More...</a><br /></td></tr>
+<tr class="separator:abe38aa782fdf9599019fdfca8ef8a74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f8276b89f2c33ee2fd30d8e8fbaf855"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a7f8276b89f2c33ee2fd30d8e8fbaf855">solver_should_restart</a> (const double t, const unsigned int step_number, const double h, typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;solution, typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;solution_dot)</td></tr>
+<tr class="memdesc:a7f8276b89f2c33ee2fd30d8e8fbaf855"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will check the behaviour of the solution.  <a href="#a7f8276b89f2c33ee2fd30d8e8fbaf855">More...</a><br /></td></tr>
+<tr class="separator:a7f8276b89f2c33ee2fd30d8e8fbaf855"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2adae71b9ea21a5a47730c4196bd819d"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a2adae71b9ea21a5a47730c4196bd819d">residual</a> (const double t, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;src_yy, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;src_yp, typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;dst)</td></tr>
+<tr class="memdesc:a2adae71b9ea21a5a47730c4196bd819d"><td class="mdescLeft">&#160;</td><td class="mdescRight">For dae problems, we need a residual function.  <a href="#a2adae71b9ea21a5a47730c4196bd819d">More...</a><br /></td></tr>
+<tr class="separator:a2adae71b9ea21a5a47730c4196bd819d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a324740ed6ec4db830339c619f5f7d3c7"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a324740ed6ec4db830339c619f5f7d3c7">setup_jacobian</a> (const double t, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;src_yy, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;src_yp, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;<a class="el" href="classpi_do_m_u_s.html#a2adae71b9ea21a5a47730c4196bd819d">residual</a>, const double alpha)</td></tr>
+<tr class="memdesc:a324740ed6ec4db830339c619f5f7d3c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup Jacobian system and preconditioner.  <a href="#a324740ed6ec4db830339c619f5f7d3c7">More...</a><br /></td></tr>
+<tr class="separator:a324740ed6ec4db830339c619f5f7d3c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d800cacc8b4b53b657de5a55a41c4ff"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a8d800cacc8b4b53b657de5a55a41c4ff">solve_jacobian_system</a> (const double t, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;y, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;y_dot, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;<a class="el" href="classpi_do_m_u_s.html#a2adae71b9ea21a5a47730c4196bd819d">residual</a>, const double alpha, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;src, typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;dst) const </td></tr>
+<tr class="memdesc:a8d800cacc8b4b53b657de5a55a41c4ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse of the Jacobian vector product.  <a href="#a8d800cacc8b4b53b657de5a55a41c4ff">More...</a><br /></td></tr>
+<tr class="separator:a8d800cacc8b4b53b657de5a55a41c4ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0e10487cbd4cc13724a083f9b53ad34"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#ad0e10487cbd4cc13724a083f9b53ad34">differential_components</a> () const </td></tr>
+<tr class="memdesc:ad0e10487cbd4cc13724a083f9b53ad34"><td class="mdescLeft">&#160;</td><td class="mdescRight">And an identification of the differential components.  <a href="#ad0e10487cbd4cc13724a083f9b53ad34">More...</a><br /></td></tr>
+<tr class="separator:ad0e10487cbd4cc13724a083f9b53ad34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fb4224d7cce3a498ceb13ad4f793a1f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a3fb4224d7cce3a498ceb13ad4f793a1f">get_solution</a> ()</td></tr>
+<tr class="memdesc:a3fb4224d7cce3a498ceb13ad4f793a1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to get back the solution.  <a href="#a3fb4224d7cce3a498ceb13ad4f793a1f">More...</a><br /></td></tr>
+<tr class="separator:a3fb4224d7cce3a498ceb13ad4f793a1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee083efa7d05043bcf8f909b8dddca66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#aee083efa7d05043bcf8f909b8dddca66">update_functions_and_constraints</a> (const double &amp;t)</td></tr>
+<tr class="memdesc:aee083efa7d05043bcf8f909b8dddca66"><td class="mdescLeft">&#160;</td><td class="mdescRight">set time to <code>t</code> for forcing terms and boundary conditions  <a href="#aee083efa7d05043bcf8f909b8dddca66">More...</a><br /></td></tr>
+<tr class="separator:aee083efa7d05043bcf8f909b8dddca66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfcc9f07cd6718fed27c4ffa5cd5a9c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#adfcc9f07cd6718fed27c4ffa5cd5a9c5">apply_dirichlet_bcs</a> (const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;dof_handler, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classConstraintMatrix.html">ConstraintMatrix</a> &amp;constraints) const </td></tr>
+<tr class="memdesc:adfcc9f07cd6718fed27c4ffa5cd5a9c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Dirichlet boundary conditions.  <a href="#adfcc9f07cd6718fed27c4ffa5cd5a9c5">More...</a><br /></td></tr>
+<tr class="separator:adfcc9f07cd6718fed27c4ffa5cd5a9c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34a5888c812ca993dbc2e3f658961930"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a34a5888c812ca993dbc2e3f658961930">apply_neumann_bcs</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, FEValuesCache&lt; dim, spacedim &gt; &amp;scratch, std::vector&lt; double &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a34a5888c812ca993dbc2e3f658961930"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Neumann boundary conditions.  <a href="#a34a5888c812ca993dbc2e3f658961930">More...</a><br /></td></tr>
+<tr class="separator:a34a5888c812ca993dbc2e3f658961930"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58f031bcfce7ddf2c95fb301dd87c917"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a58f031bcfce7ddf2c95fb301dd87c917">apply_forcing_terms</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, FEValuesCache&lt; dim, spacedim &gt; &amp;scratch, std::vector&lt; double &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a58f031bcfce7ddf2c95fb301dd87c917"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies CONSERVATIVE forcing terms.  <a href="#a58f031bcfce7ddf2c95fb301dd87c917">More...</a><br /></td></tr>
+<tr class="separator:a58f031bcfce7ddf2c95fb301dd87c917"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a23c1487c74bea87fc3794e265e919e49"><td class="memTemplParams" colspan="2">template&lt;int fdim, int fspacedim, int fn_components, typename fn_LAC &gt; </td></tr>
-<tr class="memitem:a23c1487c74bea87fc3794e265e919e49"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a23c1487c74bea87fc3794e265e919e49">test</a> (<a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; fdim, fspacedim, fn_components, fn_LAC &gt; &amp;)</td></tr>
-<tr class="separator:a23c1487c74bea87fc3794e265e919e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31b40a7a310f7b40ac29143bf1bfb5e0"><td class="memTemplParams" colspan="2">template&lt;int fdim, int fspacedim, typename fn_LAC &gt; </td></tr>
+<tr class="memitem:a31b40a7a310f7b40ac29143bf1bfb5e0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpi_do_m_u_s.html#a31b40a7a310f7b40ac29143bf1bfb5e0">test</a> (<a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; fdim, fspacedim, fn_LAC &gt; &amp;)</td></tr>
+<tr class="separator:a31b40a7a310f7b40ac29143bf1bfb5e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a4a902bf0b42cf72643467bf8fa532858"></a>
+<a class="anchor" id="a70d130562ea801d5222f270a339df6c3"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::<a class="el" href="classpi_do_m_u_s.html">piDoMUS</a> </td>
+          <td class="memname"><a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::<a class="el" href="classpi_do_m_u_s.html">piDoMUS</a> </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const BaseInterface&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>energy</em>, </td>
         </tr>
         <tr>
@@ -183,17 +204,122 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a348c5c6193f2e35d853e3cba0c8a93b6"></a>
+<a class="anchor" id="adfcc9f07cd6718fed27c4ffa5cd5a9c5"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_dirichlet_bcs </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dof_handler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classConstraintMatrix.html">ConstraintMatrix</a> &amp;&#160;</td>
+          <td class="paramname"><em>constraints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Applies Dirichlet boundary conditions. </p>
+<p>This function is used to applies Dirichlet boundary conditions. It takes as argument a DoF handler <code>dof_handler</code> and a constraint matrix <code>constraints</code>. </p>
+
+</div>
+</div>
+<a class="anchor" id="a58f031bcfce7ddf2c95fb301dd87c917"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_forcing_terms </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FEValuesCache&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>scratch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; double &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residual</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Applies CONSERVATIVE forcing terms. </p>
+<p>This function applies the conservative forcing terms, which can be defined by expressions in the parameter file.</p>
+<p>If the problem involves NON-conservative loads, they must be included in the residual formulation. </p>
+
+</div>
+</div>
+<a class="anchor" id="a34a5888c812ca993dbc2e3f658961930"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_neumann_bcs </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FEValuesCache&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>scratch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; double &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residual</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Applies Neumann boundary conditions. </p>
+
+</div>
+</div>
+<a class="anchor" id="a0ede6227e853a308739febc14d0b4702"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">shared_ptr&lt; typename LAC::VectorType &gt; <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::create_new_vector </td>
+          <td class="memname">shared_ptr&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt; <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::create_new_vector </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -208,19 +334,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aa2611697a297b8bceedc93953fced8c4"></a>
+<a class="anchor" id="a1cf85f5fba76671360ec79141f61ca9a"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::declare_parameters </td>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::declare_parameters </td>
           <td>(</td>
-          <td class="paramtype">ParameterHandler &amp;&#160;</td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classParameterHandler.html">ParameterHandler</a> &amp;&#160;</td>
           <td class="paramname"><em>prm</em></td><td>)</td>
           <td></td>
         </tr>
@@ -234,17 +360,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a239e59958e60fa110ac67a12b6f7accf"></a>
+<a class="anchor" id="ad0e10487cbd4cc13724a083f9b53ad34"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">LAC::VectorType &amp; <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::differential_components </td>
+          <td class="memname"><a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp; <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::differential_components </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -262,17 +388,36 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ab41552d022dc49f3e566007175000860"></a>
+<a class="anchor" id="a3fb4224d7cce3a498ceb13ad4f793a1f"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp; <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_solution </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function is used to get back the solution. </p>
+
+</div>
+</div>
+<a class="anchor" id="af0eba62cdf535bb99545dddc6ec65740"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::n_dofs </td>
+          <td class="memname">unsigned int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::n_dofs </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -290,17 +435,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a6886bdb1833ed5c0562cd5061673429f"></a>
+<a class="anchor" id="abe38aa782fdf9599019fdfca8ef8a74e"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::output_step </td>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::output_step </td>
           <td>(</td>
           <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -308,13 +453,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>solution</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>solution_dot</em>, </td>
         </tr>
         <tr>
@@ -347,17 +492,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ad4d7391fa75105ccadf68aedbb792bea"></a>
+<a class="anchor" id="acc68896667d7cfcb4d1f3e2ca6cb93d0"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::parse_parameters_call_back </td>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::parse_parameters_call_back </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -372,17 +517,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="afb8b587e94d82632d6931980c8aa945f"></a>
+<a class="anchor" id="a2adae71b9ea21a5a47730c4196bd819d"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::residual </td>
+          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::residual </td>
           <td>(</td>
           <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -390,19 +535,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>src_yy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>src_yp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>dst</em>&#160;</td>
         </tr>
         <tr>
@@ -422,14 +567,14 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a3e76a83f9ea7ad9089ae1c8916c59937"></a>
+<a class="anchor" id="a6bae8d015fe2dc3ad3448d479ec62a40"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::run </td>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::run </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -439,17 +584,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a890af830c2a9fb5d318ba34fb90460d1"></a>
+<a class="anchor" id="a324740ed6ec4db830339c619f5f7d3c7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::setup_jacobian </td>
+          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::setup_jacobian </td>
           <td>(</td>
           <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -457,19 +602,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>src_yy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>src_yp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>residual</em>, </td>
         </tr>
         <tr>
@@ -495,17 +640,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a9197e8508e6108f007de223dfc719c21"></a>
+<a class="anchor" id="a8d800cacc8b4b53b657de5a55a41c4ff"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::solve_jacobian_system </td>
+          <td class="memname">int <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::solve_jacobian_system </td>
           <td>(</td>
           <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -513,19 +658,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>y</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>y_dot</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>residual</em>, </td>
         </tr>
         <tr>
@@ -537,13 +682,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>src</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>dst</em>&#160;</td>
         </tr>
         <tr>
@@ -563,32 +708,20 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a2b0fd78c4e98c4bc2a8c56810f23643d"></a>
+<a class="anchor" id="a7f8276b89f2c33ee2fd30d8e8fbaf855"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, n_components, LAC &gt;::solver_should_restart </td>
+          <td class="memname">bool <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::solver_should_restart </td>
           <td>(</td>
           <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
-          <td class="paramname"><em>solution</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
-          <td class="paramname"><em>solution_dot</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -600,7 +733,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>h</em>&#160;</td>
+          <td class="paramname"><em>h</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
+          <td class="paramname"><em>solution</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
+          <td class="paramname"><em>solution_dot</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -620,14 +765,34 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<h2 class="groupheader">Friends And Related Function Documentation</h2>
-<a class="anchor" id="a23c1487c74bea87fc3794e265e919e49"></a>
+<a class="anchor" id="aee083efa7d05043bcf8f909b8dddca66"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC  = LATrilinos&gt; </div>
+template&lt;int dim, int spacedim, typename LAC &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; dim, spacedim, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::update_functions_and_constraints </td>
+          <td>(</td>
+          <td class="paramtype">const double &amp;&#160;</td>
+          <td class="paramname"><em>t</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set time to <code>t</code> for forcing terms and boundary conditions </p>
+
+</div>
+</div>
+<h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a class="anchor" id="a31b40a7a310f7b40ac29143bf1bfb5e0"></a>
+<div class="memitem">
+<div class="memproto">
 <div class="memtemplate">
-template&lt;int fdim, int fspacedim, int fn_components, typename fn_LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, typename LAC  = LATrilinos&gt; </div>
+<div class="memtemplate">
+template&lt;int fdim, int fspacedim, typename fn_LAC &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -635,7 +800,7 @@ template&lt;int fdim, int fspacedim, int fn_components, typename fn_LAC &gt; </d
         <tr>
           <td class="memname">void test </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; fdim, fspacedim, fn_components, fn_LAC &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classpi_do_m_u_s.html">piDoMUS</a>&lt; fdim, fspacedim, fn_LAC &gt; &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -659,7 +824,7 @@ template&lt;int fdim, int fspacedim, int fn_components, typename fn_LAC &gt; </d
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classpi_do_m_u_s.html">piDoMUS</a></li>
-    <li class="footer">Generated on Sun Nov 1 2015 15:00:10 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
+    <li class="footer">Generated on Mon Jan 11 2016 13:06:02 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

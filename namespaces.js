@@ -1,4 +1,5 @@
 var namespaces =
 [
-    [ "Assembly", "namespace_assembly.html", "namespace_assembly" ]
+    [ "pidomus", "namespacepidomus.html", null ],
+    [ "std", "namespacestd.html", null ]
 ];

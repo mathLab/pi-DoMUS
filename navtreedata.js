@@ -1,6 +1,7 @@
 var NAVTREE =
 [
   [ "pi-DoMUS: Parallel Deal.II MUltiphysics Solver", "index.html", [
+    [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", null, [
       [ "Namespace List", "namespaces.html", "namespaces" ]
     ] ],
@@ -29,7 +30,10 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"annotated.html"
+"ale__navier__stokes_8h.html",
+"group__Exceptions.html#ga35726ecd9d98d43be2d7194d54c140c7",
+"group__constraints.html#ga1c6685360c01c9c46eeb7575e8ef68ac",
+"hydrogels__three__fields_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

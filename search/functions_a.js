@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['reinit',['reinit',['../class_interface.html#a156995cf9232ba68716f97b7feb54e6b',1,'Interface::reinit(const Number &amp;alpha, const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const '],['../class_interface.html#af7a8d8cc23f3636fa28d8a392beb7975',1,'Interface::reinit(const Number &amp;alpha, const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, const unsigned int face_no, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const ']]],
-  ['residual',['residual',['../classpi_do_m_u_s.html#afb8b587e94d82632d6931980c8aa945f',1,'piDoMUS']]],
-  ['run',['run',['../classpi_do_m_u_s.html#a3e76a83f9ea7ad9089ae1c8916c59937',1,'piDoMUS']]]
+  ['kill_5ffile',['kill_file',['http://www.dealii.org/developer/doxygen/deal.II/classSwappableVector.html#ab7534657f74442edca2275b53e2523ba',1,'SwappableVector']]],
+  ['king_5fordering',['king_ordering',['http://www.dealii.org/developer/doxygen/deal.II/namespaceDoFRenumbering_1_1boost.html#a7dae40bee2464606f71a81ddf85e1811',1,'DoFRenumbering::boost']]],
+  ['kovasznay',['Kovasznay',['http://www.dealii.org/developer/doxygen/deal.II/classFunctions_1_1Kovasznay.html#a082166be0e076803fed98a61450e05a5',1,'Functions::Kovasznay']]]
 ];

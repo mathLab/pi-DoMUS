@@ -99,44 +99,44 @@ $(document).ready(function(){initNavTree('pidomus_8cc.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="pidomus_8h_source.html">pidomus.h</a>&quot;</code><br />
-<code>#include &lt;deal.II/lac/trilinos_precondition.h&gt;</code><br />
-<code>#include &lt;deal.II/numerics/solution_transfer.h&gt;</code><br />
-<code>#include &lt;deal.II/base/quadrature_lib.h&gt;</code><br />
-<code>#include &lt;deal.II/base/logstream.h&gt;</code><br />
-<code>#include &lt;deal.II/base/function.h&gt;</code><br />
-<code>#include &lt;deal.II/base/utilities.h&gt;</code><br />
-<code>#include &lt;deal.II/base/conditional_ostream.h&gt;</code><br />
-<code>#include &lt;deal.II/base/work_stream.h&gt;</code><br />
-<code>#include &lt;deal.II/fe/mapping_q_eulerian.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/full_matrix.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/solver_cg.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/solver_gmres.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/sparse_direct.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/constraint_matrix.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/block_sparsity_pattern.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/trilinos_block_vector.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/trilinos_sparse_matrix.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/trilinos_solver.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/block_linear_operator.h&gt;</code><br />
-<code>#include &lt;deal.II/lac/linear_operator.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/tria.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/grid_generator.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/tria_accessor.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/tria_iterator.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/filtered_iterator.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/tria_boundary_lib.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/grid_tools.h&gt;</code><br />
-<code>#include &lt;deal.II/grid/grid_refinement.h&gt;</code><br />
-<code>#include &lt;deal.II/dofs/dof_handler.h&gt;</code><br />
-<code>#include &lt;deal.II/dofs/dof_renumbering.h&gt;</code><br />
-<code>#include &lt;deal.II/dofs/dof_accessor.h&gt;</code><br />
-<code>#include &lt;deal.II/dofs/dof_tools.h&gt;</code><br />
-<code>#include &lt;deal.II/numerics/vector_tools.h&gt;</code><br />
-<code>#include &lt;deal.II/numerics/matrix_tools.h&gt;</code><br />
-<code>#include &lt;deal.II/numerics/error_estimator.h&gt;</code><br />
-<code>#include &lt;deal.II/distributed/solution_transfer.h&gt;</code><br />
-<code>#include &lt;deal.II/distributed/tria.h&gt;</code><br />
-<code>#include &lt;deal.II/distributed/grid_refinement.h&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/trilinos__precondition_8h.html">deal.II/lac/trilinos_precondition.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/numerics_2solution__transfer_8h.html">deal.II/numerics/solution_transfer.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/quadrature__lib_8h.html">deal.II/base/quadrature_lib.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/logstream_8h.html">deal.II/base/logstream.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/function_8h.html">deal.II/base/function.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/include_2deal_8II_2base_2utilities_8h.html">deal.II/base/utilities.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/conditional__ostream_8h.html">deal.II/base/conditional_ostream.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/work__stream_8h.html">deal.II/base/work_stream.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/mapping__q__eulerian_8h.html">deal.II/fe/mapping_q_eulerian.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/full__matrix_8h.html">deal.II/lac/full_matrix.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/solver__cg_8h.html">deal.II/lac/solver_cg.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/solver__gmres_8h.html">deal.II/lac/solver_gmres.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/sparse__direct_8h.html">deal.II/lac/sparse_direct.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/constraint__matrix_8h.html">deal.II/lac/constraint_matrix.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/block__sparsity__pattern_8h.html">deal.II/lac/block_sparsity_pattern.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/trilinos__block__vector_8h.html">deal.II/lac/trilinos_block_vector.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/trilinos__sparse__matrix_8h.html">deal.II/lac/trilinos_sparse_matrix.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/trilinos__solver_8h.html">deal.II/lac/trilinos_solver.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/block__linear__operator_8h.html">deal.II/lac/block_linear_operator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/linear__operator_8h.html">deal.II/lac/linear_operator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/grid_2tria_8h.html">deal.II/grid/tria.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/grid__generator_8h.html">deal.II/grid/grid_generator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/tria__accessor_8h.html">deal.II/grid/tria_accessor.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/tria__iterator_8h.html">deal.II/grid/tria_iterator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/filtered__iterator_8h.html">deal.II/grid/filtered_iterator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/tria__boundary__lib_8h.html">deal.II/grid/tria_boundary_lib.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/grid__tools_8h.html">deal.II/grid/grid_tools.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/grid_2grid__refinement_8h.html">deal.II/grid/grid_refinement.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/dofs_2dof__handler_8h.html">deal.II/dofs/dof_handler.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/dof__renumbering_8h.html">deal.II/dofs/dof_renumbering.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/dof__accessor_8h.html">deal.II/dofs/dof_accessor.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/dof__tools_8h.html">deal.II/dofs/dof_tools.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/vector__tools_8h.html">deal.II/numerics/vector_tools.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/matrix__tools_8h.html">deal.II/numerics/matrix_tools.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/error__estimator_8h.html">deal.II/numerics/error_estimator.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/distributed_2solution__transfer_8h.html">deal.II/distributed/solution_transfer.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/distributed_2tria_8h.html">deal.II/distributed/tria.h</a>&gt;</code><br />
+<code>#include &lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/distributed_2grid__refinement_8h.html">deal.II/distributed/grid_refinement.h</a>&gt;</code><br />
 <code>#include &lt;deal2lkit/utilities.h&gt;</code><br />
 <code>#include &lt;typeinfo&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
@@ -147,14 +147,14 @@ $(document).ready(function(){initNavTree('pidomus_8cc.html','');});
 <code>#include &lt;locale&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;math.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="lac__initializer_8h_source.html">lac_initializer.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="lac__initializer_8h_source.html">lac/lac_initializer.h</a>&quot;</code><br />
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_b2f33c71d4aa5e7af42a1ca61ff5af1b.html">source</a></li><li class="navelem"><a class="el" href="pidomus_8cc.html">pidomus.cc</a></li>
-    <li class="footer">Generated on Sun Nov 1 2015 15:00:10 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
+    <li class="navelem"><a class="el" href="dir_83538895fa5c9617152af84871246ca3.html">source</a></li><li class="navelem"><a class="el" href="pidomus_8cc.html">pidomus.cc</a></li>
+    <li class="footer">Generated on Mon Jan 11 2016 13:06:02 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

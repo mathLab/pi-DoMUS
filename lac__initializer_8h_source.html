@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>pi-DoMUS: Parallel Deal.II MUltiphysics Solver: include/lac_initializer.h Source File</title>
+<title>pi-DoMUS: Parallel Deal.II MUltiphysics Solver: include/lac/lac_initializer.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('lac__initializer_8h_source.html','');}
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define _LAC_INITIALIZER_H_</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;</div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// This includes all types we know of.</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="lac__type_8h.html">lac_type.h</a>&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;mpi.h&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="lac__type_8h.html">lac/lac_type.h</a>&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/mpi_8h.html">mpi.h</a>&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_scoped_l_a_c_initializer.html">ScopedLACInitializer</a></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;{</div>
@@ -118,97 +118,111 @@ $(document).ready(function(){initNavTree('lac__initializer_8h_source.html','');}
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    comm(comm)</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  {};</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">   28</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(TrilinosWrappers::MPI::BlockVector &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
+<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">   28</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html">TrilinosWrappers::MPI::BlockVector</a> &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  {</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    v.reinit(owned, comm, fast);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    v.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html#ab68f12349549b45a3c1d05aa67eb83ce">reinit</a>(owned, comm, fast);</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  };</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a7d6847b680dbba593cdbf768356cfe44">   37</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a7d6847b680dbba593cdbf768356cfe44">ghosted</a>(TrilinosWrappers::MPI::BlockVector &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a7d6847b680dbba593cdbf768356cfe44">   37</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a7d6847b680dbba593cdbf768356cfe44">ghosted</a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html">TrilinosWrappers::MPI::BlockVector</a> &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    v.reinit(owned, relevant, comm, fast);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    v.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html#ab68f12349549b45a3c1d05aa67eb83ce">reinit</a>(owned, relevant, comm, fast);</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  };</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#ae6122c8ddc4a7460a649cd6e7feb98a9">   45</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(BlockVector&lt;double&gt; &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#ae6122c8ddc4a7460a649cd6e7feb98a9">   45</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBlockVector.html">BlockVector&lt;double&gt;</a> &amp;v, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  {</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    v.reinit(dofs_per_block, fast);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    v.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBlockVector.html#adf4d1d6c3538af95309a95da2ded758c">reinit</a>(dofs_per_block, fast);</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  };</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a7b651625fa3017b650126038271e46bb">   55</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a7b651625fa3017b650126038271e46bb">ghosted</a>(BlockVector&lt;double&gt; &amp;, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a7b651625fa3017b650126038271e46bb">   55</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a7b651625fa3017b650126038271e46bb">ghosted</a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBlockVector.html">BlockVector&lt;double&gt;</a> &amp;, <span class="keywordtype">bool</span> fast=<span class="keyword">false</span>)</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    Assert(<span class="keyword">false</span>, ExcInternalError(<span class="stringliteral">&quot;You tried to create a ghosted vector in a serial run.&quot;</span>));</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  };</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> dim, <span class="keywordtype">int</span> spacedim&gt;</div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a8e834007bff14ec3ebffd4a5e2ea8799">   64</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(TrilinosWrappers::BlockSparsityPattern &amp;s,</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                   <span class="keyword">const</span> DoFHandler&lt;dim, spacedim&gt; &amp;dh,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                   <span class="keyword">const</span> ConstraintMatrix &amp;cm,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                   <span class="keyword">const</span> Table&lt;2,DoFTools::Coupling&gt; &amp;coupling)</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    s.reinit(owned, owned, relevant, comm);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    DoFTools::make_sparsity_pattern (dh,</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                                     coupling, s,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                                     cm, <span class="keyword">false</span>,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                                     Utilities::MPI::this_mpi_process(comm));</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    s.compress();</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> dim, <span class="keywordtype">int</span> spacedim&gt;</div>
-<div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a9eec6315eec336ffa95e18600c339881">   81</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(dealii::BlockSparsityPattern &amp;s,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                   <span class="keyword">const</span> DoFHandler&lt;dim, spacedim&gt; &amp;dh,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                   <span class="keyword">const</span> ConstraintMatrix &amp;cm,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                   <span class="keyword">const</span> Table&lt;2,DoFTools::Coupling&gt; &amp;coupling)</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  {</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    dealii::BlockDynamicSparsityPattern csp(dofs_per_block, dofs_per_block);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    DoFTools::make_sparsity_pattern (dh,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                                     coupling, csp,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                                     cm, <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    csp.compress();</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    s.copy_from(csp);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keyword">const</span> std::vector&lt;types::global_dof_index&gt; &amp;dofs_per_block;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keyword">const</span> std::vector&lt;IndexSet&gt; &amp;owned;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keyword">const</span> std::vector&lt;IndexSet&gt; &amp;relevant;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keyword">const</span> MPI_Comm &amp;comm;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;};</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Exceptions.html#ga70a0bb353656e704acf927945277bbc6">Assert</a>(<span class="keyword">false</span>, ExcInternalError(<span class="stringliteral">&quot;You tried to create a ghosted vector in a serial run.&quot;</span>));</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    (void)fast;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  };</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> dim, <span class="keywordtype">int</span> spacedim&gt;</div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a8e834007bff14ec3ebffd4a5e2ea8799">   65</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparsityPattern.html">TrilinosWrappers::BlockSparsityPattern</a> &amp;s,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler&lt;dim, spacedim&gt;</a> &amp;dh,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/structConstraintMatrix_1_1ConstraintLine.html">ConstraintMatrix</a> &amp;cm,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table&lt;2,DoFTools::Coupling&gt;</a> &amp;coupling)</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    s.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparsityPattern.html#aac6ef81440078f72776ff858ca6fddca">reinit</a>(owned, owned, relevant, comm);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__constraints.html#ga38d88a1a559e9fc65d60f3e168921ba5">DoFTools::make_sparsity_pattern</a> (dh,</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                                     coupling, s,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                                     cm, <span class="keyword">false</span>,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                                     <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/namespaceUtilities_1_1MPI.html#a895dcd8223a0ee6f0e6a80b80e2d5982">Utilities::MPI::this_mpi_process</a>(comm));</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    s.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBlockSparsityPatternBase.html#af889ffe0af308fb841d041d61f6a11be">compress</a>();</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> dim, <span class="keywordtype">int</span> spacedim&gt;</div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="class_scoped_l_a_c_initializer.html#a9eec6315eec336ffa95e18600c339881">   82</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">operator() </a>(dealii::BlockSparsityPattern &amp;s,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler&lt;dim, spacedim&gt;</a> &amp;dh,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/structConstraintMatrix_1_1ConstraintLine.html">ConstraintMatrix</a> &amp;cm,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                   <span class="keyword">const</span> <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table&lt;2,DoFTools::Coupling&gt;</a> &amp;coupling)</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  {</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    dealii::BlockDynamicSparsityPattern csp(dofs_per_block, dofs_per_block);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__constraints.html#ga38d88a1a559e9fc65d60f3e168921ba5">DoFTools::make_sparsity_pattern</a> (dh,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                                     coupling, csp,</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                                     cm, <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    csp.compress();</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    s.copy_from(csp);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keyword">const</span> std::vector&lt;types::global_dof_index&gt; &amp;dofs_per_block;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keyword">const</span> std::vector&lt;IndexSet&gt; &amp;owned;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keyword">const</span> std::vector&lt;IndexSet&gt; &amp;relevant;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="keyword">const</span> MPI_Comm &amp;comm;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;};</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="comment">// A few useful functions</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">  119</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a>(TrilinosWrappers::BlockSparseMatrix &amp;m,</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                     VectorOperation::values op)</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;{</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  m.compress(op);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;}</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;</div>
-<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="lac__initializer_8h.html#a609722269cf639b91096dd4f41aa57ae">  125</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a>(dealii::BlockSparseMatrix&lt;double&gt; &amp;,</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;                     VectorOperation::values )</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;{</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;}</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="comment">// A few useful functions</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno"><a class="line" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">  120</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a>(<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparseMatrix.html">TrilinosWrappers::BlockSparseMatrix</a> &amp;m,</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                     VectorOperation::values op)</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;{</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  m.<a class="codeRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBlockMatrixBase.html#a74954a421ab950fef132131c2eb6b5f9">compress</a>(op);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;}</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;</div>
+<div class="line"><a name="l00126"></a><span class="lineno"><a class="line" href="lac__initializer_8h.html#a609722269cf639b91096dd4f41aa57ae">  126</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a>(dealii::BlockSparseMatrix&lt;double&gt; &amp;,</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                     VectorOperation::values )</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;{</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;}</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="class_scoped_l_a_c_initializer_html_a217673451667115e76b02b3904d6b449"><div class="ttname"><a href="class_scoped_l_a_c_initializer.html#a217673451667115e76b02b3904d6b449">ScopedLACInitializer::operator()</a></div><div class="ttdeci">void operator()(TrilinosWrappers::MPI::BlockVector &amp;v, bool fast=false)</div><div class="ttdoc">Initialize a non ghosted TrilinosWrappers::MPI::BlockVector. </div><div class="ttdef"><b>Definition:</b> lac_initializer.h:28</div></div>
+<div class="ttc" id="classTrilinosWrappers_1_1BlockSparsityPattern_html_aac6ef81440078f72776ff858ca6fddca"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparsityPattern.html#aac6ef81440078f72776ff858ca6fddca">TrilinosWrappers::BlockSparsityPattern::reinit</a></div><div class="ttdeci">void reinit(const std::vector&lt; size_type &gt; &amp;row_block_sizes, const std::vector&lt; size_type &gt; &amp;col_block_sizes)</div></div>
+<div class="ttc" id="classBlockSparsityPatternBase_html_af889ffe0af308fb841d041d61f6a11be"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classBlockSparsityPatternBase.html#af889ffe0af308fb841d041d61f6a11be">BlockSparsityPatternBase&lt; SparsityPattern &gt;::compress</a></div><div class="ttdeci">void compress()</div></div>
 <div class="ttc" id="class_scoped_l_a_c_initializer_html_a7d6847b680dbba593cdbf768356cfe44"><div class="ttname"><a href="class_scoped_l_a_c_initializer.html#a7d6847b680dbba593cdbf768356cfe44">ScopedLACInitializer::ghosted</a></div><div class="ttdeci">void ghosted(TrilinosWrappers::MPI::BlockVector &amp;v, bool fast=false)</div><div class="ttdoc">Initialize a ghosted TrilinosWrappers::MPI::BlockVector. </div><div class="ttdef"><b>Definition:</b> lac_initializer.h:37</div></div>
 <div class="ttc" id="lac__type_8h_html"><div class="ttname"><a href="lac__type_8h.html">lac_type.h</a></div></div>
+<div class="ttc" id="classTrilinosWrappers_1_1BlockSparsityPattern_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparsityPattern.html">TrilinosWrappers::BlockSparsityPattern</a></div></div>
 <div class="ttc" id="class_scoped_l_a_c_initializer_html"><div class="ttname"><a href="class_scoped_l_a_c_initializer.html">ScopedLACInitializer</a></div><div class="ttdoc">General class, used to initialize different types of Vectors, Matrices and Sparsity Patterns using a ...</div><div class="ttdef"><b>Definition:</b> lac_initializer.h:12</div></div>
+<div class="ttc" id="classTrilinosWrappers_1_1MPI_1_1BlockVector_html_ab68f12349549b45a3c1d05aa67eb83ce"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html#ab68f12349549b45a3c1d05aa67eb83ce">TrilinosWrappers::MPI::BlockVector::reinit</a></div><div class="ttdeci">void reinit(const std::vector&lt; Epetra_Map &gt; &amp;parallel_partitioning, const bool omit_zeroing_entries=false) DEAL_II_DEPRECATED</div></div>
+<div class="ttc" id="group__Exceptions_html_ga70a0bb353656e704acf927945277bbc6"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/group__Exceptions.html#ga70a0bb353656e704acf927945277bbc6">Assert</a></div><div class="ttdeci">#define Assert(cond, exc)</div></div>
+<div class="ttc" id="classTrilinosWrappers_1_1MPI_1_1BlockVector_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1MPI_1_1BlockVector.html">TrilinosWrappers::MPI::BlockVector</a></div></div>
+<div class="ttc" id="classBlockVector_html_adf4d1d6c3538af95309a95da2ded758c"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classBlockVector.html#adf4d1d6c3538af95309a95da2ded758c">BlockVector::reinit</a></div><div class="ttdeci">void reinit(const unsigned int n_blocks, const size_type block_size=0, const bool omit_zeroing_entries=false)</div></div>
+<div class="ttc" id="structConstraintMatrix_1_1ConstraintLine_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/structConstraintMatrix_1_1ConstraintLine.html">ConstraintMatrix</a></div></div>
+<div class="ttc" id="classBlockVector_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classBlockVector.html">BlockVector&lt; double &gt;</a></div></div>
+<div class="ttc" id="mpi_8h_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/mpi_8h.html">mpi.h</a></div></div>
+<div class="ttc" id="group__constraints_html_ga38d88a1a559e9fc65d60f3e168921ba5"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/group__constraints.html#ga38d88a1a559e9fc65d60f3e168921ba5">DoFTools::make_sparsity_pattern</a></div><div class="ttdeci">void make_sparsity_pattern(const DoFHandlerType &amp;dof_handler, SparsityPatternType &amp;sparsity_pattern, const ConstraintMatrix &amp;constraints=ConstraintMatrix(), const bool keep_constrained_dofs=true, const types::subdomain_id subdomain_id=numbers::invalid_subdomain_id)</div></div>
+<div class="ttc" id="classTrilinosWrappers_1_1BlockSparseMatrix_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTrilinosWrappers_1_1BlockSparseMatrix.html">TrilinosWrappers::BlockSparseMatrix</a></div></div>
 <div class="ttc" id="class_scoped_l_a_c_initializer_html_a7b651625fa3017b650126038271e46bb"><div class="ttname"><a href="class_scoped_l_a_c_initializer.html#a7b651625fa3017b650126038271e46bb">ScopedLACInitializer::ghosted</a></div><div class="ttdeci">void ghosted(BlockVector&lt; double &gt; &amp;, bool fast=false)</div><div class="ttdoc">Initiale a ghosted BlockVector<double>. </div><div class="ttdef"><b>Definition:</b> lac_initializer.h:55</div></div>
+<div class="ttc" id="classDoFHandler_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a></div></div>
+<div class="ttc" id="namespaceUtilities_1_1MPI_html_a895dcd8223a0ee6f0e6a80b80e2d5982"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/namespaceUtilities_1_1MPI.html#a895dcd8223a0ee6f0e6a80b80e2d5982">Utilities::MPI::this_mpi_process</a></div><div class="ttdeci">unsigned int this_mpi_process(const MPI_Comm &amp;mpi_communicator)</div></div>
+<div class="ttc" id="classTable_html"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table&lt; 2, DoFTools::Coupling &gt;</a></div></div>
 <div class="ttc" id="class_scoped_l_a_c_initializer_html_a3995bf20681a335c3c578876a19295e8"><div class="ttname"><a href="class_scoped_l_a_c_initializer.html#a3995bf20681a335c3c578876a19295e8">ScopedLACInitializer::ScopedLACInitializer</a></div><div class="ttdeci">ScopedLACInitializer(const std::vector&lt; types::global_dof_index &gt; &amp;dofs_per_block, const std::vector&lt; IndexSet &gt; &amp;owned, const std::vector&lt; IndexSet &gt; &amp;relevant, const MPI_Comm &amp;comm=MPI_COMM_WORLD)</div><div class="ttdef"><b>Definition:</b> lac_initializer.h:15</div></div>
-<div class="ttc" id="lac__initializer_8h_html_aa2759db6d83a67716ad1f5f08ead53d7"><div class="ttname"><a href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a></div><div class="ttdeci">void compress(TrilinosWrappers::BlockSparseMatrix &amp;m, VectorOperation::values op)</div><div class="ttdef"><b>Definition:</b> lac_initializer.h:119</div></div>
+<div class="ttc" id="classBlockMatrixBase_html_a74954a421ab950fef132131c2eb6b5f9"><div class="ttname"><a href="http://www.dealii.org/developer/doxygen/deal.II/classBlockMatrixBase.html#a74954a421ab950fef132131c2eb6b5f9">BlockMatrixBase&lt; SparseMatrix &gt;::compress</a></div><div class="ttdeci">void compress(::VectorOperation::values operation)</div></div>
+<div class="ttc" id="lac__initializer_8h_html_aa2759db6d83a67716ad1f5f08ead53d7"><div class="ttname"><a href="lac__initializer_8h.html#aa2759db6d83a67716ad1f5f08ead53d7">compress</a></div><div class="ttdeci">void compress(TrilinosWrappers::BlockSparseMatrix &amp;m, VectorOperation::values op)</div><div class="ttdef"><b>Definition:</b> lac_initializer.h:120</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="lac__initializer_8h.html">lac_initializer.h</a></li>
-    <li class="footer">Generated on Sun Nov 1 2015 15:00:10 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
+    <li class="navelem"><a class="el" href="dir_75bb855a2d1214f16c793c314a24c360.html">include</a></li><li class="navelem"><a class="el" href="dir_f1193d57cd363635c88208ed34562834.html">lac</a></li><li class="navelem"><a class="el" href="lac__initializer_8h.html">lac_initializer.h</a></li>
+    <li class="footer">Generated on Mon Jan 11 2016 13:06:02 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

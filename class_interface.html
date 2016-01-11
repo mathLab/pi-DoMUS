@@ -96,6 +96,7 @@ $(document).ready(function(){initNavTree('class_interface.html','');});
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_interface-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -106,15 +107,19 @@ $(document).ready(function(){initNavTree('class_interface.html','');});
 <p><a class="el" href="class_interface.html" title="Interface. ">Interface</a>.  
  <a href="class_interface.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="interface_8h_source.html">interface.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="old__interface_8h_source.html">old_interface.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for Interface&lt; dim, spacedim, n_components, LAC &gt;:</div>
 <div class="dyncontent">
  <div class="center">
   <img src="class_interface.png" usemap="#Interface&lt; dim, spacedim, n_components, LAC &gt;_map" alt=""/>
   <map id="Interface&lt; dim, spacedim, n_components, LAC &gt;_map" name="Interface&lt; dim, spacedim, n_components, LAC &gt;_map">
-<area href="class_conservative_interface.html" alt="ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;" shape="rect" coords="0,112,480,136"/>
-<area href="class_non_conservative_interface.html" alt="NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;" shape="rect" coords="490,112,970,136"/>
+<area href="class_conservative_interface.html" alt="ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;" shape="rect" coords="0,112,573,136"/>
+<area href="class_conservative_interface.html" alt="ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;" shape="rect" coords="583,112,1156,136"/>
+<area href="class_conservative_interface.html" alt="ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;" shape="rect" coords="1166,112,1739,136"/>
+<area href="class_non_conservative_interface.html" alt="NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;" shape="rect" coords="1749,112,2322,136"/>
+<area href="class_heat_equation.html" alt="HeatEquation&lt; dim, LAC &gt;" shape="rect" coords="583,168,1156,192"/>
+<area href="class_free_swelling_three_fields.html" alt="FreeSwellingThreeFields&lt; dim, spacedim &gt;" shape="rect" coords="1166,168,1739,192"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -124,82 +129,101 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a12d780a91571fa8c4a7657558fa7ea8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4b684ec17035d9f4384a0d9de4da4c5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ab4b684ec17035d9f4384a0d9de4da4c5">Interface</a> (const std::string &amp;name=&quot;&quot;, const std::string &amp;default_fe=&quot;FE_Q(1)&quot;, const std::string &amp;default_component_names=&quot;u&quot;, const std::string &amp;default_coupling=&quot;&quot;, const std::string &amp;default_preconditioner_coupling=&quot;&quot;, const std::string &amp;default_differential_components=&quot;&quot;)</td></tr>
 <tr class="separator:ab4b684ec17035d9f4384a0d9de4da4c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6118bddac5afb230b856272c3adb152"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ae6118bddac5afb230b856272c3adb152">declare_parameters</a> (ParameterHandler &amp;prm)</td></tr>
-<tr class="separator:ae6118bddac5afb230b856272c3adb152"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6957faf42e6618ea59b64d00a312779b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a6957faf42e6618ea59b64d00a312779b">parse_parameters_call_back</a> ()</td></tr>
-<tr class="separator:a6957faf42e6618ea59b64d00a312779b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae85c272b0b3c7cfcbe8ddea87a769fd9"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ae85c272b0b3c7cfcbe8ddea87a769fd9">get_differential_blocks</a> () const </td></tr>
-<tr class="separator:ae85c272b0b3c7cfcbe8ddea87a769fd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50e2c736dd58d653a05eed4128703d8e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a50e2c736dd58d653a05eed4128703d8e">set_time</a> (const double &amp;<a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a>) const </td></tr>
-<tr class="memdesc:a50e2c736dd58d653a05eed4128703d8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">update time of all parsed mapped functions  <a href="#a50e2c736dd58d653a05eed4128703d8e">More...</a><br /></td></tr>
-<tr class="separator:a50e2c736dd58d653a05eed4128703d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d4e0f21714ffaa98abb336352b7f32b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2d4e0f21714ffaa98abb336352b7f32b">postprocess_newly_created_triangulation</a> (Triangulation&lt; dim, spacedim &gt; &amp;tria) const </td></tr>
-<tr class="memdesc:a2d4e0f21714ffaa98abb336352b7f32b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to modify triangulation using boundary_id or manifold_id.  <a href="#a2d4e0f21714ffaa98abb336352b7f32b">More...</a><br /></td></tr>
-<tr class="separator:a2d4e0f21714ffaa98abb336352b7f32b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f0e236f707f60aeb8eb3c6c9c2caba9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a4f0e236f707f60aeb8eb3c6c9c2caba9">apply_dirichlet_bcs</a> (const DoFHandler&lt; dim, spacedim &gt; &amp;dof_handler, ConstraintMatrix &amp;constraints) const </td></tr>
-<tr class="memdesc:a4f0e236f707f60aeb8eb3c6c9c2caba9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Dirichlet boundary conditions.  <a href="#a4f0e236f707f60aeb8eb3c6c9c2caba9">More...</a><br /></td></tr>
-<tr class="separator:a4f0e236f707f60aeb8eb3c6c9c2caba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a99ea3312bd81b2b91a06d758b363a88c"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
-<tr class="memitem:a99ea3312bd81b2b91a06d758b363a88c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#a99ea3312bd81b2b91a06d758b363a88c">apply_neumann_bcs</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;data, Number &amp;energy) const </td></tr>
-<tr class="memdesc:a99ea3312bd81b2b91a06d758b363a88c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Neumann boundary conditions.  <a href="#a99ea3312bd81b2b91a06d758b363a88c">More...</a><br /></td></tr>
-<tr class="separator:a99ea3312bd81b2b91a06d758b363a88c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39e8f48149952490c5a513a0436d5ac2"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
-<tr class="memitem:a39e8f48149952490c5a513a0436d5ac2"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#a39e8f48149952490c5a513a0436d5ac2">apply_forcing_terms</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;data, Number &amp;energy) const </td></tr>
-<tr class="memdesc:a39e8f48149952490c5a513a0436d5ac2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Forcing terms.  <a href="#a39e8f48149952490c5a513a0436d5ac2">More...</a><br /></td></tr>
-<tr class="separator:a39e8f48149952490c5a513a0436d5ac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6196a266264e678a50e6ed8855ee4e51"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a6196a266264e678a50e6ed8855ee4e51">initialize_data</a> (const typename LAC::VectorType &amp;<a class="el" href="class_interface.html#a1c83478f6e923ba13c6978c2589c1ae7">solution</a>, const typename LAC::VectorType &amp;<a class="el" href="class_interface.html#a2b3d302a360d0ca03b3cc4f2e271e281">solution_dot</a>, const double <a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a>, const double <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
+<tr class="memitem:a3cf9069bd60b1d2181ee3c9409dc5e86"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a3cf9069bd60b1d2181ee3c9409dc5e86">declare_parameters</a> (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classParameterHandler.html">ParameterHandler</a> &amp;prm)</td></tr>
+<tr class="separator:a3cf9069bd60b1d2181ee3c9409dc5e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb04747aa94df4435e8dc0ac2c1efecd"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#abb04747aa94df4435e8dc0ac2c1efecd">parse_parameters_call_back</a> ()</td></tr>
+<tr class="separator:abb04747aa94df4435e8dc0ac2c1efecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90173b90adc9b5b025d92c4e8fb95ae2"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a90173b90adc9b5b025d92c4e8fb95ae2">get_differential_blocks</a> () const </td></tr>
+<tr class="separator:a90173b90adc9b5b025d92c4e8fb95ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe2174df19eff5f9d3351212880c386b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#abe2174df19eff5f9d3351212880c386b">set_time</a> (const double &amp;<a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a>) const </td></tr>
+<tr class="memdesc:abe2174df19eff5f9d3351212880c386b"><td class="mdescLeft">&#160;</td><td class="mdescRight">update time of all parsed mapped functions  <a href="#abe2174df19eff5f9d3351212880c386b">More...</a><br /></td></tr>
+<tr class="separator:abe2174df19eff5f9d3351212880c386b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bdfbeaabcba50dba382cab00121f6f7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a5bdfbeaabcba50dba382cab00121f6f7">postprocess_newly_created_triangulation</a> (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTriangulation.html">Triangulation</a>&lt; dim, spacedim &gt; &amp;tria) const </td></tr>
+<tr class="memdesc:a5bdfbeaabcba50dba382cab00121f6f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function is used to modify triangulation using boundary_id or manifold_id.  <a href="#a5bdfbeaabcba50dba382cab00121f6f7">More...</a><br /></td></tr>
+<tr class="separator:a5bdfbeaabcba50dba382cab00121f6f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab86a704f1c11dee9d6e1e3803b5b9285"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ab86a704f1c11dee9d6e1e3803b5b9285">apply_dirichlet_bcs</a> (const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;dof_handler, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classConstraintMatrix.html">ConstraintMatrix</a> &amp;constraints) const </td></tr>
+<tr class="memdesc:ab86a704f1c11dee9d6e1e3803b5b9285"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Dirichlet boundary conditions.  <a href="#ab86a704f1c11dee9d6e1e3803b5b9285">More...</a><br /></td></tr>
+<tr class="separator:ab86a704f1c11dee9d6e1e3803b5b9285"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5bda9ccdfc5cc9b4e6d3b31499758b3"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
+<tr class="memitem:ab5bda9ccdfc5cc9b4e6d3b31499758b3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#ab5bda9ccdfc5cc9b4e6d3b31499758b3">apply_neumann_bcs</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopySystem &amp;data, std::vector&lt; Number &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:ab5bda9ccdfc5cc9b4e6d3b31499758b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies Neumann boundary conditions.  <a href="#ab5bda9ccdfc5cc9b4e6d3b31499758b3">More...</a><br /></td></tr>
+<tr class="separator:ab5bda9ccdfc5cc9b4e6d3b31499758b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fc0d21595c95cb47132b784415ced8e"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
+<tr class="memitem:a5fc0d21595c95cb47132b784415ced8e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#a5fc0d21595c95cb47132b784415ced8e">apply_forcing_terms</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopySystem &amp;data, std::vector&lt; Number &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a5fc0d21595c95cb47132b784415ced8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies CONSERVATIVE forcing terms.  <a href="#a5fc0d21595c95cb47132b784415ced8e">More...</a><br /></td></tr>
+<tr class="separator:a5fc0d21595c95cb47132b784415ced8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6196a266264e678a50e6ed8855ee4e51"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a6196a266264e678a50e6ed8855ee4e51">initialize_data</a> (const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;<a class="el" href="class_interface.html#a1c83478f6e923ba13c6978c2589c1ae7">solution</a>, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;<a class="el" href="class_interface.html#a2b3d302a360d0ca03b3cc4f2e271e281">solution_dot</a>, const double <a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a>, const double <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
 <tr class="memdesc:a6196a266264e678a50e6ed8855ee4e51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize all data required for the system.  <a href="#a6196a266264e678a50e6ed8855ee4e51">More...</a><br /></td></tr>
 <tr class="separator:a6196a266264e678a50e6ed8855ee4e51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a098a3c2c533b1ad5d69381ae60e6eb01"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a098a3c2c533b1ad5d69381ae60e6eb01">get_preconditioner_energy</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;, Scratch &amp;, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;, <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &amp;) const </td></tr>
-<tr class="memdesc:a098a3c2c533b1ad5d69381ae60e6eb01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the preconditioner in the case it is required just one derivative.  <a href="#a098a3c2c533b1ad5d69381ae60e6eb01">More...</a><br /></td></tr>
-<tr class="separator:a098a3c2c533b1ad5d69381ae60e6eb01"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3cf12aaae0259f00043d8e1ff3d05bb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ad3cf12aaae0259f00043d8e1ff3d05bb">get_preconditioner_energy</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;, Scratch &amp;, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;, <a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a> &amp;) const </td></tr>
-<tr class="memdesc:ad3cf12aaae0259f00043d8e1ff3d05bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the preconditioner in the case it is required two derivatives.  <a href="#ad3cf12aaae0259f00043d8e1ff3d05bb">More...</a><br /></td></tr>
-<tr class="separator:ad3cf12aaae0259f00043d8e1ff3d05bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d9128b2bbad5964abe5178d6fe7f17c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2d9128b2bbad5964abe5178d6fe7f17c">get_system_energy</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;, Scratch &amp;, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;, <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &amp;) const </td></tr>
-<tr class="memdesc:a2d9128b2bbad5964abe5178d6fe7f17c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the system matrix in the case it is required two derivatives.  <a href="#a2d9128b2bbad5964abe5178d6fe7f17c">More...</a><br /></td></tr>
-<tr class="separator:a2d9128b2bbad5964abe5178d6fe7f17c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed5f638f41221c3da988b5bb3e2d13ce"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aed5f638f41221c3da988b5bb3e2d13ce">get_system_energy</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;, Scratch &amp;, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;, <a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a> &amp;) const </td></tr>
-<tr class="memdesc:aed5f638f41221c3da988b5bb3e2d13ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the system matrix in the case it is required two derivatives.  <a href="#aed5f638f41221c3da988b5bb3e2d13ce">More...</a><br /></td></tr>
-<tr class="separator:aed5f638f41221c3da988b5bb3e2d13ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9c94808fa675095b8ed0e423c9aaadf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ac9c94808fa675095b8ed0e423c9aaadf">get_system_residual</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;data, std::vector&lt; <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &gt; &amp;local_residual) const </td></tr>
-<tr class="memdesc:ac9c94808fa675095b8ed0e423c9aaadf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the system matrix in the case it is required two derivatives.  <a href="#ac9c94808fa675095b8ed0e423c9aaadf">More...</a><br /></td></tr>
-<tr class="separator:ac9c94808fa675095b8ed0e423c9aaadf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5bc373809cd2fb64f2880b8ec1216b2e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a5bc373809cd2fb64f2880b8ec1216b2e">get_system_residual</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;data, std::vector&lt; double &gt; &amp;local_residual) const </td></tr>
-<tr class="memdesc:a5bc373809cd2fb64f2880b8ec1216b2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the system matrix in the case it is required just one derivative.  <a href="#a5bc373809cd2fb64f2880b8ec1216b2e">More...</a><br /></td></tr>
-<tr class="separator:a5bc373809cd2fb64f2880b8ec1216b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67b0bc48c6547b602da20dba82b40a55"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a67b0bc48c6547b602da20dba82b40a55">get_preconditioner_residual</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;data, std::vector&lt; <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &gt; &amp;local_residual) const </td></tr>
-<tr class="memdesc:a67b0bc48c6547b602da20dba82b40a55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the preconditioner matrix in the case two derivatives are required.  <a href="#a67b0bc48c6547b602da20dba82b40a55">More...</a><br /></td></tr>
-<tr class="separator:a67b0bc48c6547b602da20dba82b40a55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a185e3af50dff68f1cac3a7dce387f243"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a185e3af50dff68f1cac3a7dce387f243">compute_system_operators</a> (const DoFHandler&lt; dim, spacedim &gt; &amp;, const typename LAC::BlockMatrix &amp;, const typename LAC::BlockMatrix &amp;, LinearOperator&lt; typename LAC::VectorType &gt; &amp;, LinearOperator&lt; typename LAC::VectorType &gt; &amp;) const </td></tr>
-<tr class="memdesc:a185e3af50dff68f1cac3a7dce387f243"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute linear operators needed by the problem.  <a href="#a185e3af50dff68f1cac3a7dce387f243">More...</a><br /></td></tr>
-<tr class="separator:a185e3af50dff68f1cac3a7dce387f243"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2a84407ebcca831367060dfa1cdf491"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ab2a84407ebcca831367060dfa1cdf491">assemble_local_system</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;data) const </td></tr>
-<tr class="separator:ab2a84407ebcca831367060dfa1cdf491"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31a005d2b46f3b9f5238527fb0c040df"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a31a005d2b46f3b9f5238527fb0c040df">assemble_local_preconditioner</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, Scratch &amp;scratch, <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;data) const </td></tr>
-<tr class="separator:a31a005d2b46f3b9f5238527fb0c040df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa11a73af702dc7a07c436a7aadd290f1"><td class="memItemLeft" align="right" valign="top">virtual shared_ptr&lt; Mapping&lt; dim, spacedim &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aa11a73af702dc7a07c436a7aadd290f1">get_mapping</a> (const DoFHandler&lt; dim, spacedim &gt; &amp;, const typename LAC::VectorType &amp;) const </td></tr>
-<tr class="separator:aa11a73af702dc7a07c436a7aadd290f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d683a45b4d023ac92deabaeed47be3d"><td class="memItemLeft" align="right" valign="top">virtual UpdateFlags&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a5d683a45b4d023ac92deabaeed47be3d">get_jacobian_flags</a> () const </td></tr>
-<tr class="separator:a5d683a45b4d023ac92deabaeed47be3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45479e47ba3bfe33423649b6cf21ccff"><td class="memItemLeft" align="right" valign="top">virtual UpdateFlags&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a45479e47ba3bfe33423649b6cf21ccff">get_residual_flags</a> () const </td></tr>
-<tr class="separator:a45479e47ba3bfe33423649b6cf21ccff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d6143b8a0527b21927e7851dacf3d74"><td class="memItemLeft" align="right" valign="top">virtual UpdateFlags&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a5d6143b8a0527b21927e7851dacf3d74">get_jacobian_preconditioner_flags</a> () const </td></tr>
-<tr class="separator:a5d6143b8a0527b21927e7851dacf3d74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf2774b381333552b748390837047290"><td class="memItemLeft" align="right" valign="top">virtual UpdateFlags&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#acf2774b381333552b748390837047290">get_face_flags</a> () const </td></tr>
-<tr class="separator:acf2774b381333552b748390837047290"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35e777ae51e73bc3daaf9318e8987d03"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a35e777ae51e73bc3daaf9318e8987d03">get_preconditioner_energy</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;, Scratch &amp;, CopySystem &amp;, Sdouble &amp;) const </td></tr>
+<tr class="memdesc:a35e777ae51e73bc3daaf9318e8987d03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the preconditioner in the case it is required just one derivative.  <a href="#a35e777ae51e73bc3daaf9318e8987d03">More...</a><br /></td></tr>
+<tr class="separator:a35e777ae51e73bc3daaf9318e8987d03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedf1364e56923d10e44f54426c2cc1a6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aedf1364e56923d10e44f54426c2cc1a6">get_preconditioner_energy</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;, Scratch &amp;, CopyPreconditioner &amp;, SSdouble &amp;) const </td></tr>
+<tr class="memdesc:aedf1364e56923d10e44f54426c2cc1a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the preconditioner in the case it is required two derivatives.  <a href="#aedf1364e56923d10e44f54426c2cc1a6">More...</a><br /></td></tr>
+<tr class="separator:aedf1364e56923d10e44f54426c2cc1a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05d6c82f08df3fe2bdee24a3fad7f8b6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a05d6c82f08df3fe2bdee24a3fad7f8b6">get_system_energy</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;, Scratch &amp;, CopySystem &amp;, Sdouble &amp;) const </td></tr>
+<tr class="memdesc:a05d6c82f08df3fe2bdee24a3fad7f8b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the system matrix in the case it is required two derivatives.  <a href="#a05d6c82f08df3fe2bdee24a3fad7f8b6">More...</a><br /></td></tr>
+<tr class="separator:a05d6c82f08df3fe2bdee24a3fad7f8b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f3e3fac3aee21e35f92a79624eed628"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a8f3e3fac3aee21e35f92a79624eed628">get_system_energy</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;, Scratch &amp;, CopySystem &amp;, SSdouble &amp;) const </td></tr>
+<tr class="memdesc:a8f3e3fac3aee21e35f92a79624eed628"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the energy needed to get the system matrix in the case it is required two derivatives.  <a href="#a8f3e3fac3aee21e35f92a79624eed628">More...</a><br /></td></tr>
+<tr class="separator:a8f3e3fac3aee21e35f92a79624eed628"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2afd9964f1e7bd607513e1761972df46"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2afd9964f1e7bd607513e1761972df46">get_system_residual</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopySystem &amp;data, std::vector&lt; Sdouble &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a2afd9964f1e7bd607513e1761972df46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the system matrix in the case it is required two derivatives.  <a href="#a2afd9964f1e7bd607513e1761972df46">More...</a><br /></td></tr>
+<tr class="separator:a2afd9964f1e7bd607513e1761972df46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83de2e1fe30f13998f67cd2fbe12a405"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a83de2e1fe30f13998f67cd2fbe12a405">get_system_residual</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopySystem &amp;data, std::vector&lt; double &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a83de2e1fe30f13998f67cd2fbe12a405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the system matrix in the case it is required just one derivative.  <a href="#a83de2e1fe30f13998f67cd2fbe12a405">More...</a><br /></td></tr>
+<tr class="separator:a83de2e1fe30f13998f67cd2fbe12a405"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a157c6a11269674f1fa5d28f33df9e09b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a157c6a11269674f1fa5d28f33df9e09b">get_preconditioner_residual</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopyPreconditioner &amp;data, std::vector&lt; Sdouble &gt; &amp;local_residual) const </td></tr>
+<tr class="memdesc:a157c6a11269674f1fa5d28f33df9e09b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the residual needed to get the preconditioner matrix in the case two derivatives are required.  <a href="#a157c6a11269674f1fa5d28f33df9e09b">More...</a><br /></td></tr>
+<tr class="separator:a157c6a11269674f1fa5d28f33df9e09b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab19863a4f33227bdd0d9ccef7806d476"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ab19863a4f33227bdd0d9ccef7806d476">compute_system_operators</a> (const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;, const typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &amp;, const typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &amp;, const std::vector&lt; shared_ptr&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &gt; &gt;, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classLinearOperator.html">LinearOperator</a>&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt; &amp;, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classLinearOperator.html">LinearOperator</a>&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt; &amp;) const </td></tr>
+<tr class="memdesc:ab19863a4f33227bdd0d9ccef7806d476"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute linear operators needed by the problem.  <a href="#ab19863a4f33227bdd0d9ccef7806d476">More...</a><br /></td></tr>
+<tr class="separator:ab19863a4f33227bdd0d9ccef7806d476"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa87e2fe85c84c5a37e7b8bfaae05329b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aa87e2fe85c84c5a37e7b8bfaae05329b">assemble_local_system</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopySystem &amp;data) const </td></tr>
+<tr class="separator:aa87e2fe85c84c5a37e7b8bfaae05329b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a077e525e31abc5f333a04773497ed035"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a077e525e31abc5f333a04773497ed035">assemble_local_preconditioner</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopyPreconditioner &amp;data) const </td></tr>
+<tr class="separator:a077e525e31abc5f333a04773497ed035"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fb35dab6241fa1b7932a7b48bf1eafb"><td class="memItemLeft" align="right" valign="top">virtual shared_ptr&lt; <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classMapping.html">Mapping</a>&lt; dim, spacedim &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a6fb35dab6241fa1b7932a7b48bf1eafb">get_mapping</a> (const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;, const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;) const </td></tr>
+<tr class="separator:a6fb35dab6241fa1b7932a7b48bf1eafb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf96a8aa262eee3c499878d082fb4cf3"><td class="memItemLeft" align="right" valign="top">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#adf96a8aa262eee3c499878d082fb4cf3">get_jacobian_flags</a> () const </td></tr>
+<tr class="separator:adf96a8aa262eee3c499878d082fb4cf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d692d905333513ef95452727e1b1deb"><td class="memItemLeft" align="right" valign="top">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a4d692d905333513ef95452727e1b1deb">get_residual_flags</a> () const </td></tr>
+<tr class="separator:a4d692d905333513ef95452727e1b1deb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98ec66d20537dfb90706c8d3da5e91a2"><td class="memItemLeft" align="right" valign="top">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a98ec66d20537dfb90706c8d3da5e91a2">get_jacobian_preconditioner_flags</a> () const </td></tr>
+<tr class="separator:a98ec66d20537dfb90706c8d3da5e91a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfeacdb01391b4a4764bfe3275250e5e"><td class="memItemLeft" align="right" valign="top">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#adfeacdb01391b4a4764bfe3275250e5e">get_face_flags</a> () const </td></tr>
+<tr class="separator:adfeacdb01391b4a4764bfe3275250e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a887c4156ba6e9739c5e4ffc58e51f650"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a887c4156ba6e9739c5e4ffc58e51f650">fix_solution_dot_derivative</a> (FEValuesCache&lt; dim, spacedim &gt; &amp;, double) const </td></tr>
 <tr class="separator:a887c4156ba6e9739c5e4ffc58e51f650"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ff3bf6ae7569c3a1e7da57f7ba2ed0a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a0ff3bf6ae7569c3a1e7da57f7ba2ed0a">fix_solution_dot_derivative</a> (FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache, <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
+<tr class="memitem:a0ff3bf6ae7569c3a1e7da57f7ba2ed0a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a0ff3bf6ae7569c3a1e7da57f7ba2ed0a">fix_solution_dot_derivative</a> (FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache, Sdouble <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
 <tr class="separator:a0ff3bf6ae7569c3a1e7da57f7ba2ed0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ce3679be773849e16015fb6861dd155"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a1ce3679be773849e16015fb6861dd155">fix_solution_dot_derivative</a> (FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache, <a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a> <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
+<tr class="memitem:a1ce3679be773849e16015fb6861dd155"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a1ce3679be773849e16015fb6861dd155">fix_solution_dot_derivative</a> (FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache, SSdouble <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>) const </td></tr>
 <tr class="separator:a1ce3679be773849e16015fb6861dd155"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a156995cf9232ba68716f97b7feb54e6b"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
-<tr class="memitem:a156995cf9232ba68716f97b7feb54e6b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#a156995cf9232ba68716f97b7feb54e6b">reinit</a> (const Number &amp;<a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>, const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const </td></tr>
+<tr class="memitem:a156995cf9232ba68716f97b7feb54e6b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#a156995cf9232ba68716f97b7feb54e6b">reinit</a> (const Number &amp;<a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>, const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const </td></tr>
 <tr class="separator:a156995cf9232ba68716f97b7feb54e6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7a8d8cc23f3636fa28d8a392beb7975"><td class="memTemplParams" colspan="2">template&lt;typename Number &gt; </td></tr>
-<tr class="memitem:af7a8d8cc23f3636fa28d8a392beb7975"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#af7a8d8cc23f3636fa28d8a392beb7975">reinit</a> (const Number &amp;<a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>, const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell, const unsigned int face_no, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const </td></tr>
+<tr class="memitem:af7a8d8cc23f3636fa28d8a392beb7975"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_interface.html#af7a8d8cc23f3636fa28d8a392beb7975">reinit</a> (const Number &amp;<a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a>, const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, const unsigned int face_no, FEValuesCache&lt; dim, spacedim &gt; &amp;fe_cache) const </td></tr>
 <tr class="separator:af7a8d8cc23f3636fa28d8a392beb7975"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fbd01064853222a92d5372083b77372"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a0fbd01064853222a92d5372083b77372">get_aux_matrix_residuals</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopyPreconditioner &amp;data, std::vector&lt; std::vector&lt; double &gt; &gt; &amp;local_residuals) const </td></tr>
+<tr class="separator:a0fbd01064853222a92d5372083b77372"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54ddf2967c481f70a28c6244fae2291e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a54ddf2967c481f70a28c6244fae2291e">get_aux_matrix_residuals</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopyPreconditioner &amp;data, std::vector&lt; std::vector&lt; Sdouble &gt; &gt; &amp;local_residuals) const </td></tr>
+<tr class="separator:a54ddf2967c481f70a28c6244fae2291e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ecdac0a74937cfb813212bcfb0f3ebf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a6ecdac0a74937cfb813212bcfb0f3ebf">assemble_local_aux_matrices</a> (const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;cell, Scratch &amp;scratch, CopyPreconditioner &amp;data) const </td></tr>
+<tr class="separator:a6ecdac0a74937cfb813212bcfb0f3ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ae4c89b3ec3ab48e78fd67add669e55"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a9ae4c89b3ec3ab48e78fd67add669e55">get_aux_matrix_flags</a> (const unsigned int &amp;i) const </td></tr>
+<tr class="separator:a9ae4c89b3ec3ab48e78fd67add669e55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d54e39ed183e46d85c2c12dcbceb946"><td class="memItemLeft" align="right" valign="top">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table</a>&lt; 2, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__dofs.html#gad31df71a29dd76de9b4ab241b2527160">DoFTools::Coupling</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2d54e39ed183e46d85c2c12dcbceb946">get_aux_matrix_coupling</a> (const unsigned int &amp;i) const </td></tr>
+<tr class="separator:a2d54e39ed183e46d85c2c12dcbceb946"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58d90624ddedfba8ccf75d99091d7e93"><td class="memItemLeft" align="right" valign="top">virtual unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a58d90624ddedfba8ccf75d99091d7e93">get_number_of_aux_matrices</a> () const </td></tr>
+<tr class="separator:a58d90624ddedfba8ccf75d99091d7e93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a317ce5fcba3e7bd7af3b430d01f218e4"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a317ce5fcba3e7bd7af3b430d01f218e4">aux_matrix_update_flags</a></td></tr>
+<tr class="separator:a317ce5fcba3e7bd7af3b430d01f218e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5018b018754691900283e8b9f6cc8ff5"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table</a>&lt; 2, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__dofs.html#gad31df71a29dd76de9b4ab241b2527160">DoFTools::Coupling</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a5018b018754691900283e8b9f6cc8ff5">aux_matrix_coupling</a></td></tr>
+<tr class="separator:a5018b018754691900283e8b9f6cc8ff5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -213,14 +237,23 @@ Protected Attributes</h2></td></tr>
 <tr class="separator:a17211b9056dbb8473c7760098d2e35b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab156d8faa77b54af074a21fe5e4fdd17"><td class="memItemLeft" align="right" valign="top">std::vector&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ab156d8faa77b54af074a21fe5e4fdd17">_diff_comp</a></td></tr>
 <tr class="separator:ab156d8faa77b54af074a21fe5e4fdd17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c83478f6e923ba13c6978c2589c1ae7"><td class="memItemLeft" align="right" valign="top">const LAC::VectorType *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a1c83478f6e923ba13c6978c2589c1ae7">solution</a></td></tr>
+<tr class="memitem:a1c83478f6e923ba13c6978c2589c1ae7"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a1c83478f6e923ba13c6978c2589c1ae7">solution</a></td></tr>
+<tr class="memdesc:a1c83478f6e923ba13c6978c2589c1ae7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solution vector evaluated at time t.  <a href="#a1c83478f6e923ba13c6978c2589c1ae7">More...</a><br /></td></tr>
 <tr class="separator:a1c83478f6e923ba13c6978c2589c1ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b3d302a360d0ca03b3cc4f2e271e281"><td class="memItemLeft" align="right" valign="top">const LAC::VectorType *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2b3d302a360d0ca03b3cc4f2e271e281">solution_dot</a></td></tr>
+<tr class="memitem:ac6414240aad6dba3b57bfa08f67dff2e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ac6414240aad6dba3b57bfa08f67dff2e">old_solution</a></td></tr>
+<tr class="memdesc:ac6414240aad6dba3b57bfa08f67dff2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solution vector evaluated at time t-dt.  <a href="#ac6414240aad6dba3b57bfa08f67dff2e">More...</a><br /></td></tr>
+<tr class="separator:ac6414240aad6dba3b57bfa08f67dff2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b3d302a360d0ca03b3cc4f2e271e281"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#a2b3d302a360d0ca03b3cc4f2e271e281">solution_dot</a></td></tr>
+<tr class="memdesc:a2b3d302a360d0ca03b3cc4f2e271e281"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time derivative solution vector evaluated at time t.  <a href="#a2b3d302a360d0ca03b3cc4f2e271e281">More...</a><br /></td></tr>
 <tr class="separator:a2b3d302a360d0ca03b3cc4f2e271e281"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6cf7109b752e69e18cda95326807b49"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a></td></tr>
+<tr class="memdesc:aa6cf7109b752e69e18cda95326807b49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current time step.  <a href="#aa6cf7109b752e69e18cda95326807b49">More...</a><br /></td></tr>
+<tr class="separator:aa6cf7109b752e69e18cda95326807b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd986e9ddf43c96d37a47dc371d59db1"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#abd986e9ddf43c96d37a47dc371d59db1">old_t</a></td></tr>
+<tr class="memdesc:abd986e9ddf43c96d37a47dc371d59db1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Previous time step.  <a href="#abd986e9ddf43c96d37a47dc371d59db1">More...</a><br /></td></tr>
+<tr class="separator:abd986e9ddf43c96d37a47dc371d59db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0b1afaced16f435442d82b9cc0cc1e2"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">alpha</a></td></tr>
 <tr class="separator:ae0b1afaced16f435442d82b9cc0cc1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6cf7109b752e69e18cda95326807b49"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#aa6cf7109b752e69e18cda95326807b49">t</a></td></tr>
-<tr class="separator:aa6cf7109b752e69e18cda95326807b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addc9e4e77e1c16f087b6e27c99d2fa9d"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#addc9e4e77e1c16f087b6e27c99d2fa9d">dofs_per_cell</a></td></tr>
 <tr class="separator:addc9e4e77e1c16f087b6e27c99d2fa9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4f243cad83862275930efb1f0a734e8"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_interface.html#ad4f243cad83862275930efb1f0a734e8">n_q_points</a></td></tr>
@@ -233,13 +266,13 @@ Protected Attributes</h2></td></tr>
 class Interface&lt; dim, spacedim, n_components, LAC &gt;</h3>
 
 <p><a class="el" href="class_interface.html" title="Interface. ">Interface</a>. </p>
-<p>This class has two child: <a class="el" href="conservative__interface_8h.html">conservative_interface.h</a> and <a class="el" href="non__conservative__interface_8h.html">non_conservative_interface.h</a> Users should not derive directly from this class, but from its specialization classes. For istance, a stokes problem should consist in a interface class derived from <a class="el" href="conservative__interface_8h.html">conservative_interface.h</a>. (see include/interfaces/ for some examples)</p>
+<p>This class has two child: conservative_interface.h and non_conservative_interface.h Users should not derive directly from this class, but from its specialization classes. For istance, a stokes problem should consist in a interface class derived from conservative_interface.h. (see include/interfaces/ for some examples)</p>
 <p>Goal: provide a derivable interface to solve a particular PDEs problem (time depending, first-order, non linear).</p>
-<p>Usage: This class requires some arguments related to the setting of the problem: finite elements, boundary conditions, and initial conditions. Moreover, it helps to write the system matrix and the preconditioner matrix. (see <a class="el" href="conservative__interface_8h.html">conservative_interface.h</a> and <a class="el" href="non__conservative__interface_8h.html">non_conservative_interface.h</a>)</p>
+<p>Usage: This class requires some arguments related to the setting of the problem: finite elements, boundary conditions, and initial conditions. Moreover, it helps to write the system matrix and the preconditioner matrix. (see conservative_interface.h and non_conservative_interface.h)</p>
 <p>Varibles:</p><ul>
 <li>General:<ul>
 <li>Finite Elements</li>
-<li>Boundary conditions ( Dirichlet, Neumann, and Robin )</li>
+<li><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classBoundary.html">Boundary</a> conditions ( Dirichlet, Neumann, and Robin )</li>
 <li>Initial conditions ( y(0) and d/dt y (0) )</li>
 </ul>
 </li>
@@ -264,7 +297,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::~<a class="el" href="class_interface.html">Interface</a> </td>
+          <td class="memname">virtual <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::~<a class="el" href="class_interface.html">Interface</a> </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -289,7 +322,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::<a class="el" href="class_interface.html">Interface</a> </td>
+          <td class="memname"><a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::<a class="el" href="class_interface.html">Interface</a> </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>name</em> = <code>&quot;&quot;</code>, </td>
@@ -340,25 +373,25 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a4f0e236f707f60aeb8eb3c6c9c2caba9"></a>
+<a class="anchor" id="ab86a704f1c11dee9d6e1e3803b5b9285"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::apply_dirichlet_bcs </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_dirichlet_bcs </td>
           <td>(</td>
-          <td class="paramtype">const DoFHandler&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname"><em>dof_handler</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">ConstraintMatrix &amp;&#160;</td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classConstraintMatrix.html">ConstraintMatrix</a> &amp;&#160;</td>
           <td class="paramname"><em>constraints</em>&#160;</td>
         </tr>
         <tr>
@@ -379,7 +412,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a39e8f48149952490c5a513a0436d5ac2"></a>
+<a class="anchor" id="a5fc0d21595c95cb47132b784415ced8e"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -388,9 +421,9 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 template&lt;typename Number &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::apply_forcing_terms </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_forcing_terms </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -402,14 +435,14 @@ template&lt;typename Number &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Number &amp;&#160;</td>
-          <td class="paramname"><em>energy</em>&#160;</td>
+          <td class="paramtype">std::vector&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residual</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -419,11 +452,13 @@ template&lt;typename Number &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Applies Forcing terms. </p>
+<p>Applies CONSERVATIVE forcing terms. </p>
+<p>This function applies the conservative forcing terms, which can be defined by expressions in the parameter file.</p>
+<p>If the problem involves NON-conservative loads, they must be included in the residual formulation. </p>
 
 </div>
 </div>
-<a class="anchor" id="a99ea3312bd81b2b91a06d758b363a88c"></a>
+<a class="anchor" id="ab5bda9ccdfc5cc9b4e6d3b31499758b3"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -432,9 +467,9 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 template&lt;typename Number &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::apply_neumann_bcs </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::apply_neumann_bcs </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -446,14 +481,14 @@ template&lt;typename Number &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Number &amp;&#160;</td>
-          <td class="paramname"><em>energy</em>&#160;</td>
+          <td class="paramtype">std::vector&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residual</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -467,19 +502,19 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a31a005d2b46f3b9f5238527fb0c040df"></a>
+<a class="anchor" id="a6ecdac0a74937cfb813212bcfb0f3ebf"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::assemble_local_preconditioner </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::assemble_local_aux_matrices </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -491,7 +526,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;&#160;</td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
           <td class="paramname"><em>data</em>&#160;</td>
         </tr>
         <tr>
@@ -509,19 +544,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ab2a84407ebcca831367060dfa1cdf491"></a>
+<a class="anchor" id="a077e525e31abc5f333a04773497ed035"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::assemble_local_system </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::assemble_local_preconditioner </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -533,7 +568,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
           <td class="paramname"><em>data</em>&#160;</td>
         </tr>
         <tr>
@@ -551,43 +586,91 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a185e3af50dff68f1cac3a7dce387f243"></a>
+<a class="anchor" id="aa87e2fe85c84c5a37e7b8bfaae05329b"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::compute_system_operators </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::assemble_local_system </td>
           <td>(</td>
-          <td class="paramtype">const DoFHandler&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Scratch &amp;&#160;</td>
+          <td class="paramname"><em>scratch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab19863a4f33227bdd0d9ccef7806d476"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::compute_system_operators </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::BlockMatrix &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::BlockMatrix &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LinearOperator&lt; typename LAC::VectorType &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; shared_ptr&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a3a9ef39f6f06d136e5abdb18557fba0e">LAC::BlockMatrix</a> &gt; &gt;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LinearOperator&lt; typename LAC::VectorType &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classLinearOperator.html">LinearOperator</a>&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt; &amp;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classLinearOperator.html">LinearOperator</a>&lt; typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &gt; &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -604,23 +687,23 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Compute linear operators needed by the problem. </p>
-<p>This function is used to assemble linear operators related to the problem. It takes a reference to DoF Handler, two references to block sparse matrices representing the system matrix and the preconditioner, and two references to LinearOperator. </p>
+<p>This function is used to assemble linear operators related to the problem. It takes a reference to DoF Handler, two references to block sparse matrices representing the system matrix and the preconditioner, and two references to <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classLinearOperator.html">LinearOperator</a>. </p>
 
 </div>
 </div>
-<a class="anchor" id="ae6118bddac5afb230b856272c3adb152"></a>
+<a class="anchor" id="a3cf9069bd60b1d2181ee3c9409dc5e86"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::declare_parameters </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::declare_parameters </td>
           <td>(</td>
-          <td class="paramtype">ParameterHandler &amp;&#160;</td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classParameterHandler.html">ParameterHandler</a> &amp;&#160;</td>
           <td class="paramname"><em>prm</em></td><td>)</td>
           <td></td>
         </tr>
@@ -632,7 +715,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Reimplemented in <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, and <a class="el" href="class_non_conservative_interface.html#adb0137ac2787fd7ec58f16ef5ae8bdcb">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>.</p>
+<p>Reimplemented in <a class="el" href="group__equations.html#gad8ea4cf604e496a3eec6647dff9bbd37">FreeSwellingThreeFields&lt; dim, spacedim &gt;</a>, <a class="el" href="class_compressible_neo_hookean_interface.html#a1e6571ae143f0e8c4615585dec070fb0">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="group__equations.html#gadc02a50b6265bcfdf9e5c10762106375">ALENavierStokes&lt; dim &gt;</a>, <a class="el" href="class_neo_hookean_two_fields_interface.html#a87d3272d46c1b5371388578b2cb5ff94">NeoHookeanTwoFieldsInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="class_non_conservative_interface.html#adb0137ac2787fd7ec58f16ef5ae8bdcb">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, <a class="el" href="class_non_conservative_interface.html#adb0137ac2787fd7ec58f16ef5ae8bdcb">NonConservativeInterface&lt; dim, dim, dim+dim+1, ALENavierStokes&lt; dim &gt; &gt;</a>, <a class="el" href="class_compressible_neo_hookean_interface.html#a1e6571ae143f0e8c4615585dec070fb0">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="group__equations.html#ga95a69960fde2d6993b5528204132a56c">NeoHookeanTwoFieldsInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, dim, CompressibleNeoHookeanInterface&lt; dim, spacedim &gt; &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, dim, CompressibleNeoHookeanInterface&lt; dim, spacedim &gt;, LADealII &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, dim+1, NeoHookeanTwoFieldsInterface&lt; dim, spacedim &gt; &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a07010e908d3a6d8a29d6273332ceea5e">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>, and <a class="el" href="group__equations.html#ga2633c51375191d5b664159a727504c35">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>.</p>
 
 </div>
 </div>
@@ -640,10 +723,10 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::fix_solution_dot_derivative </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::fix_solution_dot_derivative </td>
           <td>(</td>
           <td class="paramtype">FEValuesCache&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname">, </td>
@@ -668,10 +751,10 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::fix_solution_dot_derivative </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::fix_solution_dot_derivative </td>
           <td>(</td>
           <td class="paramtype">FEValuesCache&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname"><em>fe_cache</em>, </td>
@@ -679,7 +762,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a>&#160;</td>
+          <td class="paramtype">Sdouble&#160;</td>
           <td class="paramname"><em>alpha</em>&#160;</td>
         </tr>
         <tr>
@@ -696,10 +779,10 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::fix_solution_dot_derivative </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::fix_solution_dot_derivative </td>
           <td>(</td>
           <td class="paramtype">FEValuesCache&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname"><em>fe_cache</em>, </td>
@@ -707,7 +790,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a>&#160;</td>
+          <td class="paramtype">SSdouble&#160;</td>
           <td class="paramname"><em>alpha</em>&#160;</td>
         </tr>
         <tr>
@@ -720,14 +803,146 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ae85c272b0b3c7cfcbe8ddea87a769fd9"></a>
+<a class="anchor" id="a2d54e39ed183e46d85c2c12dcbceb946"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; unsigned int &gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_differential_blocks </td>
+          <td class="memname">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table</a>&lt;2,<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__dofs.html#gad31df71a29dd76de9b4ab241b2527160">DoFTools::Coupling</a>&gt;&amp; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_aux_matrix_coupling </td>
+          <td>(</td>
+          <td class="paramtype">const unsigned int &amp;&#160;</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a9ae4c89b3ec3ab48e78fd67add669e55"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_aux_matrix_flags </td>
+          <td>(</td>
+          <td class="paramtype">const unsigned int &amp;&#160;</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a0fbd01064853222a92d5372083b77372"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_aux_matrix_residuals </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Scratch &amp;&#160;</td>
+          <td class="paramname"><em>scratch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; double &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residuals</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a54ddf2967c481f70a28c6244fae2291e"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_aux_matrix_residuals </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Scratch &amp;&#160;</td>
+          <td class="paramname"><em>scratch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; Sdouble &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>local_residuals</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a90173b90adc9b5b025d92c4e8fb95ae2"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt;unsigned int&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_differential_blocks </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -737,17 +952,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="acf2774b381333552b748390837047290"></a>
+<a class="anchor" id="adfeacdb01391b4a4764bfe3275250e5e"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">UpdateFlags <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_face_flags </td>
+          <td class="memname">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_face_flags </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -762,17 +977,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a5d683a45b4d023ac92deabaeed47be3d"></a>
+<a class="anchor" id="adf96a8aa262eee3c499878d082fb4cf3"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">UpdateFlags <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_jacobian_flags </td>
+          <td class="memname">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_jacobian_flags </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -787,17 +1002,17 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a5d6143b8a0527b21927e7851dacf3d74"></a>
+<a class="anchor" id="a98ec66d20537dfb90706c8d3da5e91a2"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">UpdateFlags <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_jacobian_preconditioner_flags </td>
+          <td class="memname">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_jacobian_preconditioner_flags </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -812,25 +1027,25 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aa11a73af702dc7a07c436a7aadd290f1"></a>
+<a class="anchor" id="a6fb35dab6241fa1b7932a7b48bf1eafb"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">shared_ptr&lt; Mapping&lt; dim, spacedim &gt; &gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_mapping </td>
+          <td class="memname">virtual shared_ptr&lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classMapping.html">Mapping</a>&lt;dim,spacedim&gt; &gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_mapping </td>
           <td>(</td>
-          <td class="paramtype">const DoFHandler&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -848,19 +1063,44 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a098a3c2c533b1ad5d69381ae60e6eb01"></a>
+<a class="anchor" id="a58d90624ddedfba8ccf75d99091d7e93"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_preconditioner_energy </td>
+          <td class="memname">virtual unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_number_of_aux_matrices </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a35e777ae51e73bc3daaf9318e8987d03"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_preconditioner_energy </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -872,13 +1112,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &amp;&#160;</td>
+          <td class="paramtype">Sdouble &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -895,23 +1135,25 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the energy needed to get the preconditioner in the case it is required just one derivative. </p>
-<p>This function is used to build the energy associated to the preconditioner in the case it is required just one derivative. It takes as argument a reference to the active cell (DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator), all the informations of the system such as fe values, quadrature points, AnyData (Scratch), all the informations related to the PDE (CopySystem) and the energy (Sdouble) </p>
+<p>This function is used to build the energy associated to the preconditioner in the case it is required just one derivative. It takes as argument a reference to the active cell (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga37f5b9b4b270a8cea857dbdbd9218562">DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator</a>), all the informations of the system such as fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> (Scratch), all the informations related to the PDE (CopySystem) and the energy (Sdouble) </p>
+
+<p>Reimplemented in <a class="el" href="class_conservative_interface.html#a1db532fd05049be1561a2b80330cbffc">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, and <a class="el" href="class_conservative_interface.html#a1db532fd05049be1561a2b80330cbffc">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ad3cf12aaae0259f00043d8e1ff3d05bb"></a>
+<a class="anchor" id="aedf1364e56923d10e44f54426c2cc1a6"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_preconditioner_energy </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_preconditioner_energy </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -923,13 +1165,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;&#160;</td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a> &amp;&#160;</td>
+          <td class="paramtype">SSdouble &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -946,23 +1188,25 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the energy needed to get the preconditioner in the case it is required two derivatives. </p>
-<p>This function is used to build the energy associated to the preconditioner in the case the Jacobian is automatically constructed using the derivative of the residual. It takes as argument a reference to the active cell (DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator), all the informations of the system such as fe values, quadrature points, AnyData (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+<p>This function is used to build the energy associated to the preconditioner in the case the Jacobian is automatically constructed using the derivative of the residual. It takes as argument a reference to the active cell (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga37f5b9b4b270a8cea857dbdbd9218562">DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator</a>), all the informations of the system such as fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+
+<p>Reimplemented in <a class="el" href="class_conservative_interface.html#a6ad8bab8a51f98124f2969e483856a26">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, and <a class="el" href="class_conservative_interface.html#a6ad8bab8a51f98124f2969e483856a26">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a67b0bc48c6547b602da20dba82b40a55"></a>
+<a class="anchor" id="a157c6a11269674f1fa5d28f33df9e09b"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_preconditioner_residual </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_preconditioner_residual </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -974,13 +1218,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html">CopyPreconditioner</a> &amp;&#160;</td>
+          <td class="paramtype">CopyPreconditioner &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; Sdouble &gt; &amp;&#160;</td>
           <td class="paramname"><em>local_residual</em>&#160;</td>
         </tr>
         <tr>
@@ -997,23 +1241,21 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the residual needed to get the preconditioner matrix in the case two derivatives are required. </p>
-<p>This function is used to build the residual associated to the preconditioner in the case it is required just one derivatice. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, AnyData ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
-
-<p>Reimplemented in <a class="el" href="class_non_conservative_interface.html#af19e24930397cbb12bedd86c07b29961">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>.</p>
+<p>This function is used to build the residual associated to the preconditioner in the case it is required just one derivatice. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
 
 </div>
 </div>
-<a class="anchor" id="a45479e47ba3bfe33423649b6cf21ccff"></a>
+<a class="anchor" id="a4d692d905333513ef95452727e1b1deb"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">UpdateFlags <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_residual_flags </td>
+          <td class="memname">virtual <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_residual_flags </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1028,19 +1270,19 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a2d9128b2bbad5964abe5178d6fe7f17c"></a>
+<a class="anchor" id="a05d6c82f08df3fe2bdee24a3fad7f8b6"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_system_energy </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_system_energy </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -1052,13 +1294,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &amp;&#160;</td>
+          <td class="paramtype">Sdouble &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -1075,23 +1317,25 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the energy needed to get the system matrix in the case it is required two derivatives. </p>
-<p>This function is used to build the energy associated to the system matrix in the case two derivatives are required. It takes as argument a reference to the active cell (DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator), all the informations of the system such as fe values, quadrature points, AnyData (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+<p>This function is used to build the energy associated to the system matrix in the case two derivatives are required. It takes as argument a reference to the active cell (<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga37f5b9b4b270a8cea857dbdbd9218562">DoFHandler&lt;dim,spacedim&gt;::active_cell_iterator</a>), all the informations of the system such as fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+
+<p>Reimplemented in <a class="el" href="class_conservative_interface.html#aa5e0b9f01d755cb20428f27b108ca9ab">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, and <a class="el" href="class_conservative_interface.html#aa5e0b9f01d755cb20428f27b108ca9ab">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aed5f638f41221c3da988b5bb3e2d13ce"></a>
+<a class="anchor" id="a8f3e3fac3aee21e35f92a79624eed628"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_system_energy </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_system_energy </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -1103,13 +1347,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="assembly_8h.html#abed3b6e004228d1f3fe43fa64dc8aa2a">SSdouble</a> &amp;&#160;</td>
+          <td class="paramtype">SSdouble &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -1126,23 +1370,25 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the energy needed to get the system matrix in the case it is required two derivatives. </p>
-<p>This function is used to build the energy associated to the system matrix in the case two derivatives are required. It takes as argument a reference to the active cell (DFHandler&lt;dim,spacedim&gt;::active_cell_iterator), all the informations of the system such as fe values, quadrature points, AnyData (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+<p>This function is used to build the energy associated to the system matrix in the case two derivatives are required. It takes as argument a reference to the active cell (DFHandler&lt;dim,spacedim&gt;::active_cell_iterator), all the informations of the system such as fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> (Scratch), all the informations related to the PDE (CopySystem) and the energy (SSdouble) </p>
+
+<p>Reimplemented in <a class="el" href="class_conservative_interface.html#ad28b7f2ced196ca1a59b278fdaefcae8">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, and <a class="el" href="class_conservative_interface.html#ad28b7f2ced196ca1a59b278fdaefcae8">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ac9c94808fa675095b8ed0e423c9aaadf"></a>
+<a class="anchor" id="a2afd9964f1e7bd607513e1761972df46"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_system_residual </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_system_residual </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -1154,13 +1400,13 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="assembly_8h.html#a86798882becc15ed4d50c01d521cf518">Sdouble</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; Sdouble &gt; &amp;&#160;</td>
           <td class="paramname"><em>local_residual</em>&#160;</td>
         </tr>
         <tr>
@@ -1177,25 +1423,23 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the residual needed to get the system matrix in the case it is required two derivatives. </p>
-<p>This function is used to build the residual associated to the system in the case two derivatives are required. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, AnyData ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
-
-<p>Reimplemented in <a class="el" href="class_non_conservative_interface.html#adcf9edffbb4af551b7a18bd846b06614">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>.</p>
+<p>This function is used to build the residual associated to the system in the case two derivatives are required. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
 
 </div>
 </div>
-<a class="anchor" id="a5bc373809cd2fb64f2880b8ec1216b2e"></a>
+<a class="anchor" id="a83de2e1fe30f13998f67cd2fbe12a405"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::get_system_residual </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::get_system_residual </td>
           <td>(</td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -1207,7 +1451,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html">CopySystem</a> &amp;&#160;</td>
+          <td class="paramtype">CopySystem &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
@@ -1230,9 +1474,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </div><div class="memdoc">
 
 <p>Build the residual needed to get the system matrix in the case it is required just one derivative. </p>
-<p>This function is used to build the residual associated to the system in the case it is required just one derivatice. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, AnyData ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
-
-<p>Reimplemented in <a class="el" href="class_non_conservative_interface.html#a82c490b2290907dc572f1c1979a17ac4">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>.</p>
+<p>This function is used to build the residual associated to the system in the case it is required just one derivatice. It takes as argument a reference to the active cell <code>cell</code>, all the informations of the system <code>scratch</code> ( fe values, quadrature points, <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> ), all the informations related to the PDE <code>data</code> and a reference to the local residual <code>local_residual</code>. </p>
 
 </div>
 </div>
@@ -1246,15 +1488,15 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::initialize_data </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::initialize_data </td>
           <td>(</td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>solution</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename LAC::VectorType &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> &amp;&#160;</td>
           <td class="paramname"><em>solution_dot</em>, </td>
         </tr>
         <tr>
@@ -1283,22 +1525,22 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
 </div><div class="memdoc">
 
 <p>Initialize all data required for the system. </p>
-<p>This function is used to initialize the varibale AnyData <code>d</code> that contains all data of the problem (solutions, DoF, quadrature points, solutions vector, etc ). It takes as argument the number of DoF per cell <code>dofs_per_cell</code>, the number of quadrature points <code>n_q_points</code>, the number of quadrature points per face <code>n_face_q_points</code>, the reference to solutions vectors <code>sol</code> and the reference to the AnyData <code>d</code>.</p>
+<p>This function is used to initialize the varibale <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> <code>d</code> that contains all data of the problem (solutions, DoF, quadrature points, solutions vector, etc ). It takes as argument the number of DoF per cell <code>dofs_per_cell</code>, the number of quadrature points <code>n_q_points</code>, the number of quadrature points per face <code>n_face_q_points</code>, the reference to solutions vectors <code>sol</code> and the reference to the <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classAnyData.html">AnyData</a> <code>d</code>.</p>
 <p>TODO: add current_time and current_alpha </p>
 
 </div>
 </div>
-<a class="anchor" id="a6957faf42e6618ea59b64d00a312779b"></a>
+<a class="anchor" id="abb04747aa94df4435e8dc0ac2c1efecd"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::parse_parameters_call_back </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::parse_parameters_call_back </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -1311,23 +1553,23 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Reimplemented in <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, and <a class="el" href="class_non_conservative_interface.html#af924f72b7ed6c45dd3fc1bb8d8dc93c3">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>.</p>
+<p>Reimplemented in <a class="el" href="group__equations.html#gaf68fb95e6bec8b43dd5f0eaffcf5240a">FreeSwellingThreeFields&lt; dim, spacedim &gt;</a>, <a class="el" href="class_compressible_neo_hookean_interface.html#a6f0cccb4d9a6d73abc47a5f6a573c444">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="group__equations.html#ga447a74658131e93492ea2af0fd95a86d">ALENavierStokes&lt; dim &gt;</a>, <a class="el" href="class_non_conservative_interface.html#af924f72b7ed6c45dd3fc1bb8d8dc93c3">NonConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, <a class="el" href="class_non_conservative_interface.html#af924f72b7ed6c45dd3fc1bb8d8dc93c3">NonConservativeInterface&lt; dim, dim, dim+dim+1, ALENavierStokes&lt; dim &gt; &gt;</a>, <a class="el" href="group__equations.html#gacbe04d65b2f8748197c41a729a8f2156">NeoHookeanTwoFieldsInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="class_compressible_neo_hookean_interface.html#a6f0cccb4d9a6d73abc47a5f6a573c444">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, n_components, Implementation, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, dim, CompressibleNeoHookeanInterface&lt; dim, spacedim &gt; &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, dim, CompressibleNeoHookeanInterface&lt; dim, spacedim &gt;, LADealII &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, dim+1, NeoHookeanTwoFieldsInterface&lt; dim, spacedim &gt; &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, dim, 1, HeatEquation&lt; dim, LAC &gt;, LAC &gt;</a>, <a class="el" href="class_conservative_interface.html#a5f63c69236fa1c9edd34d253d0d9d246">ConservativeInterface&lt; dim, spacedim, dim+2, FreeSwellingThreeFields&lt; dim, spacedim &gt;, LAC &gt;</a>, and <a class="el" href="group__equations.html#gae84dcc9d18198ba8900f0668822e00a9">CompressibleNeoHookeanInterface&lt; dim, spacedim, LAC &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a2d4e0f21714ffaa98abb336352b7f32b"></a>
+<a class="anchor" id="a5bdfbeaabcba50dba382cab00121f6f7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::postprocess_newly_created_triangulation </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::postprocess_newly_created_triangulation </td>
           <td>(</td>
-          <td class="paramtype">Triangulation&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTriangulation.html">Triangulation</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
           <td class="paramname"><em>tria</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -1353,7 +1595,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 template&lt;typename Number &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::reinit </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::reinit </td>
           <td>(</td>
           <td class="paramtype">const Number &amp;&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
@@ -1361,7 +1603,7 @@ template&lt;typename Number &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -1389,7 +1631,7 @@ template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
 template&lt;typename Number &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::reinit </td>
+          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::reinit </td>
           <td>(</td>
           <td class="paramtype">const Number &amp;&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
@@ -1397,7 +1639,7 @@ template&lt;typename Number &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramtype">const typename <a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classDoFHandler.html">DoFHandler</a>&lt; dim, spacedim &gt;::<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__Iterators.html#ga661664adfd3a341a678e5ac62f85185a">active_cell_iterator</a> &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
         </tr>
         <tr>
@@ -1422,17 +1664,17 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a50e2c736dd58d653a05eed4128703d8e"></a>
+<a class="anchor" id="abe2174df19eff5f9d3351212880c386b"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, int n_components, typename LAC &gt; </div>
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::set_time </td>
+          <td class="memname">virtual void <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::set_time </td>
           <td>(</td>
           <td class="paramtype">const double &amp;&#160;</td>
           <td class="paramname"><em>t</em></td><td>)</td>
@@ -1461,7 +1703,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;unsigned int&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::_diff_comp</td>
+          <td class="memname">std::vector&lt;unsigned int&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::_diff_comp</td>
         </tr>
       </table>
   </td>
@@ -1483,7 +1725,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::alpha</td>
+          <td class="memname">double <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::alpha</td>
         </tr>
       </table>
   </td>
@@ -1491,6 +1733,34 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
 <span class="mlabels"><span class="mlabel">mutable</span><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a5018b018754691900283e8b9f6cc8ff5"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/classTable.html">Table</a>&lt;2,<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__dofs.html#gad31df71a29dd76de9b4ab241b2527160">DoFTools::Coupling</a>&gt; &gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::aux_matrix_coupling</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a317ce5fcba3e7bd7af3b430d01f218e4"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="elRef" doxygen="/Users/heltai/pi-DoMUS/build/deal.tag:http://www.dealii.org/developer/doxygen/deal.II/" href="http://www.dealii.org/developer/doxygen/deal.II/group__feaccess.html#gaa94b67d2fdcc390690c523f28019e52f">UpdateFlags</a>&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::aux_matrix_update_flags</td>
+        </tr>
+      </table>
 </div><div class="memdoc">
 
 </div>
@@ -1505,7 +1775,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">ParsedDirichletBCs&lt;dim,spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::dirichlet_bcs</td>
+          <td class="memname">ParsedDirichletBCs&lt;dim,spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::dirichlet_bcs</td>
         </tr>
       </table>
   </td>
@@ -1527,7 +1797,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::dofs_per_cell</td>
+          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::dofs_per_cell</td>
         </tr>
       </table>
   </td>
@@ -1549,7 +1819,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">ParsedMappedFunctions&lt;spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::forcing_terms</td>
+          <td class="memname">ParsedMappedFunctions&lt;spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::forcing_terms</td>
         </tr>
       </table>
   </td>
@@ -1571,7 +1841,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::n_face_q_points</td>
+          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::n_face_q_points</td>
         </tr>
       </table>
   </td>
@@ -1593,7 +1863,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::n_q_points</td>
+          <td class="memname">unsigned int <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::n_q_points</td>
         </tr>
       </table>
   </td>
@@ -1615,7 +1885,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">ParsedMappedFunctions&lt;spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::neumann_bcs</td>
+          <td class="memname">ParsedMappedFunctions&lt;spacedim,n_components&gt; <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::neumann_bcs</td>
         </tr>
       </table>
   </td>
@@ -1624,6 +1894,54 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac6414240aad6dba3b57bfa08f67dff2e"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a> <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::old_solution</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">mutable</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Solution vector evaluated at time t-dt. </p>
+
+</div>
+</div>
+<a class="anchor" id="abd986e9ddf43c96d37a47dc371d59db1"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LATrilinos&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::old_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">mutable</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Previous time step. </p>
 
 </div>
 </div>
@@ -1637,7 +1955,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const LAC::VectorType* <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::solution</td>
+          <td class="memname">const <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a>* <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::solution</td>
         </tr>
       </table>
   </td>
@@ -1646,6 +1964,8 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Solution vector evaluated at time t. </p>
 
 </div>
 </div>
@@ -1659,7 +1979,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const LAC::VectorType* <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::solution_dot</td>
+          <td class="memname">const <a class="el" href="class_l_a_deal_i_i.html#a698dced591d9dba4992ac168c103b0ba">LAC::VectorType</a>* <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::solution_dot</td>
         </tr>
       </table>
   </td>
@@ -1668,6 +1988,8 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Time derivative solution vector evaluated at time t. </p>
 
 </div>
 </div>
@@ -1681,7 +2003,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::string <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::str_diff_comp</td>
+          <td class="memname">std::string <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::str_diff_comp</td>
         </tr>
       </table>
   </td>
@@ -1703,7 +2025,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, LAC &gt;::t</td>
+          <td class="memname">double <a class="el" href="class_interface.html">Interface</a>&lt; dim, spacedim, n_components, <a class="el" href="group__equations.html#gaa2b3b542d2395bb35335cf5eea84d811">LAC</a> &gt;::t</td>
         </tr>
       </table>
   </td>
@@ -1713,11 +2035,12 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
 </table>
 </div><div class="memdoc">
 
+<p>Current time step. </p>
+
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>include/<a class="el" href="interface_8h_source.html">interface.h</a></li>
-<li>source/<a class="el" href="interface_8cc.html">interface.cc</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/old_interfaces/<a class="el" href="old__interface_8h_source.html">old_interface.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -1725,7 +2048,7 @@ template&lt;int dim, int spacedim = dim, int n_components = 1, typename LAC = LA
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_interface.html">Interface</a></li>
-    <li class="footer">Generated on Sun Nov 1 2015 15:00:10 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
+    <li class="footer">Generated on Mon Jan 11 2016 13:06:02 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

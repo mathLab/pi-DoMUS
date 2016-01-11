@@ -101,26 +101,29 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>alpha
 : <a class="el" href="class_interface.html#ae0b1afaced16f435442d82b9cc0cc1e2">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
+<li>aux_matrix_coupling
+: <a class="el" href="class_interface.html#a5018b018754691900283e8b9f6cc8ff5">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
+</li>
+<li>aux_matrix_update_flags
+: <a class="el" href="class_interface.html#a317ce5fcba3e7bd7af3b430d01f218e4">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
+</li>
 <li>dirichlet_bcs
 : <a class="el" href="class_interface.html#a29aa74422d69ba49ded9554c919edeef">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
 <li>dofs_per_cell
 : <a class="el" href="class_interface.html#addc9e4e77e1c16f087b6e27c99d2fa9d">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
-<li>double_residual
-: <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html#a7760a076be34d375cfcf30be516402ec">Assembly::CopyData::piDoMUSPreconditioner&lt; dim, spacedim &gt;</a>
-</li>
 <li>forcing_terms
 : <a class="el" href="class_interface.html#a6ddae072e045297d05b2df3dcd1d4f2f">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
 <li>local_dof_indices
-: <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html#aa748ffc663e44d72844548444b5a358e">Assembly::CopyData::piDoMUSPreconditioner&lt; dim, spacedim &gt;</a>
+: <a class="el" href="structpidomus_1_1_copy_data.html#ae3ddd28cb4a6a80dcdeca5eff46b9af7">pidomus::CopyData</a>
 </li>
-<li>local_matrix
-: <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html#a57787dbc4bada41c05072f604ea0ebd2">Assembly::CopyData::piDoMUSPreconditioner&lt; dim, spacedim &gt;</a>
+<li>local_matrices
+: <a class="el" href="structpidomus_1_1_copy_data.html#a472bde339a658ac5304ed1b36aac68ad">pidomus::CopyData</a>
 </li>
-<li>local_rhs
-: <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_system.html#a3bd0ff73c69659eaca09a4f1fc5e589f">Assembly::CopyData::piDoMUSSystem&lt; dim, spacedim &gt;</a>
+<li>local_residual
+: <a class="el" href="structpidomus_1_1_copy_data.html#adbc8c36a96b6033287bb25a3dd772fc0">pidomus::CopyData</a>
 </li>
 <li>n_face_q_points
 : <a class="el" href="class_interface.html#a1268a7d07af331b36276ae661c0ee45c">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
@@ -131,8 +134,11 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>neumann_bcs
 : <a class="el" href="class_interface.html#a78c4a41fe0134a5aa79775c48fa40206">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
-<li>sacado_residual
-: <a class="el" href="struct_assembly_1_1_copy_data_1_1pi_do_m_u_s_preconditioner.html#a2c2335752f7d84bf739e999a2f23f69e">Assembly::CopyData::piDoMUSPreconditioner&lt; dim, spacedim &gt;</a>
+<li>old_solution
+: <a class="el" href="class_interface.html#ac6414240aad6dba3b57bfa08f67dff2e">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
+</li>
+<li>old_t
+: <a class="el" href="class_interface.html#abd986e9ddf43c96d37a47dc371d59db1">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
 </li>
 <li>solution
 : <a class="el" href="class_interface.html#a1c83478f6e923ba13c6978c2589c1ae7">Interface&lt; dim, spacedim, n_components, LAC &gt;</a>
@@ -152,7 +158,7 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 1 2015 15:00:10 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
+    <li class="footer">Generated on Mon Jan 11 2016 13:06:02 for pi-DoMUS: Parallel Deal.II MUltiphysics Solver by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>
