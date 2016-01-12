@@ -1,4 +1,4 @@
-# Parameter file generated with 
+# Parameter file generated with
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     794e613
 # DEAL_II_GIT_BRANCH=   master
@@ -9,7 +9,7 @@ subsection Dirichlet boundary conditions
                                 2=0;0;0;0;0 %\
                                 4=0;0;0;0;0
   set Known component names   = u,u,u,p,c
-  set Used constants          = 
+  set Used constants          =
 end
 subsection Domain
   set Colorize                      = true
@@ -17,8 +17,8 @@ subsection Domain
   set Copy material to manifold ids = false
   set Create default manifolds      = true
   set Grid to generate              = rectangle
-  set Input grid file name          = 
-  set Manifold descriptors          = 
+  set Input grid file name          =
+  set Manifold descriptors          =
   set Mesh smoothing alogrithm      = none
   set Optional Point<spacedim> 1    = 0,0,0
   set Optional Point<spacedim> 2    = 1,1,1
@@ -28,7 +28,7 @@ subsection Domain
   set Optional int 1                = 1
   set Optional int 2                = 2
   set Optional vector of dim int    = 1,1,1
-  set Output grid file name         = 
+  set Output grid file name         =
 end
 subsection Error Tables
   set Compute error            = false
@@ -44,19 +44,19 @@ subsection Error Tables
     set Extra terms                    = cells,dofs
     set Latex table caption            = error
     set List of error norms to compute = L2,H1;L2,H1;L2,H1;L2,H1;L2,H1
-    set Rate key                       = 
+    set Rate key                       =
   end
 end
 subsection Exact solution
-  set Function constants  = 
+  set Function constants  =
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Forcing terms
   set IDs and component masks = 7=c
-  set IDs and expressions     = 7=0;0;0;0;114.701*t
+  set IDs and expressions     = 7=0;0;0;0;-(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*t
   set Known component names   = u,u,u,p,c
-  set Used constants          = 
+  set Used constants          = R=8.314, T=298.0, l0=1.5, chi=0.1, G=1e4, Omega=1e-5
 end
 subsection Free Swelling Three Fields
   set Block of differential components = 1,0,0
@@ -67,7 +67,6 @@ subsection Free Swelling Three Fields
   set T                                = 298.0
   set chi                              = 0.1
   set l0                               = 1.5
-  set mu                               = -1.8e-22
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
@@ -106,19 +105,19 @@ subsection Initial solution
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
-  set Function constants  = 
+  set Function constants  =
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
 subsection Neumann boundary conditions
-  set IDs and component masks = 
-  set IDs and expressions     = 
+  set IDs and component masks =
+  set IDs and expressions     =
   set Known component names   = u,u,u,p,c
-  set Used constants          = 
+  set Used constants          =
 end
 subsection Output Parameters
-  set Files to save in run directory = 
-  set Incremental run prefix         = 
+  set Files to save in run directory =
+  set Incremental run prefix         =
   set Output format                  = vtu
   set Output partitioning            = false
   set Problem base name              = solution
@@ -133,10 +132,10 @@ subsection Refinement
   set Top fraction                           = 0.300000
 end
 subsection Time derivative of Dirichlet boundary conditions
-  set IDs and component masks = 
-  set IDs and expressions     = 
+  set IDs and component masks =
+  set IDs and expressions     =
   set Known component names   = u,u,u,p,c
-  set Used constants          = 
+  set Used constants          =
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
@@ -144,7 +143,7 @@ subsection piDoMUS
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = false
+  set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Time stepper                                   = ida
   set Timer output file                              = timer.txt
