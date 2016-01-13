@@ -143,7 +143,7 @@ public:
 
 private:
 
-  
+
   /**
    * set time to @p t for forcing terms and boundary conditions
    */
@@ -161,7 +161,7 @@ private:
    *
    */
   void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-			    const ParsedDirichletBCs<dim,spacedim> &bc,
+                            const ParsedDirichletBCs<dim,spacedim> &bc,
                             ConstraintMatrix &constraints) const;
 
   /**

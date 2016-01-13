@@ -207,7 +207,7 @@ template <int dim, int spacedim, typename LAC>
 void
 piDoMUS<dim,spacedim,LAC>::
 apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
-		     const ParsedDirichletBCs<dim,spacedim> &bc,
+                     const ParsedDirichletBCs<dim,spacedim> &bc,
                      ConstraintMatrix &constraints) const
 {
   if (fe->has_support_points())
@@ -285,8 +285,8 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                     interface.get_component_names(), ""),
 
   zero_average("Zero average constraints",
-	       interface.n_components,
-	       interface.get_component_names() ),
+               interface.n_components,
+               interface.get_component_names() ),
 
 
   ida(*this),
