@@ -207,18 +207,19 @@ template <int dim, int spacedim, typename LAC>
 void
 piDoMUS<dim,spacedim,LAC>::
 apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+		     const ParsedDirichletBCs<dim,spacedim> &bc,
                      ConstraintMatrix &constraints) const
 {
   if (fe->has_support_points())
-    dirichlet_bcs.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
+    bc.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
   else
     {
       const QGauss<dim-1> quad(fe->degree+1);
-      dirichlet_bcs.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
+      bc.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
     }
   unsigned int codim = spacedim - dim;
   if (codim == 0)
-    dirichlet_bcs.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
+    bc.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
 }
 
 
@@ -282,6 +283,10 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
                     interface.n_components,
                     interface.get_component_names(), ""),
+
+  zero_average("Zero average constraints",
+	       interface.n_components,
+	       interface.get_component_names() ),
 
 
   ida(*this),
@@ -354,14 +359,15 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  apply_dirichlet_bcs(*dof_handler, constraints);
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
+  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
   constraints.close ();
 
   constraints_dot.clear();
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints_dot);
 
-  apply_dirichlet_bcs(*dof_handler, constraints_dot);
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
 
   constraints_dot.close ();
 
@@ -424,7 +430,9 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  apply_dirichlet_bcs(*dof_handler, constraints);
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
+
+  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
 
   constraints.close ();
 
@@ -432,7 +440,7 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints_dot);
 
-  apply_dirichlet_bcs(*dof_handler, constraints_dot);
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
 
   constraints_dot.close ();
 }

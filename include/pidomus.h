@@ -38,6 +38,7 @@
 #include <deal2lkit/sundials_interface.h>
 #include <deal2lkit/ida_interface.h>
 #include <deal2lkit/imex_stepper.h>
+#include <deal2lkit/parsed_zero_average_constraints.h>
 
 #include <deal2lkit/any_data.h>
 #include <deal2lkit/fe_values_cache.h>
@@ -140,6 +141,9 @@ public:
    */
   typename LAC::VectorType &get_solution();
 
+private:
+
+  
   /**
    * set time to @p t for forcing terms and boundary conditions
    */
@@ -152,11 +156,12 @@ public:
    * Applies Dirichlet boundary conditions
    *
    * This function is used to applies Dirichlet boundary conditions.
-   * It takes as argument a DoF handler @p dof_handler and a constraint
-   * matrix @p constraints.
+   * It takes as argument a DoF handler @p dof_handler, a
+   * ParsedDirichletBCs and a constraint matrix @p constraints.
    *
    */
   void apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
+			    const ParsedDirichletBCs<dim,spacedim> &bc,
                             ConstraintMatrix &constraints) const;
 
   /**
@@ -183,7 +188,6 @@ public:
 
 
 
-private:
   void make_grid_fe();
   void setup_dofs (const bool &first_run = true);
 
@@ -259,10 +263,12 @@ private:
   ParsedFunction<spacedim>        initial_solution_dot;
 
 
-  mutable ParsedMappedFunctions<spacedim>  forcing_terms; // on the volume
-  mutable ParsedMappedFunctions<spacedim>  neumann_bcs;
-  mutable ParsedDirichletBCs<dim,spacedim> dirichlet_bcs;
-  mutable ParsedDirichletBCs<dim,spacedim> dirichlet_bcs_dot;
+  ParsedMappedFunctions<spacedim>  forcing_terms; // on the volume
+  ParsedMappedFunctions<spacedim>  neumann_bcs;
+  ParsedDirichletBCs<dim,spacedim> dirichlet_bcs;
+  ParsedDirichletBCs<dim,spacedim> dirichlet_bcs_dot;
+
+  ParsedZeroAverageConstraints<dim,spacedim> zero_average;
 
 
 
