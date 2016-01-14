@@ -125,6 +125,7 @@ void sort_file_contents (const std::string &filename)
 {
   int error = std::system ((std::string ("LC_ALL=C sort ") + filename + " -o " + filename).c_str());
   Assert (error == 0, ExcInternalError());
+  (void)error;
 }
 
 
@@ -141,6 +142,7 @@ void unify_pretty_function (const std::string &filename)
   int error = std::system ((std::string ("sed -i -e 's/ \\&/ \\& /g' -e 's/ & ,/\\&,/g' -e 's/ \\& )/\\&)/g' -e 's/ \\& /\\& /g' -e 's/^DEAL::virtual /DEAL::/g' ") + filename).c_str());
 
   Assert (error == 0, ExcInternalError());
+  (void)error;
 }
 
 
