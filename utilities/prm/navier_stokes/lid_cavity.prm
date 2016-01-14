@@ -64,6 +64,13 @@ subsection Dirichlet boundary conditions
   set Known component names   = u,u,p
   set Used constants          = k=.9
 end
+
+subsection Zero average constraints
+  set Known component names        = u,u,p
+  set Zero average on boundary     = 
+  set Zero average on whole domain = p
+end
+
 subsection Domain
   set Colorize                      = true
   set Copy boundary to manifold ids = false
@@ -105,7 +112,6 @@ subsection IMEX Parameters
   set Step size                                    = 1.0e-1
   set Update continuously Jacobian                 = true
 end
-
 
 subsection Output Parameters
   set Files to save in run directory = 
