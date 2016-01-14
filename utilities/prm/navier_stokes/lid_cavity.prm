@@ -1,41 +1,49 @@
 ################################################################################
-#   This parameter files solves for a navier stokes problem on a lid cavity
+#   This parameter files solves for a navier stokes problem on a lid cavity		
 ################################################################################
+ 
+# Parameter file generated with 
+# D2K_GIT_BRANCH=       master
+# D2K_GIT_SHORTREV=     9a5f1b2
+# DEAL_II_GIT_BRANCH=   master
+# DEAL_II_GIT_SHORTREV= aaa9278
 
 subsection Navier Stokes Interface
-  set Amg Aggregation Threshold            = 0.2
-  set Amg Elliptic                         = false
-  set Amg High Order Elements              = false
-  set Amg Smoother Sweeps                  = 2
+  set A - Amg Aggregation Threshold        = 0.8
+  set A - Amg Elliptic                     = false
+  set A - Amg High Order Elements          = true
+  set A - Amg Smoother Sweeps              = 2
   
-  set Amg P Aggregation Threshold          = 0.02
-  set Amg P Elliptic                       = true
-  set Amg P Smoother Sweeps                = 2
-
+  set Ap - Amg Aggregation Threshold       = 0.02
+  set Ap - Amg Elliptic                    = true
+  set Ap - Amg Smoother Sweeps             = 2
+  
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
   
-  set CG Solver tolerance                  = 1e-8
-  set GMRES Solver tolerance               = 1e-8
+  set CG Solver tolerance                  = 1e-10
+  set GMRES Solver tolerance               = 1e-10
   
   set Enable convection term ((\nabla u)u) = true
   set Enable dynamic term (\partial_t u)   = false
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-
-  set Invert Ap using inverse_operator     = false
-  set Invert Mp using inverse_operator     = false
-  set Linearize using time                 = false
-  set Non linear term                      = grad_linear
-  set Preconditioner                       = default
   
-  set div-grad stabilization parameter     = 0.9975
-  set nu [Pa s]                            = 0.0025
-  set p-q stabilization parameter          = 0.0 #1.0e-6
+  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
+  
+  set Invert Ap using inverse_operator     = false
+  set Invert Mp using inverse_operator     = true
+  
+  set Linearize using time                 = true
+  
+  set Non linear term                      = u_linear
+  set Preconditioner                       = default
+  set div-grad stabilization parameter     = .09975
+  set nu [Pa s]                            = 0.00025
+  set p-q stabilization parameter          = 0.0
   set rho [kg m^3]                         = 1.0
 end
 
-subsection piDoMUS<2, 2, LATrilinos>
-  set Adaptive refinement                            = true
+subsection piDoMUS
+  set Adaptive refinement                            = false
   set Initial global refinement                      = 5
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
@@ -49,86 +57,62 @@ end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 % 1 = 0 ; 0 ; 0 % 2 = 0 ; 0 ; 0 % 3 = 1 ; 0 ; 0
+  set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
+                                1 = 0 ; 0 ; 0 % \
+                                2 = 0 ; 0 ; 0 % \
+                                3 = 1 ; 0 ; 0
   set Known component names   = u,u,p
-  set Used constants          = k=1
+  set Used constants          = k=.9
 end
-
 subsection Domain
-  set Grid to generate           = rectangle
-  set Mesh smoothing alogrithm   = none
-  set Optional Point<spacedim> 1 = 0,0
-  set Optional Point<spacedim> 2 = 1,1
-  set Colorize                   = true
-end
-
-subsection Refinement
-  set Bottom fraction                        = 0.100000
-  set Maximum number of cells (if available) = 500
-  set Order (optimize)                       = 2
-  set Refinement strategy                    = fraction
-  set Top fraction                           = 0.300000
+  set Colorize                      = true
+  set Copy boundary to manifold ids = false
+  set Copy material to manifold ids = false
+  set Create default manifolds      = true
+  set Grid to generate              = rectangle
+  set Input grid file name          = 
+  set Manifold descriptors          = 
+  set Mesh smoothing alogrithm      = none
+  set Optional Point<spacedim> 1    = 0,0
+  set Optional Point<spacedim> 2    = 1,1
+  set Optional double 1             = 1.0
+  set Optional double 2             = 0.5
+  set Optional double 3             = 1.5
+  set Optional int 1                = 1
+  set Optional int 2                = 2
+  set Optional vector of dim int    = 1,1
+  set Output grid file name         = 
 end
 
 subsection Error Tables
   set Compute error            = false
-  set Error file format        = tex
-  set Output error tables      = true
-  set Solution names           = u,u,p
-  set Solution names for latex = u,u,p
-  set Table names              = error
-  set Write error files        = false
-  subsection Table 0
-    set Add convergence rates          = true
-    set Extra terms                    = cells,dofs
-    set Latex table caption            = error
-    set List of error norms to compute = L2, Linfty, H1; AddUp; L2
-    set Rate key                       =
-  end
-end
-
-subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-3
-  set Initial time                                  = 0
-  set Final time                                    = 0
-
-  set Ignore algebraic terms for error computations = true
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_diff
-  set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-2
-  set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 3
-  set Min step size                                 = 5e-3
-  set Relative error tolerance                      = 1e-2
-  set Seconds between each output                   = 1e-2
-  set Show output of time steps                     = true
-  set Use local tolerances                          = false
 end
 
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1.0e-8
   set Relative error tolerance                     = 1.0e-6
-    
-  set Final time                                   = 0
+  
+  set Final time                                   = 2
   set Initial time                                 = 0
   
   set Intervals between outputs                    = 1
   
-  set Maximum number of inner nonlinear iterations = 5
-  set Maximum number of outer nonlinear iterations = 10
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 20
+  
   set Newton relaxation parameter                  = 1
+
   set Step size                                    = 1.0e-1
-  set Update continuously Jacobian                 = false
+  set Update continuously Jacobian                 = true
 end
 
+
 subsection Output Parameters
-  set Incremental run prefix         =
-  set Files to save in run directory =
-  set Output format          = vtu
-  set Output partitioning    = false
-  set Problem base name      = solution
-  set Solution names         = u
-  set Subdivisions           = 1
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = solution
+  set Solution names                 = u
+  set Subdivisions                   = 1
 end
