@@ -1,3 +1,7 @@
+################################################################################
+#   This parameter files solves for a navier stokes problem on a lid cavity		
+################################################################################
+ 
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     9a5f1b2
@@ -5,7 +9,7 @@
 # DEAL_II_GIT_SHORTREV= aaa9278
 
 subsection Navier Stokes Interface
-  set A - Amg Aggregation Threshold        = 2
+  set A - Amg Aggregation Threshold        = 0.8
   set A - Amg Elliptic                     = false
   set A - Amg High Order Elements          = true
   set A - Amg Smoother Sweeps              = 2
@@ -17,8 +21,8 @@ subsection Navier Stokes Interface
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
   
-  set CG Solver tolerance                  = 1e-8
-  set GMRES Solver tolerance               = 1e-8
+  set CG Solver tolerance                  = 1e-10
+  set GMRES Solver tolerance               = 1e-10
   
   set Enable convection term ((\nabla u)u) = true
   set Enable dynamic term (\partial_t u)   = false
@@ -33,12 +37,12 @@ subsection Navier Stokes Interface
   set Non linear term                      = u_linear
   set Preconditioner                       = default
   set div-grad stabilization parameter     = .09975
-  set nu [Pa s]                            = 0.001
+  set nu [Pa s]                            = 0.00025
   set p-q stabilization parameter          = 0.0
   set rho [kg m^3]                         = 1.0
 end
 
-subsection piDoMUS<2, 2, LATrilinos>
+subsection piDoMUS
   set Adaptive refinement                            = false
   set Initial global refinement                      = 5
   set Jacobian solver tolerance                      = 1e-8

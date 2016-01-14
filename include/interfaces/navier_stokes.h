@@ -344,10 +344,10 @@ template <int dim, int spacedim, typename LAC>
 void NavierStokes<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
-  couplings[0] = "1,1;0,0";
+  couplings[0] = "1,1;1,0"; // Direct solver uses block(1,0)
   couplings[1] = "0,0;0,1";
   couplings[2] = "0,0;0,1";
-};
+}
 
 template <int dim, int spacedim, typename LAC>
 template <typename EnergyType, typename ResidualType>
@@ -394,18 +394,22 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   for (unsigned int quad=0; quad<n_quad_points; ++quad)
     {
+      // Pressure:
       const ResidualType &p = ps[quad];
-      // const ResidualType &p_dot = ps_dot[quad];
       const Tensor<1, dim, ResidualType> &grad_p = grad_ps[quad];
+
+      // Velocity:
       const Tensor<1, dim, ResidualType> &u = us[quad];
       const Tensor<1, dim, ResidualType> &u_dot = us_dot[quad];
       const Tensor<2, dim, ResidualType> &grad_u = grad_us[quad];
       const Tensor<2, dim, ResidualType> &sym_grad_u = sym_grad_us[quad];
       const ResidualType &div_u = div_us[quad];
 
+      // Previous time step solution:
       const Tensor<1, dim, ResidualType> &u_old = u_olds[quad];
       const Tensor<2, dim, ResidualType> &grad_u_old = grad_u_olds[quad];
 
+      // Previous Jacobian step solution:
       const Tensor<1, dim, ResidualType> &u_prev = u_prevs[quad];
       const Tensor<2, dim, ResidualType> &grad_u_prev = grad_u_prevs[quad];
 
@@ -414,7 +418,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           // Velocity:
           auto v = fev[velocity ].value(i,quad);
           auto div_v = fev[velocity ].divergence(i,quad);
-          auto grad_v = fev[ velocity ].gradient(i,quad);
           auto sym_grad_v = fev[ velocity ].symmetric_gradient(i,quad);
 
           // Pressure:
