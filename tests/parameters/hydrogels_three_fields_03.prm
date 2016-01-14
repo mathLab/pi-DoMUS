@@ -61,7 +61,9 @@ end
 subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)-FE_DGQ(1)]
+  set Finite element space             = FESystem[FE_Q(1)^d-\
+                                         FE_DGPMonomial(0)-\
+					 FE_DGPMonomial(0)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
@@ -139,7 +141,7 @@ subsection Time derivative of Dirichlet boundary conditions
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 1
+  set Initial global refinement                      = 3	
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
