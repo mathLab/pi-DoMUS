@@ -183,10 +183,10 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
                          LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
-  std::vector<std::vector<bool> > constant_modes;
+  /* std::vector<std::vector<bool> > constant_modes; */
   FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
-                                    constant_modes);
+  /* DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement), */
+  /*                                   constant_modes); */
 
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
@@ -194,11 +194,11 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   S_prec.reset (new TrilinosWrappers::PreconditionJacobi());
 
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
+  //  Amg_data.constant_modes = constant_modes;
   Amg_data.elliptic = true;
   Amg_data.higher_order_elements = true;
   Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
+  Amg_data.aggregation_threshold = 2;
 
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);

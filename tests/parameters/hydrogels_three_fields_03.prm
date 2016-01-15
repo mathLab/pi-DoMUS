@@ -4,10 +4,8 @@
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= c2570a1
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0=u.N % 2=u.N % 4=u.N
-  set IDs and expressions     = 0=0;0;0;0;0 %\
-                                2=0;0;0;0;0 %\
-                                4=0;0;0;0;0
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=0;0;0;0;0 
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
@@ -124,7 +122,7 @@ subsection Output Parameters
   set Output partitioning            = false
   set Problem base name              = solution
   set Solution names                 = u
-  set Subdivisions                   = 3
+  set Subdivisions                   = 2
 end
 subsection Refinement
   set Bottom fraction                        = 0.100000
