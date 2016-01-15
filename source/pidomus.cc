@@ -210,10 +210,16 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                      const ParsedDirichletBCs<dim,spacedim> &bc,
                      ConstraintMatrix &constraints) const
 {
-  if (fe->has_support_points())
-    bc.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
-  else
+  try
     {
+      bc.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
+    }
+  catch (...)
+    {
+      AssertThrow(!we_are_parallel,
+                  ExcMessage("You called VectorTools::project_boundary_values(), which is not \n"
+                             "currently supported on deal.II in parallel settings.\n"
+                             "Feel free to submit a patch :)"));
       const QGauss<dim-1> quad(fe->degree+1);
       bc.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
     }
@@ -396,7 +402,6 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       matrices[i]->reinit(*matrix_sparsities[i]);
     }
 
-
   if (first_run)
     {
       if (fe->has_support_points())
@@ -404,12 +409,29 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
           VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution, solution);
           VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution_dot, solution_dot);
         }
-      else
+      else if (!we_are_parallel)
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
           VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
           VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
+      else
+        {
+          Point<spacedim> p;
+          Vector<double> vals(interface.n_components);
+          Vector<double> vals_dot(interface.n_components);
+          initial_solution.vector_value(p, vals);
+          initial_solution_dot.vector_value(p, vals_dot);
+
+          unsigned int comp = 0;
+          for (unsigned int b=0; b<solution.n_blocks(); ++b)
+            {
+              solution.block(b) = vals[comp];
+              solution_dot.block(b) = vals_dot[comp];
+              comp += fe->element_multiplicity(b);
+            }
+        }
+
       explicit_solution = solution;
       distributed_explicit_solution = solution;
 
