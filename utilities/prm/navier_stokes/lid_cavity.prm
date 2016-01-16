@@ -68,7 +68,7 @@ end
 subsection Zero average constraints
   set Known component names        = u,u,p
   set Zero average on boundary     = 
-  set Zero average on whole domain = p
+  set Zero average on whole domain = 
 end
 
 subsection Domain
