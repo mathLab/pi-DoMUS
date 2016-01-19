@@ -75,6 +75,8 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> S_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionIdentity> bbt_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionIdentity> eet_prec;
 
 };
 
@@ -115,7 +117,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
-  auto &grad_ps = fe_cache.get_gradients("solution", "p", pressure, alpha);
+  auto &grad_ps = fe_cache.get_gradients("solution", "gradp", pressure, alpha);
 
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
@@ -146,7 +148,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       if (!compute_only_system_terms)
         {
-          EnergyType pp = 0.5*p*p + 0.5*grad_p*grad_p;
+          EnergyType pp = p*p;
           energies[1] += pp*JxW[q];
         }
     }
@@ -193,7 +195,6 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   U_prec.reset (new TrilinosWrappers::PreconditionAMG());
-  S_prec.reset (new TrilinosWrappers::PreconditionJacobi());
 
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
   Amg_data.constant_modes = constant_modes;
@@ -204,7 +205,6 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
 
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);
-  S_prec->initialize (matrices[1]->block(2,2));
   p_prec->initialize (matrices[1]->block(2,2));
   c_prec->initialize (matrices[0]->block(1,1));
 
@@ -227,7 +227,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto PE  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1));
   auto Pp  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(2,2));
 
-  
+
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
       {{ A   , Z01 ,  Bt  }},
       {{ Z10 ,   C ,  Et  }},
@@ -241,7 +241,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
 
 
 
-  static ReductionControl solver_control_pre(5000, 1e-5);
+  static ReductionControl solver_control_pre(5000, 1e-9);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
@@ -271,24 +271,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   LinearOperator<LATrilinos::VectorType::BlockType> L21 = -1.0*(E*C_inv);
 
 
-  IterationNumberControl s_inv_control (5, 1e-3);
-  static SolverGMRES<LATrilinos::VectorType::BlockType> solver_GMRES(s_inv_control);
 
-  LinearOperator<LATrilinos::VectorType::BlockType>  S;
-  LinearOperator<LATrilinos::VectorType::BlockType>  Su;
-  LinearOperator<LATrilinos::VectorType::BlockType>  Sc;
-  Su = -1.0*B*A_inv*Bt;
-  Sc = -1.0*E*C_inv*Et;
-  //  S = -1.0*(B*A_inv*Bt + E*C_inv*Et);
-  auto Su_inv = inverse_operator(Su,solver_GMRES,*S_prec);
-  auto Sc_inv = inverse_operator(Sc,solver_GMRES,*S_prec);
-    auto S_inv = Su_inv + Sc_inv;
-    //auto S_inv = Su_inv;
-  //  auto S_inv = Sc_inv;
-
-
-
-  
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > L_inv_array = {{
       {{ L00  ,  Z01  , L02 }},
       {{ Z10  ,  L11  , L12 }},
@@ -303,7 +286,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   auto U12 = -1.0*(C_inv*Et);
   auto U20 = 0*B;
   auto U21 = 0*C;
-  
+
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > U_inv_array = {{
       {{ L00  ,  Z01  , U02 }},
       {{ Z10  ,  L11, U12 }},
@@ -317,9 +300,9 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
 
 
-LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+  LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
 
- prec_op = U_inv_op*D_inv_op*L_inv_op;
+  prec_op = U_inv_op*D_inv_op*L_inv_op;
 //prec_op = U_inv_op;
 //  prec_op = L_inv_op;
 // prec_op = D_inv_op;
