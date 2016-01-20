@@ -72,11 +72,9 @@ private:
 
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> c_prec_amg;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> S_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionIdentity> bbt_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionIdentity> eet_prec;
 
 };
 
@@ -181,32 +179,34 @@ void HydroGelThreeFields<dim,spacedim,LAC>::parse_parameters_call_back ()
 template <int dim, int spacedim, typename LAC>
 void
 HydroGelThreeFields<dim,spacedim,LAC>::
-compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+compute_system_operators(const DoFHandler<dim,spacedim> &,
                          const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
                          LinearOperator<LATrilinos::VectorType> &system_op,
                          LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
-  std::vector<std::vector<bool> > constant_modes;
-  FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
-                                    constant_modes);
 
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   U_prec.reset (new TrilinosWrappers::PreconditionAMG());
+  c_prec_amg.reset (new TrilinosWrappers::PreconditionAMG());
 
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
   Amg_data.elliptic = true;
   Amg_data.higher_order_elements = true;
-  Amg_data.smoother_sweeps = 1;
-  Amg_data.aggregation_threshold = 2;
+  Amg_data.smoother_sweeps = 2;
+  Amg_data.aggregation_threshold = 1;
+  TrilinosWrappers::PreconditionAMG::AdditionalData c_amg_data;
+  c_amg_data.elliptic = true;
+  c_amg_data.higher_order_elements = true;
+  c_amg_data.smoother_sweeps = 2;
+  c_amg_data.aggregation_threshold = 2;
 
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);
   p_prec->initialize (matrices[1]->block(2,2));
   c_prec->initialize (matrices[0]->block(1,1));
+  c_prec_amg->initialize (matrices[0]->block(1,1), c_amg_data);
 
 
 
@@ -241,12 +241,13 @@ compute_system_operators(const DoFHandler<dim,spacedim> &dh,
 
 
 
-  static ReductionControl solver_control_pre(5000, 1e-9);
+  //  static ReductionControl solver_control_pre(5000, 1e-9);
+  static IterationNumberControl solver_control_pre(1);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
   auto A_inv = inverse_operator( PA, solver_CG, *U_prec);
-  auto C_inv = inverse_operator( PE, solver_CG, *c_prec);
+  auto C_inv = inverse_operator( PE, solver_CG, *c_prec_amg);
   auto P_inv = inverse_operator( Pp, solver_CG, *p_prec);
   /* auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec); */
   /* auto E_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec); */

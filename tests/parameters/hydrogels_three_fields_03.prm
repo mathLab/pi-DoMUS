@@ -60,8 +60,8 @@ subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
   set Finite element space             = FESystem[FE_Q(1)^d-\
-                                         FE_DGP(0)-\
-					 FE_DGP(0)]
+                                         FE_DGPMonomial(0)-\
+					 FE_DGPMonomial(0)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
@@ -88,10 +88,10 @@ subsection IDA Solver Parameters
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
-  set Final time                                   = 1.005
+  set Final time                                   = 1
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
-  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of inner nonlinear iterations = 5
   set Maximum number of outer nonlinear iterations = 50
   set Newton relaxation parameter                  = 1.000000
   set Relative error tolerance                     = 0.000000
