@@ -170,6 +170,7 @@ public:
   virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                         const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
                                         LinearOperator<typename LATrilinos::VectorType> &,
+                                        LinearOperator<typename LATrilinos::VectorType> &,
                                         LinearOperator<typename LATrilinos::VectorType> &) const;
 
   /**
@@ -178,6 +179,7 @@ public:
    */
   void compute_system_operators(const DoFHandler<dim,spacedim> &,
                                 const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
+                                LinearOperator<typename LADealII::VectorType> &,
                                 LinearOperator<typename LADealII::VectorType> &,
                                 LinearOperator<typename LADealII::VectorType> &) const
   {};

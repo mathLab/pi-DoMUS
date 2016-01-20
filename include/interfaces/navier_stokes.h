@@ -105,6 +105,7 @@ public:
     const DoFHandler<dim,spacedim> &,
     const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
     LinearOperator<LATrilinos::VectorType> &,
+    LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
 
   void
@@ -494,7 +495,8 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   const DoFHandler<dim,spacedim> &dh,
   const std::vector<shared_ptr<LATrilinos::BlockMatrix>> matrices,
   LinearOperator<LATrilinos::VectorType> &system_op,
-  LinearOperator<LATrilinos::VectorType> &prec_op) const
+  LinearOperator<LATrilinos::VectorType> &prec_op,
+  LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
   auto aplha = this->alpha;
 

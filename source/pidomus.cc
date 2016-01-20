@@ -95,6 +95,18 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Double (0.0));
 
   add_parameter(  prm,
+                  &jacobian_solver_tolerance_finer,
+                  "Finer Jacobian solver tolerance",
+                  "1e-8",
+                  Patterns::Double (0.0));
+
+  add_parameter(  prm,
+                  &double_preconditioner,
+                  "Enable double preconditioner",
+                  "false",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
                   &timer_file_name,
                   "Timer output file",
                   "timer.txt",
@@ -925,24 +937,45 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
     }
   else
     {
+      unsigned int iterations = 0;
+      try
+        {
+          PrimitiveVectorMemory<typename LAC::VectorType> mem;
+          ReductionControl solver_control (matrices[0]->m(),
+                                           jacobian_solver_tolerance);
+          SolverFGMRES<typename LAC::VectorType>
+          solver(solver_control, mem,
+                 typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(30, true));
+          auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
+          S_inv.vmult(dst, src);
 
-      PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (matrices[0]->m(),
-                                    jacobian_solver_tolerance);
+          iterations += solver_control.last_step();
+        }
+      catch (...)
+        {
+          if (double_preconditioner)
+            {
+              PrimitiveVectorMemory<typename LAC::VectorType> mem;
+              ReductionControl solver_control (matrices[0]->m(),
+                                               jacobian_solver_tolerance_finer);
+              SolverFGMRES<typename LAC::VectorType>
+              solver(solver_control, mem,
+                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+              auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op_finer);
+              S_inv.vmult(dst, src);
 
-      SolverFGMRES<typename LAC::VectorType>
-      solver(solver_control, mem,
-             typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+              iterations += solver_control.last_step();
+            }
+        }
 
-      auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
-      S_inv.vmult(dst, src);
+
 
       if (verbose)
         {
           if (!overwrite_iter)
             pcout << std::endl;
           pcout << " iterations:            "
-                << solver_control.last_step();
+                << iterations;
           if (overwrite_iter)
             pcout << "               \r";
           else
@@ -973,7 +1006,8 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
 
       interface.compute_system_operators(*dof_handler,
                                          matrices,
-                                         jacobian_op, jacobian_preconditioner_op);
+                                         jacobian_op, jacobian_preconditioner_op,
+                                         jacobian_preconditioner_op_finer);
     }
 
   computing_timer.exit_section();

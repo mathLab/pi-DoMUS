@@ -199,6 +199,7 @@ BaseInterface<dim,spacedim,LAC>::
 compute_system_operators(const DoFHandler<dim,spacedim> &,
                          const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                          LinearOperator<LATrilinos::VectorType> &,
+                         LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &) const
 {
   Assert(false, ExcPureFunctionCalled ());
