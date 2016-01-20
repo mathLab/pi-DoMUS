@@ -8,7 +8,7 @@ subsection Dirichlet boundary conditions
   set IDs and expressions     = 0=0;0;0;0;0 %\
                                 2=0;0;0;0;0 %\
                                 4=0;0;0;0;0
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
 subsection Domain
@@ -35,8 +35,8 @@ subsection Error Tables
   set Error file format        = tex
   set Error precision          = 3
   set Output error tables      = true
-  set Solution names           = u,u,u,p,c
-  set Solution names for latex = u,u,u,p,c
+  set Solution names           = u,u,u,c,p
+  set Solution names for latex = u,u,u,c,p
   set Table names              = error
   set Write error files        = false
   subsection Table 0
@@ -54,14 +54,14 @@ subsection Exact solution
 end
 subsection Forcing terms
   set IDs and component masks = 7=c
-  set IDs and expressions     = 7=0;0;0;0;11.470
-  set Known component names   = u,u,u,p,c
+  set IDs and expressions     = 7=0;0;0;11.470;0
+  set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
 subsection Free Swelling Three Fields
-  set Block of differential components = 1,0,0
-  set Blocking of the finite element   = u,u,u,p,c
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]
+  set Block of differential components = 0,0,0
+  set Blocking of the finite element   = u,u,u,c,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)-FE_DGQ(1)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
@@ -102,7 +102,7 @@ subsection IMEX Parameters
 end
 subsection Initial solution
   set Function constants  = G=1e4, l0=1.5, Omega=1e-5
-  set Function expression = 0; 0; 0; G/l0; (l0^3-1)/(Omega*l0^3)
+  set Function expression = 0; 0; 0; (l0^3-1)/(Omega*l0^3); G/l0
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
@@ -113,7 +113,7 @@ end
 subsection Neumann boundary conditions
   set IDs and component masks = 
   set IDs and expressions     = 
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
 subsection Output Parameters
@@ -135,7 +135,7 @@ end
 subsection Time derivative of Dirichlet boundary conditions
   set IDs and component masks = 
   set IDs and expressions     = 
-  set Known component names   = u,u,u,p,c
+  set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
 subsection piDoMUS

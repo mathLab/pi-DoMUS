@@ -72,6 +72,7 @@ private:
 
 
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> c_prec_amg;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
 
@@ -82,7 +83,7 @@ HydroGelThreeFields<dim,spacedim,LAC>::HydroGelThreeFields() :
   PDESystemInterface<dim,spacedim,HydroGelThreeFields<dim,spacedim,LAC>, LAC>("Free Swelling Three Fields",
       dim+2,2,
       "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)]",
-      "u,u,u,p,c","1,0,0")
+      "u,u,u,c,p","1,0,0")
 {}
 
 template <int dim, int spacedim, typename LAC>
@@ -90,8 +91,8 @@ void
 HydroGelThreeFields<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
-  couplings[0] = "1,1,0;1,0,1;0,1,1";
-  couplings[1] = "0,0,0;0,1,0;0,0,0";
+  couplings[0] = "1,0,1;0,1,1;1,1,0";
+  couplings[1] = "0,0,0;0,0,0;0,0,1";
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -108,12 +109,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
-  const FEValuesExtractors::Scalar pressure(dim);
-  const FEValuesExtractors::Scalar concentration(dim+1);
+  const FEValuesExtractors::Scalar concentration(dim);
+  const FEValuesExtractors::Scalar pressure(dim+1);
 
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+  auto &grad_ps = fe_cache.get_gradients("solution", "gradp", pressure, alpha);
 
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
@@ -127,6 +129,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
       const EnergyType &c = cs[q];
       const EnergyType &p = ps[q];
+      const Tensor<1,dim,EnergyType> &grad_p = grad_ps[q];
 
       const EnergyType I = trace(C);
       const EnergyType J = determinant(F);
@@ -142,7 +145,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       energies[0] += psi*JxW[q];
 
       if (!compute_only_system_terms)
-        energies[1] += 0.5*(p*p)*JxW[q];
+        {
+          EnergyType pp = p*p;
+          energies[1] += pp*JxW[q];
+        }
     }
 
 }
@@ -173,77 +179,135 @@ void HydroGelThreeFields<dim,spacedim,LAC>::parse_parameters_call_back ()
 template <int dim, int spacedim, typename LAC>
 void
 HydroGelThreeFields<dim,spacedim,LAC>::
-compute_system_operators(const DoFHandler<dim,spacedim> &dh,
+compute_system_operators(const DoFHandler<dim,spacedim> &,
                          const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
                          LinearOperator<LATrilinos::VectorType> &system_op,
                          LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
-  std::vector<std::vector<bool> > constant_modes;
-  FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
-                                    constant_modes);
 
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   U_prec.reset (new TrilinosWrappers::PreconditionAMG());
+  c_prec_amg.reset (new TrilinosWrappers::PreconditionAMG());
 
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
-  Amg_data.constant_modes = constant_modes;
   Amg_data.elliptic = true;
   Amg_data.higher_order_elements = true;
   Amg_data.smoother_sweeps = 2;
-  Amg_data.aggregation_threshold = 0.02;
+  Amg_data.aggregation_threshold = 1;
+  TrilinosWrappers::PreconditionAMG::AdditionalData c_amg_data;
+  c_amg_data.elliptic = true;
+  c_amg_data.higher_order_elements = true;
+  c_amg_data.smoother_sweeps = 2;
+  c_amg_data.aggregation_threshold = 2;
 
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);
-  p_prec->initialize (matrices[1]->block(1,1));
-  c_prec->initialize (matrices[0]->block(2,2));
+  p_prec->initialize (matrices[1]->block(2,2));
+  c_prec->initialize (matrices[0]->block(1,1));
+  c_prec_amg->initialize (matrices[0]->block(1,1), c_amg_data);
+
 
 
   // SYSTEM MATRIX:
   auto A   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0) );
-  auto Bt  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,1) );
-  auto Z02 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,2) );
+  auto Z01 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,1) );
+  auto Bt  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,2) );
 
-  auto B   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,0) );
-  auto Z11 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1) );
-  auto C   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,2) );
+  auto Z10 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,0) );
+  auto C   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1) );
+  auto Et   =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,2) );
 
-  auto Z20 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,0) );
-  auto D   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,1) );
-  auto E   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2) );
+  auto B   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,0) );
+  auto E   =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,1) );
+  auto Z22 = 0*linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2) );
 
-  auto P0  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0));
-  auto P1  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(1,1));
-  auto P2  =  linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(2,2));
-
-
-  static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
-
-  auto P0_inv = inverse_operator( P0, solver_CG, *U_prec);
-  auto P1_inv = inverse_operator( P1, solver_CG, *p_prec);
-  auto P2_inv = inverse_operator( P2, solver_CG, *c_prec);
-
-  auto P0_i = P0_inv;
-  auto P1_i = P1_inv;
-  auto P2_i = P2_inv;
+  auto PA  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0));
+  auto PE  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1));
+  auto Pp  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(2,2));
 
 
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
-      {{ A,   Bt   , Z02 }},
-      {{ B,   Z11  , C   }},
-      {{ Z20, D    , E   }}
+      {{ A   , Z01 ,  Bt  }},
+      {{ Z10 ,   C ,  Et  }},
+      {{ B   ,   E ,  Z22 }}
     }
   };
 
   system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
 
+
+
+
+
+  //  static ReductionControl solver_control_pre(5000, 1e-9);
+  static IterationNumberControl solver_control_pre(1);
+
+  static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
+
+  auto A_inv = inverse_operator( PA, solver_CG, *U_prec);
+  auto C_inv = inverse_operator( PE, solver_CG, *c_prec_amg);
+  auto P_inv = inverse_operator( Pp, solver_CG, *p_prec);
+  /* auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec); */
+  /* auto E_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec); */
+  /* auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec); */
+
+
+  auto P0_i = A_inv;
+  auto P1_i = C_inv;
+  auto P2_i = P_inv;
+
+
+
+
+
+  auto L00 = identity_operator(A.reinit_range_vector);
+  auto L11 = identity_operator(E.reinit_range_vector);
+  auto L22 = identity_operator(Z22.reinit_range_vector);
+
+  auto L02 = null_operator(Bt);
+  auto L12 = null_operator(Et);
+  LinearOperator<LATrilinos::VectorType::BlockType> L20 = -1.0*(B*A_inv);
+  LinearOperator<LATrilinos::VectorType::BlockType> L21 = -1.0*(E*C_inv);
+
+
+
+  const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > L_inv_array = {{
+      {{ L00  ,  Z01  , L02 }},
+      {{ Z10  ,  L11  , L12 }},
+      {{ L20  ,  L21  , L22 }}
+    }
+  };
+
+  LinearOperator<LATrilinos::VectorType> L_inv_op =   block_operator<3, 3, LATrilinos::VectorType >(L_inv_array);
+
+
+  auto U02 = -1.0*(A_inv*Bt);
+  auto U12 = -1.0*(C_inv*Et);
+  auto U20 = 0*B;
+  auto U21 = 0*C;
+
+  const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > U_inv_array = {{
+      {{ L00  ,  Z01  , U02 }},
+      {{ Z10  ,  L11, U12 }},
+      {{ U20  ,  U21  , L22          }}
+    }
+  };
+  LinearOperator<LATrilinos::VectorType> U_inv_op =  block_operator<3, 3, LATrilinos::VectorType >(U_inv_array);
+
+
+
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
 
 
-  prec_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+  LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+
+  prec_op = U_inv_op*D_inv_op*L_inv_op;
+//prec_op = U_inv_op;
+//  prec_op = L_inv_op;
+// prec_op = D_inv_op;
+
 
 }
 
