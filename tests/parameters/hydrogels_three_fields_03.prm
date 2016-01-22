@@ -1,6 +1,6 @@
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     c3b1019
+# D2K_GIT_SHORTREV=     d7c206b
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= 2aed525
 subsection Dirichlet boundary conditions
@@ -59,9 +59,7 @@ end
 subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
-  set Finite element space             = FESystem[FE_Q(1)^d-\
-                                         FE_DGPMonomial(0)-\
-					 FE_DGPMonomial(0)]
+  set Finite element space             = FESystem[FE_Q(1)^d-FE_DGPMonomial(0)-FE_DGPMonomial(0)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
@@ -88,7 +86,7 @@ subsection IDA Solver Parameters
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
-  set Final time                                   = 1
+  set Final time                                   = 0.02
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
@@ -143,13 +141,13 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 4
+  set Initial global refinement                      = 3
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
-  set Time stepper                                   = euler
+  set Time stepper                                   = ida
   set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end

@@ -76,6 +76,8 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> c_prec_amg;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> p_prec;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> c_prec;
+  mutable shared_ptr<TrilinosWrappers::PreconditionSOR> p_prec_sor;
+  mutable shared_ptr<TrilinosWrappers::PreconditionSSOR> p_prec_ssor;
 
 };
 
@@ -186,6 +188,8 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
   p_prec.reset (new TrilinosWrappers::PreconditionJacobi());
+  p_prec_sor.reset (new TrilinosWrappers::PreconditionSOR());
+  p_prec_ssor.reset (new TrilinosWrappers::PreconditionSSOR());
   c_prec.reset (new TrilinosWrappers::PreconditionJacobi());
   U_prec.reset (new TrilinosWrappers::PreconditionAMG());
   c_prec_amg.reset (new TrilinosWrappers::PreconditionAMG());
@@ -203,10 +207,12 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
   U_prec->initialize (matrices[0]->block(0,0), Amg_data);
-  p_prec->initialize (matrices[1]->block(2,2));
   c_prec->initialize (matrices[0]->block(1,1));
   c_prec_amg->initialize (matrices[0]->block(1,1), c_amg_data);
 
+  p_prec->initialize (matrices[1]->block(2,2));
+  p_prec_sor->initialize (matrices[1]->block(2,2));
+  p_prec_ssor->initialize (matrices[1]->block(2,2));
 
 
   // SYSTEM MATRIX:
@@ -237,16 +243,16 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
 
 
-  static ReductionControl solver_control_pre(5000, 1e-4);
+  static ReductionControl solver_control_pre(5000, 1e-6);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
-  auto A_inv = inverse_operator( PA, solver_CG, *U_prec);
-  auto C_inv = inverse_operator( PE, solver_CG, *c_prec_amg);
+  /* auto A_inv = inverse_operator( PA, solver_CG, *U_prec); */
+  /* auto C_inv = inverse_operator( PE, solver_CG, *c_prec); */
   auto P_inv = inverse_operator( Pp, solver_CG, *p_prec);
-  /* auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec); */
-  /* auto E_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec); */
-  /* auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec); */
+  auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec);
+  auto C_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec_amg);
+  //  auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec);
 
 
   auto P0_i = A_inv;
@@ -293,8 +299,10 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
   auto S1 = schur_complement(A_inv,Bt,B,Z22);
   auto S2 = schur_complement(C_inv,Et,E,Z22);
-  /* LinearOperator<LATrilinos::VectorType::BlockType> S1 = -1.0*(B*A_inv*Bt); */
-  /* LinearOperator<LATrilinos::VectorType::BlockType> S2 = -1.0*(E*C_inv*Et); */
+  /* LinearOperator<LATrilinos::VectorType::BlockType> S1 = B*A_inv*Bt; */
+  /* LinearOperator<LATrilinos::VectorType::BlockType> S2 = E*C_inv*Et; */
+  /* S1 *= -1.0; */
+  /* S2 *= -1.0; */
 
   /* auto S1_inv = inverse_operator(S2, solver_CG, *p_prec); */
   /* auto S2_inv = inverse_operator(S2, solver_CG, *p_prec); */
@@ -303,12 +311,18 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
   auto S = S1 + S2;
 
-  static IterationNumberControl schur_control(1);
+  auto S_prec = null_operator(L22) - C_inv -P_inv;
 
-  static SolverCG<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
+  static IterationNumberControl schur_control(50);
+  //  static ReductionControl schur_control(50000,1e-8);
+  //  static ReductionControl solver_control_pre(5000, 1e-6);
+
+  static SolverCG<LATrilinos::VectorType::BlockType> solver_schur_CG(schur_control);
+  static SolverGMRES<LATrilinos::VectorType::BlockType> solver_schur_GMRES(schur_control);
 
 
-  auto S_inv = inverse_operator(S, solver_schur, *p_prec);
+  auto S_inv = inverse_operator(S, solver_schur_GMRES, *p_prec_ssor);
+  //  auto S_inv = inverse_operator(S, solver_schur_GMRES, P_inv);
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, S_inv }};
 
 
