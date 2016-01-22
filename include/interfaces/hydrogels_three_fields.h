@@ -21,6 +21,7 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include<deal.II/lac/schur_complement.h>
 
 #include "lac/lac_type.h"
 
@@ -115,7 +116,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
-  auto &grad_ps = fe_cache.get_gradients("solution", "gradp", pressure, alpha);
 
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
@@ -129,7 +129,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
       const EnergyType &c = cs[q];
       const EnergyType &p = ps[q];
-      const Tensor<1,dim,EnergyType> &grad_p = grad_ps[q];
 
       const EnergyType I = trace(C);
       const EnergyType J = determinant(F);
@@ -238,11 +237,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   system_op  = block_operator<3, 3, LATrilinos::VectorType >(matrix_array);
 
 
-
-
-
-  //  static ReductionControl solver_control_pre(5000, 1e-9);
-  static IterationNumberControl solver_control_pre(1);
+  static ReductionControl solver_control_pre(5000, 1e-4);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
 
@@ -260,16 +255,15 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
 
-
-
   auto L00 = identity_operator(A.reinit_range_vector);
   auto L11 = identity_operator(E.reinit_range_vector);
   auto L22 = identity_operator(Z22.reinit_range_vector);
 
   auto L02 = null_operator(Bt);
   auto L12 = null_operator(Et);
-  LinearOperator<LATrilinos::VectorType::BlockType> L20 = -1.0*(B*A_inv);
-  LinearOperator<LATrilinos::VectorType::BlockType> L21 = -1.0*(E*C_inv);
+  LinearOperator<LATrilinos::VectorType::BlockType> L20 = null_operator(B) - B*A_inv;
+  LinearOperator<LATrilinos::VectorType::BlockType> L21 = null_operator(E) - E*C_inv;
+
 
 
 
@@ -283,10 +277,10 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   LinearOperator<LATrilinos::VectorType> L_inv_op =   block_operator<3, 3, LATrilinos::VectorType >(L_inv_array);
 
 
-  auto U02 = -1.0*(A_inv*Bt);
-  auto U12 = -1.0*(C_inv*Et);
-  auto U20 = 0*B;
-  auto U21 = 0*C;
+  auto U02 = null_operator(Bt) - A_inv*Bt;
+  auto U12 = null_operator(Et) - C_inv*Et;
+  auto U20 = null_operator(B);
+  auto U21 = null_operator(C);
 
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > U_inv_array = {{
       {{ L00  ,  Z01  , U02 }},
@@ -297,8 +291,25 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   LinearOperator<LATrilinos::VectorType> U_inv_op =  block_operator<3, 3, LATrilinos::VectorType >(U_inv_array);
 
 
+  auto S1 = schur_complement(A_inv,Bt,B,Z22);
+  auto S2 = schur_complement(C_inv,Et,E,Z22);
+  /* LinearOperator<LATrilinos::VectorType::BlockType> S1 = -1.0*(B*A_inv*Bt); */
+  /* LinearOperator<LATrilinos::VectorType::BlockType> S2 = -1.0*(E*C_inv*Et); */
 
-  const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, P2_i }};
+  /* auto S1_inv = inverse_operator(S2, solver_CG, *p_prec); */
+  /* auto S2_inv = inverse_operator(S2, solver_CG, *p_prec); */
+
+
+
+  auto S = S1 + S2;
+
+  static IterationNumberControl schur_control(1);
+
+  static SolverCG<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
+
+
+  auto S_inv = inverse_operator(S, solver_schur, *p_prec);
+  const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, S_inv }};
 
 
   LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
