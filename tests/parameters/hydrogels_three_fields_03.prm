@@ -147,7 +147,7 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
-  set Time stepper                                   = ida
+  set Time stepper                                   = euler
   set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end
