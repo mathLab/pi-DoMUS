@@ -73,7 +73,7 @@ subsection IDA Solver Parameters
   set Initial condition Newton parameter            = 0.33
   set Initial condition type                        = use_y_diff
   set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
+  set Initial step size                             = 1e-3
   set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 20
   set Maximum order of BDF                          = 5

@@ -107,14 +107,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &fev = fe_cache.get_current_fe_values();
   auto &JxW = fe_cache.get_JxW_values();
 
-  auto &mus = fe_cache.get_values("solution", "mu", chempot, alpha);
-
   const unsigned int n_q_points = JxW.size();
 
   ResidualType rt = 0;
   this->reinit (rt, cell, fe_cache);
   auto &Fs_res = fe_cache.get_deformation_gradients("solution", "u", displacement, rt);
   auto &grads_mu = fe_cache.get_gradients("solution", "gradmu", chempot, rt);
+  auto &mus = fe_cache.get_values("solution", "mu", chempot, rt);
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
@@ -124,30 +123,27 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       const EnergyType I = trace(C);
       const EnergyType J = determinant(F);
-      const EnergyType &mu = mus[q];
 
       EnergyType psi = 0.5*G*l0_3*(l02*I - dim)
-
-                         + (l0_3*R*T/Omega)*((J*l03-1.)*std::log((J*l03-1.)/(J*l03))
-                                             + chi*((J*l03-1.)/(J*l03)))
-
-                         - mu*(l03*J-1.)/(l03*Omega) ;
+                       + (l0_3*R*T/Omega)*((J*l03-1.)*std::log((J*l03-1.)/(J*l03))
+                                           + chi*((J*l03-1.)/(J*l03)));
 
       energies[0] += psi*JxW[q];
 
-//      auto &F_res = Fs_res[q];
-//      const Tensor<2,dim,ResidualType> F_star = J.val()*transpose(invert(F_res));
+      auto &F_res = Fs_res[q];
+      const Tensor<2,dim,ResidualType> F_star = J.val()*transpose(invert(F_res));
 
       auto &grad_mu = grads_mu[q];
+      auto &mu = mus[q];
       const Tensor<1,dim,ResidualType> h = -D*grad_mu;
 
       for (unsigned int i=0; i<residuals[0].size(); ++i)
         {
-//          auto grad_v = fev[displacement].gradient(i,q);
+          auto grad_v = fev[displacement].gradient(i,q);
 //          auto test_mu = fev[chempot].value(i,q);
           auto grad_test_mu = fev[chempot].gradient(i,q);
 //          residuals[0][i] += (test_mu*inner(F_star,grad_v)/Omega-inner(h,grad_test_mu)*)JxW[q];
-          residuals[0][i] += -inner(h,grad_test_mu)*JxW[q];
+          residuals[0][i] -= (mu*inner(F_star,grad_v)/Omega+inner(h,grad_test_mu))*JxW[q];
         }
 
 //      if (!compute_only_system_terms)
