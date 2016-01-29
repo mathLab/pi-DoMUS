@@ -360,6 +360,24 @@ get_cell_update_flags() const
           update_gradients);
 }
 
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+estimate_error_per_cell(const DoFHandler<dim,spacedim> &dof,
+                        const typename LAC::VectorType &solution,
+                        Vector<float> &estimated_error) const
+{
+  KellyErrorEstimator<dim,spacedim>::estimate (get_mapping(),
+                                               dof,
+                                               QGauss <dim-1> (dof.get_fe().degree + 1),
+                                               typename FunctionMap<spacedim>::type(),
+                                               solution,
+                                               estimated_error,
+                                               ComponentMask(),
+                                               0,
+                                               0,
+                                               dof.get_triangulation().locally_owned_subdomain());
+}
 
 template class BaseInterface<2, 2, LATrilinos>;
 template class BaseInterface<2, 3, LATrilinos>;

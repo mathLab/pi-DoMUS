@@ -2,12 +2,9 @@
 #define _pidomus_base_interface_h_
 
 #include <deal.II/lac/linear_operator.h>
-/* #include <deal.II/lac/linear_operator.h> */
-/* #include <deal.II/lac/block_linear_operator.h> */
-/* #include <deal.II/lac/packaged_operation.h> */
-/* #include <deal.II/lac/solver_cg.h> */
 #include <deal.II/base/sacado_product_type.h>
 
+#include <deal.II/numerics/error_estimator.h>
 
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/parsed_function.h>
@@ -222,6 +219,9 @@ public:
    */
   std::string get_component_names() const;
 
+  virtual void estimate_error_per_cell(const DoFHandler<dim,spacedim> &dof,
+                                       const typename LAC::VectorType &solution,
+                                       Vector<float> &estimated_error) const;
 
 protected:
 

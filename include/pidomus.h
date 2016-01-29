@@ -199,15 +199,19 @@ private:
 
   void refine_and_transfer_solutions (LADealII::VectorType &y,
                                       LADealII::VectorType &y_dot,
+                                      LADealII::VectorType &y_expl,
                                       LADealII::VectorType &distributed_y,
                                       LADealII::VectorType &distributed_y_dot,
+                                      LADealII::VectorType &distributed_y_expl,
                                       bool adaptive_refinement);
 
 
   void refine_and_transfer_solutions (LATrilinos::VectorType &y,
                                       LATrilinos::VectorType &y_dot,
+                                      LATrilinos::VectorType &y_expl,
                                       LATrilinos::VectorType &distributed_y,
                                       LATrilinos::VectorType &distributed_y_dot,
+                                      LATrilinos::VectorType &distributed_y_expl,
                                       bool adaptive_refinement);
 
 
@@ -310,6 +314,16 @@ private:
    * previous time step
    */
   double old_t;
+
+  /**
+   * refine mesh during transients
+   */
+  bool use_space_adaptivity;
+
+  /**
+   * threshold for refine mesh during transients
+   */
+  double kelly_threshold;
 
 };
 
