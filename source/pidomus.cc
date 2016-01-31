@@ -11,7 +11,6 @@
 #include <deal.II/fe/mapping_q_eulerian.h>
 
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/constraint_matrix.h>
@@ -40,7 +39,6 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/solution_transfer.h>
-#include <deal.II/numerics/error_estimator.h>
 
 #include <deal.II/distributed/solution_transfer.h>
 //#include <deal.II/base/index_set.h>
@@ -129,6 +127,19 @@ declare_parameters (ParameterHandler &prm)
                   "Time stepper",
                   "euler",
                   Patterns::Selection("ida|euler"));
+
+  add_parameter(  prm,
+                  &use_space_adaptivity,
+                  "Refine mesh during transient",
+                  "true",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
+                  &kelly_threshold,
+                  "Threshold for solver's restart",
+                  "1e-2",
+                  Patterns::Double(0.0));
+
 }
 
 
@@ -564,18 +575,22 @@ template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LATrilinos::VectorType &y,
                               LATrilinos::VectorType &y_dot,
+                              LATrilinos::VectorType &y_expl,
                               LATrilinos::VectorType &distributed_y,
                               LATrilinos::VectorType &distributed_y_dot,
+                              LATrilinos::VectorType &distributed_y_expl,
                               bool adaptive_refinement)
 {
   distributed_y = y;
   distributed_y_dot = y_dot;
+  distributed_y_expl = y_expl;
 
   parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
 
-  std::vector<const LATrilinos::VectorType *> old_sols (2);
+  std::vector<const LATrilinos::VectorType *> old_sols (3);
   old_sols[0] = &distributed_y;
   old_sols[1] = &distributed_y_dot;
+  old_sols[2] = &distributed_y_expl;
 
   triangulation->prepare_coarsening_and_refinement();
   sol_tr.prepare_for_coarsening_and_refinement (old_sols);
@@ -589,30 +604,36 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
   LATrilinos::VectorType new_sol (y);
   LATrilinos::VectorType new_sol_dot (y_dot);
+  LATrilinos::VectorType new_sol_expl (y_expl);
 
-  std::vector<LATrilinos::VectorType *> new_sols (2);
+  std::vector<LATrilinos::VectorType *> new_sols (3);
   new_sols[0] = &new_sol;
   new_sols[1] = &new_sol_dot;
+  new_sols[2] = &new_sol_expl;
 
   sol_tr.interpolate (new_sols);
 
   y = new_sol;
   y_dot = new_sol_dot;
+  y_expl = new_sol_expl;
 }
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LADealII::VectorType &y,
                               LADealII::VectorType &y_dot,
+                              LADealII::VectorType &y_expl,
+                              LADealII::VectorType &,
                               LADealII::VectorType &,
                               LADealII::VectorType &,
                               bool adaptive_refinement)
 {
   SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
 
-  std::vector<LADealII::VectorType> old_sols (2);
+  std::vector<LADealII::VectorType> old_sols (3);
   old_sols[0] = y;
   old_sols[1] = y_dot;
+  old_sols[2] = y_expl;
 
   triangulation->prepare_coarsening_and_refinement();
   sol_tr.prepare_for_coarsening_and_refinement (old_sols);
@@ -626,9 +647,11 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
 
   LADealII::VectorType new_sol(y);
   LADealII::VectorType new_sol_dot(y_dot);
-  std::vector<LADealII::VectorType> new_sols (2);
+  LADealII::VectorType new_sol_expl(y_expl);
+  std::vector<LADealII::VectorType> new_sols (3);
   new_sols[0].reinit(y);
   new_sols[1].reinit(y_dot);
+  new_sols[2].reinit(y_expl);
 
   sol_tr.interpolate (old_sols, new_sols);
 }
@@ -638,30 +661,23 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 {
   computing_timer.enter_section ("   Mesh refinement");
 
-  typedef TrilinosWrappers::MPI::BlockVector pVEC;
-  typedef BlockVector<double> sVEC;
-
   if (adaptive_refinement)
     {
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
-      KellyErrorEstimator<dim,spacedim>::estimate (interface.get_mapping(),
-                                                   *dof_handler,
-                                                   QGauss <dim-1> (fe->degree + 1),
-                                                   typename FunctionMap<spacedim>::type(),
-                                                   distributed_solution,
-                                                   estimated_error_per_cell,
-                                                   ComponentMask(),
-                                                   0,
-                                                   0,
-                                                   triangulation->locally_owned_subdomain());
+
+      interface.estimate_error_per_cell(*dof_handler,
+                                        distributed_solution,
+                                        estimated_error_per_cell);
 
       pgr.mark_cells(estimated_error_per_cell, *triangulation);
     }
 
   refine_and_transfer_solutions(solution,
                                 solution_dot,
+                                explicit_solution,
                                 distributed_solution,
                                 distributed_solution_dot,
+                                distributed_explicit_solution,
                                 adaptive_refinement);
 
   old_t = -std::numeric_limits<double>::max();
@@ -754,7 +770,8 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
                                          const typename LAC::VectorType &solution,
                                          const typename LAC::VectorType &solution_dot,
                                          const unsigned int step_number,
-                                         const double /* h */ )
+                                         const double // h
+                                        )
 {
   computing_timer.enter_section ("Postprocessing");
 
@@ -789,13 +806,69 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
 
 template <int dim, int spacedim, typename LAC>
 bool
-piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double /*t*/,
+piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                                    const unsigned int /*step_number*/,
                                                    const double /*h*/,
-                                                   typename LAC::VectorType &/*solution*/,
-                                                   typename LAC::VectorType &/*solution_dot*/)
+                                                   typename LAC::VectorType &solution,
+                                                   typename LAC::VectorType &solution_dot)
 {
-  return false;
+
+  if (use_space_adaptivity)
+    {
+      double max_kelly=0;
+
+      computing_timer.enter_section ("   Compute error estimator");
+
+
+      update_functions_and_constraints(t);
+
+      typename LAC::VectorType tmp_c(solution);
+      constraints.distribute(tmp_c);
+      distributed_solution = tmp_c;
+
+      Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
+
+      interface.estimate_error_per_cell(*dof_handler,
+                                        distributed_solution,
+                                        estimated_error_per_cell);
+
+      max_kelly = estimated_error_per_cell.linfty_norm();
+      max_kelly = Utilities::MPI::max(max_kelly, comm);
+
+      if (max_kelly > kelly_threshold)
+
+        {
+          pcout << "  ################ restart ######### \n"
+                << "max_kelly > threshold\n"
+                << max_kelly  << " >  " << kelly_threshold
+                << std::endl
+                << "######################################\n";
+          pgr.mark_cells(estimated_error_per_cell, *triangulation);
+
+          refine_and_transfer_solutions(solution,
+                                        solution_dot,
+                                        explicit_solution,
+                                        distributed_solution,
+                                        distributed_solution_dot,
+                                        distributed_explicit_solution,
+                                        adaptive_refinement);
+
+          //    old_t = -std::numeric_limits<double>::max();
+          computing_timer.exit_section();
+          MPI::COMM_WORLD.Barrier();
+
+          return true;
+        }
+      else // if max_kelly > kelly_threshold
+        {
+          computing_timer.exit_section();
+          return false;
+        }
+
+    }
+  else // use space adaptivity
+
+    return false;
 }
 
 
