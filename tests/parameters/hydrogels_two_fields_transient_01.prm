@@ -1,6 +1,6 @@
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0=u % 1=mu
-  set IDs and expressions     = 0=0;0;0;0 %\
+  set IDs and component masks = 0=u;mu % 1=mu
+  set IDs and expressions     = 0=0;0;0;(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*(1-t/2) %\
                                 1=0;0;0;(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*(1-t)
   set Known component names   = u,u,u,mu
   set Used constants          = R=8.314, T=298.0, l0=1.5, chi=0.1, G=1e4, Omega=1e-5
@@ -53,7 +53,7 @@ subsection Forcing terms
   set Used constants          =
 end
 subsection Free Swelling Two Fields Transient
-  set Block of differential components = 0,0
+  set Block of differential components = 1,0
   set Blocking of the finite element   = u,u,u,mu
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
   set G                                = 1e4
@@ -61,7 +61,7 @@ subsection Free Swelling Two Fields Transient
   set T                                = 298.0
   set chi                              = 0.1
   set l0                               = 1.5
-  set D                                = 1e-2
+  set D                                = 1e-3
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4

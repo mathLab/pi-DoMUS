@@ -81,7 +81,7 @@ HydroGelTwoFieldsTransient<dim,spacedim,LAC>::HydroGelTwoFieldsTransient() :
   PDESystemInterface<dim,spacedim,HydroGelTwoFieldsTransient<dim,spacedim,LAC>, LAC>("Free Swelling Two Fields Transient",
       dim+1,2,
       "FESystem[FE_Q(2)^d-FE_Q(2)]",
-      "u,u,u,mu","1,1")
+      "u,u,u,mu","1,0")
 {}
 
 
