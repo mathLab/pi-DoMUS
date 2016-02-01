@@ -102,7 +102,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Vector displacement(0);
   const FEValuesExtractors::Scalar chempot(dim);
 
-  auto &us = fe_cache.get_values("solution", "u", displacement, alpha);
   auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
   auto &fev = fe_cache.get_current_fe_values();
   auto &JxW = fe_cache.get_JxW_values();
@@ -118,7 +117,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
-      auto &u = us[q];
       const Tensor<2, dim, EnergyType>  &F = Fs[q];
       const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
 
