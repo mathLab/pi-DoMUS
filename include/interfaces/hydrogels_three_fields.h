@@ -256,22 +256,44 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   auto Pp  =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[1]->block(2,2));
 
  static auto C_lumped =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(1,1) );
+  static auto A_lumped =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0) );
 
+ ////////////////// C_lumped
+  LATrilinos::VectorType::BlockType c_ones;
+  C_lumped.reinit_domain_vector(c_ones, false);
+  c_ones = 1.0;
 
-  LATrilinos::VectorType::BlockType ones;
-  C_lumped.reinit_domain_vector(ones, false);
-  ones = 1.0;
+  static  LATrilinos::VectorType::BlockType vec;
+  vec.reinit(c_ones);
+  vec=c_ones;
 
-static  LATrilinos::VectorType::BlockType vec(ones);
-
-  C_lumped.vmult(vec, ones);
+  C_lumped.vmult(vec, c_ones);
 
   C_lumped.vmult = [&vec] (LATrilinos::VectorType::BlockType &dst,
 			   const LATrilinos::VectorType::BlockType &src) {
        dst = src;
        dst.scale(vec);
   };
+  ///////////////
 
+  
+  ////////////// A_lumped
+  LATrilinos::VectorType::BlockType A_ones;
+  A_lumped.reinit_domain_vector(A_ones, false);
+  A_ones = 1.0;
+
+  static  LATrilinos::VectorType::BlockType A_vec;
+  A_vec.reinit(A_ones);
+  A_vec=A_ones;
+
+  A_lumped.vmult(A_vec, A_ones);
+
+  A_lumped.vmult = [&A_vec] (LATrilinos::VectorType::BlockType &dst,
+			   const LATrilinos::VectorType::BlockType &src) {
+       dst = src;
+       dst.scale(A_vec);
+  };
+  ///////////////
 
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
       {{ A   , Z01 ,  Bt  }},
@@ -284,8 +306,11 @@ static  LATrilinos::VectorType::BlockType vec(ones);
 
 
   static ReductionControl solver_control_pre(5000, 1e-6);
+  static IterationNumberControl solver_control_ite(3);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
+  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_CG_it(solver_control_ite);
+
 
   /* auto A_inv = inverse_operator( PA, solver_CG, *U_prec); */
   /* auto C_inv = inverse_operator( PE, solver_CG, *c_prec); */
@@ -348,9 +373,12 @@ static  LATrilinos::VectorType::BlockType vec(ones);
   /* auto S1_inv = inverse_operator(S2, solver_CG, *p_prec); */
   /* auto S2_inv = inverse_operator(S2, solver_CG, *p_prec); */
 
+   auto C_lumped_inv = inverse_operator(C_lumped,solver_CG_it, *p_prec_ssor);
+   auto A_lumped_inv = inverse_operator(A_lumped,solver_CG_it, *U_prec);
 
   auto BBt = B*Bt + E*Et;
-  auto BABt =S1+S2;//null_operator(E)- B*A_inv*Bt - E*C_inv*Et;
+  //   auto BABt =/*S1+S2;//*/null_operator(E)- B*A_inv*Bt - E*C_lumped_inv*Et;
+     auto BABt =null_operator(E)- B*A_lumped_inv*Bt - E*C_lumped_inv*Et;
    auto ECEt = C_lumped;
 
   auto S = S1 + S2;
@@ -358,8 +386,8 @@ static  LATrilinos::VectorType::BlockType vec(ones);
 
 
 
-  static IterationNumberControl schur_control(20);
-  static IterationNumberControl schur_control_0(20);
+  static IterationNumberControl schur_control(10);
+  static IterationNumberControl schur_control_0(10);
   //  static ReductionControl schur_control(50000,1e-8);
   //  static ReductionControl solver_control_pre(5000, 1e-6);
   static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_bicgstab(schur_control);
