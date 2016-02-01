@@ -306,7 +306,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
   static ReductionControl solver_control_pre(5000, 1e-6);
-  static IterationNumberControl solver_control_ite(3);
+  static IterationNumberControl solver_control_ite(2);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
   static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_CG_it(solver_control_ite);
@@ -377,8 +377,8 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
    auto A_lumped_inv = inverse_operator(A_lumped,solver_CG_it, *U_prec);
 
   auto BBt = B*Bt + E*Et;
-  //   auto BABt =/*S1+S2;//*/null_operator(E)- B*A_inv*Bt - E*C_lumped_inv*Et;
-     auto BABt =null_operator(E)- B*A_lumped_inv*Bt - E*C_lumped_inv*Et;
+     auto BABt =/*S1+S2;//*/null_operator(E)- B*A_inv*Bt - E*C_lumped_inv*Et;
+     //   auto BABt =null_operator(E)- B*A_lumped_inv*Bt - E*C_lumped_inv*Et;
    auto ECEt = C_lumped;
 
   auto S = S1 + S2;
