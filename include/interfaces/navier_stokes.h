@@ -267,11 +267,10 @@ declare_parameters (ParameterHandler &prm)
                       "Enable convection term ((\\nabla u)u)", "true",
                       Patterns::Bool(),
                       "Enable the convection term of the equation. Set it false if you want to solve Stokes Equation.");
-  this->add_parameter(prm, &non_linear_term, "Non linear term","grad_linear",
-                      Patterns::Selection("fully_non_linear|grad_linear|u_linear|RHS"),
+  this->add_parameter(prm, &non_linear_term, "Non linear term","linear",
+                      Patterns::Selection("fully_non_linear|linear|RHS"),
                       "Available options: \n"
                       " fully_non_linear\n"
-                      "grad_linear\n"
                       "u_linear\n"
                       "RHS\n");
   this->add_parameter(prm, &linearize_in_time,
@@ -451,9 +450,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
               if (non_linear_term=="fully_non_linear")
                 nl_u = grad_u * u;
-              else if (non_linear_term=="grad_linear")
-                nl_u = gradoldu * u;
-              else if (non_linear_term=="u_linear")
+              else if (non_linear_term=="linear")
                 nl_u = grad_u * oldu;
               else if (non_linear_term=="RHS")
                 nl_u = gradoldu * oldu;
