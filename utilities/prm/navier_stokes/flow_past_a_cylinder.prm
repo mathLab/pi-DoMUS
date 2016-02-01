@@ -3,40 +3,38 @@
 ################################################################################
 
 subsection Navier Stokes Interface
-  set Amg P Aggregation Threshold          = 0.02
-  set Amg P Elliptic                       = true
-  set Amg P Smoother Sweeps                = 2
+  set A - Amg Aggregation Threshold        = 1.5
+  set A - Amg Elliptic                     = false
+  set A - Amg High Order Elements          = true
+  set A - Amg Smoother Sweeps              = 2
+
+  set Ap - Amg Aggregation Threshold       = 0.02
+  set Ap - Amg Elliptic                    = true
+  set Ap - Amg Smoother Sweeps             = 2
+
+  set CG Solver tolerance                  = 1e-10
+  set GMRES Solver tolerance               = 1e-10
+  
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
-  set CG Solver tolerance                  = 1e-8
   set Enable convection term ((\nabla u)u) = true
   set Enable dynamic term (\partial_t u)   = true
-  set Non linear term                      = grad_linear
+  set Non linear term                      = linear
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set GMRES Solver tolerance               = 1e-8
+
+  set Linearize using time                 = true
+  
   set Invert Ap using inverse_operator     = false
-  set Invert Mp using inverse_operator     = false
+  set Invert Mp using inverse_operator     = true
   set Preconditioner                       = default
-  set div-grad stabilization parameter     = 0.0
-  set nu [Pa s]                            = 0.01
+  set div-grad stabilization parameter     = 0.09975
+  set nu [Pa s]                            = 0.00025
   set rho [kg m^3]                         = 1.0
 end
 
-subsection piDoMUS<2, 2, LADealII>
+subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 1
-  set Maximum number of time steps                   = 10000
-  set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
-  set Print some useful informations about processes = true
-  set Time stepper                                   = euler
-  set Timer output file                              = timer.txt
-  set Use direct solver if available                 = true
-end
-
-subsection piDoMUS<2, 2, LATrilinos>
-  set Adaptive refinement                            = true
-  set Initial global refinement                      = 2
+  set Initial global refinement                      = 4
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
@@ -54,10 +52,10 @@ subsection Forcing terms
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 1 = ALL % 2 = u % 4 = u
-  set IDs and expressions     = 1 = 0;0;0 % 2=t<1.0?t*k*(4-y)*y:k*(4-y)*y;0;0 % 4 = 0;0;0
-  # set IDs and component masks =  1= u % 5=u % 3=u % 4=u
-  # set IDs and expressions     =  1= t<1.?t*k*(1-y^2):k*(1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
+  #set IDs and component masks = 1 = ALL % 2 = u % 4 = u
+  # set IDs and expressions     = 1 = 0;0;0 % 2=t<1.0?t*k*(4-y)*y:k*(4-y)*y;0;0 % 4 = 0;0;0
+  set IDs and component masks =  1= u % 5=u % 3=u % 4=u
+  set IDs and expressions     =  1= t<1.?t*k*(1-y^2):k*(1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
   set Known component names   = u,u,p
   set Used constants          = k=1
 end
@@ -78,8 +76,12 @@ end
 subsection Domain
   set Grid to generate           = file
   set Input grid file name       = \
-      ../utilities/grids/rectangle_with_circular_hole.inp
+      ../utilities/grids/rectangle_with_circular_hole.ucd
   set Colorize                   = true
+  set Manifold descriptors       = 5=HyperBallBoundary
+  set Optional Point<spacedim> 1 = 0,0
+  set Optional double 1          = .2
+  set Output grid file name      = output.vtk
 end
 
 subsection Refinement
@@ -128,12 +130,12 @@ subsection IDA Solver Parameters
 end
 
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1.0e-5
+  set Absolute error tolerance                     = 1.0e-6
   set Final time                                   = 20
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 5
+  set Maximum number of outer nonlinear iterations = 10
   set Newton relaxation parameter                  = 1.0
   set Relative error tolerance                     = 0.0
   set Step size                                    = 1.0e-1

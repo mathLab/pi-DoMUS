@@ -25,7 +25,7 @@ subsection Navier Stokes Interface
   set GMRES Solver tolerance               = 1e-10
   
   set Enable convection term ((\nabla u)u) = true
-  set Enable dynamic term (\partial_t u)   = false
+  set Enable dynamic term (\partial_t u)   = true
   
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
   
