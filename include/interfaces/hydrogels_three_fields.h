@@ -85,6 +85,10 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionSOR> p_prec_sor;
   mutable shared_ptr<TrilinosWrappers::PreconditionSSOR> p_prec_ssor;
 
+  unsigned int it_c_lumped;
+  unsigned int it_s_approx;
+  unsigned int it_s;
+
 };
 
 template <int dim, int spacedim, typename LAC>
@@ -125,7 +129,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &grad_us = fe_cache.get_gradients("solution", "grad_u", displacement, alpha);
 
   auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
-  auto &grad_ps = fe_cache.get_gradients("solution", "p", pressure, alpha);
 
   auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
@@ -144,7 +147,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       const EnergyType I = trace(C);
       const EnergyType J = determinant(F);
-      const Tensor<1, dim, EnergyType>  &grad_p = grad_ps[q];
 
 
       EnergyType psi = ( 0.5*G*l0_3*(l02*I - dim)
@@ -165,7 +167,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       if (!compute_only_system_terms)
         {
-          EnergyType pp = p*p + 0.5*scalar_product(grad_u,grad_u);
+          EnergyType pp = p*p ;
           energies[1] += pp*JxW[q];
         }
     }
@@ -181,6 +183,9 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &chi, "chi", "0.1", Patterns::Double(0.0));
   this->add_parameter(prm, &l0, "l0", "1.5", Patterns::Double(1.0));
   this->add_parameter(prm, &G, "G", "10e3", Patterns::Double(0.0));
+  this->add_parameter(prm, &it_c_lumped, "iteration c lumped", "10", Patterns::Integer(1));
+  this->add_parameter(prm, &it_s_approx, "iteration s approx", "10", Patterns::Integer(1));
+  this->add_parameter(prm, &it_s, "iteration s", "10", Patterns::Integer(1));
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -217,15 +222,15 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   U_amg_data.elliptic = true;
   U_amg_data.higher_order_elements = true;
   U_amg_data.smoother_sweeps = 2;
-  U_amg_data.aggregation_threshold = 1;
-  U_amg_data.coarse_type = "Amesos-UMFPACK";
+  U_amg_data.aggregation_threshold = 2;
+  U_amg_data.coarse_type = "Amesos-MUMPS";
 
   TrilinosWrappers::PreconditionAMG::AdditionalData c_amg_data;
   c_amg_data.elliptic = true;
   c_amg_data.higher_order_elements = true;
   c_amg_data.smoother_sweeps = 2;
   c_amg_data.aggregation_threshold = 2;
-  c_amg_data.coarse_type = "Amesos-UMFPACK";
+  c_amg_data.coarse_type = "Amesos-MUMPS";
 
 
   U_prec->initialize (matrices[0]->block(0,0), U_amg_data);
@@ -306,10 +311,12 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
   static ReductionControl solver_control_pre(5000, 1e-6);
-  static IterationNumberControl solver_control_ite(2);
+  static IterationNumberControl solver_control_c_lumped(it_c_lumped);
 
   static SolverCG<LATrilinos::VectorType::BlockType> solver_CG(solver_control_pre);
-  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_CG_it(solver_control_ite);
+  //  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_c_lumped(solver_control_c_lumped);
+  //    static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_c_lumped(solver_control_c_lumped);
+    static SolverCG<LATrilinos::VectorType::BlockType> solver_c_lumped(solver_control_c_lumped);
 
 
   /* auto A_inv = inverse_operator( PA, solver_CG, *U_prec); */
@@ -365,6 +372,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
   auto S1 = schur_complement(A_inv,Bt,B,Z22);
   auto S2 = schur_complement(C_inv,Et,E,Z22);
+
   /* LinearOperator<LATrilinos::VectorType::BlockType> S1 = B*A_inv*Bt; */
   /* LinearOperator<LATrilinos::VectorType::BlockType> S2 = E*C_inv*Et; */
   /* S1 *= -1.0; */
@@ -373,51 +381,50 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   /* auto S1_inv = inverse_operator(S2, solver_CG, *p_prec); */
   /* auto S2_inv = inverse_operator(S2, solver_CG, *p_prec); */
 
-   auto C_lumped_inv = inverse_operator(C_lumped,solver_CG_it, *p_prec_ssor);
-   auto A_lumped_inv = inverse_operator(A_lumped,solver_CG_it, *U_prec);
+   /* auto C_lumped_inv = inverse_operator(C_lumped, solver_c_lumped, *p_prec_ssor); */
+   auto C_lumped_inv = inverse_operator(C_lumped, solver_c_lumped, *c_prec);
+   /* auto A_lumped_inv = inverse_operator(A_lumped,solver_CG_it, *U_prec); */
 
-  auto BBt = B*Bt + E*Et;
-     auto BABt =/*S1+S2;//*/null_operator(E)- B*A_inv*Bt - E*C_lumped_inv*Et;
-     //   auto BABt =null_operator(E)- B*A_lumped_inv*Bt - E*C_lumped_inv*Et;
-   auto ECEt = C_lumped;
+   auto S2_approx = schur_complement(C_lumped_inv,Et,E,Z22);
+   auto S_approx = S1 + S2_approx;
+   //   auto S_approx =null_operator(E)- B*A_lumped_inv*Bt - E*C_lumped_inv*Et;
 
-  auto S = S1 + S2;
-  //  auto S_prec = P2_i;
-
+   auto S = S1 + S2;
+   //  auto S_prec = P2_i;
 
 
-  static IterationNumberControl schur_control(3);
-  static IterationNumberControl schur_control_0(3);
-  //  static ReductionControl schur_control(50000,1e-8);
-  //  static ReductionControl solver_control_pre(5000, 1e-6);
-  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_bicgstab(schur_control);
-  static SolverCG<LATrilinos::VectorType::BlockType> solver_schur_CG(schur_control);
-  static SolverGMRES<LATrilinos::VectorType::BlockType> solver_schur_GMRES(schur_control);
-  static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur_FGMRES(schur_control);
-  static SolverGMRES<LATrilinos::VectorType::BlockType> solver_schur_GMRES_0(schur_control_0);
 
-  /* auto BBt_inv = inverse_operator(BBt,solver_schur_GMRES, *p_prec_ssor); */
-   auto BBt_inv = inverse_operator(BABt,solver_bicgstab, *p_prec_ssor);
-   //  auto EEt_inv = inverse_operator(ECEt,solver_schur_GMRES, *p_prec);
+  static IterationNumberControl schur_control_approx(it_s_approx);
+  static IterationNumberControl schur_control(it_s);
+
+  //  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control_approx);
+
+   static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control);
+
+    static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
+  // static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
+  
+
+    //   auto S_approx_inv = inverse_operator(S_approx, solver_schur_approx, *p_prec_ssor);
+     auto S_approx_inv = inverse_operator(S1, solver_schur_approx, *p_prec_ssor);
+
 
  
 
    static  LinearOperator<LATrilinos::VectorType::BlockType> S_preconditioner;
    
-   S_preconditioner       = BBt_inv;
-     //     = BBt_inv + EEt_inv;
+   S_preconditioner       = S_approx_inv;
 
 
-    auto S_inv = inverse_operator(S, solver_schur_FGMRES, S_preconditioner); 
-      //auto S_inv = inverse_operator(S, solver_bicgstab, *p_prec_ssor);
-   //   auto S_inv = BBt_inv;
-  //  auto S_inv = inverse_operator(S, solver_schur_GMRES, P2_i);
-  const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, S_inv }};
+
+   auto S_inv = inverse_operator(S, solver_schur, S_preconditioner); 
+
+   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, S_inv }};
 
 
-  LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
+   LinearOperator<LATrilinos::VectorType> D_inv_op = block_diagonal_operator<3,LATrilinos::VectorType>(diagonal_array);
 
-  prec_op = U_inv_op*D_inv_op*L_inv_op;
+   prec_op = U_inv_op*D_inv_op*L_inv_op;
 //prec_op = U_inv_op;
 //  prec_op = L_inv_op;
 // prec_op = D_inv_op;

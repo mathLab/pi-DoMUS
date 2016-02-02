@@ -1,8 +1,8 @@
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     d7c206b
+# D2K_GIT_SHORTREV=     a43b2c9
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= 2aed525
+# DEAL_II_GIT_SHORTREV= 99e6130
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
   set IDs and expressions     = 0=0;0;0;0;0
@@ -59,11 +59,16 @@ end
 subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
-  set Finite element space             = FESystem[FE_Q(1)^d-FE_DGPMonomial(0)-FE_DGPMonomial(0)]
+  set Finite element space             = FESystem[FE_Q(1)^d-\
+                                         FE_DGPMonomial(0)-\
+					 FE_DGPMonomial(0)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
   set chi                              = 0.1
+  set iteration c lumped               = 1
+  set iteration s                      = 10
+  set iteration s approx               = 5
   set l0                               = 1.5
 end
 subsection IDA Solver Parameters
@@ -141,12 +146,14 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 2
+  set Initial global refinement                      = 4
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
+  set Refine mesh during transient                   = true
+  set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = euler
   set Show timer                                     = false
   set Use direct solver if available                 = true
