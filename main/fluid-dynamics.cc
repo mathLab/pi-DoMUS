@@ -1,3 +1,4 @@
+#include "interfaces/ALE_navier_stokes.h"
 #include "interfaces/navier_stokes.h"
 #include "pidomus.h"
 
@@ -38,7 +39,7 @@ int main (int argc, char *argv[])
   );
 
   std::string pde_name="navier_stokes";
-  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes or navier_stokes)");
+  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes, navier_stokes, or ALE_navier_stokes)");
 
   bool trilinos = true;
   My_CLP.setOption("trilinos","dealii", &trilinos, "select the vector type to use");
@@ -95,6 +96,11 @@ int main (int argc, char *argv[])
       string_pde_name = "Navier Stokes";
       stokes = false;
     }
+  else if (pde_name == "ALE_navier_stokes")
+    {
+      string_pde_name = "ALE Navier Stokes";
+      stokes = false;
+    }
   else if (pde_name == "stokes")
     {
       string_pde_name = "Stokes";
@@ -119,42 +125,86 @@ int main (int argc, char *argv[])
                       comm,
                       check_prm);
 
-      if (dim==2)
+      if ( pde_name == "ALE_navier_stokes" )
         {
-          if (trilinos)
+          if (dim==2)
             {
-              NavierStokes<2> energy(dynamic, stokes);
-              piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
-              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-              ParameterAcceptor::prm.log_parameters(deallog);
-              navier_stokes_equation.run ();
+              if (trilinos)
+                {
+                  ALENavierStokes<2> energy(dynamic, stokes);
+                  piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
+              else
+                {
+                  ALENavierStokes<2,2,LADealII> energy(dynamic, stokes);
+                  piDoMUS<2,2,LADealII> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
             }
           else
             {
-              NavierStokes<2,2,LADealII> energy(dynamic, stokes);
-              piDoMUS<2,2,LADealII> navier_stokes_equation ("piDoMUS",energy);
-              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-              ParameterAcceptor::prm.log_parameters(deallog);
-              navier_stokes_equation.run ();
+              if (trilinos)
+                {
+                  ALENavierStokes<3> energy(dynamic, stokes);
+                  piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
+              else
+                {
+                  ALENavierStokes<3,3,LADealII> energy(dynamic, stokes);
+                  piDoMUS<3,3,LADealII> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
             }
         }
       else
         {
-          if (trilinos)
+          if (dim==2)
             {
-              NavierStokes<3> energy(dynamic, stokes);
-              piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
-              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-              ParameterAcceptor::prm.log_parameters(deallog);
-              navier_stokes_equation.run ();
+              if (trilinos)
+                {
+                  NavierStokes<2> energy(dynamic, stokes);
+                  piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
+              else
+                {
+                  NavierStokes<2,2,LADealII> energy(dynamic, stokes);
+                  piDoMUS<2,2,LADealII> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
             }
           else
             {
-              NavierStokes<3,3,LADealII> energy(dynamic, stokes);
-              piDoMUS<3,3,LADealII> navier_stokes_equation ("piDoMUS",energy);
-              ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
-              ParameterAcceptor::prm.log_parameters(deallog);
-              navier_stokes_equation.run ();
+              if (trilinos)
+                {
+                  NavierStokes<3> energy(dynamic, stokes);
+                  piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
+              else
+                {
+                  NavierStokes<3,3,LADealII> energy(dynamic, stokes);
+                  piDoMUS<3,3,LADealII> navier_stokes_equation ("piDoMUS",energy);
+                  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
+                  ParameterAcceptor::prm.log_parameters(deallog);
+                  navier_stokes_equation.run ();
+                }
             }
         }
 
