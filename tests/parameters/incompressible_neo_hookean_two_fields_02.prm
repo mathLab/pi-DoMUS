@@ -136,6 +136,6 @@ subsection piDoMUS<3, 3, LATrilinos>
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Time stepper                                   = euler
-  set Timer output file                              = timer.txt
+  set Show timer                                     = false
   set Use direct solver if available                 = true
 end

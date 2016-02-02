@@ -145,6 +145,6 @@ subsection pidomus
   set Refine mesh during transient                   = true
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = ida
-  set Timer output file                              = timer.txt
+  set Show timer                                     = false
   set Use direct solver if available                 = true
 end

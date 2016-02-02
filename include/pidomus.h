@@ -225,12 +225,7 @@ private:
   unsigned int initial_global_refinement;
   unsigned int max_time_iterations;
 
-  std::string timer_file_name;
-
   ConditionalOStream        pcout;
-  std::ofstream             timer_outfile;
-  ConditionalOStream        tcout;
-
 
   shared_ptr<parallel::distributed::Triangulation<dim, spacedim> > triangulation;
   shared_ptr<FiniteElement<dim, spacedim> >       fe;
@@ -250,8 +245,16 @@ private:
   mutable typename LAC::VectorType        distributed_solution_dot;
   mutable typename LAC::VectorType        distributed_explicit_solution;
 
-  mutable TimerOutput                               computing_timer;
-  ParsedDataOut<dim, spacedim>                  data_out;
+  /**
+   * Show timer statistics 
+   */
+  bool                     output_timer;
+  /**
+   * Teucos timer file
+   */
+  mutable TimeMonitor       computing_timer;
+  
+  ParsedDataOut<dim, spacedim>            data_out;
 
   const unsigned int n_matrices;
   std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;

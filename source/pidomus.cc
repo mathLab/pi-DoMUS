@@ -56,6 +56,8 @@
 #include <string>
 #include <math.h>
 
+#include <Teuchos_TimeMonitor.hpp>
+
 #include "lac/lac_initializer.h"
 
 using namespace dealii;
@@ -91,12 +93,6 @@ declare_parameters (ParameterHandler &prm)
                   "Jacobian solver tolerance",
                   "1e-8",
                   Patterns::Double (0.0));
-
-  add_parameter(  prm,
-                  &timer_file_name,
-                  "Timer output file",
-                  "timer.txt",
-                  Patterns::FileName());
 
   add_parameter(  prm,
                   &adaptive_refinement,
@@ -139,6 +135,12 @@ declare_parameters (ParameterHandler &prm)
                   "Threshold for solver's restart",
                   "1e-2",
                   Patterns::Double(0.0));
+
+  add_parameter(  prm,
+                  &output_timer,
+                  "Show timer",
+                  "false",
+                  Patterns::Bool());
 
 }
 
@@ -263,14 +265,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-  timer_outfile(timer_file_name),
-  tcout (timer_outfile,
-         (Utilities::MPI::this_mpi_process(comm)
-          == 0)),
-  computing_timer (comm,
-                   tcout,
-                   TimerOutput::summary,
-                   TimerOutput::wall_times),
   data_out("Output Parameters", "vtu"),
 
   n_matrices(interface.n_matrices),
@@ -326,7 +320,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 {
-  computing_timer.enter_section("Setup dof systems");
+  auto _timer = computing_timer.scoped_timer("Setup dof systems");
   std::vector<unsigned int> sub_blocks = interface.pfe.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
@@ -446,8 +440,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       explicit_solution = solution;
       distributed_explicit_solution = solution;
 
-    }
-  computing_timer.exit_section();
+    }  
 }
 
 
@@ -487,7 +480,7 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                                                      const typename LAC::VectorType &solution_dot,
                                                      const double alpha)
 {
-  computing_timer.enter_section ("   Assemble matrices");
+  auto _timer = computing_timer.scoped_timer ("Assemble matrices");
   update_functions_and_constraints(t);
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
@@ -564,8 +557,6 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 
   for (unsigned int i=0; i<n_matrices; ++i)
     matrices[i]->compress(VectorOperation::add);
-
-  computing_timer.exit_section();
 }
 
 
@@ -659,7 +650,7 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 {
-  computing_timer.enter_section ("   Mesh refinement");
+  auto _timer = computing_timer.scoped_timer ("Mesh refinement");
 
   if (adaptive_refinement)
     {
@@ -680,9 +671,7 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
                                 distributed_explicit_solution,
                                 adaptive_refinement);
 
-  old_t = -std::numeric_limits<double>::max();
-
-  computing_timer.exit_section();
+  old_t = -std::numeric_limits<double>::max();  
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -710,12 +699,6 @@ get_solution()
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
 {
-  if (timer_file_name != "")
-    timer_outfile.open(timer_file_name.c_str());
-  else
-    timer_outfile.open("/dev/null");
-
-
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
       if (current_cycle == 0)
@@ -739,10 +722,11 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
   eh.output_table(pcout);
 
-  // std::ofstream f("errors.txt");
-  computing_timer.print_summary();
-  timer_outfile.close();
-  // f.close();
+  if(output_timer)
+  {
+    pcout << std::endl;
+    Teuchos::TimeMonitor::summarize(std::cout,true);
+  }
 }
 
 /*** ODE Argument Interface ***/
@@ -773,7 +757,7 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
                                          const double // h
                                         )
 {
-  computing_timer.enter_section ("Postprocessing");
+  auto _timer = computing_timer.scoped_timer ("Postprocessing");
 
   update_functions_and_constraints(t);
 
@@ -798,8 +782,6 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
   data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
   data_out.write_data_and_clear(interface.get_mapping());
-
-  computing_timer.exit_section ();
 }
 
 
@@ -813,13 +795,11 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                                    typename LAC::VectorType &solution_dot)
 {
 
+  auto _timer = computing_timer.scoped_timer ("Solver should restart");
   if (use_space_adaptivity)
     {
       double max_kelly=0;
-
-      computing_timer.enter_section ("   Compute error estimator");
-
-
+      auto _timer = computing_timer.scoped_timer ("Compute error estimator");
       update_functions_and_constraints(t);
 
       typename LAC::VectorType tmp_c(solution);
@@ -854,14 +834,14 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                         adaptive_refinement);
 
           //    old_t = -std::numeric_limits<double>::max();
-          computing_timer.exit_section();
+          
           MPI::COMM_WORLD.Barrier();
 
           return true;
         }
       else // if max_kelly > kelly_threshold
         {
-          computing_timer.exit_section();
+          
           return false;
         }
 
@@ -879,7 +859,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
                                       const typename LAC::VectorType &solution_dot,
                                       typename LAC::VectorType &dst)
 {
-  computing_timer.enter_section ("Residual");
+  auto _timer = computing_timer.scoped_timer ("Residual");
   update_functions_and_constraints(t);
 
   typename LAC::VectorType tmp(solution);
@@ -966,7 +946,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
     }
 
   dst.compress(VectorOperation::insert);
-  computing_timer.exit_section();
+  
   return 0;
 }
 
@@ -981,7 +961,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
                                                    const typename LAC::VectorType &src,
                                                    typename LAC::VectorType &dst) const
 {
-  computing_timer.enter_section ("   Solve system");
+  auto _timer = computing_timer.scoped_timer ("Solve system");
   set_constrained_dofs_to_zero(dst);
 
   typedef dealii::BlockSparseMatrix<double> sMAT;
@@ -1026,7 +1006,6 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
   set_constrained_dofs_to_zero(dst);
 
-  computing_timer.exit_section();
   return 0;
 }
 
@@ -1039,7 +1018,7 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                             const typename LAC::VectorType &,
                                             const double alpha)
 {
-  computing_timer.enter_section ("   Setup Jacobian");
+  auto _timer = computing_timer.scoped_timer ("Setup Jacobian");
   assemble_matrices(t, src_yy, src_yp, alpha);
   if (use_direct_solver == false)
     {
@@ -1048,8 +1027,6 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                          matrices,
                                          jacobian_op, jacobian_preconditioner_op);
     }
-
-  computing_timer.exit_section();
 
   return 0;
 }
