@@ -131,7 +131,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &use_space_adaptivity,
                   "Refine mesh during transient",
-                  "true",
+                  "false",
                   Patterns::Bool());
 
   add_parameter(  prm,
