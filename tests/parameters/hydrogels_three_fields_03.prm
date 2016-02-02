@@ -67,7 +67,7 @@ subsection Free Swelling Three Fields
   set T                                = 298.0
   set chi                              = 0.1
   set iteration c lumped               = 1
-  set iteration s                      = 10
+  set iteration s                      = 15
   set iteration s approx               = 5
   set l0                               = 1.5
 end
