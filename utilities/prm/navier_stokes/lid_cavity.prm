@@ -9,7 +9,7 @@
 # DEAL_II_GIT_SHORTREV= aaa9278
 
 subsection Navier Stokes Interface
-  set A - Amg Aggregation Threshold        = 0.8
+  set A - Amg Aggregation Threshold        = 0.9
   set A - Amg Elliptic                     = false
   set A - Amg High Order Elements          = true
   set A - Amg Smoother Sweeps              = 2
@@ -25,7 +25,7 @@ subsection Navier Stokes Interface
   set GMRES Solver tolerance               = 1e-10
   
   set Enable convection term ((\nabla u)u) = true
-  set Enable dynamic term (\partial_t u)   = false
+  set Enable dynamic term (\partial_t u)   = true
   
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
   
@@ -34,10 +34,10 @@ subsection Navier Stokes Interface
   
   set Linearize using time                 = true
   
-  set Non linear term                      = u_linear
+  set Non linear term                      = linear
   set Preconditioner                       = default
-  set div-grad stabilization parameter     = .09975
-  set nu [Pa s]                            = 0.00025
+  set div-grad stabilization parameter     = .0975
+  set nu [Pa s]                            = 0.0025
   set p-q stabilization parameter          = 0.0
   set rho [kg m^3]                         = 1.0
 end
