@@ -141,7 +141,7 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 4
+  set Initial global refinement                      = 2
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1

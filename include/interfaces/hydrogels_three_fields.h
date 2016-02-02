@@ -386,8 +386,8 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 
 
-  static IterationNumberControl schur_control(10);
-  static IterationNumberControl schur_control_0(10);
+  static IterationNumberControl schur_control(3);
+  static IterationNumberControl schur_control_0(3);
   //  static ReductionControl schur_control(50000,1e-8);
   //  static ReductionControl solver_control_pre(5000, 1e-6);
   static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_bicgstab(schur_control);
@@ -410,7 +410,7 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
     auto S_inv = inverse_operator(S, solver_schur_FGMRES, S_preconditioner); 
       //auto S_inv = inverse_operator(S, solver_bicgstab, *p_prec_ssor);
-   //      auto S_inv = inverse_operator(S, solver_schur_FGMRES, *p_prec_ssor);
+   //   auto S_inv = BBt_inv;
   //  auto S_inv = inverse_operator(S, solver_schur_GMRES, P2_i);
   const std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 > diagonal_array = {{ P0_i, P1_i, S_inv }};
 
