@@ -1019,13 +1019,16 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                             const double alpha)
 {
   auto _timer = computing_timer.scoped_timer ("Setup Jacobian");
+
   assemble_matrices(t, src_yy, src_yp, alpha);
   if (use_direct_solver == false)
     {
+      auto _timer = computing_timer.scoped_timer ("Compute system operators");
 
       interface.compute_system_operators(*dof_handler,
                                          matrices,
                                          jacobian_op, jacobian_preconditioner_op);
+      computing_timer.exit_section();
     }
 
   return 0;

@@ -59,16 +59,15 @@ end
 subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
-  set Finite element space             = FESystem[FE_Q(1)^d-\
-                                         FE_DGPMonomial(0)-\
-					 FE_DGPMonomial(0)]
+  set Finite element space             = FESystem[FE_Q(1)^d-FE_DGPMonomial(0)-FE_DGPMonomial(0)]
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
+  set aggregation                      = 2
   set chi                              = 0.1
   set iteration c lumped               = 1
   set iteration s                      = 15
-  set iteration s approx               = 5
+  set iteration s approx               = 50
   set l0                               = 1.5
 end
 subsection IDA Solver Parameters
