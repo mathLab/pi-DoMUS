@@ -84,7 +84,17 @@ private:
   unsigned int it_c_lumped;
   unsigned int it_s_approx;
   unsigned int it_s;
+
+  bool elliptic;
+  bool high_order_elements;
+  unsigned int n_cycles;
+  bool w_cycle;
   double agg;
+  unsigned int smoother_sweeps;
+  unsigned int smoother_overlap;
+  bool output_details;
+  std::string smoother_type;
+  std::string coarse_type;
 
   ConditionalOStream pcout;
 
@@ -188,6 +198,20 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &it_s, "iteration s", "10", Patterns::Integer(1));
   this->add_parameter(prm, &agg, "aggregation", "0.8", Patterns::Double(0.0));
 
+  this->add_parameter(prm, &elliptic, "elliptic", "true", Patterns::Bool());
+  this->add_parameter(prm, &high_order_elements, "high_order_elements", "true", Patterns::Bool());
+  this->add_parameter(prm, &w_cycle, "w_cycle", "true", Patterns::Bool());
+  this->add_parameter(prm, &output_details, "output_details", "true", Patterns::Bool());
+
+  this->add_parameter(prm, &n_cycles, "n_cycles", "2", Patterns::Integer(1));
+  this->add_parameter(prm, &smoother_sweeps, "smoother_sweeps", "2", Patterns::Integer(1));
+  this->add_parameter(prm, &smoother_overlap, "smoother_overlap", "1", Patterns::Integer(1));
+
+  this->add_parameter(prm, &smoother_type, "smoother_type", "Chebyshev", Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
+  this->add_parameter(prm, &coarse_type, "coarse_type", "Amesos-KLU",Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
+
+
+		   
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -223,15 +247,25 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
 
 //    if (U_prec == 0)
 //      {
-  pcout << "nullllllllllllllllllllllllllllllllllllllllllllll" << std::endl;
   U_prec.reset (new TrilinosWrappers::PreconditionAMG());
 
   TrilinosWrappers::PreconditionAMG::AdditionalData U_amg_data;
-  U_amg_data.elliptic = true;
-  U_amg_data.higher_order_elements = true;
-  U_amg_data.smoother_sweeps = 2;
+  U_amg_data.elliptic = elliptic;
+  U_amg_data.higher_order_elements = high_order_elements;
+  U_amg_data.n_cycles = n_cycles;
+  U_amg_data.w_cycle = w_cycle;
+  U_amg_data.smoother_sweeps = smoother_sweeps;
+  U_amg_data.smoother_overlap = smoother_overlap;
+  U_amg_data.output_details = output_details;
+  U_amg_data.smoother_type = smoother_type.c_str();
+  U_amg_data.coarse_type = coarse_type.c_str();
   U_amg_data.aggregation_threshold = agg;
-  U_amg_data.coarse_type = "Amesos-MUMPS";
+
+
+  /* U_amg_data.elliptic = true; */
+  /* U_amg_data.higher_order_elements = true; */
+  /* U_amg_data.smoother_sweeps = 2; */
+  /* U_amg_data.coarse_type = "Amesos-MUMPS"; */
 
   U_prec->initialize (matrices[0]->block(0,0), U_amg_data);
 

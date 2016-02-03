@@ -2,7 +2,7 @@
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     a43b2c9
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= 99e6130
+# DEAL_II_GIT_SHORTREV= 7a1eeb4
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
   set IDs and expressions     = 0=0;0;0;0;0
@@ -63,12 +63,23 @@ subsection Free Swelling Three Fields
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
-  set aggregation                      = 2
   set chi                              = 0.1
-  set iteration c lumped               = 1
-  set iteration s                      = 15
-  set iteration s approx               = 50
   set l0                               = 1.5
+
+  set iteration c lumped               = 1
+  set iteration s                      = 10
+  set iteration s approx               = 10
+
+  set aggregation                      = 0.3
+  set coarse_type                      = Amesos-KLU
+  set elliptic                         = true
+  set high_order_elements              = true
+  set n_cycles                         = 2
+  set output_details                   = true
+  set smoother_overlap                 = 1
+  set smoother_sweeps                  = 2
+  set smoother_type                    = Chebyshev
+  set w_cycle                          = true
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
@@ -145,7 +156,7 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 4
+  set Initial global refinement                      = 3
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
