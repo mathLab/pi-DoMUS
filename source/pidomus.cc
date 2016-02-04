@@ -1028,7 +1028,6 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
       interface.compute_system_operators(*dof_handler,
                                          matrices,
                                          jacobian_op, jacobian_preconditioner_op);
-      computing_timer.exit_section();
     }
 
   return 0;
