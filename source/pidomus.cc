@@ -265,7 +265,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-  data_out("Output Parameters", "vtu"),
+  data_out("Output Parameters", "none"),
 
   n_matrices(interface.n_matrices),
   eh("Error Tables", interface.get_component_names(),
