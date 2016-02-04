@@ -246,14 +246,14 @@ private:
   mutable typename LAC::VectorType        distributed_explicit_solution;
 
   /**
-   * Show timer statistics 
+   * Show timer statistics
    */
   bool                     output_timer;
   /**
    * Teucos timer file
    */
   mutable TimeMonitor       computing_timer;
-  
+
   ParsedDataOut<dim, spacedim>            data_out;
 
   const unsigned int n_matrices;
