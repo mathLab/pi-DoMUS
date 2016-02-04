@@ -134,7 +134,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   // Previous time step solution:
   auto &u_olds     = fe_cache.get_values("explicit_solution","u",velocity,dummy);
   auto &ds_dot_old = fe_cache.get_values("explicit_solution","d_dot",displacement,dummy);
-    
+
   // displacement:
   auto &ds          = fe_cache.get_values(                "solution",     "d",      displacement,   et);
   auto &grad_ds     = fe_cache.get_gradients(             "solution",     "grad_d", displacement,   et);
@@ -174,7 +174,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       // Previous time step solution:
       const Tensor<1, dim, ResidualType> &u_old       = u_olds[quad];
       const Tensor<1, dim, ResidualType> &d_dot_old   = ds_dot_old[quad];
-      
+
       //    pressure:
       const ResidualType                  &p          = ps[quad];
 
@@ -196,10 +196,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto grad_v = fev[velocity].gradient(i,quad);
           auto div_v  = fev[velocity].divergence(i,quad);
           auto sym_grad_v = fev[velocity].symmetric_gradient(i,quad);
-          
+
           //    displacement:
           auto grad_e = fev[displacement].gradient(i,quad);
-          
+
           //    pressure:
           auto m      = fev[pressure].value(i,quad);
           auto q      = fev[pressure].value(i,quad);
@@ -216,14 +216,14 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               //
               + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , v )
               //
-              + scalar_product( J_ale * sigma * Ft_inv, grad_v ) 
+              + scalar_product( J_ale * sigma * Ft_inv, grad_v )
 
               // "stiffness" od the displacement
               + nu * scalar_product( grad_d , grad_e )
-              
+
               // divergence free constriant
               - div_u * m
-              
+
               // pressure term
               - p * div_v
             )*JxW[quad];
@@ -244,7 +244,7 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 {
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;
-  
+
   P00_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
   P11_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
   P22_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
@@ -255,7 +255,7 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   Amg_data_d.higher_order_elements = true;
   Amg_data_d.smoother_sweeps = 2;
   Amg_data_d.aggregation_threshold = 0.02;
-  
+
   TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data;
 
   std::vector<std::vector<bool>> constant_modes;
@@ -279,7 +279,7 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
     for (unsigned int j = 0; j<3; ++j)
       S[i][j] = linear_operator< BVEC >(matrices[0]->block(i,j) );
   system_op = BlockLinearOperator< VEC >(S);
-  
+
   std::array<std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 3>, 3> P;
   for (unsigned int i = 0; i<3; ++i)
     for (unsigned int j = 0; j<3; ++j)
@@ -307,18 +307,18 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   auto Mp = linear_operator< TrilinosWrappers::MPI::Vector  >( matrices[1]->block(2,2) );
   auto Mp_inv = inverse_operator( Mp, solver_CG, *P22_preconditioner);
-  
+
   auto Schur_inv = nu * Mp_inv;
 
   P[0][0] = inverse_operator< >( S[0][0],
-                                  solver_CG,
-                                  *P00_preconditioner);
+                                 solver_CG,
+                                 *P00_preconditioner);
   P[1][1] = A_inv;
   P[1][2] = A_inv * Bt * Schur_inv;
   P[2][1] = null_operator(B);
   P[2][2] = -1 * Schur_inv;
 
-  
+
   prec_op = BlockLinearOperator< VEC >(P);
 }
 

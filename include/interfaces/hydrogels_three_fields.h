@@ -211,7 +211,7 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &coarse_type, "coarse_type", "Amesos-KLU",Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
 
 
-		   
+
 }
 
 template <int dim, int spacedim, typename LAC>

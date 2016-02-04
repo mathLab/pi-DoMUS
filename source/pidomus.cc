@@ -440,7 +440,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       explicit_solution = solution;
       distributed_explicit_solution = solution;
 
-    }  
+    }
 }
 
 
@@ -671,7 +671,7 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
                                 distributed_explicit_solution,
                                 adaptive_refinement);
 
-  old_t = -std::numeric_limits<double>::max();  
+  old_t = -std::numeric_limits<double>::max();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -722,11 +722,11 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
   eh.output_table(pcout);
 
-  if(output_timer)
-  {
-    pcout << std::endl;
-    Teuchos::TimeMonitor::summarize(std::cout,true);
-  }
+  if (output_timer)
+    {
+      pcout << std::endl;
+      Teuchos::TimeMonitor::summarize(std::cout,true);
+    }
 }
 
 /*** ODE Argument Interface ***/
@@ -834,14 +834,14 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                         adaptive_refinement);
 
           //    old_t = -std::numeric_limits<double>::max();
-          
+
           MPI::COMM_WORLD.Barrier();
 
           return true;
         }
       else // if max_kelly > kelly_threshold
         {
-          
+
           return false;
         }
 
@@ -946,7 +946,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
     }
 
   dst.compress(VectorOperation::insert);
-  
+
   return 0;
 }
 
