@@ -177,7 +177,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       if (!compute_only_system_terms)
         {
-          EnergyType pp = p*p ;
+          EnergyType pp = 0.5*p*p ;
           energies[1] += pp*JxW[q];
         }
     }
@@ -205,7 +205,7 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
 
   this->add_parameter(prm, &n_cycles, "n_cycles", "2", Patterns::Integer(1));
   this->add_parameter(prm, &smoother_sweeps, "smoother_sweeps", "2", Patterns::Integer(1));
-  this->add_parameter(prm, &smoother_overlap, "smoother_overlap", "1", Patterns::Integer(1));
+  this->add_parameter(prm, &smoother_overlap, "smoother_overlap", "1", Patterns::Integer(0));
 
   this->add_parameter(prm, &smoother_type, "smoother_type", "Chebyshev", Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
   this->add_parameter(prm, &coarse_type, "coarse_type", "Amesos-KLU",Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
@@ -279,8 +279,8 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   c_amg_data.elliptic = true;
   c_amg_data.higher_order_elements = true;
   c_amg_data.smoother_sweeps = 1;
-  c_amg_data.aggregation_threshold = 2;
-  c_amg_data.coarse_type = "Amesos-MUMPS";
+  c_amg_data.aggregation_threshold = 0.03;
+  //  c_amg_data.coarse_type = "Amesos-MUMPS";
 
 
   c_prec_amg->initialize (matrices[0]->block(1,1), c_amg_data);
@@ -451,9 +451,9 @@ compute_system_operators(const DoFHandler<dim,spacedim> &,
   static IterationNumberControl schur_control_approx(it_s_approx);
   static IterationNumberControl schur_control(it_s);
 
-  //  static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control_approx);
+  // static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control_approx);
 
-  static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control);
+  static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur_approx(schur_control_approx);
 
   static SolverFGMRES<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
   // static SolverBicgstab<LATrilinos::VectorType::BlockType> solver_schur(schur_control);
