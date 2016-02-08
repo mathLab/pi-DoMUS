@@ -1,3 +1,6 @@
+# ignore OS X auxiliary files
+*.DS_Store
+
 *.vtu
 *.vtk
 *.pvtu
