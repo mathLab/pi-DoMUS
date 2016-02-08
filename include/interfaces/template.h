@@ -157,7 +157,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
         {
           auto v = fev[displacement] .value(i,q); // test function
 
-          local_residuals[0] -= 0.1*v*u;
+          local_residuals[0][i] -= 0.1*v*u;
 
           // matrix[0] is assumed to be the system matrix other
           // matrices are either preconditioner or auxiliary matrices
@@ -166,7 +166,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
           // if this function is called to evalute the system residual
           //  we do not need to assemble them so we guard them
           if (!compute_only_system_matrix)
-            local_residuals[1] += v*u;
+            local_residuals[1][i] += v*u;
         }
     }
 
