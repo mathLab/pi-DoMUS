@@ -3,12 +3,12 @@
 ################################################################################
 
 subsection Navier Stokes Interface
-  set A - Amg Aggregation Threshold        = 1.5
+  set A - Amg Aggregation Threshold        = 1.8
   set A - Amg Elliptic                     = false
   set A - Amg High Order Elements          = true
   set A - Amg Smoother Sweeps              = 2
 
-  set Ap - Amg Aggregation Threshold       = 0.02
+  set Ap - Amg Aggregation Threshold       = 0.2
   set Ap - Amg Elliptic                    = true
   set Ap - Amg Smoother Sweeps             = 2
 
@@ -21,14 +21,14 @@ subsection Navier Stokes Interface
   set Enable dynamic term (\partial_t u)   = true
   set Non linear term                      = linear
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-
   set Linearize using time                 = true
   
-  set Invert Ap using inverse_operator     = false
-  set Invert Mp using inverse_operator     = true
+  
   set Preconditioner                       = default
-  set div-grad stabilization parameter     = 0.09975
-  set nu [Pa s]                            = 0.00025
+  set Invert Mp using inverse_operator     = true
+  set Invert Ap using inverse_operator     = true
+  set div-grad stabilization parameter     = 0.0
+  set nu [Pa s]                            = 0.25
   set rho [kg m^3]                         = 1.0
 end
 
@@ -37,34 +37,21 @@ subsection piDoMUS
   set Initial global refinement                      = 4
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
+  set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Time stepper                                   = euler
-  set Show timer                     = false
+  set Show timer                     		     = true
   set Use direct solver if available                 = true
 end
-
-subsection Forcing terms
-  set IDs and component masks =
-  set IDs and expressions     =
-  set Known component names   = u,u,p
-  set Used constants          = k=1
-end
-
+bv 
 subsection Dirichlet boundary conditions
-  #set IDs and component masks = 1 = ALL % 2 = u % 4 = u
+
+  # set IDs and component masks = 1 = u % 2 = u % 4 = u
   # set IDs and expressions     = 1 = 0;0;0 % 2=t<1.0?t*k*(4-y)*y:k*(4-y)*y;0;0 % 4 = 0;0;0
   set IDs and component masks =  1= u % 5=u % 3=u % 4=u
   set IDs and expressions     =  1= t<1.?t*k*(1-y^2):k*(1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
   set Known component names   = u,u,p
   set Used constants          = k=1
-end
-
-subsection Neumann boundary conditions
-  set IDs and component masks =
-  set IDs and expressions     =
-  set Known component names   = u,u,p
-  set Used constants          =
 end
 
 subsection Exact solution
@@ -84,70 +71,27 @@ subsection Domain
   set Output grid file name      = output.vtk
 end
 
-subsection Refinement
-  set Bottom fraction                        = 0.100000
-  set Maximum number of cells (if available) = 500
-  set Order (optimize)                       = 2
-  set Refinement strategy                    = fraction
-  set Top fraction                           = 0.300000
-end
-
-subsection Error Tables
-  set Compute error            = false
-  set Error file format        = tex
-  set Output error tables      = true
-  set Solution names           = u,u,p
-  set Solution names for latex = u,u,p
-  set Table names              = error
-  set Write error files        = false
-  subsection Table 0
-    set Add convergence rates          = true
-    set Extra terms                    = cells,dofs
-    set Latex table caption            = error
-    set List of error norms to compute = L2, Linfty, H1; AddUp; L2
-    set Rate key                       =
-  end
-end
-
-subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-3
-  set Initial time                                  = 0
-  set Final time                                    = 20
-
-  set Ignore algebraic terms for error computations = true
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_diff
-  set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-2
-  set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 3
-  set Min step size                                 = 5e-3
-  set Relative error tolerance                      = 1e-2
-  set Seconds between each output                   = 1e-2
-  set Show output of time steps                     = true
-  set Use local tolerances                          = false
-end
-
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1.0e-6
-  set Final time                                   = 20
+  set Absolute error tolerance                     = 1.0e-8
+  set Relative error tolerance                     = 1.0e-6
+  set Final time                                   = 15
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
-  set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 10
-  set Newton relaxation parameter                  = 1.0
-  set Relative error tolerance                     = 0.0
+  set Maximum number of inner nonlinear iterations = 5
+  set Maximum number of outer nonlinear iterations = 30
+  set Newton relaxation parameter                  = 1
+  
   set Step size                                    = 1.0e-1
   set Update continuously Jacobian                 = true
 end
 
 subsection Output Parameters
-  set Incremental run prefix         =
-  set Files to save in run directory =
-  set Output format          = vtu
-  set Output partitioning    = false
-  set Problem base name      = solution
-  set Solution names         = u
-  set Subdivisions           = 1
+  set Incremental run prefix          =
+  set Files to save in run directory  =
+  set Output format         	      = vtu
+  set Output partitioning  	      = false
+  set Problem base name      	      = solution
+  set Solution names         	      = u
+  set Subdivisions           	      = 1
 end
+
