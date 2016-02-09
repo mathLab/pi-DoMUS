@@ -144,8 +144,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto grad_test_mu = fev[chempot].gradient(i,q);
 
           residuals[0][i] -= (mu*inner(F_star,grad_v)/Omega+
-                            -scalar_product(F_star,F_dot)*test_mu/Omega
-                            +h*grad_test_mu)*JxW[q];
+                              -scalar_product(F_star,F_dot)*test_mu/Omega
+                              +h*grad_test_mu)*JxW[q];
         }
 
 //      if (!compute_only_system_terms)
