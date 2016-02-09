@@ -5,9 +5,15 @@
 # DEAL_II_GIT_SHORTREV= af6f8d1
 
 subsection Navier Stokes Interface
-  set Amg P Aggregation Threshold          = 0.02
-  set Amg P Elliptic                       = true
-  set Amg P Smoother Sweeps                = 2
+  set A - Amg Aggregation Threshold        = 1.5
+  set A - Amg Elliptic                     = false
+  set A - Amg High Order Elements          = true
+  set A - Amg Smoother Sweeps              = 2
+
+  set Ap - Amg Aggregation Threshold       = 0.02
+  set Ap - Amg Elliptic                    = true
+  set Ap - Amg Smoother Sweeps             = 2
+  
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
   set CG Solver tolerance                  = 1e-12
@@ -19,7 +25,7 @@ subsection Navier Stokes Interface
   set Invert Mp using inverse_operator     = true
 
   set Linearize using time                 = false
-  set Non linear term                      = grad_linear
+  set Non linear term                      = linear
 
   set Preconditioner                       = default
   set div-grad stabilization parameter     = 0.0
