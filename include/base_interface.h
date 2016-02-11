@@ -107,10 +107,11 @@ public:
    * Initialize all data required for the system
    *
    * This function is used to initialize the internal variables
-   * according to the given arguments, which are @p solution,
+   * according to the given arguments, which are @p dof_handler, @p solution,
    * @p solution_dot, @p explicit_solution, @p t and @p alpha.
    */
-  virtual void initialize_data(const typename LAC::VectorType &solution,
+  virtual void initialize_data(const DoFHandler<dim,spacedim> &dof_handler,
+                               const typename LAC::VectorType &solution,
                                const typename LAC::VectorType &solution_dot,
                                const typename LAC::VectorType &explicit_solution,
                                const double t,
@@ -164,8 +165,7 @@ public:
    * This function is used to assemble linear operators related
    * to the problem. It is only needed if we use iterative solvers.
    */
-  virtual void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                        const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
+  virtual void compute_system_operators(const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
                                         LinearOperator<typename LATrilinos::VectorType> &,
                                         LinearOperator<typename LATrilinos::VectorType> &) const;
 
@@ -173,11 +173,10 @@ public:
    * Compute linear operators needed by the problem. When using deal.II vector and matrix types, this
    * function is empty, since a direct solver is used by default.
    */
-  void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
                                 LinearOperator<typename LADealII::VectorType> &,
-                                LinearOperator<typename LADealII::VectorType> &) const
-  {};
+                                LinearOperator<typename LADealII::VectorType> &) const;
+
 
 
   virtual const Mapping<dim,spacedim> &get_mapping() const;
@@ -269,6 +268,8 @@ protected:
    * Time derivative solution vector evaluated at time t
    */
   mutable const typename LAC::VectorType *solution_dot;
+
+  mutable const DoFHandler<dim,spacedim> *dof_handler;
 
   /**
    * Current time step

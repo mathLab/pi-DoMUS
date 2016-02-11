@@ -18,6 +18,8 @@ public:
   ~PoissonProblem () {};
   PoissonProblem ();
 
+  virtual void declare_parameters(ParameterHandler &prm);
+
   // interface with the PDESystemInterface :)
 
 
@@ -29,13 +31,13 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
+  double gamma;
 
 
 };
@@ -98,8 +100,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 template <int dim, int spacedim, typename LAC>
 void
-PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                                           const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
                                                            LinearOperator<LATrilinos::VectorType> &system_op,
                                                            LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
@@ -125,6 +126,16 @@ PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,
       {{ P00}} ,
     }
   });
+}
+
+
+template <int dim, int spacedim, typename LAC>
+template <typename EnergyType, typename ResidualType>
+void
+declare_parameters (ParameterHandler &prm)
+{
+  PDESystemInterface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>,LAC>::declare_parameters(prm);
+  this->add_parameter(prm, &gamma, "gamma", "0.1", Patterns::Double(0.0));
 }
 
 #endif

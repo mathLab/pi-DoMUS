@@ -44,8 +44,7 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  void compute_system_operators(const DoFHandler<dim,spacedim> &,
-                                const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
@@ -128,15 +127,15 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::set_matrix_couplings(std::v
 
 template <int dim, int spacedim, typename LAC>
 void
-NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::compute_system_operators(const DoFHandler<dim,spacedim> &dh,
-    const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
-    LinearOperator<LATrilinos::VectorType> &system_op,
-    LinearOperator<LATrilinos::VectorType> &prec_op) const
+NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::compute_system_operators(
+  const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+  LinearOperator<LATrilinos::VectorType> &system_op,
+  LinearOperator<LATrilinos::VectorType> &prec_op) const
 {
 
   std::vector<std::vector<bool> > constant_modes;
   FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(displacement),
+  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(displacement),
                                     constant_modes);
 
   P_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());

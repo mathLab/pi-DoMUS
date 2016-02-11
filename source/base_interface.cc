@@ -192,12 +192,19 @@ assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_
 }
 
 
+template <int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
+                         LinearOperator<typename LADealII::VectorType> &,
+                         LinearOperator<typename LADealII::VectorType> &) const
+{}
+
 
 template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
-compute_system_operators(const DoFHandler<dim,spacedim> &,
-                         const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                          LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &) const
 {
@@ -317,13 +324,14 @@ BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,s
 
 template <int dim, int spacedim, typename LAC>
 void
-BaseInterface<dim,spacedim,LAC>::initialize_data(const typename LAC::VectorType &solution,
+BaseInterface<dim,spacedim,LAC>::initialize_data(const DoFHandler<dim,spacedim> &dof,
+                                                 const typename LAC::VectorType &solution,
                                                  const typename LAC::VectorType &solution_dot,
                                                  const typename LAC::VectorType &explicit_solution,
                                                  const double t,
                                                  const double alpha) const
 {
-
+  this->dof_handler = &dof;
   this->solution = &solution;
   this->solution_dot = &solution_dot;
   this->explicit_solution = &explicit_solution;

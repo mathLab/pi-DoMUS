@@ -506,7 +506,8 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
     }
 
 
-  interface.initialize_data(distributed_solution,
+  interface.initialize_data(*dof_handler,
+                            distributed_solution,
                             distributed_solution_dot,
                             distributed_explicit_solution,
                             t, alpha);
@@ -882,7 +883,8 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
     }
 
 
-  interface.initialize_data(distributed_solution,
+  interface.initialize_data(*dof_handler,
+                            distributed_solution,
                             distributed_solution_dot,
                             distributed_explicit_solution,
                             t, 0.0);
@@ -1025,8 +1027,7 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
     {
       auto _timer = computing_timer.scoped_timer ("Compute system operators");
 
-      interface.compute_system_operators(*dof_handler,
-                                         matrices,
+      interface.compute_system_operators(matrices,
                                          jacobian_op, jacobian_preconditioner_op);
     }
 
