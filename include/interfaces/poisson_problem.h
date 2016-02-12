@@ -9,6 +9,7 @@
 #include <deal.II/lac/solver_cg.h>
 
 //typedef LATrilinos LAC;
+using deal2lkit::DOFUtilities::inner;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
 class PoissonProblem : public PDESystemInterface<dim,spacedim, PoissonProblem<dim,spacedim,LAC>, LAC>
@@ -19,6 +20,19 @@ public:
   PoissonProblem ();
 
   virtual void declare_parameters(ParameterHandler &prm);
+
+
+
+  virtual UpdateFlags get_face_update_flags() const
+  {
+    return (update_values             |
+            update_gradients          | /* this is the new entry */
+            update_quadrature_points  |
+            update_normal_vectors     |
+            update_JxW_values);
+  }
+
+
 
   // interface with the PDESystemInterface :)
 
@@ -38,6 +52,7 @@ public:
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
   double gamma;
+mutable  ParsedMappedFunctions<spacedim> nietsche;
 
 
 };
@@ -48,7 +63,12 @@ PoissonProblem():
   PDESystemInterface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>, LAC >("Poisson problem",
       1,1,
       "FESystem[FE_Q(1)]",
-      "u","1")
+      "u","1"),
+  nietsche("Nietsche boundary conditions",
+	   this->n_components,
+	   this->get_component_names(),
+	   "" /* do nothing by default */
+	   )
 {}
 
 
@@ -64,6 +84,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        bool compute_only_system_terms) const
 {
   const FEValuesExtractors::Scalar s(0);
+  double h = cell->diameter();
 
   ResidualType rt = this->alpha; // dummy number to define the type of variables
   this->reinit (rt, cell, fe_cache);
@@ -93,6 +114,59 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       (void)compute_only_system_terms;
 
     }
+  /// nietsche bcs
+
+  ResidualType dummy;
+  for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+    {
+      unsigned int face_id = cell->face(face)->boundary_id();
+      if (cell->face(face)->at_boundary() && nietsche.acts_on_id(face_id))
+        {
+          this->reinit(dummy, cell, face, fe_cache);
+          auto &gradusf = fe_cache.get_gradients("solution", "u", s, dummy);
+          auto &usf = fe_cache.get_values("solution", "u", s, dummy);
+
+          auto &fev = fe_cache.get_current_fe_values();
+          auto &q_points = fe_cache.get_quadrature_points();
+          auto &JxW = fe_cache.get_JxW_values();
+
+          for (unsigned int q=0; q<q_points.size(); ++q)
+            {
+              auto &u = usf[q];
+              const Tensor<1,spacedim> n = fev.normal_vector(q);
+              auto &gradu = gradusf[q];
+
+	      // update time for nietsche_bcs
+	      nietsche.set_time(this->t);
+
+	      // get mapped function acting on this face_id
+	      Vector<double> u0(this->n_components);
+              nietsche.get_mapped_function(face_id)->vector_value(q_points[q], u0);
+	      
+              for (unsigned int i=0; i<local_residuals[0].size(); ++i)
+                {
+                  auto v = fev[s].value(i,q);
+                  auto gradv = fev[s].gradient(i,q);
+
+                  local_residuals[0][i] += (
+                                             -inner(gradu,n)*v
+
+                                             -(u-u0[0])*(gradv*n)
+
+                                             +(1./(gamma*h))*(u-u0[0])*v
+
+                                           )*JxW[q];
+
+
+                }
+            }// end loop over quadrature points
+
+          break;
+
+        } // endif face->at_boundary
+
+    }// end loop over faces
+
 
 
 }
@@ -130,9 +204,8 @@ PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const std::vector<sha
 
 
 template <int dim, int spacedim, typename LAC>
-template <typename EnergyType, typename ResidualType>
 void
-declare_parameters (ParameterHandler &prm)
+PoissonProblem<dim,spacedim,LAC>::declare_parameters (ParameterHandler &prm)
 {
   PDESystemInterface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>,LAC>::declare_parameters(prm);
   this->add_parameter(prm, &gamma, "gamma", "0.1", Patterns::Double(0.0));
