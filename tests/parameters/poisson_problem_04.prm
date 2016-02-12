@@ -1,11 +1,11 @@
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     a43b2c9
-# DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= 2aed525
+# DEAL_II_GIT_BRANCH=   rand_function
+# DEAL_II_GIT_SHORTREV= 6663214
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0=ALL
-  set IDs and expressions     = 0=(1-y)*y*sin(2*pi*(x-t))
+  set IDs and component masks = 
+  set IDs and expressions     = 
   set Known component names   = u
   set Used constants          = 
 end
@@ -76,14 +76,14 @@ subsection IDA Solver Parameters
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1e-6
-  set Final time                                   = 0.
+  set Final time                                   = 1.
   set Initial time                                 = 0.
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 5
   set Newton relaxation parameter                  = 1.000000
-  set Relative error tolerance                     = 0.000000
-  set Step size                                    = 1e10
+  set Relative error tolerance                     = 0.0001
+  set Step size                                    = 1e-2
   set Update continuously Jacobian                 = true
 end
 subsection Initial solution
@@ -102,12 +102,18 @@ subsection Neumann boundary conditions
   set Known component names   = u
   set Used constants          = 
 end
+subsection Nietsche boundary conditions
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=(1-y)*y*sin(2*pi*(x-t))
+  set Known component names   = u
+  set Used constants          = 
+end
 subsection Output Parameters
   set Files to save in run directory = 
   set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = strong
+  set Problem base name              = nietsche
   set Solution names                 = u
   set Subdivisions                   = 1
 end
@@ -115,6 +121,7 @@ subsection Poisson problem
   set Block of differential components = 1
   set Blocking of the finite element   = u
   set Finite element space             = FESystem[FE_Q(1)]
+  set gamma                            = 0.1
 end
 subsection Refinement
   set Bottom fraction                        = 0.2
@@ -143,8 +150,8 @@ subsection pidomus
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = true
+  set Show timer                                     = false
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = ida
-  set Show timer                                     = false
   set Use direct solver if available                 = true
 end

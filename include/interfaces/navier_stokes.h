@@ -102,7 +102,6 @@ public:
 
   void
   compute_system_operators(
-    const DoFHandler<dim,spacedim> &,
     const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
@@ -488,7 +487,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 template <int dim, int spacedim, typename LAC>
 void
 NavierStokes<dim,spacedim,LAC>::compute_system_operators(
-  const DoFHandler<dim,spacedim> &dh,
   const std::vector<shared_ptr<LATrilinos::BlockMatrix>> matrices,
   LinearOperator<LATrilinos::VectorType> &system_op,
   LinearOperator<LATrilinos::VectorType> &prec_op) const
@@ -526,7 +524,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   std::vector<std::vector<bool>> constant_modes;
   FEValuesExtractors::Vector velocity_components(0);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(velocity_components),
+  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(velocity_components),
                                     constant_modes);
   TrilinosWrappers::PreconditionAMG::AdditionalData amg_A_data;
   amg_A_data.constant_modes = constant_modes;
@@ -537,7 +535,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   std::vector<std::vector<bool> > constant_modes_p;
   FEValuesExtractors::Scalar pressure_components(dim);
-  DoFTools::extract_constant_modes (dh, dh.get_fe().component_mask(pressure_components),
+  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(pressure_components),
                                     constant_modes_p);
   TrilinosWrappers::PreconditionAMG::AdditionalData amg_Ap_data;
   amg_Ap_data.constant_modes = constant_modes_p;
