@@ -396,6 +396,13 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       initializer.ghosted(distributed_solution_dot);
       initializer.ghosted(distributed_explicit_solution);
     }
+  else
+    {
+      initializer(distributed_solution);
+      initializer(distributed_solution_dot);
+      initializer(distributed_explicit_solution);
+    }
+
 
   for (unsigned int i=0; i < n_matrices; ++i)
     {
@@ -637,15 +644,23 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
 
   setup_dofs(false);
 
-  LADealII::VectorType new_sol(y);
-  LADealII::VectorType new_sol_dot(y_dot);
-  LADealII::VectorType new_sol_expl(y_expl);
+  LADealII::VectorType new_sol();
+  LADealII::VectorType new_sol_dot();
+  LADealII::VectorType new_sol_expl();
+
   std::vector<LADealII::VectorType> new_sols (3);
+
   new_sols[0].reinit(y);
   new_sols[1].reinit(y_dot);
   new_sols[2].reinit(y_expl);
 
   sol_tr.interpolate (old_sols, new_sols);
+
+  y      = new_sols[0];
+  y_dot  = new_sols[1];
+  y_expl = new_sols[2];
+  distributed_explicit_solution = y_expl;
+
 }
 
 template <int dim, int spacedim, typename LAC>

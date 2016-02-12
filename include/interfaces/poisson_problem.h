@@ -52,7 +52,7 @@ public:
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
   double gamma;
-mutable  ParsedMappedFunctions<spacedim> nietsche;
+  mutable  ParsedMappedFunctions<spacedim> nietsche;
 
 
 };
@@ -65,10 +65,10 @@ PoissonProblem():
       "FESystem[FE_Q(1)]",
       "u","1"),
   nietsche("Nietsche boundary conditions",
-	   this->n_components,
-	   this->get_component_names(),
-	   "" /* do nothing by default */
-	   )
+           this->n_components,
+           this->get_component_names(),
+           "" /* do nothing by default */
+          )
 {}
 
 
@@ -136,13 +136,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               const Tensor<1,spacedim> n = fev.normal_vector(q);
               auto &gradu = gradusf[q];
 
-	      // update time for nietsche_bcs
-	      nietsche.set_time(this->t);
+              // update time for nietsche_bcs
+              nietsche.set_time(this->t);
 
-	      // get mapped function acting on this face_id
-	      Vector<double> u0(this->n_components);
+              // get mapped function acting on this face_id
+              Vector<double> u0(this->n_components);
               nietsche.get_mapped_function(face_id)->vector_value(q_points[q], u0);
-	      
+
               for (unsigned int i=0; i<local_residuals[0].size(); ++i)
                 {
                   auto v = fev[s].value(i,q);
