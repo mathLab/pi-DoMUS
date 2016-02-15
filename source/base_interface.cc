@@ -387,6 +387,12 @@ estimate_error_per_cell(const DoFHandler<dim,spacedim> &dof,
                                                dof.get_triangulation().locally_owned_subdomain());
 }
 
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+solution_preprocessing (FEValuesCache<dim,spacedim> & /*scratch*/) const
+{}
+
 template class BaseInterface<2, 2, LATrilinos>;
 template class BaseInterface<2, 3, LATrilinos>;
 template class BaseInterface<3, 3, LATrilinos>;

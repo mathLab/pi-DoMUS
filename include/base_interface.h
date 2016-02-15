@@ -119,6 +119,15 @@ public:
 
 
   /**
+   * Solution preprocessing. This function can be used to store
+   * variables, which are needed during the assembling of energies and
+   * residuals, that cannot be computed there (e.g., GLOBAL
+   * variables). The variables must be stored inside the AnyData of
+   * the passed FEValuescache.
+   */
+  virtual void solution_preprocessing (FEValuesCache<dim,spacedim> &) const;
+
+  /**
    * Assemble energies and residuals. To be used when computing only residual
    * quantities, i.e., the energy here is a Sacado double, while the residual
    * is a pure double.

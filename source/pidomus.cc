@@ -519,6 +519,14 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                             distributed_explicit_solution,
                             t, alpha);
 
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+                                        *fe, quadrature_formula,
+                                        interface.get_cell_update_flags(),
+                                        face_quadrature_formula,
+                                        interface.get_face_update_flags());
+
+  interface.solution_preprocessing(fev_cache);
+
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
   CellFilter;
@@ -556,11 +564,7 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim> (interface.get_mapping(),
-                                    *fe, quadrature_formula,
-                                    interface.get_cell_update_flags(),
-                                    face_quadrature_formula,
-                                    interface.get_face_update_flags()),
+       fev_cache,
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
   for (unsigned int i=0; i<n_matrices; ++i)
@@ -908,6 +912,14 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+                                        *fe, quadrature_formula,
+                                        interface.get_cell_update_flags(),
+                                        face_quadrature_formula,
+                                        interface.get_face_update_flags());
+
+  interface.solution_preprocessing(fev_cache);
+
   dst = 0;
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
@@ -943,12 +955,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim>(interface.get_mapping(),
-                                   *fe,
-                                   quadrature_formula,
-                                   interface.get_cell_update_flags(),
-                                   face_quadrature_formula,
-                                   interface.get_face_update_flags()),
+       fev_cache,
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
 
