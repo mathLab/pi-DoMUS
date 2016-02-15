@@ -35,7 +35,8 @@ BaseInterface(const std::string &name,
   n_components(ncomp),
   n_matrices(nmat),
   pfe(name,default_fe,default_component_names,n_components),
-  str_diff_comp(default_differential_components)
+  str_diff_comp(default_differential_components),
+  data_out("Output Parameters", "none")
 {}
 
 template <int dim, int spacedim, typename LAC>
@@ -392,6 +393,29 @@ void
 BaseInterface<dim,spacedim,LAC>::
 solution_preprocessing (FEValuesCache<dim,spacedim> & /*scratch*/) const
 {}
+
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+output_solution (const unsigned int &current_cycle,
+                 const unsigned int &step_number) const
+{
+  std::stringstream suffix;
+  suffix << "." << current_cycle << "." << step_number;
+  data_out.prepare_data_output( *this->dof_handler,
+                                suffix.str());
+  data_out.add_data_vector (*solution, get_component_names());
+  std::vector<std::string> sol_dot_names =
+    Utilities::split_string_list(get_component_names());
+  for (auto &name : sol_dot_names)
+    {
+      name += "_dot";
+    }
+  data_out.add_data_vector (*solution_dot, print(sol_dot_names, ","));
+
+  data_out.write_data_and_clear(get_mapping());
+
+}
 
 template class BaseInterface<2, 2, LATrilinos>;
 template class BaseInterface<2, 3, LATrilinos>;

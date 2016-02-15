@@ -33,7 +33,6 @@
 #include <deal2lkit/parsed_grid_refinement.h>
 #include <deal2lkit/error_handler.h>
 #include <deal2lkit/parsed_function.h>
-#include <deal2lkit/parsed_data_out.h>
 #include <deal2lkit/parameter_acceptor.h>
 #include <deal2lkit/sundials_interface.h>
 #include <deal2lkit/ida_interface.h>
@@ -254,7 +253,6 @@ private:
    */
   mutable TimeMonitor       computing_timer;
 
-  ParsedDataOut<dim, spacedim>            data_out;
 
   const unsigned int n_matrices;
   std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;

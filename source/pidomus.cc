@@ -265,7 +265,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-  data_out("Output Parameters", "none"),
 
   n_matrices(interface.n_matrices),
   eh("Error Tables", interface.get_component_names(),
@@ -788,20 +787,15 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
   distributed_solution = tmp;
   distributed_solution_dot = tmp_dot;
 
-  std::stringstream suffix;
-  suffix << "." << current_cycle << "." << step_number;
-  data_out.prepare_data_output( *dof_handler,
-                                suffix.str());
-  data_out.add_data_vector (distributed_solution, interface.get_component_names());
-  std::vector<std::string> sol_dot_names =
-    Utilities::split_string_list( interface.get_component_names());
-  for (auto &name : sol_dot_names)
-    {
-      name += "_dot";
-    }
-  data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear(interface.get_mapping());
+  interface.initialize_data(*dof_handler,
+                            distributed_solution,
+                            distributed_solution_dot,
+                            distributed_explicit_solution,
+                            t, 0.0);
+
+  interface.output_solution(current_cycle,
+                            step_number);
 }
 
 
