@@ -265,7 +265,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
-  data_out("Output Parameters", "none"),
 
   n_matrices(interface.n_matrices),
   eh("Error Tables", interface.get_component_names(),
@@ -519,6 +518,14 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                             distributed_explicit_solution,
                             t, alpha);
 
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+                                        *fe, quadrature_formula,
+                                        interface.get_cell_update_flags(),
+                                        face_quadrature_formula,
+                                        interface.get_face_update_flags());
+
+  interface.solution_preprocessing(fev_cache);
+
   typedef
   FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
   CellFilter;
@@ -556,11 +563,7 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim> (interface.get_mapping(),
-                                    *fe, quadrature_formula,
-                                    interface.get_cell_update_flags(),
-                                    face_quadrature_formula,
-                                    interface.get_face_update_flags()),
+       fev_cache,
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
   for (unsigned int i=0; i<n_matrices; ++i)
@@ -784,20 +787,15 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
   distributed_solution = tmp;
   distributed_solution_dot = tmp_dot;
 
-  std::stringstream suffix;
-  suffix << "." << current_cycle << "." << step_number;
-  data_out.prepare_data_output( *dof_handler,
-                                suffix.str());
-  data_out.add_data_vector (distributed_solution, interface.get_component_names());
-  std::vector<std::string> sol_dot_names =
-    Utilities::split_string_list( interface.get_component_names());
-  for (auto &name : sol_dot_names)
-    {
-      name += "_dot";
-    }
-  data_out.add_data_vector (distributed_solution_dot, print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear(interface.get_mapping());
+  interface.initialize_data(*dof_handler,
+                            distributed_solution,
+                            distributed_solution_dot,
+                            distributed_explicit_solution,
+                            t, 0.0);
+
+  interface.output_solution(current_cycle,
+                            step_number);
 }
 
 
@@ -908,6 +906,14 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+                                        *fe, quadrature_formula,
+                                        interface.get_cell_update_flags(),
+                                        face_quadrature_formula,
+                                        interface.get_face_update_flags());
+
+  interface.solution_preprocessing(fev_cache);
+
   dst = 0;
 
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
@@ -943,12 +949,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
                    dof_handler->end()),
        local_assemble,
        local_copy,
-       FEValuesCache<dim,spacedim>(interface.get_mapping(),
-                                   *fe,
-                                   quadrature_formula,
-                                   interface.get_cell_update_flags(),
-                                   face_quadrature_formula,
-                                   interface.get_face_update_flags()),
+       fev_cache,
        pidomus::CopyData(fe->dofs_per_cell,n_matrices));
 
 

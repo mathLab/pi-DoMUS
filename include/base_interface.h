@@ -10,6 +10,8 @@
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_dirichlet_bcs.h>
+#include <deal2lkit/parsed_data_out.h>
+
 
 #include "copy_data.h"
 #include "lac/lac_type.h"
@@ -119,6 +121,26 @@ public:
 
 
   /**
+   * Solution preprocessing. This function can be used to store
+   * variables, which are needed during the assembling of energies and
+   * residuals, that cannot be computed there (e.g., GLOBAL
+   * variables). The variables must be stored inside the AnyData of
+   * the passed FEValuescache. You may want to use a WorkStream inside
+   * this function.
+   */
+  virtual void solution_preprocessing (FEValuesCache<dim,spacedim> &scratch) const;
+
+  /**
+   * This function is called inside the output_step of pi-DoMUS and
+   * defines what is stored/printed. By default it stores the solution
+   * and solution_dot in file with extension parsed in the parameter
+   * file. If you need to perform post-processing on the solution you
+   * must override this function.
+   */
+  virtual void output_solution (const unsigned int &cycle,
+                                const unsigned int &step_number) const;
+
+  /**
    * Assemble energies and residuals. To be used when computing only residual
    * quantities, i.e., the energy here is a Sacado double, while the residual
    * is a pure double.
@@ -224,6 +246,8 @@ public:
 
 protected:
 
+
+
   void build_couplings();
 
   /**
@@ -281,6 +305,8 @@ protected:
   unsigned int n_face_q_points;
 
   std::vector<Table<2,DoFTools::Coupling> > matrix_couplings;
+  mutable ParsedDataOut<dim, spacedim>            data_out;
+
 
 
 };
