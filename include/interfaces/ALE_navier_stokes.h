@@ -12,13 +12,51 @@
 
 #include "pde_system_interface.h"
 
+#include <deal.II/grid/filtered_iterator.h>
+
+#include <deal.II/base/work_stream.h>
+#include <deal.II/base/conditional_ostream.h>
+
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/packaged_operation.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#include <deal.II/base/conditional_ostream.h>
+
+////////////////////////////////////////////////////////////////////////////////
+/// Used functions:
+
+double get_double(Sdouble num)
+{
+  return num.val();
+}
+
+double get_double(double num)
+{
+  return num;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Structs and classes:
+
+template <int dim>
+struct CopyForce
+{
+  CopyForce ()
+  {};
+
+  CopyForce (const CopyForce &data)
+    :
+    local_force(data.local_force)
+  {};
+
+  // TODO: add templated dim=2
+  Tensor<1, dim, double> local_force;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// ALE Navier Stokes interface:
 
 template <int dim, int spacedim=dim, typename LAC=LATrilinos>
 class ALENavierStokes
@@ -43,6 +81,13 @@ public:
     bool compute_only_system_terms) const;
 
   void
+  assemble_local_forces(
+    const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+    FEValuesCache<dim,spacedim> &fe_cache,
+    CopyForce<dim> &data
+  )const;
+
+  void
   compute_system_operators(
     const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
     LinearOperator<LATrilinos::VectorType> &,
@@ -54,7 +99,7 @@ public:
   void
   output_solution (const unsigned int &current_cycle,
                    const unsigned int &step_number) const;
-                   
+
   void
   set_matrix_couplings(std::vector<std::string> &couplings) const;
 
@@ -70,6 +115,8 @@ public:
 private:
   mutable ParsedMappedFunctions<spacedim> nietsche;
 
+  mutable Tensor<1, dim, double> output_force;
+
   double nu;
   double rho;
 
@@ -80,7 +127,7 @@ private:
   double Amg_data_v_aggregation_threshold;
   double Amg_data_u_smoother_sweeps;
   double Amg_data_u_aggregation_threshold;
-  
+
 // mutable shared_ptr<TrilinosWrappers::PreconditionAMG> amg_A;
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> P00_preconditioner, P11_preconditioner, P22_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> P33_preconditioner;
@@ -132,17 +179,17 @@ declare_parameters (ParameterHandler &prm)
                       "AMG d - smoother sweeps", "2",
                       Patterns::Integer(0),
                       "AMG d - smoother sweeps");
-                      
+
   this->add_parameter(prm, &Amg_data_d_aggregation_threshold,
                       "AMG d - aggregation threshold", "0.02",
                       Patterns::Double(0.0),
                       "AMG d - aggregation threshold");
-                                          
+
   this->add_parameter(prm, &Amg_data_v_smoother_sweeps,
                       "AMG v - smoother sweeps", "2",
                       Patterns::Integer(0),
                       "AMG v - smoother sweeps");
-                      
+
   this->add_parameter(prm, &Amg_data_v_aggregation_threshold,
                       "AMG v - aggregation threshold", "0.02",
                       Patterns::Double(0.0),
@@ -152,7 +199,7 @@ declare_parameters (ParameterHandler &prm)
                       "AMG u - smoother sweeps", "2",
                       Patterns::Integer(0),
                       "AMG u - smoother sweeps");
-                      
+
   this->add_parameter(prm, &Amg_data_u_aggregation_threshold,
                       "AMG u - aggregation threshold", "0.02",
                       Patterns::Double(0.0),
@@ -173,95 +220,105 @@ set_matrix_couplings(std::vector<std::string> &couplings) const
   couplings[1] = "0,0,0,0; 0,0,0,0; 0,0,0,0; 0,0,0,1";
 }
 
-double get_double(Sdouble num)
-{
-  return num.val();
-}
-
-double get_double(double num)
-{
-  return num;
-}
-
 template <int dim, int spacedim, typename LAC>
 void
 ALENavierStokes<dim,spacedim,LAC>::
 solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
 {
-//   this->reinit (et, cell, fe_cache);
-// 
-// // displacement:
-//   auto &ds = fe_cache.get_values( "solution", "d", displacement, et);
-//   auto &grad_ds = fe_cache.get_gradients( "solution", "grad_d", displacement, et);
-//   auto &div_ds = fe_cache.get_divergences( "solution", "div_d", displacement, et);
-//   auto &Fs = fe_cache.get_deformation_gradients( "solution", "Fd", displacement, et);
-//   auto &ds_dot = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
-// 
-// // Displacement velocity:
-//   auto &v_ = fe_cache.get_values( "solution", "v", displacement_velocity, et);
-// 
-// // velocity:
-//   auto &us = fe_cache.get_values( "solution", "u", velocity, et);
-//   auto &grad_us = fe_cache.get_gradients( "solution", "grad_u", velocity, et);
-//   auto &div_us = fe_cache.get_divergences( "solution", "div_u", velocity, et);
-//   auto &sym_grad_us = fe_cache.get_symmetric_gradients( "solution", "u", velocity, et);
-//   auto &us_dot = fe_cache.get_values( "solution_dot", "u_dot", velocity, et);
-// 
-// // Previous time step solution:
-//   auto &u_olds = fe_cache.get_values("explicit_solution","u",velocity,dummy);
-//   auto &ds_dot_old = fe_cache.get_values("explicit_solution","d_dot",displacement,dummy);
-// 
-// 
-// // pressure:
-//   auto &ps = fe_cache.get_values( "solution", "p", pressure, et);
-// 
-// // Jacobian:
-//   auto &JxW = fe_cache.get_JxW_values();
-// 
-//   const unsigned int n_quad_points = us.size();
-// 
-//   auto &fev = fe_cache.get_current_fe_values();
-// 
-//   for (unsigned int quad=0; quad<n_quad_points; ++quad)
-//     {
-// // variables:
-// // velocity:
-//       const Tensor<1, dim, ResidualType> &u = us[quad];
-//       const ResidualType &div_u = div_us[quad];
-//       const Tensor<1, dim, ResidualType> &u_dot = us_dot[quad];
-//       const Tensor<2, dim, ResidualType> &grad_u = grad_us[quad];
-//       const Tensor <2, dim, ResidualType> &sym_grad_u = sym_grad_us[quad];
-// // displacement
-//       const Tensor<1, dim, ResidualType> &d = ds[quad];
-//       const Tensor<1, dim, ResidualType> &d_dot = ds_dot[quad];
-//       const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
-//       const ResidualType &div_d = div_ds[quad];
-// // Displacement velocity:
-//       const Tensor<1, dim, ResidualType> &v = v_[quad];
-// 
-//       const Tensor <2, dim, ResidualType> &F = Fs[quad];
-//       ResidualType J = determinant(F);
-//       const Tensor <2, dim, ResidualType> &F_inv = invert(F);
-//       const Tensor <2, dim, ResidualType> &Ft_inv = transpose(F_inv);
-// 
-// // Previous time step solution:
-//       const Tensor<1, dim, ResidualType> &u_old = u_olds[quad];
-//       const Tensor<1, dim, ResidualType> &d_dot_old = ds_dot_old[quad];
-// 
-// // pressure:
-//       const ResidualType &p = ps[quad];
-// 
-// // others:
-//       auto J_ale = J; // jacobian of ALE transformation
-// // auto div_u_ale = (J_ale * (F_inv * u) );
-//       Tensor <2, dim, ResidualType> Id;
-//       for (unsigned int i = 0; i<dim; ++i)
-//         Id[i][i] = p;
-// 
-//       ResidualType my_rho = rho;
-//       const Tensor <2, dim, ResidualType> sigma =
-//         - Id + my_rho * ( nu* sym_grad_u * F_inv + ( Ft_inv * transpose(sym_grad_u) ) ) ;
-//   }
+  Tensor<1, dim, double> global_force;
+
+  typedef
+  FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
+  CellFilter;
+
+  auto local_copy = [this, &global_force]
+                    (const CopyForce<dim> &data)
+  {
+    global_force += data.local_force;
+  };
+
+  auto local_assemble = [this]
+                        (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
+                         FEValuesCache<dim,spacedim> &scratch,
+                         CopyForce<dim> &data)
+  {
+    assemble_local_forces(cell, scratch, data);
+  };
+
+
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   this->dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   this->dof_handler->end()),
+       local_assemble,
+       local_copy,
+       fe_cache,
+       CopyForce<dim>());
+
+  auto &cache = fe_cache.get_cache();
+
+  global_force[1] = Utilities::MPI::sum(global_force[1],MPI_COMM_WORLD);
+
+  global_force *= 1/2.51327412287; // Mean
+
+  cache.template add_copy<Tensor<1, dim, double> >(global_force, "global_force");
+
+  output_force = global_force;
+}
+
+template <int dim, int spacedim, typename LAC>
+void
+ALENavierStokes<dim,spacedim, LAC>::
+assemble_local_forces(
+  const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+  FEValuesCache<dim,spacedim> &fe_cache,
+  CopyForce<dim> &data
+)const
+{
+  const FEValuesExtractors::Vector displacement(0);
+  const FEValuesExtractors::Vector displacement_velocity(dim);
+  const FEValuesExtractors::Vector velocity(2*dim);
+  const FEValuesExtractors::Scalar pressure(3*dim);
+
+  double dummy = 0.0;
+
+  for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+    {
+      unsigned int face_id = cell->face(face)->boundary_id();
+      if (cell->face(face)->at_boundary() && nietsche.acts_on_id(face_id))
+        {
+          this->reinit(dummy, cell, face, fe_cache);
+// Velocity:
+          auto &sym_grad_u_ = fe_cache.get_symmetric_gradients( "explicit_solution", "grad_u", velocity, dummy);
+          auto &p_ = fe_cache.get_values( "explicit_solution", "p", pressure, dummy);
+
+          auto &fev = fe_cache.get_current_fe_values();
+          auto &q_points = fe_cache.get_quadrature_points();
+          auto &JxW = fe_cache.get_JxW_values();
+
+          for (unsigned int q=0; q<q_points.size(); ++q)
+            {
+              const Tensor<1, dim, double> n = fev.normal_vector(q);
+
+              // velocity:
+              const Tensor <2, dim, double> &sym_grad_u = sym_grad_u_[q];
+              const double &p = p_[q];
+
+              Tensor <2, dim, double> Id;
+              for (unsigned int i = 0; i<dim; ++i)
+                Id[i][i] = 1;
+
+              const Tensor <2, dim, double> sigma =
+                - p * Id + nu * sym_grad_u;
+
+              Tensor<1, dim, double> force = sigma * n * JxW[q];
+              data.local_force[1] -= force[1]; // Minus is due to normal issue..
+
+            } // end loop over quadrature points
+          break;
+        } // endif face->at_boundary
+    } // end loop over faces
 }
 
 template<int dim, int spacedim, typename LAC>
@@ -273,7 +330,7 @@ output_solution (const unsigned int &current_cycle,
   std::stringstream suffix;
   suffix << "." << current_cycle << "." << step_number;
   this->data_out.prepare_data_output( *this->dof_handler,
-                                suffix.str());
+                                      suffix.str());
   this->data_out.add_data_vector (*this->solution, this->get_component_names());
   std::vector<std::string> sol_dot_names =
     Utilities::split_string_list(this->get_component_names());
@@ -282,10 +339,13 @@ output_solution (const unsigned int &current_cycle,
       name += "_dot";
     }
   this->data_out.add_data_vector (*this->solution_dot, print(sol_dot_names, ","));
-  
+
   this->data_out.write_data_and_clear(this->get_mapping());
-  pcout << "done" << std::endl;
-  // TODO: print force
+
+  
+  pcout << " Mean force value on the sphere (vertical value): "
+        << output_force[1]
+        << std::endl;
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -305,6 +365,9 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   ResidualType et = this->alpha;
   double dummy = 0.0;
+
+  auto &cache = fe_cache.get_cache();
+  auto &force  = cache.template get<Tensor<1, dim, double> >("global_force");
 
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
@@ -356,13 +419,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   auto v_test = fev[displacement_velocity].value(i,q);
                   auto u_test = fev[velocity].value(i,q);
 
-                  Tensor<1, dim, double> f_double;
-                  Tensor<1, dim, ResidualType> force = grad_u * n + grad_p;
-                  f_double[1] = get_double(force[1]);
+                  Tensor<1, dim, double> f;
+                  // Tensor<1, dim, ResidualType> force = grad_u * n + grad_p;
+                  f[1] = force[1];
                   residual[0][i] += (
-                                      (v_dot - f_double) * v_test
-                                      + (u-v) * u_test
-                                      + (d_dot-v) * d_test
+                                      (v_dot - f) * v_test
+                                      + (u - v) * u_test
+                                      + (d_dot - v) * d_test
                                     )*JxW[q];
                 }
             } // end loop over quadrature points
@@ -477,7 +540,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 //
               + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
 //
-              + scalar_product( J_ale * sigma * Ft_inv, grad_v )        
+              + scalar_product( J_ale * sigma * Ft_inv, grad_v )
 // divergence free constriant
               - div_u * m
 // pressure term

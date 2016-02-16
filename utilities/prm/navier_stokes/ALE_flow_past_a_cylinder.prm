@@ -3,6 +3,19 @@
 # D2K_GIT_SHORTREV=     d7c206b
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= 6bdde74
+
+subsection piDoMUS
+  set Adaptive refinement                            = true
+  set Initial global refinement                      = 2
+  set Jacobian solver tolerance                      = 1e-8
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Time stepper                                   = euler
+  set Use direct solver if available                 = true
+end
+
 subsection ALE Navier Stokes Interface
   # Physical parameters:
   set nu [Pa s]                        = .1
@@ -10,9 +23,9 @@ subsection ALE Navier Stokes Interface
 
   set AMG d - aggregation threshold    = 0.2
   set AMG d - smoother sweeps          = 2
-  set AMG u - aggregation threshold    = 0.02
+  set AMG u - aggregation threshold    = 0.2
   set AMG u - smoother sweeps          = 2
-  set AMG v - aggregation threshold    = 0.02
+  set AMG v - aggregation threshold    = 0.2
   set AMG v - smoother sweeps          = 2
 
   set Block of differential components = 1,1,1,0
@@ -26,16 +39,18 @@ subsection Dirichlet boundary conditions
   set IDs and component masks =  1=d;v;u % 3=d;v;u % 4=d;v;u
   set IDs and expressions     =   3=0;0;0;0;0;0;0 % \
                                   4=0;0;0;0;0;0;0 % \
-                                  1=0;0;0;0; t<k ? (1+y) * ( 1/k ) * t: 1; 0;0
+                                  1=0;0;0;0; (1-y)*(1+y)*max_speed * ( t<k ? ( 1/k ) * t * ( 1 + sin(phi*t + y) ) / 2: max_speed*( 1 + sin(phi*t + y) ) / 2 ); 0;0
   set Known component names   = d,d,v,v,u,u,p
-  set Used constants          = k=.2
+  set Used constants          = k=.1, phi=4*2*pi, max_speed=10
 end
+
 subsection Nietsche boundary conditions
-  set IDs and component masks = 5=d;v
+  set IDs and component masks = 5=d;v;u
   set IDs and expressions     =
   set Known component names   = d,d,v,v,u,u,p
   set Used constants          = 
 end
+
 subsection Domain
   set Grid to generate           = file
   set Input grid file name       = \
@@ -82,26 +97,4 @@ subsection Refinement
   set Order (optimize)                       = 2
   set Refinement strategy                    = fraction
   set Top fraction                           = 0.300000
-end
-subsection Time derivative of Dirichlet boundary conditions
-  set IDs and component masks = 
-  set IDs and expressions     = 
-  set Known component names   = d,d,v,v,u,u,p
-  set Used constants          = 
-end
-subsection Zero average constraints
-  set Known component names        = d,d,v,v,u,u,p
-  set Zero average on boundary     = 
-  set Zero average on whole domain = 
-end
-subsection piDoMUS
-  set Adaptive refinement                            = true
-  set Initial global refinement                      = 3
-  set Jacobian solver tolerance                      = 1e-8
-  set Maximum number of time steps                   = 10000
-  set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
-  set Print some useful informations about processes = true
-  set Time stepper                                   = euler
-  set Use direct solver if available                 = true
 end
