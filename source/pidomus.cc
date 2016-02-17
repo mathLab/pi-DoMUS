@@ -647,9 +647,9 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
 
   setup_dofs(false);
 
-  LADealII::VectorType new_sol();
-  LADealII::VectorType new_sol_dot();
-  LADealII::VectorType new_sol_expl();
+  LADealII::VectorType new_sol;
+  LADealII::VectorType new_sol_dot;
+  LADealII::VectorType new_sol_expl;
 
   std::vector<LADealII::VectorType> new_sols (3);
 
