@@ -119,6 +119,8 @@ private:
   double nu;
   double rho;
 
+  bool use_mass_matrix_for_d_dot;
+
 // AMG
   double Amg_data_d_smoother_sweeps;
   double Amg_data_d_aggregation_threshold;
@@ -178,6 +180,12 @@ declare_parameters (ParameterHandler &prm)
                       "rho [Kg m^-d]", "1.0",
                       Patterns::Double(0.0),
                       "Density");
+
+  this->add_parameter(prm, &use_mass_matrix_for_d_dot,
+                      "Use mass matrix for d_dot", "true",
+                      Patterns::Bool(),
+                      "Use d_dot mass matrix to close the system \n"
+                      "If false it uses the stifness matrix");
 
   this->add_parameter(prm, &Amg_data_d_smoother_sweeps,
                       "AMG d - smoother sweeps", "2",
@@ -563,8 +571,16 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               - p * div_v
 // Impose armonicity of d and v=d_dot
               + scalar_product( grad_d , grad_e )
-              + scalar_product( grad_v , grad_v_test )
             )*JxW[quad];
+
+          if (use_mass_matrix_for_d_dot)
+            {
+              residual[0][i] += scalar_product( v , v_test )*JxW[quad];
+            }
+          else
+            {
+              residual[0][i] += scalar_product( grad_v , grad_v_test )*JxW[quad];
+            }
 
         }
     }
@@ -682,8 +698,8 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   if (Amg_d_use_inverse_operator)
     {
       P[0][0] = inverse_operator( S[0][0],
-                                        solver_CG,
-                                        *P00_preconditioner);
+                                  solver_CG,
+                                  *P00_preconditioner);
     }
   else
     {
@@ -694,8 +710,8 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   if (Amg_v_use_inverse_operator)
     {
       P[1][1] = inverse_operator( S[1][1],
-                                        solver_CG,
-                                        *P11_preconditioner);
+                                  solver_CG,
+                                  *P11_preconditioner);
     }
   else
     {
