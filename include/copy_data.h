@@ -36,6 +36,9 @@ namespace pidomus
       local_matrices     (data.local_matrices)
     {};
 
+    ~CopyData()
+    {}
+
     std::vector<types::global_dof_index>  local_dof_indices;
     std::vector<double>                   local_residual;
     std::vector<FullMatrix<double> >      local_matrices;
