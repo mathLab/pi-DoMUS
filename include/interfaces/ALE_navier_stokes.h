@@ -46,6 +46,9 @@ struct CopyForce
   CopyForce ()
   {};
 
+  ~CopyForce ()
+  {};
+
   CopyForce (const CopyForce &data)
     :
     local_force(data.local_force)
@@ -121,6 +124,8 @@ private:
 
   bool use_mass_matrix_for_d_dot;
 
+  bool Mp_use_inverse_operator;
+
 // AMG
   double Amg_data_d_smoother_sweeps;
   double Amg_data_d_aggregation_threshold;
@@ -186,6 +191,11 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Bool(),
                       "Use d_dot mass matrix to close the system \n"
                       "If false it uses the stifness matrix");
+
+  this->add_parameter(prm, &Mp_use_inverse_operator,
+                      "Invert Mp using inverse operator", "false",
+                      Patterns::Bool(),
+                      "Invert Mp usign inverse operator");
 
   this->add_parameter(prm, &Amg_data_d_smoother_sweeps,
                       "AMG d - smoother sweeps", "2",
@@ -691,7 +701,19 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
     }
 
   auto Mp = linear_operator< TrilinosWrappers::MPI::Vector >( matrices[1]->block(3,3) );
-  auto Mp_inv = inverse_operator( Mp, solver_CG, *P33_preconditioner);
+
+  LinearOperator<BVEC> Mp_inv;
+  if (Mp_use_inverse_operator)
+    {
+      Mp_inv = inverse_operator(Mp,
+                                solver_GMRES,
+                                *P33_preconditioner);
+    }
+  else
+    {
+      Mp_inv = linear_operator<BVEC>(matrices[1]->block(3,3),
+                                     *P33_preconditioner);
+    }
 
   auto Schur_inv = nu * Mp_inv;
 
