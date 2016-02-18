@@ -51,7 +51,6 @@ struct CopyForce
     local_force(data.local_force)
   {};
 
-  // TODO: add templated dim=2
   Tensor<1, dim, double> local_force;
 };
 
@@ -123,10 +122,15 @@ private:
 // AMG
   double Amg_data_d_smoother_sweeps;
   double Amg_data_d_aggregation_threshold;
+  bool   Amg_d_use_inverse_operator;
+
   double Amg_data_v_smoother_sweeps;
   double Amg_data_v_aggregation_threshold;
+  bool   Amg_v_use_inverse_operator;
+
   double Amg_data_u_smoother_sweeps;
   double Amg_data_u_aggregation_threshold;
+  bool   Amg_u_use_inverse_operator;
 
 // mutable shared_ptr<TrilinosWrappers::PreconditionAMG> amg_A;
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> P00_preconditioner, P11_preconditioner, P22_preconditioner;
@@ -185,6 +189,11 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Double(0.0),
                       "AMG d - aggregation threshold");
 
+  this->add_parameter(prm, &Amg_d_use_inverse_operator,
+                      "AMG d - use inverse operator", "false",
+                      Patterns::Bool(),
+                      "Enable the use of inverse operator for AMG d");
+
   this->add_parameter(prm, &Amg_data_v_smoother_sweeps,
                       "AMG v - smoother sweeps", "2",
                       Patterns::Integer(0),
@@ -194,6 +203,11 @@ declare_parameters (ParameterHandler &prm)
                       "AMG v - aggregation threshold", "0.02",
                       Patterns::Double(0.0),
                       "AMG v - aggregation threshold");
+
+  this->add_parameter(prm, &Amg_v_use_inverse_operator,
+                      "AMG v - use inverse operator", "false",
+                      Patterns::Bool(),
+                      "Enable the use of inverse operator for AMG v");
 
   this->add_parameter(prm, &Amg_data_u_smoother_sweeps,
                       "AMG u - smoother sweeps", "2",
@@ -205,6 +219,10 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Double(0.0),
                       "AMG u - aggregation threshold");
 
+  this->add_parameter(prm, &Amg_u_use_inverse_operator,
+                      "AMG u - use inverse operator", "false",
+                      Patterns::Bool(),
+                      "Enable the use of inverse operator for AMG u");
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -216,7 +234,7 @@ template <int dim, int spacedim, typename LAC>
 void ALENavierStokes<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
-  couplings[0] = "1,1,1,1; 1,1,1,1; 1,1,1,1; 1,1,1,1"; // TODO: Select only not null entries
+  couplings[0] = "1,0,1,1; 0,1,0,0; 1,0,1,1; 1,0,1,0"; // TODO: Select only not null entries
   couplings[1] = "0,0,0,0; 0,0,0,0; 0,0,0,0; 0,0,0,1";
 }
 
@@ -259,8 +277,6 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
   auto &cache = fe_cache.get_cache();
 
   global_force[1] = Utilities::MPI::sum(global_force[1],MPI_COMM_WORLD);
-
-  global_force *= 1/2.51327412287; // Mean
 
   cache.template add_copy<Tensor<1, dim, double> >(global_force, "global_force");
 
@@ -342,7 +358,7 @@ output_solution (const unsigned int &current_cycle,
 
   this->data_out.write_data_and_clear(this->get_mapping());
 
-  
+
   pcout << " Mean force value on the sphere (vertical value): "
         << output_force[1]
         << std::endl;
@@ -628,11 +644,11 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   std::array<std::array<LinearOperator<TrilinosWrappers::MPI::Vector>, 4>, 4> P;
   for (unsigned int i = 0; i<4; ++i)
     for (unsigned int j = 0; j<4; ++j)
-      P[i][j] = linear_operator< TrilinosWrappers::MPI::Vector >( matrices[0]->block(i,j) );
+      P[i][j] = linear_operator<BVEC>( matrices[0]->block(i,j) );
 
   static ReductionControl solver_control_pre(5000, 1e-8);
-  static SolverCG<TrilinosWrappers::MPI::Vector> solver_CG(solver_control_pre);
-  static SolverGMRES<TrilinosWrappers::MPI::Vector> solver_GMRES(solver_control_pre);
+  static SolverCG<BVEC> solver_CG(solver_control_pre);
+  static SolverGMRES<BVEC> solver_GMRES(solver_control_pre);
 
 
 
@@ -645,21 +661,48 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   auto B = linear_operator< BVEC>(matrices[0]->block(3,2) );
   auto Bt = transpose_operator< >(B);
 
-  auto A_inv = inverse_operator( P[2][2],
-                                 solver_GMRES,
-                                 *P22_preconditioner);
+  LinearOperator<BVEC> A_inv;
+  if (Amg_v_use_inverse_operator)
+    {
+      A_inv = inverse_operator( S[2][2],
+                                solver_GMRES,
+                                *P22_preconditioner);
+    }
+  else
+    {
+      A_inv = linear_operator<BVEC>(matrices[0]->block(2,2),
+                                    *P22_preconditioner);
+    }
 
   auto Mp = linear_operator< TrilinosWrappers::MPI::Vector >( matrices[1]->block(3,3) );
   auto Mp_inv = inverse_operator( Mp, solver_CG, *P33_preconditioner);
 
   auto Schur_inv = nu * Mp_inv;
 
-  P[0][0] = inverse_operator< >( S[0][0],
-                                 solver_CG,
-                                 *P00_preconditioner);
-  P[1][1] = inverse_operator< >( S[1][1],
-                                 solver_CG,
-                                 *P11_preconditioner);
+  if (Amg_d_use_inverse_operator)
+    {
+      P[0][0] = inverse_operator( S[0][0],
+                                        solver_CG,
+                                        *P00_preconditioner);
+    }
+  else
+    {
+      P[0][0] = linear_operator<BVEC>(matrices[0]->block(0,0),
+                                      *P00_preconditioner);
+    }
+
+  if (Amg_v_use_inverse_operator)
+    {
+      P[1][1] = inverse_operator( S[1][1],
+                                        solver_CG,
+                                        *P11_preconditioner);
+    }
+  else
+    {
+      P[1][1] = linear_operator<BVEC>(matrices[0]->block(1,1),
+                                      *P11_preconditioner);
+    }
+
   P[2][2] = A_inv;
   P[2][3] = A_inv * Bt * Schur_inv;
   P[3][2] = null_operator(B);
