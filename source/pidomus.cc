@@ -734,7 +734,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       if (time_stepper == "ida")
         ida.start_ode(solution, solution_dot, max_time_iterations);
       else if (time_stepper == "euler")
-        euler.start_ode(solution);
+        euler.start_ode(solution, solution_dot);
 
       eh.error_from_exact(interface.get_mapping(), *dof_handler, distributed_solution, exact_solution);
     }
