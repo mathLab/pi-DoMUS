@@ -662,7 +662,6 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   y      = new_sols[0];
   y_dot  = new_sols[1];
   y_expl = new_sols[2];
-  distributed_explicit_solution = y_expl;
 
 }
 
@@ -689,6 +688,8 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
                                 distributed_solution_dot,
                                 distributed_explicit_solution,
                                 adaptive_refinement);
+
+  distributed_explicit_solution = explicit_solution;
 
   old_t = -std::numeric_limits<double>::max();
 }
