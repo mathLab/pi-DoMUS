@@ -72,6 +72,11 @@
 
 #include "pde_system_interface.h"
 
+#include <deal.II/grid/filtered_iterator.h>
+
+#include <deal.II/base/work_stream.h>
+#include <deal.II/base/conditional_ostream.h>
+
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/packaged_operation.h>
@@ -80,6 +85,47 @@
 
 #include <deal2lkit/parsed_preconditioner_amg.h>
 #include <deal2lkit/parsed_preconditioner_jacobi.h>
+
+namespace NSUtilities
+{
+
+////////////////////////////////////////////////////////////////////////////////
+/// Used functions:
+
+  double get_double(Sdouble num)
+  {
+    return num.val();
+  }
+
+  double get_double(double num)
+  {
+    return num;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Structs and classes:
+
+  template <int dim>
+  struct CopyForce
+  {
+    CopyForce ()
+    {};
+
+    ~CopyForce ()
+    {};
+
+    CopyForce (const CopyForce &data)
+      :
+      local_force(data.local_force)
+    {};
+
+    Tensor<1, dim, double> local_force;
+  };
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Navier Stokes interface:
 
 template <int dim, int spacedim=dim, typename LAC=LATrilinos>
 class NavierStokes
@@ -113,6 +159,22 @@ public:
   void
   set_matrix_couplings(std::vector<std::string> &couplings) const;
 
+  void
+  solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const;
+
+  void
+  output_solution (const unsigned int &current_cycle,
+                   const unsigned int &step_number) const;
+
+  virtual UpdateFlags get_face_update_flags() const
+  {
+    return (update_values |
+            update_gradients | /* this is the new entry */
+            update_quadrature_points |
+            update_normal_vectors |
+            update_JxW_values);
+  }
+
 private:
 
   /**
@@ -129,6 +191,11 @@ private:
    * Jacobi preconditioner for the pressure mass matrix.
    */
   mutable ParsedJacobiPreconditioner jac_Mp;
+
+  /**
+   * Force acting on the obstables.
+   **/
+  mutable Tensor<1, dim, double> output_force;
 
   /**
    * Enable dynamic term: \f$ \partial_t u\f$.
@@ -150,6 +217,11 @@ private:
    * Hot to handle \f$ (\nabla u)u \f$.
    */
   bool linearize_in_time;
+
+  /**
+   * Compute the force on the obstable.
+   */
+  bool compute_force;
 
   /**
   * Name of the preconditioner:
@@ -205,6 +277,10 @@ private:
    * Solver tolerance for GMRES
    */
   double GMRES_solver_tolerance;
+
+  ConditionalOStream pcout;
+
+  bool is_parallel;
 };
 
 template <int dim, int spacedim, typename LAC>
@@ -224,7 +300,10 @@ NavierStokes(bool dynamic, bool convection)
   dynamic(dynamic),
   convection(convection),
   compute_Mp(false),
-  compute_Ap(false)
+  compute_Ap(false),
+  pcout(std::cout,
+        Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0),
+  is_parallel(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 1)
 {
   this->init();
 }
@@ -242,6 +321,11 @@ declare_parameters (ParameterHandler &prm)
                       " - identity -> S^-1 = identity \n"
                       " - low-nu   -> S^-1 = rho * alpha * Ap^-1 \n"
                       " - cah-cha  -> S^-1 = nu * Mp^-1 + rho * alpha * Ap^-1 ");
+  this->add_parameter(prm, &compute_force,
+                      "Compute sigma on the obstacle", "false",
+                      Patterns::Bool(),
+                      "Compute the mean resulting force acting\n"
+                      "on the obstacle.");
   this->add_parameter(prm, &dynamic,
                       "Enable dynamic term (\\partial_t u)", "true",
                       Patterns::Bool(),
@@ -290,6 +374,128 @@ declare_parameters (ParameterHandler &prm)
 }
 
 template <int dim, int spacedim, typename LAC>
+void
+NavierStokes<dim,spacedim,LAC>::
+solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
+{
+  Tensor<1, dim, double> global_force;
+
+  typedef
+  FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
+  CellFilter;
+
+  auto local_copy = [this, &global_force]
+                    (const NSUtilities::CopyForce<dim> &data)
+  {
+    global_force += data.local_force;
+  };
+
+  auto local_assemble = [this]
+                        (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
+                         FEValuesCache<dim,spacedim> &fe_cache,
+                         NSUtilities::CopyForce<dim> &data)
+  {
+    if (compute_force && is_parallel)
+      {
+        double dummy = 0.0;
+
+        const FEValuesExtractors::Vector velocity(0);
+        const FEValuesExtractors::Scalar pressure(dim);
+
+
+        for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+          {
+            unsigned int face_id = cell->face(face)->boundary_id();
+            if (cell->face(face)->at_boundary() && ((face_id == 5 ) || (face_id ==6)) )
+              {
+                this->reinit(dummy, cell, face, fe_cache);
+// Velocity:
+                auto &sym_grad_u_ = fe_cache.get_symmetric_gradients( "explicit_solution", "grad_u", velocity, dummy);
+                auto &p_ = fe_cache.get_values( "explicit_solution", "p", pressure, dummy);
+
+                auto &fev = fe_cache.get_current_fe_values();
+                auto &q_points = fe_cache.get_quadrature_points();
+                auto &JxW = fe_cache.get_JxW_values();
+
+                for (unsigned int q=0; q<q_points.size(); ++q)
+                  {
+                    const Tensor<1, dim, double> n = fev.normal_vector(q);
+
+                    // velocity:
+                    const Tensor <2, dim, double> &sym_grad_u = sym_grad_u_[q];
+                    const double &p = p_[q];
+
+                    Tensor <2, dim, double> Id;
+                    for (unsigned int i = 0; i<dim; ++i)
+                      Id[i][i] = 1;
+
+                    const Tensor <2, dim, double> sigma =
+                      - p * Id + nu * sym_grad_u;
+
+                    Tensor<1, dim, double> force = sigma * n * JxW[q];
+                    data.local_force -= force; // Minus is due to normal issue..
+
+                  } // end loop over quadrature points
+                break;
+              } // endif face->at_boundary
+          } // end loop over faces
+      }
+  };
+
+
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   this->get_dof_handler().begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   this->get_dof_handler().end()),
+       local_assemble,
+       local_copy,
+       fe_cache,
+       NSUtilities::CopyForce<dim>());
+
+  auto &cache = fe_cache.get_cache();
+
+  global_force[0] = Utilities::MPI::sum(global_force[0],MPI_COMM_WORLD);
+  global_force[1] = Utilities::MPI::sum(global_force[1],MPI_COMM_WORLD);
+
+  cache.template add_copy<Tensor<1, dim, double> >(global_force, "global_force");
+
+  output_force = global_force;
+
+  return;
+}
+
+template<int dim, int spacedim, typename LAC>
+void
+NavierStokes<dim,spacedim,LAC>::
+output_solution (const unsigned int &current_cycle,
+                 const unsigned int &step_number) const
+{
+  std::stringstream suffix;
+  suffix << "." << current_cycle << "." << step_number;
+  this->data_out.prepare_data_output( this->get_dof_handler(),
+                                      suffix.str());
+  this->data_out.add_data_vector (this->get_locally_relevant_solution(), this->get_component_names());
+  std::vector<std::string> sol_dot_names =
+    Utilities::split_string_list(this->get_component_names());
+  for (auto &name : sol_dot_names)
+    {
+      name += "_dot";
+    }
+  this->data_out.add_data_vector (this->get_locally_relevant_solution_dot(), print(sol_dot_names, ","));
+
+  this->data_out.write_data_and_clear(this->get_mapping());
+
+  if (compute_force && is_parallel)
+    pcout << " Total force on the sphere (vertical value): "  << std::endl
+          << "     f_x = " << output_force[0] << std::endl
+          << "     f_y = " << output_force[1] << std::endl << std::endl
+          << "============================================================="
+          << std::endl << std::endl << std::endl;
+}
+
+
+template <int dim, int spacedim, typename LAC>
 void NavierStokes<dim,spacedim,LAC>::
 parse_parameters_call_back ()
 {
@@ -312,7 +518,11 @@ template <int dim, int spacedim, typename LAC>
 void NavierStokes<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
-  couplings[0] = "1,1;1,0"; // Direct solver uses block(1,0)
+  if (is_parallel)
+    couplings[0] = "1,1;0,0"; // Direct solver uses block(1,0)
+  else
+    couplings[0] = "1,1;1,0";
+
   couplings[1] = "0,0;0,1";
   couplings[2] = "0,0;0,1";
 }
@@ -438,7 +648,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           res -= p * div_v;
 
           // Incompressible constraint:
-          res -= div_u * q;
+          if (!is_parallel)
+            res -= div_u * q;
 
           residual[0][i] += res * JxW[q];
 
@@ -463,7 +674,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<LATrilinos::VectorType> &prec_op,
   LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
-  auto aplha = 0;
+  auto alpha = 0;
 
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;
@@ -477,8 +688,8 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   // SYSTEM MATRIX:
   auto A  = linear_operator<BVEC>( matrices[0]->block(0,0) );
-  auto Bt = linear_operator<BVEC>( matrices[0]->block(0,1) );
-  auto B  = transpose_operator<BVEC>( Bt );
+  auto Bt  = linear_operator<BVEC>( matrices[0]->block(0,1) );
+  auto B = transpose_operator<BVEC>( Bt );
   auto C  = B*Bt;
   auto ZeroP = null_operator(C);
 
@@ -532,11 +743,11 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   if (prec_name=="default")
     Schur_inv = (gamma + nu) * Mp_inv;
   else if (prec_name=="low-nu")
-    Schur_inv = aplha * rho * Ap_inv;
+    Schur_inv = (alpha * rho)  * Ap_inv;
   else if (prec_name=="identity")
     Schur_inv = identity_operator((C).reinit_range_vector);
-  else if (prec_name=="cha-cha")
-    Schur_inv = (gamma + nu) * Mp_inv + aplha * rho * Ap_inv;
+  else if (prec_name=="cah-cha")
+    Schur_inv = ((gamma + nu) * Mp_inv) + ((alpha * rho) * Ap_inv);
 
 
   BlockLinearOperator<VEC> M = block_operator<2, 2, VEC>({{
