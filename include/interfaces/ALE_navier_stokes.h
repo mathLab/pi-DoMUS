@@ -119,8 +119,13 @@ private:
 
   mutable Tensor<1, dim, double> output_force;
 
+// Physical parameter
   double nu;
   double rho;
+
+  double c;
+  double k;
+
 
   bool use_mass_matrix_for_d_dot;
 
@@ -185,6 +190,16 @@ declare_parameters (ParameterHandler &prm)
                       "rho [Kg m^-d]", "1.0",
                       Patterns::Double(0.0),
                       "Density");
+
+  this->add_parameter(prm, &c,
+                      "c", "0.0",
+                      Patterns::Double(0.0),
+                      "c");
+
+  this->add_parameter(prm, &k,
+                      "k", "1.0",
+                      Patterns::Double(0.0),
+                      "k");
 
   this->add_parameter(prm, &use_mass_matrix_for_d_dot,
                       "Use mass matrix for d_dot", "true",
@@ -411,6 +426,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           this->reinit(et, cell, face, fe_cache);
 
 // Displacement:
+          auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
           auto &d_dot_ = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
 // Displacement velocity:
@@ -433,6 +449,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               const Tensor<1, dim, double> n = fev.normal_vector(q);
 
 // Displacement:
+              const Tensor<1, dim, ResidualType> &d = d_[q];
+
               const Tensor<1, dim, ResidualType> &d_dot = d_dot_[q];
 
 // Displacement velocity:
@@ -457,7 +475,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   // Tensor<1, dim, ResidualType> force = grad_u * n + grad_p;
                   f[1] = force[1];
                   residual[0][i] += (
-                                      (v_dot - f) * v_test
+                                      (v_dot + c * d_dot + k * d - f) * v_test
                                       + (u - v) * u_test
                                       + (d_dot - v) * d_test
                                     )*JxW[q];

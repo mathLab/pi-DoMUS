@@ -6,18 +6,18 @@
 
 subsection piDoMUS
   set Initial global refinement                      = 3
-  set Jacobian solver tolerance                      = 1e-8
+  set Jacobian solver tolerance                      = 1e-6
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
-  set Print some useful informations about processes = true
+  set Print some useful informations about processes = false
   set Time stepper                                   = euler
   set Use direct solver if available                 = true
   
   set Adaptive refinement                            = false
   set Refine mesh during transient                   = false
   set Show timer                                     = true
-  set Threshold for solver's restart                 = 1e-2
+  set Threshold for solver's restart                 = 5e-1
 end
 
 subsection Refinement
@@ -38,7 +38,9 @@ subsection ALE Navier Stokes Interface
   # Physical parameters:
   set nu [Pa s]                        = .1
   set rho [Kg m^-d]                    = 1.0
-
+  set c                                = 0.0
+  set k                                = 0.0
+  
   set Use mass matrix for d_dot        = false
 
   set Invert Mp using inverse operator = true
@@ -49,7 +51,7 @@ subsection ALE Navier Stokes Interface
   
   set AMG u - aggregation threshold    = 10
   set AMG u - smoother sweeps          = 2
-  set AMG u - use inverse operator     = true
+  set AMG u - use inverse operator     = false
 
   set AMG v - aggregation threshold    = 1
   set AMG v - smoother sweeps          = 2
@@ -99,8 +101,8 @@ subsection Forcing terms
 end
 
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1e-8
-  set Relative error tolerance                     = 1e-6
+  set Absolute error tolerance                     = 1e-6
+  set Relative error tolerance                     = 1e-4
   
   set Final time                                   = 1
   set Initial time                                 = 0
@@ -114,10 +116,10 @@ subsection IMEX Parameters
   set Newton relaxation parameter                  = 1
   set Number of elements in backtracking sequence  = 5
 
-  set Step size                                    = 1e-2
+  set Step size                                    = 2e-1
   set Update continuously Jacobian                 = true
 
-  set Print useful informations                    = true
+  set Print useful informations                    = false
 end
 
 subsection IDA Solver Parameters
