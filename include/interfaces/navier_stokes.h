@@ -104,6 +104,7 @@ public:
   compute_system_operators(
     const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
     LinearOperator<LATrilinos::VectorType> &,
+    LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
 
   void
@@ -489,7 +490,8 @@ void
 NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   const std::vector<shared_ptr<LATrilinos::BlockMatrix>> matrices,
   LinearOperator<LATrilinos::VectorType> &system_op,
-  LinearOperator<LATrilinos::VectorType> &prec_op) const
+  LinearOperator<LATrilinos::VectorType> &prec_op,
+  LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
   auto aplha = this->alpha;
 
@@ -546,7 +548,8 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   amg_A.reset (new TrilinosWrappers::PreconditionAMG());
   amg_A->initialize (matrices[0]->block(0,0), amg_A_data);
-  auto A_inv = inverse_operator( A, solver_GMRES, *amg_A);
+  auto A_inv = linear_operator<BVEC>(matrices[0]->block(0,0), *amg_A);
+  auto A_inv_finer = inverse_operator( A, solver_GMRES, *amg_A);
 
   LinearOperator<BVEC> Schur_inv;
   LinearOperator<BVEC> Ap, Ap_inv, Mp, Mp_inv;
@@ -574,6 +577,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     }
 
   LinearOperator<BVEC> P00,P01,P10,P11;
+  LinearOperator<BVEC> P00_finer,P01_finer,P10_finer,P11_finer;
 
   if (prec_name=="default")
     Schur_inv = (gamma + nu) * Mp_inv;
@@ -592,6 +596,17 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   prec_op = block_operator<2, 2, VEC>({{
       {{ P00, P01 }} ,
       {{ P10, P11 }}
+    }
+  });
+
+  P00_finer = A_inv_finer;
+  P01_finer = A_inv_finer * Bt * Schur_inv;
+  P10_finer = null_operator(B);
+  P11_finer = -1 * Schur_inv;
+
+  prec_op_finer = block_operator<2, 2, VEC>({{
+      {{ P00_finer, P01_finer }} ,
+      {{ P10_finer, P11_finer }}
     }
   });
 }

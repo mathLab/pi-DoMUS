@@ -34,6 +34,7 @@ public:
 
   void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
                                 LinearOperator<LATrilinos::VectorType> &,
+                                LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
 private:
@@ -126,7 +127,8 @@ void
 ScalarReactionDiffusionConvection<dim,spacedim,LAC>::compute_system_operators(
   const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
   LinearOperator<LATrilinos::VectorType> &system_op,
-  LinearOperator<LATrilinos::VectorType> &prec_op) const
+  LinearOperator<LATrilinos::VectorType> &prec_op,
+  LinearOperator<LATrilinos::VectorType> &) const
 {
 
   preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());
