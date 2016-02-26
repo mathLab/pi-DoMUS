@@ -266,13 +266,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
 
-  n_matrices(interface.n_matrices),
-  eh("Error Tables", interface.get_component_names(),
-     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
-
   pgg("Domain"),
 
   pgr("Refinement"),
+
+  n_matrices(interface.n_matrices),
+
+  eh("Error Tables", interface.get_component_names(),
+     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
 
   exact_solution("Exact solution",
                  interface.n_components),

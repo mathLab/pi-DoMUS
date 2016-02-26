@@ -226,6 +226,9 @@ private:
 
   ConditionalOStream        pcout;
 
+  ParsedGridGenerator<dim, spacedim>   pgg;
+  ParsedGridRefinement  pgr;
+
   shared_ptr<parallel::distributed::Triangulation<dim, spacedim> > triangulation;
   shared_ptr<FiniteElement<dim, spacedim> >       fe;
   shared_ptr<DoFHandler<dim, spacedim> >          dof_handler;
@@ -259,8 +262,6 @@ private:
   std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
 
   ErrorHandler<1>       eh;
-  ParsedGridGenerator<dim, spacedim>   pgg;
-  ParsedGridRefinement  pgr;
 
   ParsedFunction<spacedim>        exact_solution;
 
