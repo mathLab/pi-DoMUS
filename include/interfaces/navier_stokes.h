@@ -588,6 +588,9 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   else if (prec_name=="cha-cha")
     Schur_inv = (gamma + nu) * Mp_inv + aplha * rho * Ap_inv;
 
+
+  // Preconditioner
+  //////////////////////////////
   P00 = A_inv;
   P01 = A_inv * Bt * Schur_inv;
   P10 = null_operator(B);
@@ -599,6 +602,9 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     }
   });
 
+
+  // Finer preconditioner
+  //////////////////////////////
   P00_finer = A_inv_finer;
   P01_finer = A_inv_finer * Bt * Schur_inv;
   P10_finer = null_operator(B);
