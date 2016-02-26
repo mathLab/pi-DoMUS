@@ -1031,6 +1031,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
           if (enable_finer_preconditioner && verbose)
             pcout << " --> Coarse preconditioner "
                   << std::endl;
+
           PrimitiveVectorMemory<typename LAC::VectorType> mem;
 
           SolverControl solver_control (solver_iterations,
@@ -1045,17 +1046,19 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
           tot_iteration += solver_control.last_step();
         }
-      catch (...)
+      catch (const std::exception &e)
         {
-          unsigned int solver_iterations = matrices[0]->m();
-          if ( max_iterations_finer != 0 )
-            solver_iterations = max_iterations_finer;
 
           if (enable_finer_preconditioner)
             {
+              unsigned int solver_iterations = matrices[0]->m();
+              if ( max_iterations_finer != 0 )
+                solver_iterations = max_iterations_finer;
+
               if (verbose)
                 pcout << " --> Finer preconditioner "
                       << std::endl;
+
               PrimitiveVectorMemory<typename LAC::VectorType> mem;
               SolverControl solver_control (solver_iterations,
                                             jacobian_solver_tolerance);
@@ -1069,6 +1072,11 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
               tot_iteration += solver_control.last_step();
             }
+          else
+            {
+              AssertThrow(false,ExcMessage(e.what()));
+            }
+
         }
 
       if (verbose)
