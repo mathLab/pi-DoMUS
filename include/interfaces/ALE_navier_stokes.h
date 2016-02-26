@@ -68,7 +68,7 @@ class ALENavierStokes
 
 public:
   ~ALENavierStokes () {};
-  ALENavierStokes (bool dynamic, bool convection);
+  ALENavierStokes ();
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -154,7 +154,7 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 ALENavierStokes<dim,spacedim, LAC>::
-ALENavierStokes(bool dynamic, bool convection)
+ALENavierStokes()
   :
   PDESystemInterface<dim,spacedim,ALENavierStokes<dim,spacedim,LAC>, LAC>(
     "ALE Navier Stokes Interface",
@@ -446,8 +446,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
           for (unsigned int q=0; q<q_points.size(); ++q)
             {
-              const Tensor<1, dim, double> n = fev.normal_vector(q);
-
 // Displacement:
               const Tensor<1, dim, ResidualType> &d = d_[q];
 
@@ -459,10 +457,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // Velocity:
               const Tensor<1, dim, ResidualType> &u = u_[q];
-              const Tensor<2, dim, ResidualType> &grad_u = grad_u_[q];
-
-// Pressure:
-              const Tensor<1, dim, ResidualType> &grad_p = grad_p_[q];
 
               for (unsigned int i=0; i<residual[0].size(); ++i)
                 {
@@ -472,7 +466,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   auto u_test = fev[velocity].value(i,q);
 
                   Tensor<1, dim, double> f;
-                  // Tensor<1, dim, ResidualType> force = grad_u * n + grad_p;
                   f[1] = force[1];
                   residual[0][i] += (
                                       (v_dot + c * d_dot + k * d - f) * v_test
@@ -523,16 +516,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
     {
 // variables:
 // velocity:
-      const Tensor<1, dim, ResidualType> &u = us[quad];
       const ResidualType &div_u = div_us[quad];
       const Tensor<1, dim, ResidualType> &u_dot = us_dot[quad];
       const Tensor<2, dim, ResidualType> &grad_u = grad_us[quad];
       const Tensor <2, dim, ResidualType> &sym_grad_u = sym_grad_us[quad];
 // displacement
-      const Tensor<1, dim, ResidualType> &d = ds[quad];
       const Tensor<1, dim, ResidualType> &d_dot = ds_dot[quad];
       const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
-      const ResidualType &div_d = div_ds[quad];
 // Displacement velocity:
       const Tensor<1, dim, ResidualType> &v = v_[quad];
 
@@ -543,7 +533,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // Previous time step solution:
       const Tensor<1, dim, ResidualType> &u_old = u_olds[quad];
-      const Tensor<1, dim, ResidualType> &d_dot_old = ds_dot_old[quad];
 
 // pressure:
       const ResidualType &p = ps[quad];
@@ -570,16 +559,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto u_test = fev[velocity].value(i,quad);
           auto grad_v = fev[velocity].gradient(i,quad);
           auto div_v = fev[velocity].divergence(i,quad);
-          auto sym_grad_v = fev[velocity].symmetric_gradient(i,quad);
 
 // displacement:
           auto grad_e = fev[displacement].gradient(i,quad);
-          auto e = fev[displacement].value(i,quad);
 
 // pressure:
           auto m = fev[pressure].value(i,quad);
           auto q = fev[pressure].value(i,quad);
-          auto grad_q = fev[pressure].gradient(i,quad);
 
           residual[1][i] +=
             (
