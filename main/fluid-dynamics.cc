@@ -38,8 +38,8 @@ int main (int argc, char *argv[])
     "   |_| |_|      |___/ \\___/\\_|  |_/\\___/\\____/ \n"
   );
 
-  std::string pde_name="navier_stokes";
-  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes, navier_stokes, or ALE_navier_stokes)");
+  std::string pde_name="NS";
+  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes, NS for navier stokes, or ALE for ALE navier stokes)");
 
   bool trilinos = true;
   My_CLP.setOption("trilinos","dealii", &trilinos, "select the vector type to use");
@@ -91,12 +91,12 @@ int main (int argc, char *argv[])
 
   bool stokes;
   std::string string_pde_name="";
-  if (pde_name == "navier_stokes")
+  if (pde_name == "NS")
     {
       string_pde_name = "Navier Stokes";
       stokes = false;
     }
-  else if (pde_name == "ALE_navier_stokes")
+  else if (pde_name == "ALE")
     {
       string_pde_name = "ALE Navier Stokes";
       stokes = false;
@@ -125,13 +125,13 @@ int main (int argc, char *argv[])
                       comm,
                       check_prm);
 
-      if ( pde_name == "ALE_navier_stokes" )
+      if ( pde_name == "ALE" )
         {
           if (dim==2)
             {
               if (trilinos)
                 {
-                  ALENavierStokes<2> energy(dynamic, stokes);
+                  ALENavierStokes<2> energy;
                   piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -139,7 +139,7 @@ int main (int argc, char *argv[])
                 }
               else
                 {
-                  ALENavierStokes<2,2,LADealII> energy(dynamic, stokes);
+                  ALENavierStokes<2,2,LADealII> energy;
                   piDoMUS<2,2,LADealII> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  ALENavierStokes<3> energy(dynamic, stokes);
+                  ALENavierStokes<3> energy;
                   piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -158,7 +158,7 @@ int main (int argc, char *argv[])
                 }
               else
                 {
-                  ALENavierStokes<3,3,LADealII> energy(dynamic, stokes);
+                  ALENavierStokes<3,3,LADealII> energy;
                   piDoMUS<3,3,LADealII> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
