@@ -3,6 +3,15 @@
 PRG=$PWD/programs
 CASA=$PWD
 
+if [ ! -d programs ] 
+then
+  echo "create folder $PRG"
+  mkdir $PRG
+else
+  # touch all files to avoid cache to be deleted
+  find $PRG -exec touch {} \;
+fi
+
 # astyle
 if [ ! -d $PRG/astyle ]
 then
