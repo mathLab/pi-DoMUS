@@ -1,13 +1,11 @@
 # Parameter file generated with 
 # D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     794e613
+# D2K_GIT_SHORTREV=     34e6485
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= c2570a1
+# DEAL_II_GIT_SHORTREV= b3f2eeb
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u.N % 2=u.N % 4=u.N
-  set IDs and expressions     = 0=0;0;0;0;0 %\
-                                2=0;0;0;0;0 %\
-                                4=0;0;0;0;0
+  set IDs and expressions     = 0=0;0;0;0;0 %2=0;0;0;0;0 %4=0;0;0;0;0
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
@@ -65,9 +63,21 @@ subsection Free Swelling Three Fields
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
+  set aggregation                      = 0.8
   set chi                              = 0.1
+  set coarse_type                      = Amesos-KLU
+  set elliptic                         = true
+  set high_order_elements              = true
+  set iteration c lumped               = 10
+  set iteration s                      = 10
+  set iteration s approx               = 10
   set l0                               = 1.5
-  set mu                               = -1.8e-22
+  set n_cycles                         = 2
+  set output_details                   = true
+  set smoother_overlap                 = 1
+  set smoother_sweeps                  = 2
+  set smoother_type                    = Chebyshev
+  set w_cycle                          = true
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
@@ -94,8 +104,10 @@ subsection IMEX Parameters
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 5
+  set Method used                                  = fixed_alpha
   set Newton relaxation parameter                  = 1.000000
-  set Norm used for non linear iterations          = l2
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
   set Relative error tolerance                     = 0.000000
   set Step size                                    = 0.001000
   set Update continuously Jacobian                 = true
@@ -138,6 +150,11 @@ subsection Time derivative of Dirichlet boundary conditions
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
+subsection Zero average constraints
+  set Known component names        = u,u,u,c,p
+  set Zero average on boundary     = 
+  set Zero average on whole domain = 
+end
 subsection piDoMUS
   set Adaptive refinement                            = true
   set Initial global refinement                      = 0
@@ -146,7 +163,9 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Time stepper                                   = euler
+  set Refine mesh during transient                   = false
   set Show timer                                     = false
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = euler
   set Use direct solver if available                 = true
 end

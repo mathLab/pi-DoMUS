@@ -83,7 +83,7 @@ subsection Free Swelling Three Fields
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0.5
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -130,7 +130,7 @@ end
 subsection Output Parameters
   set Files to save in run directory = 
   set Incremental run prefix         = 
-  set Output format                  = vtu
+  set Output format                  = none
   set Output partitioning            = false
   set Problem base name              = solution
   set Solution names                 = u
@@ -156,7 +156,7 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 5
+  set Initial global refinement                      = 1
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
