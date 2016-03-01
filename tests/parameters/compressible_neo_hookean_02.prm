@@ -79,7 +79,7 @@ subsection IDA Solver Parameters
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1e-6
-  set Final time                                   = 1.000000
+  set Final time                                   = 5e-2
   set Initial time                                 = 0.000000
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3

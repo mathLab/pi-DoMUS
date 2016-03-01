@@ -70,7 +70,7 @@ subsection Free Swelling Three Fields
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 1.5e-2
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -139,7 +139,7 @@ subsection Time derivative of Dirichlet boundary conditions
 end
 subsection piDoMUS
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 3
+  set Initial global refinement                      = 1
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1

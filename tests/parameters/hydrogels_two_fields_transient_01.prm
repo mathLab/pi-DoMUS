@@ -65,7 +65,7 @@ subsection Free Swelling Two Fields Transient
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0.3
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -113,7 +113,7 @@ end
 subsection Output Parameters
   set Files to save in run directory =
   set Incremental run prefix         =
-  set Output format                  = vtu
+  set Output format                  = none
   set Output partitioning            = false
   set Problem base name              = solution
   set Solution names                 = u
