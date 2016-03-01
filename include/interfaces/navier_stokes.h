@@ -588,33 +588,26 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   else if (prec_name=="cha-cha")
     Schur_inv = (gamma + nu) * Mp_inv + aplha * rho * Ap_inv;
 
+  auto I00 = identity_operator(A.reinit_domain_vector);
+  auto I11 = identity_operator(C.reinit_domain_vector);
+  auto Z10 = null_operator(B);
+
+  auto D1       = block_diagonal_operator<2, VEC>({{A_inv, I11}});
+  auto D1_finer = block_diagonal_operator<2, VEC>({{A_inv_finer, I11}});
+  auto D2 = block_diagonal_operator<2, VEC>({{I00, -1 * Schur_inv}});
+  auto T  = block_operator<2,2,VEC>({{
+      {{ I00, -1*Bt }} ,
+      {{ Z10, I11   }}
+    }
+  });
 
   // Preconditioner
   //////////////////////////////
-  P00 = A_inv;
-  P01 = A_inv * Bt * Schur_inv;
-  P10 = null_operator(B);
-  P11 = -1 * Schur_inv;
-
-  prec_op = block_operator<2, 2, VEC>({{
-      {{ P00, P01 }} ,
-      {{ P10, P11 }}
-    }
-  });
-
+  prec_op = D1 * T * D2;
 
   // Finer preconditioner
   //////////////////////////////
-  P00_finer = A_inv_finer;
-  P01_finer = A_inv_finer * Bt * Schur_inv;
-  P10_finer = null_operator(B);
-  P11_finer = -1 * Schur_inv;
-
-  prec_op_finer = block_operator<2, 2, VEC>({{
-      {{ P00_finer, P01_finer }} ,
-      {{ P10_finer, P11_finer }}
-    }
-  });
+  prec_op_finer = D1_finer * T * D2;
 }
 
 #endif
