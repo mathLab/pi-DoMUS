@@ -142,6 +142,29 @@ declare_parameters (ParameterHandler &prm)
                   "false",
                   Patterns::Bool());
 
+  add_parameter(  prm,
+                  &max_iterations,
+                  "Max iterations",
+                  "50",
+                  Patterns::Integer (0),
+                  "Maximum number of iterations for solving the Newtons's system.\n"
+                  "If this variables is 0, then the size of the matrix is used.");
+
+  add_parameter(  prm,
+                  &max_iterations_finer,
+                  "Max iterations finer prec.",
+                  "0",
+                  Patterns::Integer (0),
+                  "Maximum number of iterations for solving the Newtons's system \n"
+                  "using the finer preconditioner.\n"
+                  "If this variables is 0, then the size of the matrix is used.");
+
+  add_parameter(  prm,
+                  &enable_finer_preconditioner,
+                  "Enable finer preconditioner",
+                  "false",
+                  Patterns::Bool());
+
 }
 
 
@@ -998,24 +1021,70 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
     }
   else
     {
+      unsigned int tot_iteration = 0;
+      try
+        {
+          unsigned int solver_iterations = matrices[0]->m();
+          if ( max_iterations != 0 )
+            solver_iterations = max_iterations;
 
-      PrimitiveVectorMemory<typename LAC::VectorType> mem;
-      SolverControl solver_control (matrices[0]->m(),
-                                    jacobian_solver_tolerance);
+          if (enable_finer_preconditioner && verbose)
+            pcout << " --> Coarse preconditioner "
+                  << std::endl;
 
-      SolverFGMRES<typename LAC::VectorType>
-      solver(solver_control, mem,
-             typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+          PrimitiveVectorMemory<typename LAC::VectorType> mem;
 
-      auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
-      S_inv.vmult(dst, src);
+          SolverControl solver_control (solver_iterations,
+                                        jacobian_solver_tolerance);
+
+          SolverFGMRES<typename LAC::VectorType>
+          solver(solver_control, mem,
+                 typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+
+          auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
+          S_inv.vmult(dst, src);
+
+          tot_iteration += solver_control.last_step();
+        }
+      catch (const std::exception &e)
+        {
+
+          if (enable_finer_preconditioner)
+            {
+              unsigned int solver_iterations = matrices[0]->m();
+              if ( max_iterations_finer != 0 )
+                solver_iterations = max_iterations_finer;
+
+              if (verbose)
+                pcout << " --> Finer preconditioner "
+                      << std::endl;
+
+              PrimitiveVectorMemory<typename LAC::VectorType> mem;
+              SolverControl solver_control (solver_iterations,
+                                            jacobian_solver_tolerance);
+
+              SolverFGMRES<typename LAC::VectorType>
+              solver(solver_control, mem,
+                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(80, true));
+
+              auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op_finer);
+              S_inv.vmult(dst, src);
+
+              tot_iteration += solver_control.last_step();
+            }
+          else
+            {
+              AssertThrow(false,ExcMessage(e.what()));
+            }
+
+        }
 
       if (verbose)
         {
           if (!overwrite_iter)
             pcout << std::endl;
           pcout << " iterations:            "
-                << solver_control.last_step();
+                << tot_iteration;
           if (overwrite_iter)
             pcout << "               \r";
           else
@@ -1046,7 +1115,9 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
       auto _timer = computing_timer.scoped_timer ("Compute system operators");
 
       interface.compute_system_operators(matrices,
-                                         jacobian_op, jacobian_preconditioner_op);
+                                         jacobian_op,
+                                         jacobian_preconditioner_op,
+                                         jacobian_preconditioner_op_finer);
     }
 
   return 0;

@@ -237,6 +237,7 @@ private:
   ConstraintMatrix                          constraints_dot;
 
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
+  LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op_finer;
   LinearOperator<typename LAC::VectorType> jacobian_op;
 
   typename LAC::VectorType        solution;
@@ -327,6 +328,23 @@ private:
    */
   double kelly_threshold;
 
+  /**
+   * Maximum number of iterations for solving the Newtons's system.
+   * If this variables is 0, then the size of the matrix is used.
+   */
+  unsigned int max_iterations;
+
+  /**
+   * Maximum number of iterations for solving the Newtons's system
+   * using the finer preconditioner.  If this variables is 0, then the
+   * size of the matrix is used.
+   */
+  unsigned int max_iterations_finer;
+
+  /**
+   * use a coarse preconditioner and then a finer preconditioner
+   */
+  bool enable_finer_preconditioner;
 };
 
 #endif

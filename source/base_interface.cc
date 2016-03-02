@@ -198,6 +198,7 @@ void
 BaseInterface<dim,spacedim,LAC>::
 compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
                          LinearOperator<typename LADealII::VectorType> &,
+                         LinearOperator<typename LADealII::VectorType> &,
                          LinearOperator<typename LADealII::VectorType> &) const
 {}
 
@@ -206,6 +207,7 @@ template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
 compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+                         LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &) const
 {

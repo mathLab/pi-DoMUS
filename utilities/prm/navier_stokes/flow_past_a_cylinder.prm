@@ -39,11 +39,17 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
+
+  set Max iterations                                 = 0
+  
+  set Enable finer preconditioner                    = true
+  set Max iterations finer prec.                     = 0
+  
   set Time stepper                                   = euler
-  set Show timer                     		     = true
+  set Show timer                                     = true
   set Use direct solver if available                 = true
 end
-bv 
+
 subsection Dirichlet boundary conditions
 
   # set IDs and component masks = 1 = u % 2 = u % 4 = u
@@ -74,7 +80,7 @@ end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1.0e-8
   set Relative error tolerance                     = 1.0e-6
-  set Final time                                   = 15
+  set Final time                                   = 1
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 5
