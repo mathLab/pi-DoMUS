@@ -588,26 +588,25 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   else if (prec_name=="cha-cha")
     Schur_inv = (gamma + nu) * Mp_inv + aplha * rho * Ap_inv;
 
-  auto I00 = identity_operator(A.reinit_domain_vector);
-  auto I11 = identity_operator(C.reinit_domain_vector);
-  auto Z10 = null_operator(B);
 
-  auto D1       = block_diagonal_operator<2, VEC>({{A_inv, I11}});
-  auto D1_finer = block_diagonal_operator<2, VEC>({{A_inv_finer, I11}});
-  auto D2 = block_diagonal_operator<2, VEC>({{I00, -1 * Schur_inv}});
-  auto T  = block_operator<2,2,VEC>({{
-      {{ I00, -1*Bt }} ,
-      {{ Z10, I11   }}
+  BlockLinearOperator<VEC> M = block_operator<2, 2, VEC>({{
+      {{ null_operator(A), Bt               }},
+      {{ null_operator(B), null_operator(C) }}
     }
   });
 
   // Preconditioner
   //////////////////////////////
-  prec_op = D1 * T * D2;
+  BlockLinearOperator<VEC> diag_inv
+  = block_diagonal_operator<2, VEC>({{ A_inv, -1 * Schur_inv }});
+  prec_op = block_back_substitution(M, diag_inv);
+
 
   // Finer preconditioner
   //////////////////////////////
-  prec_op_finer = D1_finer * T * D2;
+  BlockLinearOperator<VEC> diag_inv_finer
+  = block_diagonal_operator<2, VEC>({{ A_inv_finer, -1 * Schur_inv }});
+  prec_op_finer = block_back_substitution(M, diag_inv_finer);
 }
 
 #endif
