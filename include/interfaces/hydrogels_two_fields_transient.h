@@ -95,7 +95,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        std::vector<std::vector<ResidualType> > &residuals,
                        bool compute_only_system_terms) const
 {
-  EnergyType alpha = this->alpha;
+  EnergyType alpha = 0;
 
   this->reinit(alpha, cell, fe_cache);
 

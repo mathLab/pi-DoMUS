@@ -300,9 +300,9 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
 
   WorkStream::
   run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   this->dof_handler->begin_active()),
+                   this->get_dof_handler().begin_active()),
        CellFilter (IteratorFilters::LocallyOwnedCell(),
-                   this->dof_handler->end()),
+                   this->get_dof_handler().end()),
        local_assemble,
        local_copy,
        fe_cache,
@@ -379,16 +379,18 @@ output_solution (const unsigned int &current_cycle,
 {
   std::stringstream suffix;
   suffix << "." << current_cycle << "." << step_number;
-  this->data_out.prepare_data_output( *this->dof_handler,
+  this->data_out.prepare_data_output( this->get_dof_handler(),
                                       suffix.str());
-  this->data_out.add_data_vector (*this->solution, this->get_component_names());
+  this->data_out.add_data_vector (this->get_locally_relevant_solution(),
+                                  this->get_component_names());
   std::vector<std::string> sol_dot_names =
     Utilities::split_string_list(this->get_component_names());
   for (auto &name : sol_dot_names)
     {
       name += "_dot";
     }
-  this->data_out.add_data_vector (*this->solution_dot, print(sol_dot_names, ","));
+  this->data_out.add_data_vector (this->get_locally_relevant_solution_dot(),
+                                  print(sol_dot_names, ","));
 
   this->data_out.write_data_and_clear(this->get_mapping());
 
@@ -413,7 +415,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Vector velocity(2*dim);
   const FEValuesExtractors::Scalar pressure(3*dim);
 
-  ResidualType et = this->alpha;
+  ResidualType et = 0;
   double dummy = 0.0;
 
   auto &cache = fe_cache.get_cache();
@@ -627,8 +629,8 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   std::vector<std::vector<bool>> constant_modes_v;
   FEValuesExtractors::Vector d_velocity_components(dim);
   DoFTools::extract_constant_modes (
-    *this->dof_handler,
-    this->dof_handler->get_fe().component_mask(d_velocity_components),
+    this->get_dof_handler(),
+    this->get_dof_handler().get_fe().component_mask(d_velocity_components),
     constant_modes_v);
   Amg_data_v.constant_modes = constant_modes_v;
   Amg_data_v.elliptic = true;
@@ -641,8 +643,8 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   std::vector<std::vector<bool>> constant_modes_u;
   FEValuesExtractors::Vector velocity_components(2*dim);
   DoFTools::extract_constant_modes (
-    *this->dof_handler,
-    this->dof_handler->get_fe().component_mask(velocity_components),
+    this->get_dof_handler(),
+    this->get_dof_handler().get_fe().component_mask(velocity_components),
     constant_modes_u);
   Amg_data_u.constant_modes = constant_modes_u;
   // Amg_data_u.elliptic = false;

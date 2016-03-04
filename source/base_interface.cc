@@ -325,22 +325,6 @@ BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,s
     sol_dot[i] = (0.5*alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
 }
 
-template <int dim, int spacedim, typename LAC>
-void
-BaseInterface<dim,spacedim,LAC>::initialize_data(const DoFHandler<dim,spacedim> &dof,
-                                                 const typename LAC::VectorType &solution,
-                                                 const typename LAC::VectorType &solution_dot,
-                                                 const typename LAC::VectorType &explicit_solution,
-                                                 const double t,
-                                                 const double alpha) const
-{
-  this->dof_handler = &dof;
-  this->solution = &solution;
-  this->solution_dot = &solution_dot;
-  this->explicit_solution = &explicit_solution;
-  this->alpha = alpha;
-  this->t = t;
-}
 
 template<int dim, int spacedim, typename LAC>
 void
@@ -374,15 +358,14 @@ get_cell_update_flags() const
 template<int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
-estimate_error_per_cell(const DoFHandler<dim,spacedim> &dof,
-                        const typename LAC::VectorType &solution,
-                        Vector<float> &estimated_error) const
+estimate_error_per_cell(Vector<float> &estimated_error) const
 {
+  const DoFHandler<dim,spacedim> &dof = this->get_dof_handler();
   KellyErrorEstimator<dim,spacedim>::estimate (get_mapping(),
                                                dof,
                                                QGauss <dim-1> (dof.get_fe().degree + 1),
                                                typename FunctionMap<spacedim>::type(),
-                                               solution,
+                                               this->get_locally_relevant_solution(),
                                                estimated_error,
                                                ComponentMask(),
                                                0,
@@ -404,16 +387,18 @@ output_solution (const unsigned int &current_cycle,
 {
   std::stringstream suffix;
   suffix << "." << current_cycle << "." << step_number;
-  data_out.prepare_data_output( *this->dof_handler,
+  data_out.prepare_data_output( this->get_dof_handler(),
                                 suffix.str());
-  data_out.add_data_vector (*solution, get_component_names());
+  data_out.add_data_vector (this->get_locally_relevant_solution(),
+                            get_component_names());
   std::vector<std::string> sol_dot_names =
     Utilities::split_string_list(get_component_names());
   for (auto &name : sol_dot_names)
     {
       name += "_dot";
     }
-  data_out.add_data_vector (*solution_dot, print(sol_dot_names, ","));
+  data_out.add_data_vector (this->get_locally_relevant_solution_dot(),
+                            print(sol_dot_names, ","));
 
   data_out.write_data_and_clear(get_mapping());
 

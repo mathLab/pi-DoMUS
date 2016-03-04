@@ -330,7 +330,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Vector velocity(0);
   const FEValuesExtractors::Scalar pressure(dim);
 
-  ResidualType et = this->alpha;
+  ResidualType et = 0;
   double dummy = 0.0;
   // dummy number to define the type of variables
   this->reinit (et, cell, fe_cache);
@@ -351,7 +351,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &grad_u_olds = fe_cache.get_gradients("explicit_solution", "grad_u", velocity, dummy);
 
   // Previous Jacobian step solution:
-  fe_cache.cache_local_solution_vector("prev_solution", *this->solution, dummy);
+  fe_cache.cache_local_solution_vector("prev_solution",
+                                       this->get_locally_relevant_solution(), dummy);
   auto &u_prevs = fe_cache.get_values("prev_solution", "u", velocity, dummy);
   auto &grad_u_prevs = fe_cache.get_gradients("prev_solution", "grad_u", velocity, dummy);
 
@@ -462,7 +463,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<LATrilinos::VectorType> &prec_op,
   LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
-  auto aplha = this->alpha;
+  auto aplha = 0;
 
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;
@@ -493,7 +494,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     }
   });
 
-  const DoFHandler<dim,spacedim> &dh = *this->dof_handler;
+  const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
   const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
 
   AMG_A.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);

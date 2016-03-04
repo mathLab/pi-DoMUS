@@ -55,6 +55,7 @@
 #include <locale>
 #include <string>
 #include <math.h>
+#include <cmath>
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -62,6 +63,81 @@
 
 using namespace dealii;
 using namespace deal2lkit;
+
+
+/* ------------------------ CONSTRUCTORS ------------------------ */
+
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
+                                      const BaseInterface<dim, spacedim, LAC> &interface,
+                                      const MPI_Comm &communicator)
+  :
+  ParameterAcceptor(name),
+  SundialsInterface<typename LAC::VectorType>(communicator),
+  comm(communicator),
+  interface(interface),
+  pcout (std::cout,
+         (Utilities::MPI::this_mpi_process(comm)
+          == 0)),
+
+  pgg("Domain"),
+
+  pgr("Refinement"),
+
+
+  current_time(std::numeric_limits<double>::quiet_NaN()),
+  current_alpha(std::numeric_limits<double>::quiet_NaN()),
+  current_dt(std::numeric_limits<double>::quiet_NaN()),
+  previous_time(std::numeric_limits<double>::quiet_NaN()),
+  previous_dt(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_time(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_dt(std::numeric_limits<double>::quiet_NaN()),
+
+  n_matrices(interface.n_matrices),
+
+  eh("Error Tables", interface.get_component_names(),
+     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
+
+  exact_solution("Exact solution",
+                 interface.n_components),
+  initial_solution("Initial solution",
+                   interface.n_components),
+  initial_solution_dot("Initial solution_dot",
+                       interface.n_components),
+
+  forcing_terms("Forcing terms",
+                interface.n_components,
+                interface.get_component_names(), ""),
+  neumann_bcs("Neumann boundary conditions",
+              interface.n_components,
+              interface.get_component_names(), ""),
+  dirichlet_bcs("Dirichlet boundary conditions",
+                interface.n_components,
+                interface.get_component_names(), "0=ALL"),
+  dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
+                    interface.n_components,
+                    interface.get_component_names(), ""),
+
+  zero_average("Zero average constraints",
+               interface.n_components,
+               interface.get_component_names() ),
+
+
+  ida(*this),
+  euler(*this),
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
+{
+
+  interface.initialize_simulator (*this);
+
+  for (unsigned int i=0; i<n_matrices; ++i)
+    {
+      matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+    }
+}
+
+
 
 /* ------------------------ PARAMETERS ------------------------ */
 
@@ -166,6 +242,8 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Bool());
 
 }
+
+
 
 
 template <int dim, int spacedim, typename LAC>
@@ -274,70 +352,6 @@ piDoMUS<dim, spacedim, LAC>::parse_parameters_call_back()
 }
 
 
-/* ------------------------ CONSTRUCTORS ------------------------ */
-
-template <int dim, int spacedim, typename LAC>
-piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
-                                      const BaseInterface<dim, spacedim, LAC> &interface,
-                                      const MPI_Comm &communicator)
-  :
-  ParameterAcceptor(name),
-  SundialsInterface<typename LAC::VectorType>(communicator),
-  comm(communicator),
-  interface(interface),
-  pcout (std::cout,
-         (Utilities::MPI::this_mpi_process(comm)
-          == 0)),
-
-  pgg("Domain"),
-
-  pgr("Refinement"),
-
-  n_matrices(interface.n_matrices),
-
-  eh("Error Tables", interface.get_component_names(),
-     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
-
-  exact_solution("Exact solution",
-                 interface.n_components),
-  initial_solution("Initial solution",
-                   interface.n_components),
-  initial_solution_dot("Initial solution_dot",
-                       interface.n_components),
-
-  forcing_terms("Forcing terms",
-                interface.n_components,
-                interface.get_component_names(), ""),
-  neumann_bcs("Neumann boundary conditions",
-              interface.n_components,
-              interface.get_component_names(), ""),
-  dirichlet_bcs("Dirichlet boundary conditions",
-                interface.n_components,
-                interface.get_component_names(), "0=ALL"),
-  dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
-                    interface.n_components,
-                    interface.get_component_names(), ""),
-
-  zero_average("Zero average constraints",
-               interface.n_components,
-               interface.get_component_names() ),
-
-
-  ida(*this),
-  euler(*this),
-
-  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
-
-  old_t(-std::numeric_limits<double>::max())
-{
-  for (unsigned int i=0; i<n_matrices; ++i)
-    {
-      matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
-      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
-    }
-}
-
-
 /* ------------------------ DEGREE OF FREEDOM ------------------------ */
 
 template <int dim, int spacedim, typename LAC>
@@ -413,17 +427,26 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
   initializer(solution);
   initializer(solution_dot);
   initializer(explicit_solution);
+  initializer(explicit_solution_dot);
+  initializer(previous_explicit_solution);
+  initializer(previous_explicit_solution_dot);
   if (we_are_parallel)
     {
-      initializer.ghosted(distributed_solution);
-      initializer.ghosted(distributed_solution_dot);
-      initializer.ghosted(distributed_explicit_solution);
+      initializer.ghosted(locally_relevant_solution);
+      initializer.ghosted(locally_relevant_solution_dot);
+      initializer.ghosted(locally_relevant_explicit_solution);
+      initializer.ghosted(locally_relevant_explicit_solution_dot);
+      initializer.ghosted(locally_relevant_previous_explicit_solution);
+      initializer.ghosted(locally_relevant_previous_explicit_solution_dot);
     }
   else
     {
-      initializer(distributed_solution);
-      initializer(distributed_solution_dot);
-      initializer(distributed_explicit_solution);
+      initializer(locally_relevant_solution);
+      initializer(locally_relevant_solution_dot);
+      initializer(locally_relevant_explicit_solution);
+      initializer(locally_relevant_explicit_solution_dot);
+      initializer(locally_relevant_previous_explicit_solution);
+      initializer(locally_relevant_previous_explicit_solution_dot);
     }
 
 
@@ -468,7 +491,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
         }
 
       explicit_solution = solution;
-      distributed_explicit_solution = solution;
+      locally_relevant_explicit_solution = solution;
 
     }
 }
@@ -503,6 +526,90 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
 
 
 
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::
+syncronize(const double &t,
+           const typename LAC::VectorType &solution,
+           const typename LAC::VectorType &solution_dot)
+{
+  if (std::isnan(current_time))
+    {
+      // we are at the very first time step
+      // solution = initial solution
+      // explicit solution will be zero
+      // previous explicit solution will be zero
+      current_time = t;
+      update_functions_and_constraints(t);
+      typename LAC::VectorType tmp(solution);
+      typename LAC::VectorType tmp_dot(solution_dot);
+      constraints.distribute(tmp);
+      constraints_dot.distribute(tmp_dot);
+
+      locally_relevant_solution = tmp;
+      locally_relevant_solution_dot = tmp_dot;
+    }
+  else if (current_time < t) // next temporal step
+    {
+      second_to_last_dt = previous_dt;
+      previous_dt       = current_dt;
+      current_dt        = t - current_time;
+
+      second_to_last_time = previous_time;
+      previous_time = current_time;
+      current_time = t;
+
+      previous_explicit_solution     = explicit_solution;
+      previous_explicit_solution_dot = explicit_solution_dot;
+      explicit_solution              = solution;
+      explicit_solution_dot          = solution_dot;
+
+      locally_relevant_previous_explicit_solution     = explicit_solution;
+      locally_relevant_previous_explicit_solution_dot = explicit_solution_dot;
+      locally_relevant_explicit_solution     = solution;
+      locally_relevant_explicit_solution_dot = solution_dot;
+
+      update_functions_and_constraints(t);
+      typename LAC::VectorType tmp(solution);
+      typename LAC::VectorType tmp_dot(solution_dot);
+      constraints.distribute(tmp);
+      constraints_dot.distribute(tmp_dot);
+
+      locally_relevant_solution = tmp;
+      locally_relevant_solution_dot = tmp_dot;
+    }
+  else if (current_time == t)
+    {
+      // we are calling this function in different part of the code
+      // within the same time step (e.g. during the non-linear solver)
+      typename LAC::VectorType tmp(solution);
+      typename LAC::VectorType tmp_dot(solution_dot);
+      constraints.distribute(tmp);
+      constraints_dot.distribute(tmp_dot);
+
+      locally_relevant_solution = tmp;
+      locally_relevant_solution_dot = tmp_dot;
+    }
+  else
+    {
+      // we get here when t<current_time. This may happen when we are
+      // trying to estimate the time step and we need to reduce the
+      // first guess. IDA enters here often times
+      current_time = t;
+      update_functions_and_constraints(t);
+
+      typename LAC::VectorType tmp(solution);
+      typename LAC::VectorType tmp_dot(solution_dot);
+      constraints.distribute(tmp);
+      constraints_dot.distribute(tmp_dot);
+
+      locally_relevant_solution = tmp;
+      locally_relevant_solution_dot = tmp_dot;
+    }
+
+}
+
+
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
@@ -511,36 +618,12 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
                                                      const double alpha)
 {
   auto _timer = computing_timer.scoped_timer ("Assemble matrices");
-  update_functions_and_constraints(t);
+
+  current_alpha = alpha;
+  syncronize(t,solution,solution_dot);
+
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
-
-
-  typename LAC::VectorType tmp(solution);
-  typename LAC::VectorType tmp_dot(solution_dot);
-  constraints.distribute(tmp);
-  constraints_dot.distribute(tmp_dot);
-
-  distributed_solution = tmp;
-  distributed_solution_dot = tmp_dot;
-
-  if (old_t < t)
-    {
-      explicit_solution.reinit(solution);
-      explicit_solution = solution;
-
-      distributed_explicit_solution.reinit(distributed_solution);
-      distributed_explicit_solution = distributed_solution;
-
-      old_t = t;
-    }
-
-
-  interface.initialize_data(*dof_handler,
-                            distributed_solution,
-                            distributed_solution_dot,
-                            distributed_explicit_solution,
-                            t, alpha);
 
   FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
                                         *fe, quadrature_formula,
@@ -602,21 +685,21 @@ void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LATrilinos::VectorType &y,
                               LATrilinos::VectorType &y_dot,
                               LATrilinos::VectorType &y_expl,
-                              LATrilinos::VectorType &distributed_y,
-                              LATrilinos::VectorType &distributed_y_dot,
-                              LATrilinos::VectorType &distributed_y_expl,
+                              LATrilinos::VectorType &locally_relevant_y,
+                              LATrilinos::VectorType &locally_relevant_y_dot,
+                              LATrilinos::VectorType &locally_relevant_y_expl,
                               bool adaptive_refinement)
 {
-  distributed_y = y;
-  distributed_y_dot = y_dot;
-  distributed_y_expl = y_expl;
+  locally_relevant_y = y;
+  locally_relevant_y_dot = y_dot;
+  locally_relevant_y_expl = y_expl;
 
   parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
 
   std::vector<const LATrilinos::VectorType *> old_sols (3);
-  old_sols[0] = &distributed_y;
-  old_sols[1] = &distributed_y_dot;
-  old_sols[2] = &distributed_y_expl;
+  old_sols[0] = &locally_relevant_y;
+  old_sols[1] = &locally_relevant_y_dot;
+  old_sols[2] = &locally_relevant_y_expl;
 
   triangulation->prepare_coarsening_and_refinement();
   sol_tr.prepare_for_coarsening_and_refinement (old_sols);
@@ -628,9 +711,10 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
   setup_dofs(false);
 
+
   LATrilinos::VectorType new_sol (y);
-  LATrilinos::VectorType new_sol_dot (y_dot);
-  LATrilinos::VectorType new_sol_expl (y_expl);
+  LATrilinos::VectorType new_sol_dot (y);
+  LATrilinos::VectorType new_sol_expl (y);
 
   std::vector<LATrilinos::VectorType *> new_sols (3);
   new_sols[0] = &new_sol;
@@ -642,6 +726,11 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
   y = new_sol;
   y_dot = new_sol_dot;
   y_expl = new_sol_expl;
+
+  locally_relevant_y = y;
+  locally_relevant_y_dot = y_dot;
+  locally_relevant_y_expl = y_expl;
+
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -649,9 +738,9 @@ void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LADealII::VectorType &y,
                               LADealII::VectorType &y_dot,
                               LADealII::VectorType &y_expl,
-                              LADealII::VectorType &,
-                              LADealII::VectorType &,
-                              LADealII::VectorType &,
+                              LADealII::VectorType &locally_relevant_y,
+                              LADealII::VectorType &locally_relevant_y_dot,
+                              LADealII::VectorType &locally_relevant_y_expl,
                               bool adaptive_refinement)
 {
   SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
@@ -687,6 +776,10 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   y_dot  = new_sols[1];
   y_expl = new_sols[2];
 
+  locally_relevant_y = y;
+  locally_relevant_y_dot = y_dot;
+  locally_relevant_y_expl = y_expl;
+
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -698,9 +791,7 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
     {
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
 
-      interface.estimate_error_per_cell(*dof_handler,
-                                        distributed_solution,
-                                        estimated_error_per_cell);
+      interface.estimate_error_per_cell(estimated_error_per_cell);
 
       pgr.mark_cells(estimated_error_per_cell, *triangulation);
     }
@@ -708,14 +799,14 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
   refine_and_transfer_solutions(solution,
                                 solution_dot,
                                 explicit_solution,
-                                distributed_solution,
-                                distributed_solution_dot,
-                                distributed_explicit_solution,
+                                locally_relevant_solution,
+                                locally_relevant_solution_dot,
+                                locally_relevant_explicit_solution,
                                 adaptive_refinement);
 
-  distributed_explicit_solution = explicit_solution;
+  locally_relevant_explicit_solution = explicit_solution;
 
-  old_t = -std::numeric_limits<double>::max();
+  previous_time = -std::numeric_limits<double>::max();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -761,7 +852,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       else if (time_stepper == "euler")
         euler.start_ode(solution, solution_dot);
 
-      eh.error_from_exact(interface.get_mapping(), *dof_handler, distributed_solution, exact_solution);
+      eh.error_from_exact(interface.get_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
     }
 
   eh.output_table(pcout);
@@ -780,6 +871,7 @@ shared_ptr<typename LAC::VectorType>
 piDoMUS<dim, spacedim, LAC>::create_new_vector() const
 {
   shared_ptr<typename LAC::VectorType> ret = SP(new typename LAC::VectorType(solution));
+  *ret *= 0;
   return ret;
 }
 
@@ -803,21 +895,7 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
 {
   auto _timer = computing_timer.scoped_timer ("Postprocessing");
 
-  update_functions_and_constraints(t);
-
-  typename LAC::VectorType tmp(solution);
-  typename LAC::VectorType tmp_dot(solution_dot);
-  constraints.distribute(tmp);
-  constraints_dot.distribute(tmp_dot);
-  distributed_solution = tmp;
-  distributed_solution_dot = tmp_dot;
-
-
-  interface.initialize_data(*dof_handler,
-                            distributed_solution,
-                            distributed_solution_dot,
-                            distributed_explicit_solution,
-                            t, 0.0);
+  syncronize(t,solution,solution_dot);
 
   interface.output_solution(current_cycle,
                             step_number);
@@ -841,15 +919,14 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
       auto _timer = computing_timer.scoped_timer ("Compute error estimator");
       update_functions_and_constraints(t);
 
-      typename LAC::VectorType tmp_c(solution);
-      constraints.distribute(tmp_c);
-      distributed_solution = tmp_c;
+      constraints.distribute(solution);
+      locally_relevant_solution = solution;
+      constraints_dot.distribute(solution_dot);
+      locally_relevant_solution_dot = solution_dot;
 
       Vector<float> estimated_error_per_cell (triangulation->n_active_cells());
 
-      interface.estimate_error_per_cell(*dof_handler,
-                                        distributed_solution,
-                                        estimated_error_per_cell);
+      interface.estimate_error_per_cell(estimated_error_per_cell);
 
       max_kelly = estimated_error_per_cell.linfty_norm();
       max_kelly = Utilities::MPI::max(max_kelly, comm);
@@ -867,12 +944,11 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
           refine_and_transfer_solutions(solution,
                                         solution_dot,
                                         explicit_solution,
-                                        distributed_solution,
-                                        distributed_solution_dot,
-                                        distributed_explicit_solution,
+                                        locally_relevant_solution,
+                                        locally_relevant_solution_dot,
+                                        locally_relevant_explicit_solution,
                                         adaptive_refinement);
 
-          //    old_t = -std::numeric_limits<double>::max();
 
           MPI::COMM_WORLD.Barrier();
 
@@ -899,33 +975,8 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
                                       typename LAC::VectorType &dst)
 {
   auto _timer = computing_timer.scoped_timer ("Residual");
-  update_functions_and_constraints(t);
 
-  typename LAC::VectorType tmp(solution);
-  typename LAC::VectorType tmp_dot(solution_dot);
-  constraints.distribute(tmp);
-  constraints_dot.distribute(tmp_dot);
-
-  distributed_solution = tmp;
-  distributed_solution_dot = tmp_dot;
-
-  if (old_t < t)
-    {
-      explicit_solution.reinit(solution);
-      explicit_solution = solution;
-
-      distributed_explicit_solution.reinit(distributed_solution);
-      distributed_explicit_solution = distributed_solution;
-
-      old_t = t;
-    }
-
-
-  interface.initialize_data(*dof_handler,
-                            distributed_solution,
-                            distributed_solution_dot,
-                            distributed_explicit_solution,
-                            t, 0.0);
+  syncronize(t,solution,solution_dot);
 
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
@@ -985,7 +1036,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
     {
       auto j = id.nth_index_in_set(i);
       if (constraints.is_constrained(j))
-        dst[j] = solution(j) - distributed_solution(j);
+        dst[j] = solution(j) - locally_relevant_solution(j);
     }
 
   dst.compress(VectorOperation::insert);
@@ -1093,6 +1144,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
     }
 
+
   set_constrained_dofs_to_zero(dst);
 
   return 0;
@@ -1108,6 +1160,9 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                             const double alpha)
 {
   auto _timer = computing_timer.scoped_timer ("Setup Jacobian");
+
+  current_alpha = alpha;
+  syncronize(t,solution,solution_dot);
 
   assemble_matrices(t, src_yy, src_yp, alpha);
   if (use_direct_solver == false)
