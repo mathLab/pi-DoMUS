@@ -435,11 +435,11 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto &v_dot_ = fe_cache.get_values( "solution_dot", "v_dot", displacement_velocity, et);
 
 // Velocity:
-          auto &grad_u_ = fe_cache.get_gradients("solution", "u", velocity, et);
+//          auto &grad_u_ = fe_cache.get_gradients("solution", "u", velocity, et);
           auto &u_ = fe_cache.get_values("solution", "grad_u", velocity, et);
 
 // Pressure:
-          auto &grad_p_ = fe_cache.get_gradients("solution", "p", pressure, et);
+//          auto &grad_p_ = fe_cache.get_gradients("solution", "p", pressure, et);
 
           auto &fev = fe_cache.get_current_fe_values();
           auto &q_points = fe_cache.get_quadrature_points();
@@ -482,9 +482,9 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   this->reinit (et, cell, fe_cache);
 
 // displacement:
-  auto &ds = fe_cache.get_values( "solution", "d", displacement, et);
+//  auto &ds = fe_cache.get_values( "solution", "d", displacement, et);
   auto &grad_ds = fe_cache.get_gradients( "solution", "grad_d", displacement, et);
-  auto &div_ds = fe_cache.get_divergences( "solution", "div_d", displacement, et);
+//  auto &div_ds = fe_cache.get_divergences( "solution", "div_d", displacement, et);
   auto &Fs = fe_cache.get_deformation_gradients( "solution", "Fd", displacement, et);
   auto &ds_dot = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
@@ -500,7 +500,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // Previous time step solution:
   auto &u_olds = fe_cache.get_values("explicit_solution","u",velocity,dummy);
-  auto &ds_dot_old = fe_cache.get_values("explicit_solution","d_dot",displacement,dummy);
+  //  auto &ds_dot_old = fe_cache.get_values("explicit_solution","d_dot",displacement,dummy);
 
 
 // pressure:
@@ -566,7 +566,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // pressure:
           auto m = fev[pressure].value(i,quad);
-          auto q = fev[pressure].value(i,quad);
+//          auto q = fev[pressure].value(i,quad);
 
           residual[1][i] +=
             (
