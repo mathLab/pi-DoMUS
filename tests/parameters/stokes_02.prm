@@ -18,16 +18,35 @@ subsection piDoMUS<2, 2, LATrilinos>
   set Use direct solver if available                 = false
 end
 
+subsection AMG for A
+  set Aggregation threshold              = 1.5
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = false
+  set High Order Elements                = true
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = u
+  set w-cycle                            = false
+end
+
+subsection AMG for Ap
+  set Aggregation threshold              = 0.02
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = p
+  set w-cycle                            = false
+end
+
 subsection Navier Stokes Interface
-  set A - Amg Aggregation Threshold        = 1.5
-  set A - Amg Elliptic                     = false
-  set A - Amg High Order Elements          = true
-  set A - Amg Smoother Sweeps              = 2
-
-  set Ap - Amg Aggregation Threshold       = 0.02
-  set Ap - Amg Elliptic                    = true
-  set Ap - Amg Smoother Sweeps             = 2
-
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
 
