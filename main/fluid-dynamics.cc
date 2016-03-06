@@ -17,7 +17,7 @@
 void print_status(  std::string name,
                     std::string prm_file,
                     int dim,
-                    int spacedim,
+                    // int spacedim,
                     int n_threads,
                     const MPI_Comm &comm,
                     bool check_prm);
@@ -47,8 +47,8 @@ int main (int argc, char *argv[])
   bool dynamic = true;
   My_CLP.setOption("ut","static", &dynamic, "wait for a key press before starting the run");
 
-  int spacedim = 2;
-  My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
+  // int spacedim = 2;
+  // My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
 
   int dim = 2;
   My_CLP.setOption("dim", &dim, "dimension of the problem");
@@ -114,13 +114,13 @@ int main (int argc, char *argv[])
 
   My_CLP.printHelpMessage(argv[0], out);
 
-  deallog.depth_console (0);
+  // deallog.depth_console (0);
   try
     {
       print_status(   string_dynamic+" "+string_pde_name+" Equations",
                       prm_file,
                       dim,
-                      spacedim,
+                      // spacedim,
                       n_threads,
                       comm,
                       check_prm);
@@ -131,7 +131,7 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  ALENavierStokes<2> energy;
+                  ALENavierStokes<2,2> energy;
                   piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  ALENavierStokes<3> energy;
+                  ALENavierStokes<3,3> energy;
                   piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -172,7 +172,7 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  NavierStokes<2> energy(dynamic, stokes);
+                  NavierStokes<2,2> energy(dynamic, stokes);
                   piDoMUS<2,2> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -191,7 +191,7 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  NavierStokes<3> energy(dynamic, stokes);
+                  NavierStokes<3,3> energy(dynamic, stokes);
                   piDoMUS<3,3> navier_stokes_equation ("piDoMUS",energy);
                   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm");
                   ParameterAcceptor::prm.log_parameters(deallog);
@@ -241,7 +241,7 @@ int main (int argc, char *argv[])
 void print_status(  std::string name,
                     std::string prm_file,
                     int dim,
-                    int spacedim,
+                    // int spacedim,
                     int n_threads,
                     const MPI_Comm &comm,
                     bool check_prm)
@@ -266,11 +266,11 @@ void print_status(  std::string name,
       << std::endl
       << " proc.tot:  "  << numprocs
       << std::endl
-      << " spacedim:  " << spacedim
-      << std::endl
+      // << " spacedim:  " << spacedim
+      // << std::endl
       << "      dim:  " << dim
-      << std::endl
-      << "    codim:  " << spacedim-dim
+      // << std::endl
+      // << "    codim:  " << spacedim-dim
       << std::endl;
   if (check_prm)
     {
