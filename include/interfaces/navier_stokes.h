@@ -78,6 +78,9 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include <deal2lkit/parsed_preconditioner_amg.h>
+#include <deal2lkit/parsed_preconditioner_jacobi.h>
+
 template <int dim, int spacedim=dim, typename LAC=LATrilinos>
 class NavierStokes
   :
@@ -111,6 +114,22 @@ public:
   set_matrix_couplings(std::vector<std::string> &couplings) const;
 
 private:
+
+  /**
+   * AMG preconditioner for velocity-velocity matrix.
+   */
+  mutable ParsedAMGPreconditioner AMG_A;
+
+  /**
+   * AMG preconditioner for the pressure stifness matrix.
+   */
+  mutable ParsedAMGPreconditioner AMG_Ap;
+
+  /**
+   * Jacobi preconditioner for the pressure mass matrix.
+   */
+  mutable ParsedJacobiPreconditioner jac_Mp;
+
   /**
    * Enable dynamic term: \f$ \partial_t u\f$.
    */
@@ -186,45 +205,6 @@ private:
    * Solver tolerance for GMRES
    */
   double GMRES_solver_tolerance;
-
-  /**
-   * AMG smoother sweeps:
-   */
-  int amg_A_smoother_sweeps;
-
-  /**
-   * AMG aggregation threshold:
-   */
-  double amg_A_aggregation_threshold;
-
-  /**
-   * AMG elliptic:
-   */
-  bool amg_A_elliptic;
-
-  /**
-   * AMG high order elements:
-   */
-  bool amg_A_higher_order_elements;
-
-  /**
-   * AMG smoother sweeps:
-   */
-  int amg_Ap_smoother_sweeps;
-
-  /**
-   * AMG aggregation threshold:
-   */
-  double amg_Ap_aggregation_threshold;
-
-  /**
-   * AMG elliptic:
-   */
-  bool amg_Ap_elliptic;
-
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> amg_A;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> amg_Ap;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> jacobi_Mp;
 };
 
 template <int dim, int spacedim, typename LAC>
@@ -238,6 +218,9 @@ NavierStokes(bool dynamic, bool convection)
     "FESystem[FE_Q(2)^d-FE_Q(1)]",
     "u,u,p",
     "1,0"),
+  AMG_A("AMG for A"),
+  AMG_Ap("AMG for Ap"),
+  jac_Mp("Jacobi for Mp", 1.4),
   dynamic(dynamic),
   convection(convection),
   compute_Mp(false),
@@ -304,20 +287,6 @@ declare_parameters (ParameterHandler &prm)
   this->add_parameter(prm, &GMRES_solver_tolerance,
                       "GMRES Solver tolerance", "1e-8",
                       Patterns::Double(0.0));
-  this->add_parameter(prm, &amg_A_smoother_sweeps,
-                      "A - Amg Smoother Sweeps","2", Patterns::Integer(0));
-  this->add_parameter(prm, &amg_A_aggregation_threshold,
-                      "A - Amg Aggregation Threshold", "0.02", Patterns::Double(0.0));
-  this->add_parameter(prm, &amg_A_elliptic,
-                      "A - Amg Elliptic", "true", Patterns::Bool());
-  this->add_parameter(prm, &amg_A_higher_order_elements,
-                      "A - Amg High Order Elements", "true", Patterns::Bool());
-  this->add_parameter(prm, &amg_Ap_smoother_sweeps,
-                      "Ap - Amg Smoother Sweeps","2", Patterns::Integer(0));
-  this->add_parameter(prm, &amg_Ap_aggregation_threshold,
-                      "Ap - Amg Aggregation Threshold", "0.02", Patterns::Double(0.0));
-  this->add_parameter(prm, &amg_Ap_elliptic,
-                      "Ap - Amg Elliptic", "true", Patterns::Bool());
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -524,32 +493,13 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     }
   });
 
-  std::vector<std::vector<bool>> constant_modes;
-  FEValuesExtractors::Vector velocity_components(0);
-  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(velocity_components),
-                                    constant_modes);
-  TrilinosWrappers::PreconditionAMG::AdditionalData amg_A_data;
-  amg_A_data.constant_modes = constant_modes;
-  amg_A_data.elliptic = amg_A_elliptic;
-  amg_A_data.higher_order_elements = amg_A_higher_order_elements;
-  amg_A_data.smoother_sweeps = amg_A_smoother_sweeps;
-  amg_A_data.aggregation_threshold = amg_A_aggregation_threshold;
+  const DoFHandler<dim,spacedim> &dh = *this->dof_handler;
+  const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
 
-  std::vector<std::vector<bool> > constant_modes_p;
-  FEValuesExtractors::Scalar pressure_components(dim);
-  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(pressure_components),
-                                    constant_modes_p);
-  TrilinosWrappers::PreconditionAMG::AdditionalData amg_Ap_data;
-  amg_Ap_data.constant_modes = constant_modes_p;
-  amg_Ap_data.elliptic = amg_Ap_elliptic;
-  amg_Ap_data.smoother_sweeps = amg_Ap_smoother_sweeps;
-  amg_Ap_data.aggregation_threshold = amg_Ap_aggregation_threshold;
+  AMG_A.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
 
-
-  amg_A.reset (new TrilinosWrappers::PreconditionAMG());
-  amg_A->initialize (matrices[0]->block(0,0), amg_A_data);
-  auto A_inv = linear_operator<BVEC>(matrices[0]->block(0,0), *amg_A);
-  auto A_inv_finer = inverse_operator( A, solver_GMRES, *amg_A);
+  auto A_inv = linear_operator<BVEC>(matrices[0]->block(0,0), AMG_A);
+  auto A_inv_finer = inverse_operator(A, solver_GMRES, AMG_A);
 
   LinearOperator<BVEC> Schur_inv;
   LinearOperator<BVEC> Ap, Ap_inv, Mp, Mp_inv;
@@ -557,22 +507,20 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   if (compute_Mp)
     {
       Mp = linear_operator<BVEC>( matrices[1]->block(1,1) );
-      jacobi_Mp.reset (new TrilinosWrappers::PreconditionJacobi());
-      jacobi_Mp->initialize (matrices[1]->block(1,1), 1.4);
-      Mp_inv = inverse_operator( Mp, solver_CG, *jacobi_Mp);
+      jac_Mp.initialize_preconditioner<>(matrices[1]->block(1,1));
+      Mp_inv = inverse_operator( Mp, solver_CG, jac_Mp);
     }
   if (compute_Ap)
     {
-      Mp = linear_operator<BVEC>( matrices[2]->block(1,1) );
-      amg_Ap.reset (new TrilinosWrappers::PreconditionAMG());
-      amg_Ap->initialize (matrices[2]->block(1,1),  amg_Ap_data);
+      Ap = linear_operator<BVEC>( matrices[2]->block(1,1) );
+      AMG_Ap.initialize_preconditioner<dim, spacedim>(matrices[2]->block(1,1), fe, dh);
       if (invert_Ap)
         {
-          Ap_inv  = inverse_operator( Ap, solver_CG, *amg_Ap);
+          Ap_inv  = inverse_operator( Ap, solver_CG, AMG_Ap);
         }
       else
         {
-          Ap_inv = linear_operator<BVEC>(matrices[2]->block(1,1), *amg_Ap);
+          Ap_inv = linear_operator<BVEC>(matrices[2]->block(1,1), AMG_Ap);
         }
     }
 
