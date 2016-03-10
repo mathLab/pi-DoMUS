@@ -8,37 +8,18 @@
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= aaa9278
 
-subsection AMG for A
-  set Aggregation threshold              = 0.9
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = false
-  set High Order Elements                = true
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = u
-  set w-cycle                            = false
-end
-
-subsection AMG for Ap
-  set Aggregation threshold              = 0.02
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = p
-  set w-cycle                            = false
-end
-
 subsection Navier Stokes Interface
+  set A - Amg Aggregation Threshold        = 0.9
+  set A - Amg Elliptic                     = false
+  set A - Amg High Order Elements          = true
+  set A - Amg Smoother Sweeps              = 2
+  
+  set Ap - Amg Aggregation Threshold       = 0.02
+  set Ap - Amg Elliptic                    = true
+  set Ap - Amg Smoother Sweeps             = 2
+  
   set Block of differential components     = 1,0
-  set Blocking of the finite element       = u,u,p
+  set Blocking of the finite element       = u,u,u,p
   
   set CG Solver tolerance                  = 1e-10
   set GMRES Solver tolerance               = 1e-10
@@ -63,29 +44,31 @@ end
 
 subsection piDoMUS
   set Adaptive refinement                            = false
-  set Initial global refinement                      = 5
+  set Initial global refinement                      = 3
   set Jacobian solver tolerance                      = 1e-8
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Time stepper                                   = euler
-  set Show timer                     = false
+  set Show timer                                     = false
   set Use direct solver if available                 = true
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 % \
-                                1 = 0 ; 0 ; 0 % \
-                                2 = 0 ; 0 ; 0 % \
-                                3 = 1 ; 0 ; 0
-  set Known component names   = u,u,p
+  set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u % 4 = u % 5 = u
+  set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 % \
+                                1 = 0 ; 0 ; 0 ; 0 % \
+                                2 = 0 ; 0 ; 0 ; 0 % \
+                                3 = 1 ; 0 ; 0 ; 0 % \
+                                4 = 0 ; 0 ; 0 ; 0 % \
+                                5 = 0 ; 0 ; 0 ; 0
+  set Known component names   = u,u,u,p
   set Used constants          = k=.9
 end
 
 subsection Zero average constraints
-  set Known component names        = u,u,p
+  set Known component names        = u,u,u,p
   set Zero average on boundary     = 
   set Zero average on whole domain = 
 end
@@ -99,14 +82,8 @@ subsection Domain
   set Input grid file name          = 
   set Manifold descriptors          = 
   set Mesh smoothing alogrithm      = none
-  set Optional Point<spacedim> 1    = 0,0
-  set Optional Point<spacedim> 2    = 1,1
-  set Optional double 1             = 1.0
-  set Optional double 2             = 0.5
-  set Optional double 3             = 1.5
-  set Optional int 1                = 1
-  set Optional int 2                = 2
-  set Optional vector of dim int    = 1,1
+  set Optional Point<spacedim> 1    = 0, 0, 0
+  set Optional Point<spacedim> 2    = 1, 1, 1
   set Output grid file name         = 
 end
 
@@ -137,7 +114,7 @@ subsection Output Parameters
   set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = solution
+  set Problem base name              = lid_cavity_3D
   set Solution names                 = u
   set Subdivisions                   = 1
 end

@@ -216,7 +216,7 @@ NavierStokes(bool dynamic, bool convection)
     dim+1,
     3,
     "FESystem[FE_Q(2)^d-FE_Q(1)]",
-    "u,u,p",
+    (dim==3)?"u,u,u,p":"u,u,p",
     "1,0"),
   AMG_A("AMG for A"),
   AMG_Ap("AMG for Ap"),
@@ -514,6 +514,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
     {
       Ap = linear_operator<BVEC>( matrices[2]->block(1,1) );
       AMG_Ap.initialize_preconditioner<dim, spacedim>(matrices[2]->block(1,1), fe, dh);
+
       if (invert_Ap)
         {
           Ap_inv  = inverse_operator( Ap, solver_CG, AMG_Ap);
