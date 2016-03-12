@@ -2,23 +2,43 @@
 #   This parameter files solves for a navier stokes flow past a cylinder
 ################################################################################
 
-subsection Navier Stokes Interface
-  set A - Amg Aggregation Threshold        = 0.9
-  set A - Amg Elliptic                     = false
-  set A - Amg High Order Elements          = true
-  set A - Amg Smoother Sweeps              = 2
-  
-  set Ap - Amg Aggregation Threshold       = 0.02
-  set Ap - Amg Elliptic                    = true
-  set Ap - Amg Smoother Sweeps             = 2
+subsection AMG for A
+  set Aggregation threshold              = 0.9
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = false
+  set High Order Elements                = true
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection AMG for Ap
+  set Aggregation threshold              = 0.02
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
 
+subsection Navier Stokes Interface
   set CG Solver tolerance                  = 1e-10
   set GMRES Solver tolerance               = 1e-10
   
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,u,p
+  
   set Enable convection term ((\nabla u)u) = true
   set Enable dynamic term (\partial_t u)   = true
+  
   set Non linear term                      = linear
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
   set Linearize using time                 = true
@@ -28,14 +48,13 @@ subsection Navier Stokes Interface
   set Invert Ap using inverse_operator     = false
   set Invert Mp using inverse_operator     = true
   
-  set div-grad stabilization parameter     = 0.0
   set nu [Pa s]                            = 0.025
   set rho [kg m^3]                         = 1.0
   set div-grad stabilization parameter     = 0.005
 end
 
 subsection piDoMUS
-  set Initial global refinement                      = 3
+  set Initial global refinement                      = 0
   set Adaptive refinement                            = false
   
   set Max iterations                                 = 30
@@ -55,8 +74,10 @@ subsection piDoMUS
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 1 = u % 2 = u % 4 = u 
-  set IDs and expressions     = 1 = (1-y^2) * z * (2-z) * ( t<1/k ? t*k : 1 ) ;0;0;0  % 2=0;0;0;0 % 4=0;0;0;0 #
+  set IDs and component masks = 1 = u % 3 = u % 4 = u 
+  set IDs and expressions     = 1 = (1-y^2) * z * (2-z) * ( t<1/k ? t*k : 1 ) ;0;0;0  %\
+                                3 = 0;0;0;0 %\
+                                4 = 0;0;0;0 
   set Known component names   = u,u,u,p
   set Used constants          = k=1
 end
@@ -65,6 +86,9 @@ subsection Domain
   set Grid to generate           = file
   set Input grid file name       = ../utilities/grids/3D/hyper_rectangle_with_cylinder_hole.ucd
   set Colorize                   = true
+  set Manifold descriptors       = 4=HyperBallBoundary
+  set Optional Point<spacedim> 1 = 0,0,0
+  set Optional double 1          = 1.5
 end
 
 subsection IMEX Parameters
@@ -81,7 +105,7 @@ subsection IMEX Parameters
   
   set Newton relaxation parameter                  = 1
 
-  set Step size                                    = 1.0e-3
+  set Step size                                    = 1.0e-2
   set Update continuously Jacobian                 = true
 end
 
