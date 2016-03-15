@@ -94,7 +94,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        std::vector<std::vector<ResidualType> > &residuals,
                        bool compute_only_system_terms) const
 {
-  EnergyType alpha = this->alpha;
+  EnergyType alpha = 0;
 
   this->reinit(alpha, cell, fe_cache);
 
@@ -132,11 +132,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       auto &F_res = Fs_res[q];
       const Tensor<2,dim,ResidualType> F_star = J.val()*transpose(invert(F_res));
-
       for (unsigned int i=0; i<residuals[0].size(); ++i)
         {
           auto grad_v = fev[displacement].gradient(i,q);
-          residuals[0][i] += (mu0/Omega)*(this->t)*inner(F_star,grad_v)*JxW[q];
+          residuals[0][i] += (mu0/Omega)*(this->get_current_time())*inner(F_star,grad_v)*JxW[q];
         }
 
       if (!compute_only_system_terms)

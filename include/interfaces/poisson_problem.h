@@ -84,10 +84,11 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        std::vector<std::vector<ResidualType> > &local_residuals,
                        bool compute_only_system_terms) const
 {
+
   const FEValuesExtractors::Scalar s(0);
   double h = cell->diameter();
 
-  ResidualType rt = this->alpha; // dummy number to define the type of variables
+  ResidualType rt = 0; // dummy number to define the type of variables
   this->reinit (rt, cell, fe_cache);
   auto &uts = fe_cache.get_values("solution_dot", "u", s, rt);
   auto &gradus = fe_cache.get_gradients("solution", "u", s, rt);
@@ -138,7 +139,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               auto &gradu = gradusf[q];
 
               // update time for nietsche_bcs
-              nietsche.set_time(this->t);
+              nietsche.set_time(this->get_current_time());
 
               // get mapped function acting on this face_id
               Vector<double> u0(this->n_components);
@@ -161,6 +162,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
                 }
             }// end loop over quadrature points
+
 
           break;
 

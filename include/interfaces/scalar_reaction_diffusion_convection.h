@@ -77,7 +77,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 {
   const FEValuesExtractors::Scalar concentration(0);
 
-  ResidualType alpha = this->alpha;
+  ResidualType alpha = 0;
   // Initialize the various solutions, derivatives, etc with the right type for
   // alpha.
   this->reinit (alpha, cell, fe_cache);

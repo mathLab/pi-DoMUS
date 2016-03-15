@@ -76,7 +76,7 @@ void NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::energies_and_residuals(cons
     std::vector<std::vector<ResidualType> > &,
     bool compute_only_system_terms) const
 {
-  EnergyType alpha = this->alpha;
+  EnergyType alpha = 0;
   this->reinit(alpha, cell, fe_cache);
 
   const FEValuesExtractors::Vector displacement(0);
@@ -137,7 +137,8 @@ NeoHookeanTwoFieldsInterface<dim,spacedim,LAC>::compute_system_operators(
 
   std::vector<std::vector<bool> > constant_modes;
   FEValuesExtractors::Vector displacement(0);
-  DoFTools::extract_constant_modes (*this->dof_handler, this->dof_handler->get_fe().component_mask(displacement),
+  DoFTools::extract_constant_modes (this->get_dof_handler(),
+                                    this->get_dof_handler().get_fe().component_mask(displacement),
                                     constant_modes);
 
   P_preconditioner.reset  (new TrilinosWrappers::PreconditionJacobi());

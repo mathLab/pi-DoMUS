@@ -31,9 +31,9 @@ void test(piDoMUS<dim,spacedim,n_components,LAC> &pb)
 
       pb.solution += *du;
 
-      pb.distributed_solution = pb.solution;
+      pb.locally_relevant_solution = pb.solution;
 
-      pb.eh.error_from_exact(*pb.mapping, *pb.dof_handler, pb.distributed_solution, pb.exact_solution);
+      pb.eh.error_from_exact(*pb.mapping, *pb.dof_handler, pb.locally_relevant_solution, pb.exact_solution);
 
       pb.output_step(0.0, pb.solution, pb.solution_dot, 0, 0.0);
     }

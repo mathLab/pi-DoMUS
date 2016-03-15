@@ -257,7 +257,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Scalar kinetic_energy(dim+1);
   const FEValuesExtractors::Scalar turbulence_frequency(dim+2);
 
-  ResidualType et = this->alpha;
+  ResidualType et = 0;
   double dummy = 0.0;
   // dummy number to define the type of variables
   this->reinit (et, cell, fe_cache);
@@ -497,7 +497,7 @@ KOmega<dim,spacedim,LAC>::compute_system_operators(
       P[i][i] = I[i];
     }
 
-  const DoFHandler<dim,spacedim> &dh = *this->dof_handler;
+  const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
   const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
 
   amg_A.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
@@ -507,7 +507,7 @@ KOmega<dim,spacedim,LAC>::compute_system_operators(
   jacobi_Mp.initialize_preconditioner( matrices[1]->block(1,1));
 
 
-  auto alpha = this->alpha;
+  auto alpha = this->get_alpha();
   // auto dt =  1/alpha;
 
   // Pressure Mass Matrix

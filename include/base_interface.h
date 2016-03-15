@@ -15,6 +15,7 @@
 
 #include "copy_data.h"
 #include "lac/lac_type.h"
+#include "simulator_access.h"
 
 using namespace pidomus;
 /**
@@ -23,11 +24,11 @@ using namespace pidomus;
  * *Goal*: provide a derivable interface to solve a particular PDE
  * System (time dependent, first-order, non linear).
  *
- * *Interface*: This class provides some default implementations of the
- * standard requirements for Systems of PDEs (finite element
- * definition, boundary and initial conditions, etc.) and provides an
- * unified interface to fill the local (cell-wise) contributions of
- * all matrices and residuals required for the definition of the problem.
+ * *Interface*: provide some default implementations of the standard
+ * requirements for Systems of PDEs (finite element definition,
+ * boundary and initial conditions, etc.) and provides an unified
+ * interface to fill the local (cell-wise) contributions of all
+ * matrices and residuals required for the definition of the problem.
  *
  * The underlying pi-DoMUS driver uses TBB and MPI to assemble
  * matrices and vectors, and calls the virtual methods
@@ -64,9 +65,14 @@ using namespace pidomus;
  *
  * The class PDESystemInterface is derived from BaseInterface, and implements
  * CRTP.
+ *
+ * BaseInterface derives from SimulatorAccess class, which stores a reference to
+ * the simulator (i.e. pi-DoMUS) where the specific pde system is solved.
+ * Each variable inside the simulator can be accessed with a function
+ * "get_solution()", "get_locally_relevant_solution()", "get_time()".
  */
 template <int dim,int spacedim=dim, typename LAC=LATrilinos>
-class BaseInterface : public ParameterAcceptor
+class BaseInterface : public ParameterAcceptor, public SimulatorAccess<dim,spacedim,LAC>
 {
 
 public:
@@ -75,6 +81,9 @@ public:
    * virtual destructor.
    */
   virtual ~BaseInterface() {};
+
+  /** @name Function needed in order to construct the interface */
+  /** @{ */
 
   /**
    * Constructor. It takes the name of the subsection within the
@@ -89,36 +98,18 @@ public:
                 const std::string &default_fe="FE_Q(1)",
                 const std::string &default_component_names="u",
                 const std::string &default_differential_components="");
-
+  /**
+   * Set the dimension of coupling consistenly with the number of
+   * components and matrices set in the constructor.  This function
+   * must be called inside the constructor of the derived class.
+   */
   void init ();
 
 
-  virtual void declare_parameters (ParameterHandler &prm);
-
   /**
-   * Return the vector @p of differential blocks
-   */
-  const std::vector<unsigned int> get_differential_blocks() const;
-
-  /**
-   * Postprocess the newly generated triangulation.
-   */
+     * Postprocess the newly generated triangulation.
+     */
   virtual void postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &tria) const;
-
-  /**
-   * Initialize all data required for the system
-   *
-   * This function is used to initialize the internal variables
-   * according to the given arguments, which are @p dof_handler, @p solution,
-   * @p solution_dot, @p explicit_solution, @p t and @p alpha.
-   */
-  virtual void initialize_data(const DoFHandler<dim,spacedim> &dof_handler,
-                               const typename LAC::VectorType &solution,
-                               const typename LAC::VectorType &solution_dot,
-                               const typename LAC::VectorType &explicit_solution,
-                               const double t,
-                               const double alpha) const;
-
 
   /**
    * Solution preprocessing. This function can be used to store
@@ -139,6 +130,10 @@ public:
    */
   virtual void output_solution (const unsigned int &cycle,
                                 const unsigned int &step_number) const;
+
+
+  /** @name Functions dedicated to assemble system and preconditioners */
+  /** @{ */
 
   /**
    * Assemble energies and residuals. To be used when computing only residual
@@ -224,27 +219,23 @@ public:
                                 LinearOperator<typename LADealII::VectorType> &,
                                 LinearOperator<typename LADealII::VectorType> &) const;
 
-
-
-  virtual const Mapping<dim,spacedim> &get_mapping() const;
-
-  virtual UpdateFlags get_face_update_flags() const;
-
-  virtual UpdateFlags get_cell_update_flags() const;
-
-  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
-
-  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, Sdouble alpha) const;
-
-
-  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, SSdouble alpha) const;
-
+  /**
+   * Call the reinit of the dealii::FEValues with the given cell, and
+   * cache the local solution, solution_dot and explicit_solution, and
+   * properly sets the independent degrees of freedom to work with
+   * Sacado.
+   */
   template<typename Number>
   void reinit(const Number &alpha,
               const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
               FEValuesCache<dim,spacedim> &fe_cache) const;
 
-
+  /**
+   * Call the reinit of the dealii::FEFaceValues with the given cell,
+   * and cache the local solution, solution_dot and explicit_solution,
+   * and properly sets the independent degrees of freedom to work with
+   * Sacado.
+   */
   template<typename Number>
   void reinit(const Number &alpha,
               const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -252,25 +243,105 @@ public:
               FEValuesCache<dim,spacedim> &fe_cache) const;
 
 
+  /** @} */
 
+
+  /** @name Functions dedicated to set properties of the interface */
+  /** @{ */
+
+  /**
+   * Declare parameters.
+   */
+  virtual void declare_parameters (ParameterHandler &prm);
+
+  /**
+   * Return the vector @p of differential blocks.
+   */
+  const std::vector<unsigned int> get_differential_blocks() const;
+
+  /**
+   * This function is called in order to know which Mapping should be
+   * used.  By default it returns
+   * dealii::StaticMappingQ1<dim,spacedim>::mapping.
+   * If you want to use different mapping you need to overwrite this
+   * function.
+   */
+  virtual const Mapping<dim,spacedim> &get_mapping() const;
+
+  /**
+   * This function is called in order to know what are the update flags
+   * on the face cell. By default it returns
+   * (update_values         | update_quadrature_points  |
+   *  update_normal_vectors | update_JxW_values);
+   * If you want to use different update flags you need to overwrite
+   * this function.
+   */
+  virtual UpdateFlags get_face_update_flags() const;
+
+  /**
+   * This function is called in order to know what are the update flags
+   * on the cell. By default it returns
+   * (update_values         | update_quadrature_points  |
+   *  update_gradients      | update_JxW_values);
+   * If you want to use different update flags you need to overwrite
+   * this function.
+   */
+  virtual UpdateFlags get_cell_update_flags() const;
+  /** @} */
+
+
+
+
+  /**
+   * This function is called to get the coupling of the @p i-th matrix
+   */
   const Table<2,DoFTools::Coupling> &get_matrix_coupling(const unsigned int &i) const;
-
-  const unsigned int n_components;
-  const unsigned int n_matrices;
-
-  ParsedFiniteElement<dim,spacedim> pfe;
 
   /**
    * Return the component names.
    */
   std::string get_component_names() const;
 
-  virtual void estimate_error_per_cell(const DoFHandler<dim,spacedim> &dof,
-                                       const typename LAC::VectorType &solution,
-                                       Vector<float> &estimated_error) const;
+  virtual void estimate_error_per_cell(Vector<float> &estimated_error) const;
+
+  /**
+   * Number of components
+   */
+  const unsigned int n_components;
+
+  /**
+   * Number of matrices to be assembled
+   */
+  const unsigned int n_matrices;
+
+
+  /**
+   * ParsedFiniteElement.
+   */
+  ParsedFiniteElement<dim,spacedim> pfe;
+
+
 
 protected:
 
+  /** @name Helper functions */
+  /** @{ */
+
+  /**
+   * Do nothing but is required for Sacado types.
+   */
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const;
+
+  /**
+   * Fix the "Sacado" and "non-Sacado" parts of y_dot.
+   */
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, Sdouble alpha) const;
+
+  /**
+   * Fix the "Sacado" and "non-Sacado" parts of y_dot.
+   */
+  void fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &fe_cache, SSdouble alpha) const;
+  /** @} */
 
 
   void build_couplings();
@@ -303,33 +374,12 @@ protected:
 
   std::vector<unsigned int> _diff_comp;
 
-  /**
-   * Solution vector evaluated at time t
-   */
-  mutable const typename LAC::VectorType *solution;
-
-  /**
-   * Solution vector evaluated at time t-dt
-   */
-  mutable const typename LAC::VectorType *explicit_solution;
-
-  /**
-   * Time derivative solution vector evaluated at time t
-   */
-  mutable const typename LAC::VectorType *solution_dot;
-
-  mutable const DoFHandler<dim,spacedim> *dof_handler;
-
-  /**
-   * Current time step
-   */
-  mutable double t;
-  mutable double alpha;
   unsigned int dofs_per_cell;
   unsigned int n_q_points;
   unsigned int n_face_q_points;
 
   std::vector<Table<2,DoFTools::Coupling> > matrix_couplings;
+
   mutable ParsedDataOut<dim, spacedim>            data_out;
 
 
@@ -344,11 +394,14 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
-  Number alpha = this->alpha;
+  Number alpha = this->get_alpha();
   fe_cache.reinit(cell);
-  fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+  fe_cache.cache_local_solution_vector("explicit_solution",
+                                       this->get_locally_relevant_explicit_solution(), dummy);
+  fe_cache.cache_local_solution_vector("solution",
+                                       this->get_locally_relevant_solution(), alpha);
+  fe_cache.cache_local_solution_vector("solution_dot",
+                                       this->get_locally_relevant_solution_dot(), alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
 }
 
@@ -362,11 +415,14 @@ BaseInterface<dim,spacedim,LAC>::reinit(const Number &,
                                         FEValuesCache<dim,spacedim> &fe_cache) const
 {
   double dummy=0;
-  Number alpha = this->alpha;
+  Number alpha = this->get_alpha();
   fe_cache.reinit(cell, face_no);
-  fe_cache.cache_local_solution_vector("explicit_solution", *this->explicit_solution, dummy);
-  fe_cache.cache_local_solution_vector("solution", *this->solution, alpha);
-  fe_cache.cache_local_solution_vector("solution_dot", *this->solution_dot, alpha);
+  fe_cache.cache_local_solution_vector("explicit_solution",
+                                       this->get_locally_relevant_explicit_solution(), dummy);
+  fe_cache.cache_local_solution_vector("solution",
+                                       this->get_locally_relevant_solution(), alpha);
+  fe_cache.cache_local_solution_vector("solution_dot",
+                                       this->get_locally_relevant_solution_dot(), alpha);
   this->fix_solution_dot_derivative(fe_cache, alpha);
 }
 

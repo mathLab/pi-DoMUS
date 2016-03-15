@@ -28,6 +28,8 @@
 
 #include "copy_data.h"
 #include "base_interface.h"
+#include "simulator_access.h"
+
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/parsed_grid_refinement.h>
@@ -90,7 +92,7 @@ public:
                            const unsigned int step_number,
                            const double h);
 
-  /** This function will check the behaviour of the solution. If it
+  /** Check the behaviour of the solution. If it
    * is converged or if it is becoming unstable the time integrator
    * will be stopped. If the convergence is not achived the
    * calculation will be continued. If necessary, it can also reset
@@ -136,7 +138,7 @@ public:
   virtual typename LAC::VectorType &differential_components() const;
 
   /**
-   * This function is used to get back the solution.
+   * Get back the solution.
    */
   typename LAC::VectorType &get_solution();
 
@@ -144,7 +146,7 @@ private:
 
 
   /**
-   * set time to @p t for forcing terms and boundary conditions
+   * Set time to @p t for forcing terms and boundary conditions
    */
   void update_functions_and_constraints(const double &t);
 
@@ -152,9 +154,7 @@ private:
 
 
   /**
-   * Applies Dirichlet boundary conditions
-   *
-   * This function is used to applies Dirichlet boundary conditions.
+   * Apply Dirichlet boundary conditions.
    * It takes as argument a DoF handler @p dof_handler, a
    * ParsedDirichletBCs and a constraint matrix @p constraints.
    *
@@ -164,7 +164,7 @@ private:
                             ConstraintMatrix &constraints) const;
 
   /**
-   * Applies Neumann boundary conditions
+   * Apply Neumann boundary conditions.
    *
    */
   void apply_neumann_bcs (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -173,12 +173,11 @@ private:
 
 
   /**
-   * Applies CONSERVATIVE forcing terms.
-   * This function applies the conservative forcing terms, which can be
-   * defined by expressions in the parameter file.
+   * Applies CONSERVATIVE forcing terms, which can be defined by
+   * expressions in the parameter file.
    *
-   * If the problem involves NON-conservative loads, they must be included
-   * in the residual formulation.
+   * If the problem involves NON-conservative loads, they must be
+   * included in the residual formulation.
    *
    */
   void apply_forcing_terms (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -199,18 +198,18 @@ private:
   void refine_and_transfer_solutions (LADealII::VectorType &y,
                                       LADealII::VectorType &y_dot,
                                       LADealII::VectorType &y_expl,
-                                      LADealII::VectorType &distributed_y,
-                                      LADealII::VectorType &distributed_y_dot,
-                                      LADealII::VectorType &distributed_y_expl,
+                                      LADealII::VectorType &locally_relevant_y,
+                                      LADealII::VectorType &locally_relevant_y_dot,
+                                      LADealII::VectorType &locally_relevant_y_expl,
                                       bool adaptive_refinement);
 
 
   void refine_and_transfer_solutions (LATrilinos::VectorType &y,
                                       LATrilinos::VectorType &y_dot,
                                       LATrilinos::VectorType &y_expl,
-                                      LATrilinos::VectorType &distributed_y,
-                                      LATrilinos::VectorType &distributed_y_dot,
-                                      LATrilinos::VectorType &distributed_y_expl,
+                                      LATrilinos::VectorType &locally_relevant_y,
+                                      LATrilinos::VectorType &locally_relevant_y_dot,
+                                      LATrilinos::VectorType &locally_relevant_y_expl,
                                       bool adaptive_refinement);
 
 
@@ -240,13 +239,112 @@ private:
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op_finer;
   LinearOperator<typename LAC::VectorType> jacobian_op;
 
+
+  //// current time
+
+  /**
+   * solution at current time step
+   */
   typename LAC::VectorType        solution;
+
+  /**
+   * solution_dot at current time step
+   */
   typename LAC::VectorType        solution_dot;
+
+  /**
+   * distributed solution at current time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_solution;
+
+  /**
+   * distributed solution_dot at current time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_solution_dot;
+
+  /**
+   * current time
+   */
+  double current_time;
+
+  /**
+   * current alpha
+   */
+  double current_alpha;
+
+  /**
+   * current dt, i.e. the dt used to go from t to to+dt
+   */
+  double current_dt;
+
+
+
+  //// previous time step
+
+  /**
+   * solution at previous time step
+   */
   typename LAC::VectorType        explicit_solution;
 
-  mutable typename LAC::VectorType        distributed_solution;
-  mutable typename LAC::VectorType        distributed_solution_dot;
-  mutable typename LAC::VectorType        distributed_explicit_solution;
+  /**
+   * solution_dot at previous time step
+   */
+  typename LAC::VectorType        explicit_solution_dot;
+
+  /**
+   * distributed solution at previous time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_explicit_solution;
+
+  /**
+   * distributed solution_dot at previous time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_explicit_solution_dot;
+
+  /**
+   * previous time
+   */
+  double previous_time;
+
+  /**
+   * previous time step
+   */
+  double previous_dt;
+
+
+
+  //// second-to-last time step
+
+  /**
+   * solution at second-to-last time step
+   */
+  typename LAC::VectorType        previous_explicit_solution;
+
+  /**
+   * solution_dot at second-to-last time step
+   */
+  typename LAC::VectorType        previous_explicit_solution_dot;
+
+  /**
+   * distributed solution at second-to-last time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_previous_explicit_solution;
+
+  /**
+   * distributed solution_dot at second-to-last time step
+   */
+  mutable typename LAC::VectorType        locally_relevant_previous_explicit_solution_dot;
+
+  /**
+   * second-to-last time
+   */
+  double second_to_last_time;
+
+  /**
+   * second-to-last time step
+   */
+  double second_to_last_dt;
+
 
   /**
    * Show timer statistics
@@ -313,10 +411,6 @@ private:
    */
   std::string time_stepper;
 
-  /**
-   * previous time step
-   */
-  double old_t;
 
   /**
    * refine mesh during transients
@@ -345,6 +439,29 @@ private:
    * use a coarse preconditioner and then a finer preconditioner
    */
   bool enable_finer_preconditioner;
+
+
+  /**
+   * Syncronize to time t. This function update functions and
+   * constraints to time t and udpate the explicit solutions and
+   * previous explicit solutions vectors, as well as the related
+   * variables (i.e., previous_time, previous_dt etc.)
+   */
+  void syncronize(const double &t,
+                  const typename LAC::VectorType &solution,
+                  const typename LAC::VectorType &solution_dot);
+
+  /* /\** */
+  /*  * Distribute constraints at time t. This function update the */
+  /*  * functions and constraints at time t and then distribute them. */
+  /*  *\/ */
+  /* void distribute_constraints(const double &t) */
+
+  /**
+   * SimulatoAccess accesses to all internal variables and returns a
+   * const reference to them through functions named get_variable()
+   */
+  friend class SimulatorAccess<dim,spacedim,LAC>;
 };
 
 #endif
