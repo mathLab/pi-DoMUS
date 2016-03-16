@@ -165,10 +165,10 @@ ALENavierStokes()
     "d,d,v,v,u,u,p",
     "1,1,1,0"),
   nitsche("Nitsche boundary conditions",
-           this->n_components,
-           this->get_component_names(),
-           "" /* do nothing by default */
-          ),
+          this->n_components,
+          this->get_component_names(),
+          "" /* do nothing by default */
+         ),
   pcout(std::cout,
         Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
 {
