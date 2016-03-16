@@ -53,7 +53,7 @@ public:
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
   double gamma;
-  mutable  ParsedMappedFunctions<spacedim> nietsche;
+  mutable  ParsedMappedFunctions<spacedim> nitsche;
 
 
 };
@@ -65,7 +65,7 @@ PoissonProblem():
       1,1,
       "FESystem[FE_Q(1)]",
       "u","1"),
-  nietsche("Nietsche boundary conditions",
+  nitsche("Nitsche boundary conditions",
            this->n_components,
            this->get_component_names(),
            "" /* do nothing by default */
@@ -116,13 +116,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       (void)compute_only_system_terms;
 
     }
-  /// nietsche bcs
+  /// nitsche bcs
 
   ResidualType dummy;
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
       unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary() && nietsche.acts_on_id(face_id))
+      if (cell->face(face)->at_boundary() && nitsche.acts_on_id(face_id))
         {
           this->reinit(dummy, cell, face, fe_cache);
           auto &gradusf = fe_cache.get_gradients("solution", "u", s, dummy);
@@ -138,12 +138,12 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               const Tensor<1,spacedim> n = fev.normal_vector(q);
               auto &gradu = gradusf[q];
 
-              // update time for nietsche_bcs
-              nietsche.set_time(this->get_current_time());
+              // update time for nitsche_bcs
+              nitsche.set_time(this->get_current_time());
 
               // get mapped function acting on this face_id
               Vector<double> u0(this->n_components);
-              nietsche.get_mapped_function(face_id)->vector_value(q_points[q], u0);
+              nitsche.get_mapped_function(face_id)->vector_value(q_points[q], u0);
 
               for (unsigned int i=0; i<local_residuals[0].size(); ++i)
                 {

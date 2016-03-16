@@ -116,7 +116,7 @@ public:
   }
 
 private:
-  mutable ParsedMappedFunctions<spacedim> nietsche;
+  mutable ParsedMappedFunctions<spacedim> nitsche;
 
   mutable Tensor<1, dim, double> output_force;
 
@@ -164,7 +164,7 @@ ALENavierStokes()
     "FESystem[FE_Q(1)^d-FE_Q(1)^d-FE_Q(2)^d-FE_Q(1)]",
     "d,d,v,v,u,u,p",
     "1,1,1,0"),
-  nietsche("Nietsche boundary conditions",
+  nitsche("Nitsche boundary conditions",
            this->n_components,
            this->get_component_names(),
            "" /* do nothing by default */
@@ -336,7 +336,7 @@ assemble_local_forces(
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
       unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary() && nietsche.acts_on_id(face_id))
+      if (cell->face(face)->at_boundary() && nitsche.acts_on_id(face_id))
         {
           this->reinit(dummy, cell, face, fe_cache);
 // Velocity:
@@ -424,7 +424,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
       unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary() && nietsche.acts_on_id(face_id))
+      if (cell->face(face)->at_boundary() && nitsche.acts_on_id(face_id))
         {
           this->reinit(et, cell, face, fe_cache);
 
