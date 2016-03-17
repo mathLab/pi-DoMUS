@@ -1,5 +1,5 @@
 #include "pidomus.h"
-#include "interfaces/poisson_problem.h"
+#include "interfaces/poisson_problem_nitsche.h"
 #include "tests.h"
 
 using namespace dealii;
@@ -15,9 +15,9 @@ int main (int argc, char *argv[])
   const int dim = 2;
   const int spacedim = 2;
 
-  PoissonProblem<dim,spacedim,LADealII> p;
+  PoissonProblemNitsche<dim,spacedim,LADealII> p;
   piDoMUS<dim,spacedim,LADealII> solver ("pidomus",p);
-  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/poisson_problem_04.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize(SOURCE_DIR "/parameters/poisson_nitsche_01.prm", "used_parameters.prm");
 
 
   solver.run ();

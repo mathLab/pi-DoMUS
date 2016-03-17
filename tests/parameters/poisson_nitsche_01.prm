@@ -102,7 +102,7 @@ subsection Neumann boundary conditions
   set Known component names   = u
   set Used constants          = 
 end
-subsection Nietsche boundary conditions
+subsection Nitsche boundary conditions
   set IDs and component masks = 0=u
   set IDs and expressions     = 0=(1-y)*y*sin(2*pi*(x-t))
   set Known component names   = u
@@ -113,7 +113,7 @@ subsection Output Parameters
   set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = nietsche
+  set Problem base name              = nitsche
   set Solution names                 = u
   set Subdivisions                   = 1
 end
