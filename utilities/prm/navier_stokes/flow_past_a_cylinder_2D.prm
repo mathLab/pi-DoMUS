@@ -2,34 +2,6 @@
 #   This parameter files solves for a navier stokes flow past a cylinder
 ################################################################################
 
-subsection AMG for A
-  set Aggregation threshold              = 1.8
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = false
-  set High Order Elements                = true
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = u
-  set w-cycle                            = false
-end
-
-subsection AMG for Ap
-  set Aggregation threshold              = 0.2
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = p
-  set w-cycle                            = false
-end
-
 subsection Navier Stokes Interface
 
   set CG Solver tolerance                  = 1e-10
@@ -43,41 +15,71 @@ subsection Navier Stokes Interface
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
   set Linearize using time                 = true
   
-  
   set Preconditioner                       = default
+  
   set Invert Mp using inverse_operator     = true
   set Invert Ap using inverse_operator     = true
-  set div-grad stabilization parameter     = 0.0
-  set nu [Pa s]                            = 0.25
+  set div-grad stabilization parameter     = 1.0
+  set nu [Pa s]                            = 0.00001
   set rho [kg m^3]                         = 1.0
 end
 
 subsection piDoMUS
-  set Adaptive refinement                            = true
-  set Initial global refinement                      = 4
+  set Adaptive refinement                            = false
+  set Refine mesh during transient                   = false
+
+  set Enable finer preconditioner                    = true
+  set Max iterations                                 = 0
+  set Max iterations finer prec.                     = 0
+  
+  set Initial global refinement                      = 5
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
-
-  set Max iterations                                 = 0
-  
-  set Enable finer preconditioner                    = true
-  set Max iterations finer prec.                     = 0
   
   set Time stepper                                   = euler
   set Show timer                                     = true
   set Use direct solver if available                 = true
 end
 
+subsection AMG for A
+  set Aggregation threshold              = 1
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = false
+  set High Order Elements                = true
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = u
+  set w-cycle                            = false
+end
+
+subsection AMG for Ap
+  set Aggregation threshold              = 0.02
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = p
+  set w-cycle                            = false
+end
+
 subsection Dirichlet boundary conditions
 
   # set IDs and component masks = 1 = u % 2 = u % 4 = u
   # set IDs and expressions     = 1 = 0;0;0 % 2=t<1.0?t*k*(4-y)*y:k*(4-y)*y;0;0 % 4 = 0;0;0
-  set IDs and component masks =  1= u % 5=u % 3=u % 4=u
-  set IDs and expressions     =  1= t<1.?t*k*(1-y^2):k*(1-y^2);0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
+  set IDs and component masks = 1= u % 5=u % 3=u % 4=u
+  set IDs and expressions     = 1= k * ( 1-y^2 ) * ( t<tau ? (1/tau) *t:1 );0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
+  # set IDs and expressions     = 1= 1;0;0 % 3=0;0;0 % 4=0;0;0 % 5=0;0;0
   set Known component names   = u,u,p
-  set Used constants          = k=1
+  set Used constants          = k=1, tau=0.5
 end
 
 subsection Exact solution
@@ -100,24 +102,37 @@ end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1.0e-8
   set Relative error tolerance                     = 1.0e-6
-  set Final time                                   = 1
-  set Initial time                                 = 0
-  set Intervals between outputs                    = 1
-  set Maximum number of inner nonlinear iterations = 5
-  set Maximum number of outer nonlinear iterations = 30
-  set Newton relaxation parameter                  = 1
   
-  set Step size                                    = 1.0e-1
+  set Final time                                   = 30
+  set Initial time                                 = 0
+  
+  set Intervals between outputs                    = 1
+  
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 20
+  
+  set Method used                                  = LS_backtracking
+  set Newton relaxation parameter                  = 1
+  set Number of elements in backtracking sequence  = 5
+
+  set Step size                                    = 2.0e-1
   set Update continuously Jacobian                 = true
 end
 
 subsection Output Parameters
   set Incremental run prefix          =
   set Files to save in run directory  =
-  set Output format         	      = vtu
-  set Output partitioning  	      = false
-  set Problem base name      	      = solution
-  set Solution names         	      = u
-  set Subdivisions           	      = 1
+  set Output format         	        = vtu
+  set Output partitioning  	          = false
+  set Problem base name      	        = flow_past_a_cylinder_2D
+  set Solution names         	        = u
+  set Subdivisions           	        = 1
 end
 
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 0
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end

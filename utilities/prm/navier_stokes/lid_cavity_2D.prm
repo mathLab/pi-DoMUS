@@ -1,15 +1,54 @@
 ################################################################################
 #   This parameter files solves for a navier stokes problem on a lid cavity		
 ################################################################################
- 
-# Parameter file generated with 
-# D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     9a5f1b2
-# DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= aaa9278
+
+subsection Navier Stokes Interface  
+  set Block of differential components     = 1,0
+  set Blocking of the finite element       = u,u,p
+  
+  set CG Solver tolerance                  = 1e-10
+  set GMRES Solver tolerance               = 1e-10
+  
+  set Enable convection term ((\nabla u)u) = true
+  set Enable dynamic term (\partial_t u)   = true
+  
+  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
+  
+  set Invert Ap using inverse_operator     = false
+  set Invert Mp using inverse_operator     = true
+  
+  set Linearize using time                 = false
+  
+  set Non linear term                      = linear
+  set Preconditioner                       = default
+
+  set div-grad stabilization parameter     = 5.0
+  set nu [Pa s]                            = 0.01
+  set p-q stabilization parameter          = 0.0
+
+  set rho [kg m^3]                         = 1.0
+end
+
+subsection piDoMUS
+  set Adaptive refinement                            = false
+  set Initial global refinement                      = 7
+
+  set Jacobian solver tolerance                      = 1e-8
+
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+
+  set Overwrite Newton's iterations                  = false
+  set Print some useful informations about processes = true
+
+  set Time stepper                                   = euler
+
+  set Show timer                                     = true
+  set Use direct solver if available                 = true
+end
 
 subsection AMG for A
-  set Aggregation threshold              = 0.9
+  set Aggregation threshold              = 2
   set Coarse type                        = Amesos-KLU
   set Elliptic                           = false
   set High Order Elements                = true
@@ -34,44 +73,6 @@ subsection AMG for Ap
   set Smoother type                      = Chebyshev
   set Variable related to constant modes = p
   set w-cycle                            = false
-end
-
-subsection Navier Stokes Interface
-  set Block of differential components     = 1,0
-  set Blocking of the finite element       = u,u,p
-  
-  set CG Solver tolerance                  = 1e-10
-  set GMRES Solver tolerance               = 1e-10
-  
-  set Enable convection term ((\nabla u)u) = true
-  set Enable dynamic term (\partial_t u)   = false
-  
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-  
-  set Invert Ap using inverse_operator     = false
-  set Invert Mp using inverse_operator     = true
-  
-  set Linearize using time                 = true
-  
-  set Non linear term                      = linear
-  set Preconditioner                       = default
-  set div-grad stabilization parameter     = .0975
-  set nu [Pa s]                            = 0.0025
-  set p-q stabilization parameter          = 0.0
-  set rho [kg m^3]                         = 1.0
-end
-
-subsection piDoMUS
-  set Adaptive refinement                            = false
-  set Initial global refinement                      = 5
-  set Jacobian solver tolerance                      = 1e-8
-  set Maximum number of time steps                   = 10000
-  set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = false
-  set Print some useful informations about processes = true
-  set Time stepper                                   = euler
-  set Show timer                     = false
-  set Use direct solver if available                 = true
 end
 
 subsection Dirichlet boundary conditions
@@ -115,8 +116,8 @@ subsection Error Tables
 end
 
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1.0e-8
-  set Relative error tolerance                     = 1.0e-6
+  set Absolute error tolerance                     = 1.0e-10
+  set Relative error tolerance                     = 1.0e-8
   
   set Final time                                   = 2
   set Initial time                                 = 0
@@ -126,10 +127,12 @@ subsection IMEX Parameters
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 20
   
+  set Method used                                  = LS_backtracking
   set Newton relaxation parameter                  = 1
+  set Number of elements in backtracking sequence  = 5
 
   set Step size                                    = 1.0e-1
-  set Update continuously Jacobian                 = true
+  set Update continuously Jacobian                 = false
 end
 
 subsection Output Parameters
@@ -137,7 +140,7 @@ subsection Output Parameters
   set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = lid_cavity_3D
+  set Problem base name              = lid_cavity_2D
   set Solution names                 = u
   set Subdivisions                   = 1
 end

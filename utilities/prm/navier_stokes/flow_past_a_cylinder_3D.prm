@@ -3,7 +3,7 @@
 ################################################################################
 
 subsection AMG for A
-  set Aggregation threshold              = 0.9
+  set Aggregation threshold              = 1.8
   set Coarse type                        = Amesos-KLU
   set Elliptic                           = false
   set High Order Elements                = true
@@ -45,55 +45,56 @@ subsection Navier Stokes Interface
   
   set Preconditioner                       = default
 
-  set Invert Ap using inverse_operator     = false
+  set Invert Ap using inverse_operator     = true
   set Invert Mp using inverse_operator     = true
   
-  set nu [Pa s]                            = 0.025
+  set nu [Pa s]                            = 0.001
   set rho [kg m^3]                         = 1.0
-  set div-grad stabilization parameter     = 0.005
+  set div-grad stabilization parameter     = 0.099
 end
 
 subsection piDoMUS
-  set Initial global refinement                      = 0
-  set Adaptive refinement                            = false
+  set Initial global refinement                      = 2
+  set Adaptive refinement                            = true
   
   set Max iterations                                 = 30
   set Enable finer preconditioner                    = true
   set Max iterations finer prec.                     = 30
   
-  set Jacobian solver tolerance                      = 1e-8
+  set Jacobian solver tolerance                      = 1e-5
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Refine mesh during transient                   = false
-  set Show timer                                     = false
+  set Refine mesh during transient                   = true
+  set Show timer                                     = true
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = euler
   set Use direct solver if available                 = true
 end
 
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 1 = u % 3 = u % 4 = u 
-  set IDs and expressions     = 1 = (1-y^2) * z * (2-z) * ( t<1/k ? t*k : 1 ) ;0;0;0  %\
-                                3 = 0;0;0;0 %\
+  set IDs and component masks = 1 = u % 2 = u % 4 = u 
+  set IDs and expressions     = 2 = (1-y^2) * (1-z^2) ;0;0;0  %\
+                                1 = 0;0;0;0 %\
                                 4 = 0;0;0;0 
   set Known component names   = u,u,u,p
-  set Used constants          = k=1
+  set Used constants          = k=1.0
 end
 
 subsection Domain
   set Grid to generate           = file
   set Input grid file name       = ../utilities/grids/3D/hyper_rectangle_with_cylinder_hole.ucd
-  set Colorize                   = true
-  set Manifold descriptors       = 4=HyperBallBoundary
-  set Optional Point<spacedim> 1 = 0,0,0
-  set Optional double 1          = 1.5
+  # set Colorize                   = true
+  # set Manifold descriptors       = 5=SphericalManifold
+  # set Manifold descriptors       = 4=HyperBallBoundary
+  # set Optional Point<spacedim> 1 = 0,0,0
+  # set Optional double 1          = 0.2020305089
 end
 
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1.0e-6
-  set Relative error tolerance                     = 1.0e-4
+  set Absolute error tolerance                     = 1.0e-5
+  set Relative error tolerance                     = 1.0e-3
   
   set Final time                                   = 2
   set Initial time                                 = 0
@@ -103,9 +104,11 @@ subsection IMEX Parameters
   set Maximum number of inner nonlinear iterations = 3
   set Maximum number of outer nonlinear iterations = 20
   
+  set Method used                                  = LS_backtracking
   set Newton relaxation parameter                  = 1
+  set Number of elements in backtracking sequence  = 5
 
-  set Step size                                    = 1.0e-2
+  set Step size                                    = 1.0e-3
   set Update continuously Jacobian                 = true
 end
 
@@ -114,8 +117,15 @@ subsection Output Parameters
   set Files to save in run directory  =
   set Output format         	        = vtu
   set Output partitioning  	          = false
-  set Problem base name      	        = flow_past_a_cylinder_three_d
+  set Problem base name      	        = flow_past_a_cylinder_3D
   set Solution names         	        = u
   set Subdivisions           	        = 1
 end
 
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 0
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end
