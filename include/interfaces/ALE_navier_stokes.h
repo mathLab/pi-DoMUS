@@ -23,39 +23,43 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+namespace ALEUtilities
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used functions:
 
-double get_double(Sdouble num)
-{
-  return num.val();
-}
+  double get_double(Sdouble num)
+  {
+    return num.val();
+  }
 
-double get_double(double num)
-{
-  return num;
-}
+  double get_double(double num)
+  {
+    return num;
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Structs and classes:
 
-template <int dim>
-struct CopyForce
-{
-  CopyForce ()
-  {};
+  template <int dim>
+  struct CopyForce
+  {
+    CopyForce ()
+    {};
 
-  ~CopyForce ()
-  {};
+    ~CopyForce ()
+    {};
 
-  CopyForce (const CopyForce &data)
-    :
-    local_force(data.local_force)
-  {};
+    CopyForce (const CopyForce &data)
+      :
+      local_force(data.local_force)
+    {};
 
-  Tensor<1, dim, double> local_force;
-};
+    Tensor<1, dim, double> local_force;
+  };
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ALE Navier Stokes interface:
@@ -86,7 +90,7 @@ public:
   assemble_local_forces(
     const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
     FEValuesCache<dim,spacedim> &fe_cache,
-    CopyForce<dim> &data
+    ALEUtilities::CopyForce<dim> &data
   )const;
 
   void
@@ -284,7 +288,7 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
   CellFilter;
 
   auto local_copy = [this, &global_force]
-                    (const CopyForce<dim> &data)
+                    (const ALEUtilities::CopyForce<dim> &data)
   {
     global_force += data.local_force;
   };
@@ -292,7 +296,7 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
   auto local_assemble = [this]
                         (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
                          FEValuesCache<dim,spacedim> &scratch,
-                         CopyForce<dim> &data)
+                         ALEUtilities::CopyForce<dim> &data)
   {
     assemble_local_forces(cell, scratch, data);
   };
@@ -306,7 +310,7 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
        local_assemble,
        local_copy,
        fe_cache,
-       CopyForce<dim>());
+       ALEUtilities::CopyForce<dim>());
 
   auto &cache = fe_cache.get_cache();
 
@@ -323,7 +327,7 @@ ALENavierStokes<dim,spacedim, LAC>::
 assemble_local_forces(
   const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
   FEValuesCache<dim,spacedim> &fe_cache,
-  CopyForce<dim> &data
+  ALEUtilities::CopyForce<dim> &data
 )const
 {
   const FEValuesExtractors::Vector displacement(0);
