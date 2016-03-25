@@ -1200,12 +1200,21 @@ template <int dim, int spacedim, typename LAC>
 void
 piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorType &v) const
 {
-  for (unsigned int i = 0; i < global_partitioning.n_elements(); ++i)
-    {
-      auto j = global_partitioning.nth_index_in_set(i);
-      if (constraints.is_constrained(j))
-        v[j] = 0;
-    }
+  if(global_partitioning.n_elements() > 0)
+  {
+    auto k = global_partitioning.nth_index_in_set(0);
+    if(constraints.is_constrained(k))
+      v[k] = 0;
+    else
+      v[k] = v[k];
+    for (unsigned int i = 1; i < global_partitioning.n_elements(); ++i)
+      {
+        auto j = global_partitioning.nth_index_in_set(i);
+        if (constraints.is_constrained(j))
+          v[j] = 0;
+      }
+    v.compress(VectorOperation::insert);
+  }
 }
 
 template class piDoMUS<2, 2, LATrilinos>;
