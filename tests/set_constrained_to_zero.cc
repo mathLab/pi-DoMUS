@@ -12,30 +12,30 @@ void test(piDoMUS<fdim,fspacedim,fn_LAC>  &pi_foo)
 
   pi_foo.global_partitioning.clear();
   pi_foo.global_partitioning.set_size(2);
- 
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     pi_foo.global_partitioning.add_index(0);
   else
     pi_foo.global_partitioning.add_index(1);
   pi_foo.global_partitioning.compress();
   LATrilinos::VectorType foo_vector(std::vector<IndexSet> (1,pi_foo.global_partitioning),MPI_COMM_WORLD);
   foo_vector = 0;
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     foo_vector[0] = 1.;
   else
     foo_vector[1] = 1.;
   foo_vector.compress(VectorOperation::insert);
 
   pi_foo.set_constrained_dofs_to_zero(foo_vector);
- if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     foo_vector[0] += 1.;
   else
     foo_vector[1] += 1.;
   foo_vector.compress(VectorOperation::add);
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     std::cout<<foo_vector[0]<<std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==1)
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==1)
     std::cout<<foo_vector[1]<<std::endl;
 
 
