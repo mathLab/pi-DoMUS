@@ -7,26 +7,7 @@
 
 #include "pde_system_interface.h"
 #include <deal2lkit/parsed_function.h>
-
-
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/lac/trilinos_block_vector.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
-
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/solver_gmres.h>
-
-#include <deal2lkit/utilities.h>
-
-#include "lac/lac_type.h"
-
-using deal2lkit::DOFUtilities::inner;
+#include <deal2lkit/sacado_tools.h>
 
 template <int dim, int spacedim, typename LAC>
 class HydroGelOneField : public PDESystemInterface<dim,spacedim, HydroGelOneField<dim,spacedim,LAC>, LAC>
@@ -107,9 +88,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   const unsigned int n_q_points = JxW.size();
 
-  ResidualType rt = 0;
-  this->reinit (rt, cell, fe_cache);
-  auto &Fs_res = fe_cache.get_deformation_gradients("solution", "u", displacement, rt);
+  std::vector<Tensor<2,dim,ResidualType> > Fs_res = SacadoTools::val(Fs);
 
   for (unsigned int q=0; q<n_q_points; ++q)
     {
@@ -135,7 +114,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       for (unsigned int i=0; i<residuals[0].size(); ++i)
         {
           auto grad_v = fev[displacement].gradient(i,q);
-          residuals[0][i] += (mu0/Omega)*(this->get_current_time())*inner(F_star,grad_v)*JxW[q];
+          residuals[0][i] += (mu0/Omega)*(this->get_current_time())*SacadoTools::scalar_product(F_star,grad_v)*JxW[q];
         }
 
       if (!compute_only_system_terms)

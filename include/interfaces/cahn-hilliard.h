@@ -6,9 +6,9 @@
 #define _cahn_hilliard_h
 
 #include "pde_system_interface.h"
+#include <deal2lkit/sacado_tools.h>
 
 
-using deal2lkit::DOFUtilities::inner;
 
 
 template <int dim, typename LAC>
@@ -98,13 +98,13 @@ energies_and_residuals(const typename DoFHandler<dim>::active_cell_iterator &cel
           local_residuals[0][i] += (
                                      c_dot*test_c
                                      +
-                                     inner(grad_mu,grad_test_c)
+                                     SacadoTools::scalar_product(grad_mu,grad_test_c)
                                      +
                                      mu*test_mu
                                      -
                                      f_prime*test_mu
                                      -
-                                     lambda*inner(grad_c,grad_test_mu)
+                                     lambda*SacadoTools::scalar_product(grad_c,grad_test_mu)
                                    )*JxW[q];
         }
 

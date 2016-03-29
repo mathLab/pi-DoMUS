@@ -75,11 +75,7 @@
 #include <deal.II/grid/filtered_iterator.h>
 
 #include <deal.II/base/work_stream.h>
-#include <deal.II/base/conditional_ostream.h>
 
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
@@ -88,22 +84,6 @@
 
 namespace NSUtilities
 {
-
-////////////////////////////////////////////////////////////////////////////////
-/// Used functions:
-
-  double get_double(Sdouble num)
-  {
-    return num.val();
-  }
-
-  double get_double(double num)
-  {
-    return num;
-  }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Structs and classes:
 
   template <int dim>
   struct CopyForce
@@ -278,8 +258,6 @@ private:
    */
   double GMRES_solver_tolerance;
 
-  ConditionalOStream pcout;
-
   bool is_parallel;
 };
 
@@ -301,8 +279,6 @@ NavierStokes(bool dynamic, bool convection)
   convection(convection),
   compute_Mp(false),
   compute_Ap(false),
-  pcout(std::cout,
-        Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0),
   is_parallel(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 1)
 {
   this->init();
@@ -486,6 +462,7 @@ output_solution (const unsigned int &current_cycle,
 
   this->data_out.write_data_and_clear(this->get_mapping());
 
+  auto &pcout = this->get_pcout();
   if (compute_force && is_parallel)
     pcout << " Total force on the sphere (vertical value): "  << std::endl
           << "     f_x = " << output_force[0] << std::endl

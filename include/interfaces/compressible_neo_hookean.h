@@ -3,12 +3,6 @@
 
 #include "pde_system_interface.h"
 
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-#include <deal.II/lac/solver_cg.h>
-
-//typedef LATrilinos LAC;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
 class CompressibleNeoHookeanInterface : public PDESystemInterface<dim,spacedim, CompressibleNeoHookeanInterface<dim,spacedim,LAC>, LAC>

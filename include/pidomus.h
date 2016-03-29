@@ -40,6 +40,8 @@
 #include <deal2lkit/ida_interface.h>
 #include <deal2lkit/imex_stepper.h>
 #include <deal2lkit/parsed_zero_average_constraints.h>
+#include <deal2lkit/parsed_mapped_functions.h>
+#include <deal2lkit/parsed_dirichlet_bcs.h>
 
 #include <deal2lkit/any_data.h>
 #include <deal2lkit/fe_values_cache.h>

@@ -15,13 +15,10 @@
 #include <deal.II/grid/filtered_iterator.h>
 
 #include <deal.II/base/work_stream.h>
-#include <deal.II/base/conditional_ostream.h>
-
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+
+#include <deal2lkit/parsed_mapped_functions.h>
 
 namespace ALEUtilities
 {
@@ -153,7 +150,6 @@ private:
   mutable shared_ptr<TrilinosWrappers::PreconditionAMG> P00_preconditioner, P11_preconditioner, P22_preconditioner;
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> P33_preconditioner;
 
-  ConditionalOStream pcout;
 };
 
 
@@ -172,9 +168,7 @@ ALENavierStokes()
           this->n_components,
           this->get_component_names(),
           "" /* do nothing by default */
-         ),
-  pcout(std::cout,
-        Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+         )
 {
   this->init();
 }
@@ -398,6 +392,7 @@ output_solution (const unsigned int &current_cycle,
 
   this->data_out.write_data_and_clear(this->get_mapping());
 
+  auto &pcout = this->get_pcout();
 
   pcout << " Mean force value on the sphere (vertical value): "
         << output_force[1]

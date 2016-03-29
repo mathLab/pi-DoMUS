@@ -2,14 +2,15 @@
 #define _pidomus_base_interface_h_
 
 #include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/block_linear_operator.h>
+#include <deal.II/lac/packaged_operation.h>
+
 #include <deal.II/base/sacado_product_type.h>
 
 #include <deal.II/numerics/error_estimator.h>
 
 #include <deal2lkit/parsed_finite_element.h>
-#include <deal2lkit/parsed_function.h>
-#include <deal2lkit/parsed_mapped_functions.h>
-#include <deal2lkit/parsed_dirichlet_bcs.h>
 #include <deal2lkit/parsed_data_out.h>
 
 
