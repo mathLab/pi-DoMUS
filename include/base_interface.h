@@ -18,6 +18,10 @@
 #include "lac/lac_type.h"
 #include "simulator_access.h"
 
+//forward declaration
+template <int dim, int spacedim, typename LAC> struct Signals;
+
+
 using namespace pidomus;
 /**
  * Base Interface
@@ -106,11 +110,24 @@ public:
    */
   void init ();
 
-
   /**
-     * Postprocess the newly generated triangulation.
-     */
-  virtual void postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &tria) const;
+   * Override this function in your derived interface in order to
+   * connect to the signals, which are defined in the struct Signals.
+   *
+   * Example of implementation:
+   * @code
+   * auto &signals = this->get_signals();
+   * signals.fix_initial_conditions.connect(
+   *         [this](VEC &y, VEC &y_dot)
+   *          {
+   *            y=1;
+   *            y_dot=0;
+   *          });
+   * @endcode
+   *
+   * An example of implementation is given in the poisson_problem_signals.h file.
+   */
+  virtual void connect_to_signals() const {}
 
   /**
    * Solution preprocessing. This function can be used to store

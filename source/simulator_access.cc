@@ -39,6 +39,16 @@ SimulatorAccess<dim,spacedim,LAC>::get_simulator() const
 
 
 template <int dim, int spacedim, typename LAC>
+Signals<dim,spacedim,LAC> &
+SimulatorAccess<dim,spacedim,LAC>::get_signals() const
+{
+  // we need to connect to the signals so a const_cast is required
+  return const_cast<Signals<dim,spacedim,LAC>&>(simulator->signals);
+}
+
+
+
+template <int dim, int spacedim, typename LAC>
 MPI_Comm SimulatorAccess<dim,spacedim,LAC>::get_mpi_communicator () const
 {
   return simulator->comm;

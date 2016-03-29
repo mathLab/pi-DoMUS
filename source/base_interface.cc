@@ -156,13 +156,6 @@ get_matrix_coupling(const unsigned int &i) const
 }
 
 
-template <int dim, int spacedim, typename LAC>
-void
-BaseInterface<dim,spacedim,LAC>::
-postprocess_newly_created_triangulation(Triangulation<dim, spacedim> &) const
-{}
-
-
 
 template <int dim, int spacedim, typename LAC>
 void

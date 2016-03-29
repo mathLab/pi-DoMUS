@@ -131,11 +131,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   interface.initialize_simulator (*this);
 
+  interface.connect_to_signals();
+
   for (unsigned int i=0; i<n_matrices; ++i)
     {
       matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
       matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
+
 }
 
 
@@ -255,7 +258,6 @@ apply_neumann_bcs (
   FEValuesCache<dim,spacedim> &scratch,
   std::vector<double> &local_residual) const
 {
-
 
   double dummy = 0.0;
 
@@ -402,23 +404,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       relevant_partitioning.push_back(relevant_set.get_view(std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i, 0),
                                                             std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i + 1, 0)));
   }
-  constraints.clear ();
-  constraints.reinit (relevant_set);
 
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
-
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
-  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
-  constraints.close ();
-
-  constraints_dot.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints_dot);
-
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
-
-  constraints_dot.close ();
+  update_functions_and_constraints(current_time);
 
   ScopedLACInitializer initializer(dofs_per_block,
                                    partitioning,
@@ -493,6 +480,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
             }
         }
 
+      signals.fix_initial_conditions(solution, solution_dot);
       explicit_solution = solution;
       locally_relevant_explicit_solution = solution;
 
@@ -503,11 +491,13 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double &t)
 {
-  dirichlet_bcs.set_time(t);
-  dirichlet_bcs_dot.set_time(t);
-  forcing_terms.set_time(t);
-  neumann_bcs.set_time(t);
-
+  if (!std::isnan(t))
+    {
+      dirichlet_bcs.set_time(t);
+      dirichlet_bcs_dot.set_time(t);
+      forcing_terms.set_time(t);
+      neumann_bcs.set_time(t);
+    }
   constraints.clear();
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
@@ -523,7 +513,7 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
                                            constraints_dot);
 
   apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
-
+  signals.update_constraint_matrices(constraints,constraints_dot);
   constraints_dot.close ();
 }
 
@@ -836,7 +826,7 @@ void piDoMUS<dim, spacedim, LAC>::make_grid_fe()
 {
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
-  interface.postprocess_newly_created_triangulation(*triangulation);
+  signals.postprocess_newly_created_triangulation(*triangulation);
   fe = SP(interface.pfe());
   triangulation->refine_global (initial_global_refinement);
 }
@@ -977,6 +967,8 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
           update_functions_and_constraints(t);
           constraints.distribute(solution);
           constraints_dot.distribute(solution_dot);
+
+          signals.fix_solutions_after_refinement(solution,solution_dot);
 
           MPI::COMM_WORLD.Barrier();
           current_time = std::numeric_limits<double>::quiet_NaN();
@@ -1230,7 +1222,7 @@ piDoMUS<dim, spacedim, LAC>::differential_components() const
   std::vector<unsigned int> block_diff = interface.get_differential_blocks();
   for (unsigned int i = 0; i < block_diff.size(); ++i)
     diff_comps.block(i) = block_diff[i];
-
+  signals.fix_differential_components(diff_comps);
   set_constrained_dofs_to_zero(diff_comps);
   return diff_comps;
 }
