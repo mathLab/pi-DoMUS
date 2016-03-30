@@ -5,7 +5,7 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
+//#include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
@@ -14,13 +14,12 @@
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
 #include <deal2lkit/any_data.h>
-#include <deal2lkit/parsed_function.h>
-#include <deal2lkit/parsed_mapped_functions.h>
-#include <deal2lkit/parsed_dirichlet_bcs.h>
 #include <deal2lkit/utilities.h>
+#include <deal2lkit/sacado_tools.h>
 
 using namespace dealii;
 using namespace deal2lkit;
+using namespace SacadoTools;
 
 
 template <int dim, int spacedim, typename LAC>
@@ -311,7 +310,7 @@ BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,s
   auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
 
   for (unsigned int i=0; i<sol.size(); ++i)
-    sol_dot[i] = alpha.val()*sol[i] + (sol_dot[i].val() - alpha.val()*sol[i].val());
+    sol_dot[i] = to_double(alpha)*sol[i] +  (to_double(sol_dot[i]) - to_double(alpha)*to_double(sol[i]));
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -322,7 +321,7 @@ BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,s
   auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
 
   for (unsigned int i=0; i<sol.size(); ++i)
-    sol_dot[i] = (0.5*alpha.val().val()*sol[i]) + (sol_dot[i].val().val() - alpha.val().val()*sol[i].val().val());
+    sol_dot[i] = (0.5*to_double(alpha)*sol[i]) + (to_double(sol_dot[i]) - to_double(alpha)*to_double(sol[i]));
 }
 
 

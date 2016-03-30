@@ -6,27 +6,8 @@
 #define _hydrogels_two_fields_transient_h_
 
 #include "pde_system_interface.h"
-#include <deal2lkit/parsed_function.h>
+#include <deal2lkit/sacado_tools.h>
 
-
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/lac/trilinos_block_vector.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
-
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/solver_gmres.h>
-
-#include <deal2lkit/utilities.h>
-
-#include "lac/lac_type.h"
-
-using deal2lkit::DOFUtilities::inner;
 
 template <int dim, int spacedim, typename LAC>
 class HydroGelTwoFieldsTransient : public PDESystemInterface<dim,spacedim, HydroGelTwoFieldsTransient<dim,spacedim,LAC>, LAC>
@@ -143,7 +124,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto test_mu = fev[chempot].value(i,q);
           auto grad_test_mu = fev[chempot].gradient(i,q);
 
-          residuals[0][i] -= (mu*inner(F_star,grad_v)/Omega+
+          residuals[0][i] -= (mu*SacadoTools::scalar_product(F_star,grad_v)/Omega+
                               -scalar_product(F_star,F_dot)*test_mu/Omega
                               +h*grad_test_mu)*JxW[q];
         }

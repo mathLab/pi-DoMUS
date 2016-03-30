@@ -2,14 +2,7 @@
 #define _pidoums_poisson_nitsche_h_
 
 #include "pde_system_interface.h"
-
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-#include <deal.II/lac/solver_cg.h>
-
-//typedef LATrilinos LAC;
-using deal2lkit::DOFUtilities::inner;
+#include <deal2lkit/sacado_tools.h>
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
 class PoissonProblemNitsche : public PDESystemInterface<dim,spacedim, PoissonProblemNitsche<dim,spacedim,LAC>, LAC>
@@ -151,7 +144,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   auto gradv = fev[s].gradient(i,q);
 
                   local_residuals[0][i] += (
-                                             -inner(gradu,n)*v
+                                             -SacadoTools::scalar_product(gradu,n)*v
 
                                              -(u-u0[0])*(gradv*n)
 

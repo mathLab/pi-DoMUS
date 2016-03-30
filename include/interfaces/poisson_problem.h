@@ -3,13 +3,6 @@
 
 #include "pde_system_interface.h"
 
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-#include <deal.II/lac/solver_cg.h>
-
-//typedef LATrilinos LAC;
-using deal2lkit::DOFUtilities::inner;
 
 template <int dim, int spacedim, typename LAC=LATrilinos>
 class PoissonProblem : public PDESystemInterface<dim,spacedim, PoissonProblem<dim,spacedim,LAC>, LAC>

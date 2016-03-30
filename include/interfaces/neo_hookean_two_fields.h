@@ -8,19 +8,7 @@
 #include "pde_system_interface.h"
 #include <deal2lkit/parsed_function.h>
 
-
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/lac/trilinos_block_vector.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
-
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/block_linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-
 #include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/solver_gmres.h>
 
 
 template <int dim, int spacedim, typename LAC>
