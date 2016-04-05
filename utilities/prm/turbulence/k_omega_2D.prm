@@ -1,29 +1,56 @@
-# Parameter file generated with 
-# D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     3a08110
-# DEAL_II_GIT_BRANCH=   opencascade
-# DEAL_II_GIT_SHORTREV= f14c48e
-
-subsection k-omega
-  set A - Amg Aggregation Threshold        = 0.2
-  set A - Amg Elliptic                     = false
-  set A - Amg High Order Elements          = true
-  set A - Amg Smoother Sweeps              = 2
-  
-  set Ap - Amg Aggregation Threshold       = 0.2
-  set Ap - Amg Elliptic                    = true
-  set Ap - Amg Smoother Sweeps             = 2
-
-  set k - Amg Aggregation Threshold        = 0.2
-  set k - Amg Elliptic                     = false
-  set k - Amg High Order Elements          = false
-  set k - Amg Smoother Sweeps              = 2
-
-  set w - Amg Aggregation Threshold        = 0.2
-  set w - Amg Elliptic                     = false
-  set w - Amg High Order Elements          = false
-  set w - Amg Smoother Sweeps              = 2
-  
+subsection Amg for A
+  set Aggregation threshold              = 10
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection Amg for Ap
+  set Aggregation threshold              = 0.100
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection Amg for k
+  set Aggregation threshold              = 1.0
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection Amg for omega
+  set Aggregation threshold              = 1.0
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection k-omega  
   set Block of differential components     = 1,0,1,1
   set Blocking of the finite element       = u,u,p,k,w
   set CG Solver tolerance                  = 1e-8

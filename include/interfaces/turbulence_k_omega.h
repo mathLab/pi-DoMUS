@@ -164,7 +164,12 @@ KOmega()
     3,
     "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(1)-FE_Q(1)]",
     (dim==3) ? "u,u,u,p,k,w" : "u,u,p,k,w",
-    "1,0,1,1")
+    "1,0,1,1"),
+  amg_A("Amg for A"),
+  amg_Ap("Amg for Ap"),
+  amg_k("Amg for k"),
+  amg_w("Amg for omega"),
+  jacobi_Mp("Jacobi for Mp", 1.4)
 {
   this->init();
 }
