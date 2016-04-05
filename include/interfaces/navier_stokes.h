@@ -651,7 +651,7 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<LATrilinos::VectorType> &prec_op,
   LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
-  auto alpha = 0;
+  auto alpha = this->get_alpha();
 
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;

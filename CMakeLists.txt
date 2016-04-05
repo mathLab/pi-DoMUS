@@ -110,3 +110,12 @@ ADD_CUSTOM_TARGET(indent
   COMMAND ./scripts/indent
   )
 
+
+## dummy targets for IDEs
+FILE(GLOB _misc
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.h
+)
+ADD_CUSTOM_TARGET(dummy_include_files
+  SOURCES ${_misc}
+  )

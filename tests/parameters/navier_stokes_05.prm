@@ -1,11 +1,10 @@
-# Parameter file generated with
-# D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     e091146
+# Parameter file generated with 
+# D2K_GIT_BRANCH=       kinsol_implementation
+# D2K_GIT_SHORTREV=     3223b67
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= af6f8d1
-
+# DEAL_II_GIT_SHORTREV= b3f2eeb
 subsection AMG for A
-  set Aggregation threshold              = 1.5
+  set Aggregation threshold              = 10
   set Coarse type                        = Amesos-KLU
   set Elliptic                           = false
   set High Order Elements                = true
@@ -17,9 +16,8 @@ subsection AMG for A
   set Variable related to constant modes = u
   set w-cycle                            = false
 end
-
 subsection AMG for Ap
-  set Aggregation threshold              = 0.02
+  set Aggregation threshold              = 0.2
   set Coarse type                        = Amesos-KLU
   set Elliptic                           = true
   set High Order Elements                = false
@@ -31,85 +29,31 @@ subsection AMG for Ap
   set Variable related to constant modes = p
   set w-cycle                            = false
 end
-
-subsection Navier Stokes Interface
-  set Block of differential components     = 1,0
-  set Blocking of the finite element       = u,u,p
-  set Enable convection term ((\nabla u)u) = true
-  set Enable dynamic term (\partial_t u)   = false
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-
-  set CG Solver tolerance                  = 1e-15
-  set GMRES Solver tolerance               = 1e-15
-  set Invert Ap using inverse_operator     = false
-  set Invert Mp using inverse_operator     = true
-
-  set Linearize using time                 = false
-  set Non linear term                      = fully_non_linear
-
-  set Preconditioner                       = identity
-  set div-grad stabilization parameter     = 0.0
-  set nu [Pa s]                            = 0.0
-  set rho [kg m^3]                         = 1.0
-end
-
-subsection piDoMUS<2, 2, LATrilinos>
-  set Adaptive refinement                            = false
-  set Initial global refinement                      = 1
-  set Maximum number of time steps                   = 10000
-  set Number of cycles                               = 4
-  set Overwrite Newton's iterations                  = true
-  set Print some useful informations about processes = true
-  set Time stepper                                   = euler
-  set Show timer                                     = false
-  set Use direct solver if available                 = true
-end
-
-subsection Initial solution
-  set Function constants  =
-  set Function expression = cos(x)*cos(y); sin(x)*sin(y); 0
-  set Variable names      = x,y,t
-end
-
-subsection Exact solution
-  set Function constants  =
-  set Function expression = cos(x)*cos(y); sin(x)*sin(y); 0
-  set Variable names      = x,y,t
-end
-
-subsection Forcing terms
-  set IDs and component masks = 0=u
-  set IDs and expressions     = 0=-sin(x)*sin(y)^2*cos(x) - sin(x)*cos(x)*cos(y)^2; sin(x)^2*sin(y)*cos(y) + sin(y)*cos(x)^2*cos(y); 0
-  set Known component names   = u,u,p
-  set Used constants          = k=0.0
-end
-
 subsection Dirichlet boundary conditions
-  set IDs and component masks = 0=ALL % 1=ALL % 2=ALL % 3=ALL
-  set IDs and expressions     = 0=cos(x)*cos(y); sin(x)*sin(y); 0 % \
-                                1=cos(x)*cos(y); sin(x)*sin(y); 0 % \
-                                2=cos(x)*cos(y); sin(x)*sin(y); 0 % \
-                                3=cos(x)*cos(y); sin(x)*sin(y); 0
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=cos(x); y*sin(x); x*sin(y)
   set Known component names   = u,u,p
   set Used constants          = k=0.0
 end
-
 subsection Domain
-  set Colorize                   = false
-  set Grid to generate           = rectangle
-  set Input grid file name       =
-  set Mesh smoothing alogrithm   = none
-  set Optional Point<spacedim> 1 = 0,0
-  set Optional Point<spacedim> 2 = 1,1
-  set Optional double 1          = 1.0
-  set Optional double 2          = 0.5
-  set Optional double 3          = 1.5
-  set Optional int 1             = 1
-  set Optional int 2             = 2
-  set Optional vector of dim int = 1,1
-  set Output grid file name      =
+  set Colorize                      = false
+  set Copy boundary to manifold ids = false
+  set Copy material to manifold ids = false
+  set Create default manifolds      = true
+  set Grid to generate              = rectangle
+  set Input grid file name          = 
+  set Manifold descriptors          = 
+  set Mesh smoothing alogrithm      = none
+  set Optional Point<spacedim> 1    = 0,0
+  set Optional Point<spacedim> 2    = 1,1
+  set Optional double 1             = 1.0
+  set Optional double 2             = 0.5
+  set Optional double 3             = 1.5
+  set Optional int 1                = 1
+  set Optional int 2                = 2
+  set Optional vector of dim int    = 1,1
+  set Output grid file name         = 
 end
-
 subsection Error Tables
   set Compute error            = true
   set Error file format        = tex
@@ -124,13 +68,23 @@ subsection Error Tables
     set Extra terms                    = cells,dofs
     set Latex table caption            = error
     set List of error norms to compute = L2, Linfty, H1; AddUp; L2
-    set Rate key                       =
+    set Rate key                       = 
   end
 end
-
+subsection Exact solution
+  set Function constants  = 
+  set Function expression = cos(x); y*sin(x); x*sin(y)
+  set Variable names      = x,y,t
+end
+subsection Forcing terms
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=-sin(x)*cos(x) + sin(y) + 0.1*cos(x);\
+                                  x*cos(y) + y*sin(x)*sin(x) + y*cos(x)*cos(x); 0
+  set Known component names   = u,u,p
+  set Used constants          = k=0.0
+end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-6
-  set Initial time                                  = 0
   set Final time                                    = 0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 15
@@ -138,6 +92,7 @@ subsection IDA Solver Parameters
   set Initial condition type                        = use_y_diff
   set Initial condition type after restart          = use_y_dot
   set Initial step size                             = 1e-4
+  set Initial time                                  = 0
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 2
   set Min step size                                 = 5e-5
@@ -146,34 +101,77 @@ subsection IDA Solver Parameters
   set Show output of time steps                     = true
   set Use local tolerances                          = false
 end
-
 subsection IMEX Parameters
-  set Final time                                   = 0.0
+  set Absolute error tolerance                     = 1.0e-1
+  set Final time                                   = 1.0
   set Initial time                                 = 0.0
-
-  set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 5
-  set Newton relaxation parameter                  = 1
-
-  set Absolute error tolerance                     = 7.0e-2
   set Intervals between outputs                    = 1
+  set Maximum number of inner nonlinear iterations = 10
+  set Maximum number of outer nonlinear iterations = 15
+  set Method used                                  = fixed_alpha
+  set Newton relaxation parameter                  = .33
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
   set Relative error tolerance                     = 0.0
-  set Step size                                    = 1.0e-1
+  set Step size                                    = 2.0e-1
   set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
 end
-
+subsection Initial solution
+  set Function constants  = 
+  set Function expression = 0;0;0#x; -y; x*y
+  set Variable names      = x,y,t
+end
+subsection Initial solution_dot
+  set Function constants  = 
+  set Function expression = 0; 0; 0
+  set Variable names      = x,y,t
+end
+subsection Jacobi for Mp
+  set Min Diagonal     = 0.000000
+  set Number of sweeps = 1
+  set Omega            = 1.400000
+end
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 10
+  set Maximum number of iterations                       = 200
+  set Step tolerance                                     = 1e-8
+  set Strategy                                           = newton
+  set Tolerance for residuals                            = 1e-6
+  set Use internal KINSOL direct solver                  = false
+end
+subsection Navier Stokes Interface
+  set Block of differential components     = 0,0
+  set Blocking of the finite element       = u,u,p
+  set CG Solver tolerance                  = 1e-15
+  set Compute sigma on the obstacle        = false
+  set Enable convection term ((\nabla u)u) = true
+  set Enable dynamic term (\partial_t u)   = false
+  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
+  set GMRES Solver tolerance               = 1e-15
+  set Invert Ap using inverse_operator     = false
+  set Invert Mp using inverse_operator     = true
+  set Linearize using time                 = true
+  set Non linear term                      = linear
+  set Preconditioner                       = default
+  set div-grad stabilization parameter     = 0.1
+  set nu [Pa s]                            = 0.1
+  set p-q stabilization parameter          = 0.0
+  set rho [kg m^3]                         = 1.0
+end
 subsection Neumann boundary conditions
-  set IDs and component masks =
-  set IDs and expressions     =
+  set IDs and component masks = 
+  set IDs and expressions     = 
   set Known component names   = u,u,p
-  set Used constants          =
+  set Used constants          = 
 end
 subsection Output Parameters
-  set Files to save in run directory =
-  set Incremental run prefix         =
-  set Output format                  = none
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = solution
+  set Problem base name              = navier5
   set Solution names                 = u
   set Subdivisions                   = 1
 end
@@ -185,8 +183,30 @@ subsection Refinement
   set Top fraction                           = 0.300000
 end
 subsection Time derivative of Dirichlet boundary conditions
-  set IDs and component masks =
-  set IDs and expressions     =
+  set IDs and component masks = 
+  set IDs and expressions     = 
   set Known component names   = u,u,p
-  set Used constants          =
+  set Used constants          = 
+end
+subsection Zero average constraints
+  set Known component names        = u,u,p
+  set Zero average on boundary     = 
+  set Zero average on whole domain = 
+end
+subsection piDoMUS<2, 2, LATrilinos>
+  set Adaptive refinement                            = false
+  set Enable finer preconditioner                    = false
+  set Initial global refinement                      = 4
+  set Jacobian solver tolerance                      = 1e-6
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 0
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 3
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Refine mesh during transient                   = false
+  set Show timer                                     = false
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = euler
+  set Use direct solver if available                 = true
 end
