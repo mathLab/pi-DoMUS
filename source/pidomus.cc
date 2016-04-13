@@ -86,7 +86,8 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
 
   current_time(std::numeric_limits<double>::quiet_NaN()),
-  current_alpha(std::numeric_limits<double>::quiet_NaN()),
+  // IDA calls residual first with alpha = 0
+  current_alpha(0.0),
   current_dt(std::numeric_limits<double>::quiet_NaN()),
   previous_time(std::numeric_limits<double>::quiet_NaN()),
   previous_dt(std::numeric_limits<double>::quiet_NaN()),
@@ -430,6 +431,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
   initializer(explicit_solution_dot);
   initializer(previous_explicit_solution);
   initializer(previous_explicit_solution_dot);
+
+
   if (we_are_parallel)
     {
       initializer.ghosted(locally_relevant_solution);
@@ -540,6 +543,8 @@ syncronize(const double &t,
       // explicit solution will be zero
       // previous explicit solution will be zero
       current_time = t;
+      if (std::isnan(previous_time)) //very first step
+        previous_time = t;
       update_functions_and_constraints(t);
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
@@ -548,6 +553,8 @@ syncronize(const double &t,
 
       locally_relevant_solution = tmp;
       locally_relevant_solution_dot = tmp_dot;
+      explicit_solution = tmp;
+      locally_relevant_explicit_solution = tmp;
     }
   else if (current_time < t) // next temporal step
     {
@@ -582,11 +589,12 @@ syncronize(const double &t,
     {
       // we are calling this function in different part of the code
       // within the same time step (e.g. during the non-linear solver)
+      // so no need to call udpdate_functions_and_constraints()
+
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
       constraints.distribute(tmp);
       constraints_dot.distribute(tmp_dot);
-
       locally_relevant_solution = tmp;
       locally_relevant_solution_dot = tmp_dot;
     }
@@ -727,6 +735,13 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
   y_dot = new_sol_dot;
   y_expl = new_sol_expl;
 
+  update_functions_and_constraints(previous_time);
+  constraints.distribute(y_expl);
+
+  update_functions_and_constraints(current_time);
+  constraints.distribute(y);
+  constraints_dot.distribute(y_dot);
+
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
   locally_relevant_y_expl = y_expl;
@@ -776,6 +791,13 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   y_dot  = new_sols[1];
   y_expl = new_sols[2];
 
+  update_functions_and_constraints(previous_time);
+  constraints.distribute(y_expl);
+
+  update_functions_and_constraints(current_time);
+  constraints.distribute(y);
+  constraints_dot.distribute(y_dot);
+
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
   locally_relevant_y_expl = y_expl;
@@ -805,8 +827,8 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
                                 adaptive_refinement);
 
   locally_relevant_explicit_solution = explicit_solution;
-
-  previous_time = -std::numeric_limits<double>::max();
+  current_time = std::numeric_limits<double>::quiet_NaN();
+  previous_time =   std::numeric_limits<double>::quiet_NaN();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -834,6 +856,7 @@ get_solution()
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
 {
+  interface.set_stepper(time_stepper);
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
       if (current_cycle == 0)
@@ -850,8 +873,10 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       if (time_stepper == "ida")
         ida.start_ode(solution, solution_dot, max_time_iterations);
       else if (time_stepper == "euler")
-        euler.start_ode(solution, solution_dot);
-
+        {
+          current_alpha = euler.get_alpha();
+          euler.start_ode(solution, solution_dot);
+        }
       eh.error_from_exact(interface.get_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
     }
 
@@ -871,7 +896,7 @@ shared_ptr<typename LAC::VectorType>
 piDoMUS<dim, spacedim, LAC>::create_new_vector() const
 {
   shared_ptr<typename LAC::VectorType> ret = SP(new typename LAC::VectorType(solution));
-  *ret *= 0;
+  //   *ret *= 0;
   return ret;
 }
 
@@ -949,9 +974,12 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                         locally_relevant_explicit_solution,
                                         adaptive_refinement);
 
+          update_functions_and_constraints(t);
+          constraints.distribute(solution);
+          constraints_dot.distribute(solution_dot);
 
           MPI::COMM_WORLD.Barrier();
-
+          current_time = std::numeric_limits<double>::quiet_NaN();
           return true;
         }
       else // if max_kelly > kelly_threshold
@@ -1144,12 +1172,25 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
     }
 
-
   set_constrained_dofs_to_zero(dst);
 
   return 0;
 }
 
+template <int dim, int spacedim, typename LAC>
+int
+piDoMUS<dim,spacedim,LAC>::jacobian_vmult(const typename LAC::VectorType &src, typename LAC::VectorType &dst) const
+{
+  auto _timer = computing_timer.scoped_timer ("Jacobian vmult");
+
+  if (we_are_parallel == false &&
+      use_direct_solver == true)
+    matrices[0]->vmult(dst, src);
+  else
+    jacobian_op.vmult(dst, src);
+
+  return 0;
+}
 
 template <int dim, int spacedim, typename LAC>
 int
@@ -1215,6 +1256,78 @@ piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorTy
         }
       v.compress(VectorOperation::insert);
     }
+}
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &dst) const
+{
+  auto _timer = computing_timer.scoped_timer ("Assemble lumped mass matrix");
+
+
+  const QGauss<dim> quadrature_formula(fe->degree + 1);
+  const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
+
+
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+                                        *fe, quadrature_formula,
+                                        interface.get_cell_update_flags(),
+                                        face_quadrature_formula,
+                                        interface.get_face_update_flags());
+
+
+  dst = 0;
+
+  auto local_copy = [&dst, this] (const pidomus::CopyData & data)
+  {
+
+    for (unsigned int i=0; i<data.local_dof_indices.size(); ++i)
+      {
+        // kinsol needs that each component must strictly greater
+        // than zero.
+        dst[ data.local_dof_indices[i] ] += data.local_residual[i] + 1e-12;
+      }
+  };
+
+  auto local_assemble = []
+                        (const typename DoFHandler<dim, spacedim>::active_cell_iterator & cell,
+                         FEValuesCache<dim,spacedim> &scratch,
+                         pidomus::CopyData & data)
+  {
+    const unsigned dofs_per_cell = data.local_residual.size();
+    scratch.reinit(cell);
+
+    cell->get_dof_indices (data.local_dof_indices);
+
+    auto &JxW = scratch.get_JxW_values();
+    auto &fev = scratch.get_current_fe_values();
+
+    const unsigned int n_q_points = JxW.size();
+
+    std::fill(data.local_residual.begin(), data.local_residual.end(), 0.0);
+    for (unsigned int q=0; q<n_q_points; ++q)
+      for (unsigned int i=0; i<dofs_per_cell; ++i)
+        data.local_residual[i] += fev.shape_value(i,q)*JxW[q];
+
+  };
+
+  typedef
+  FilteredIterator<typename DoFHandler<dim, spacedim>::active_cell_iterator>
+  CellFilter;
+  WorkStream::
+  run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->begin_active()),
+       CellFilter (IteratorFilters::LocallyOwnedCell(),
+                   dof_handler->end()),
+       local_assemble,
+       local_copy,
+       fev_cache,
+       pidomus::CopyData(fe->dofs_per_cell,n_matrices));
+
+
+  dst.compress(VectorOperation::add);
+
 }
 
 template class piDoMUS<2, 2, LATrilinos>;

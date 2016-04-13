@@ -129,7 +129,11 @@ public:
                                     const typename LAC::VectorType &src,
                                     typename LAC::VectorType &dst) const;
 
-
+  /**
+   * compute jacobian vmult. It is used by the KINSOL solver
+   */
+  virtual int jacobian_vmult(const typename LAC::VectorType &v,
+                             typename LAC::VectorType &dst) const;
 
   /** And an identification of the
    differential components. This
@@ -143,6 +147,12 @@ public:
    * Get back the solution.
    */
   typename LAC::VectorType &get_solution();
+
+  /**
+   * save the diagonal of the lumped mass matrix in @p diag, which is
+   * used as scaling vector in KINSOL
+   */
+  virtual void get_lumped_mass_matrix(typename LAC::VectorType &diag) const;
 
 private:
 
@@ -452,12 +462,6 @@ private:
   void syncronize(const double &t,
                   const typename LAC::VectorType &solution,
                   const typename LAC::VectorType &solution_dot);
-
-  /* /\** */
-  /*  * Distribute constraints at time t. This function update the */
-  /*  * functions and constraints at time t and then distribute them. */
-  /*  *\/ */
-  /* void distribute_constraints(const double &t) */
 
   /**
    * SimulatoAccess accesses to all internal variables and returns a

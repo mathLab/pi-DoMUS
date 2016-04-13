@@ -320,8 +320,12 @@ public:
    * ParsedFiniteElement.
    */
   ParsedFiniteElement<dim,spacedim> pfe;
-
-
+  /**
+  * set internal variable stepper to the time stepper used by pidomus
+  * this is needed in the fix_solution_dot_derivative() functions
+  * @param s
+  */
+  void set_stepper(const std::string &s) const;
 
 protected:
 
@@ -383,7 +387,7 @@ protected:
 
   mutable ParsedDataOut<dim, spacedim>            data_out;
 
-
+  mutable std::string stepper;
 
 };
 

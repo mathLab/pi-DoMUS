@@ -299,7 +299,8 @@ BaseInterface<dim,spacedim,LAC>::get_face_update_flags() const
 
 template <int dim, int spacedim, typename LAC>
 void
-BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &, double) const
+BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,spacedim> &/*fe_cache*/,
+    double /*alpha*/) const
 {}
 
 template <int dim, int spacedim, typename LAC>
@@ -308,9 +309,9 @@ BaseInterface<dim,spacedim,LAC>::fix_solution_dot_derivative(FEValuesCache<dim,s
 {
   auto &sol = fe_cache.get_current_independent_local_dofs("solution", alpha);
   auto &sol_dot = fe_cache.get_current_independent_local_dofs("solution_dot", alpha);
-
+  double a = to_double(alpha);
   for (unsigned int i=0; i<sol.size(); ++i)
-    sol_dot[i] = to_double(alpha)*sol[i] +  (to_double(sol_dot[i]) - to_double(alpha)*to_double(sol[i]));
+    sol_dot[i] = a*sol[i] +  (to_double(sol_dot[i]) - a*to_double(sol[i]));
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -401,6 +402,14 @@ output_solution (const unsigned int &current_cycle,
 
   data_out.write_data_and_clear(get_mapping());
 
+}
+
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+set_stepper (const std::string &s) const
+{
+  stepper = s;
 }
 
 template class BaseInterface<2, 2, LATrilinos>;
