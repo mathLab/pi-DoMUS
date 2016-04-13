@@ -405,6 +405,11 @@ set_stepper (const std::string &s) const
   stepper = s;
 }
 
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::connect_to_signals() const
+{}
+
 template class BaseInterface<2, 2, LATrilinos>;
 template class BaseInterface<2, 3, LATrilinos>;
 template class BaseInterface<3, 3, LATrilinos>;

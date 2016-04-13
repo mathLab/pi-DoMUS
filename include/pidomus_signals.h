@@ -78,6 +78,30 @@ struct Signals
    */
   boost::signals2::signal<void (typename LAC::VectorType &diff_comp)> fix_differential_components;
 
+  // the following signals are called at begin and end of the
+  // corresponding function in pi-DoMUS. They should be used for debug
+  // purposes
+
+  boost::signals2::signal<void ()> begin_make_grid_fe;
+  boost::signals2::signal<void ()> begin_setup_dofs;
+  boost::signals2::signal<void ()> begin_refine_mesh;
+  boost::signals2::signal<void ()> begin_setup_jacobian;
+  boost::signals2::signal<void ()> begin_residual;
+  boost::signals2::signal<void ()> begin_solve_jacobian_system;
+  boost::signals2::signal<void ()> begin_refine_and_transfer_solutions;
+  boost::signals2::signal<void ()> begin_assemble_matrices;
+  boost::signals2::signal<void ()> begin_solver_should_restart;
+
+  boost::signals2::signal<void ()> end_make_grid_fe;
+  boost::signals2::signal<void ()> end_setup_dofs;
+  boost::signals2::signal<void ()> end_refine_mesh;
+  boost::signals2::signal<void ()> end_setup_jacobian;
+  boost::signals2::signal<void ()> end_residual;
+  boost::signals2::signal<void ()> end_solve_jacobian_system;
+  boost::signals2::signal<void ()> end_refine_and_transfer_solutions;
+  boost::signals2::signal<void ()> end_assemble_matrices;
+  boost::signals2::signal<void ()> end_solver_should_restart;
+
 };
 
 #endif

@@ -127,7 +127,7 @@ public:
    *
    * An example of implementation is given in the poisson_problem_signals.h file.
    */
-  virtual void connect_to_signals() const {}
+  virtual void connect_to_signals() const;
 
   /**
    * Solution preprocessing. This function can be used to store
