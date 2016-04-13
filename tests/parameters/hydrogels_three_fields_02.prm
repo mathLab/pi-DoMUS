@@ -1,11 +1,37 @@
-# Parameter file generated with
+# Parameter file generated with 
 # D2K_GIT_BRANCH=       master
-# D2K_GIT_SHORTREV=     794e613
+# D2K_GIT_SHORTREV=     f6a9b2b
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= c2570a1
+# DEAL_II_GIT_SHORTREV= b3f2eeb
+subsection AMG for U
+  set Aggregation threshold              = 0.000100
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection AMG for c
+  set Aggregation threshold              = 0.000100
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=u
-  set IDs and expressions     = 0=0;0;0;0;0
+  set IDs and expressions     = 
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
@@ -15,18 +41,18 @@ subsection Domain
   set Copy material to manifold ids = false
   set Create default manifolds      = true
   set Grid to generate              = rectangle
-  set Input grid file name          =
-  set Manifold descriptors          =
+  set Input grid file name          = 
+  set Manifold descriptors          = 
   set Mesh smoothing alogrithm      = none
   set Optional Point<spacedim> 1    = 0,0,0
-  set Optional Point<spacedim> 2    = 0.05,1,1
+  set Optional Point<spacedim> 2    = 1,1,1
   set Optional double 1             = 1.0
   set Optional double 2             = 0.5
   set Optional double 3             = 1.5
   set Optional int 1                = 1
   set Optional int 2                = 2
   set Optional vector of dim int    = 1,1,1
-  set Output grid file name         =
+  set Output grid file name         = 
 end
 subsection Error Tables
   set Compute error            = false
@@ -42,11 +68,11 @@ subsection Error Tables
     set Extra terms                    = cells,dofs
     set Latex table caption            = error
     set List of error norms to compute = L2,H1;L2,H1;L2,H1;L2,H1;L2,H1
-    set Rate key                       =
+    set Rate key                       = 
   end
 end
 subsection Exact solution
-  set Function constants  =
+  set Function constants  = 
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
@@ -59,13 +85,15 @@ end
 subsection Free Swelling Three Fields
   set Block of differential components = 0,0,0
   set Blocking of the finite element   = u,u,u,c,p
-  set Finite element space             = FESystem[FE_Q(1)^d-\
-                                                  FE_DGPMonomial(0)-\
-                                                  FE_DGPMonomial(0)]
+  set Finite element space             = FESystem[FE_Q(1)^d-FE_DGPMonomial(0)-FE_DGPMonomial(0)]
   set G                                = 1e4
+  set Gamma                            = 1e-5
   set Omega                            = 1e-5
   set T                                = 298.0
   set chi                              = 0.1
+  set iteration c lumped               = 10
+  set iteration s                      = 10
+  set iteration s approx               = 10
   set l0                               = 1.5
 end
 subsection IDA Solver Parameters
@@ -87,16 +115,18 @@ subsection IDA Solver Parameters
   set Use local tolerances                          = false
 end
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 0.000001
+  set Absolute error tolerance                     = 1e-6
   set Final time                                   = 1
   set Initial time                                 = 0
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 50
-  set Newton relaxation parameter                  = 1.000000
-  set Norm used for non linear iterations          = l2
-  set Relative error tolerance                     = 0.000000
-  set Step size                                    = 1e-2
+  set Maximum number of outer nonlinear iterations = 100
+  set Method used                                  = LS_backtracking
+  set Newton relaxation parameter                  = 1.0
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = true
+  set Relative error tolerance                     = 1e-3
+  set Step size                                    = 5e-3
   set Update continuously Jacobian                 = true
 end
 subsection Initial solution
@@ -105,7 +135,7 @@ subsection Initial solution
   set Variable names      = x,y,z,t
 end
 subsection Initial solution_dot
-  set Function constants  =
+  set Function constants  = 
   set Function expression = 0; 0; 0; 0; 0
   set Variable names      = x,y,z,t
 end
@@ -115,12 +145,18 @@ subsection Neumann boundary conditions
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
+subsection Nitsche boundary conditions
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 
+  set Known component names   = u,u,u,c,p
+  set Used constants          = 
+end
 subsection Output Parameters
-  set Files to save in run directory =
-  set Incremental run prefix         =
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = solution
+  set Problem base name              = nitsche
   set Solution names                 = u
   set Subdivisions                   = 3
 end
@@ -137,15 +173,25 @@ subsection Time derivative of Dirichlet boundary conditions
   set Known component names   = u,u,u,c,p
   set Used constants          = 
 end
+subsection Zero average constraints
+  set Known component names        = u,u,u,c,p
+  set Zero average on boundary     = 
+  set Zero average on whole domain = 
+end
 subsection piDoMUS
   set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = false
   set Initial global refinement                      = 1
-  set Jacobian solver tolerance                      = 1e-8
+  set Jacobian solver tolerance                      = 1e-13
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 0
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
+  set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
+  set Refine mesh during transient                   = false
+  set Show timer                                     = true
+  set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = ida
-  set Show timer                                     = false
   set Use direct solver if available                 = true
 end
