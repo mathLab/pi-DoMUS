@@ -100,7 +100,7 @@ CompressibleNeoHookeanInterface<dim,spacedim,LAC>::
 energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                        FEValuesCache<dim,spacedim> &fe_cache,
                        std::vector<EnergyType> &energies,
-                       std::vector<std::vector<ResidualType> > &local_residuals,
+                       std::vector<std::vector<ResidualType> > &/*local_residuals*/,
                        bool compute_only_system_terms) const
 {
   const FEValuesExtractors::Vector displacement(0);
@@ -137,7 +137,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
         if (!compute_only_system_terms)
           energies[1] += 0.5*u*u*JxW[q];
 
-        (void)compute_only_system_terms;
 
       }
   }
