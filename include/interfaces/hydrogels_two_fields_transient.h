@@ -74,7 +74,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                        FEValuesCache<dim,spacedim> &fe_cache,
                        std::vector<EnergyType> &energies,
                        std::vector<std::vector<ResidualType> > &residuals,
-                       bool compute_only_system_terms) const
+                       bool /*compute_only_system_terms*/) const
 {
   EnergyType alpha = 0;
 
