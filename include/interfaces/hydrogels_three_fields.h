@@ -7,13 +7,8 @@
 
 #include "pde_system_interface.h"
 #include <deal2lkit/parsed_function.h>
-
-
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/lac/trilinos_block_vector.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
+#include <deal2lkit/parsed_preconditioner_amg.h>
+#include <deal2lkit/parsed_mapped_functions.h>
 
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
@@ -41,6 +36,17 @@ public:
   ~HydroGelThreeFields() {};
 
   HydroGelThreeFields();
+
+
+  virtual UpdateFlags get_face_update_flags() const
+  {
+    return (update_values             |
+            update_gradients          | /* this is the new entry */
+            update_quadrature_points  |
+            update_normal_vectors     |
+            update_JxW_values);
+  }
+
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -76,27 +82,18 @@ private:
   double l0_6;
   const double R=8.314;
 
+  mutable ParsedAMGPreconditioner U_prec;
+  mutable ParsedAMGPreconditioner c_prec_amg;
 
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> U_prec;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> c_prec_amg;
   mutable shared_ptr<TrilinosWrappers::PreconditionSSOR> p_prec_ssor;
 
   unsigned int it_c_lumped;
   unsigned int it_s_approx;
   unsigned int it_s;
 
-  bool elliptic;
-  bool high_order_elements;
-  unsigned int n_cycles;
-  bool w_cycle;
-  double agg;
-  unsigned int smoother_sweeps;
-  unsigned int smoother_overlap;
-  bool output_details;
-  std::string smoother_type;
-  std::string coarse_type;
+  double gamma;
+  mutable  ParsedMappedFunctions<spacedim> nitsche;
 
-  ConditionalOStream pcout;
 
 };
 
@@ -106,9 +103,14 @@ HydroGelThreeFields<dim,spacedim,LAC>::HydroGelThreeFields() :
       dim+2,2,
       "FESystem[FE_Q(1)^d-FE_DGPMonomial(0)-FE_DGPMonomial(0)]",
       "u,u,u,c,p","1,0,0"),
-  pcout(std::cout,
-        (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-         == 0))
+  U_prec("AMG for U"),
+  c_prec_amg("AMG for c"),
+  nitsche("Nitsche boundary conditions",
+          this->n_components,
+          this->get_component_names(),
+          "" /* do nothing by default */
+         )
+
 {}
 
 template <int dim, int spacedim, typename LAC>
@@ -136,51 +138,120 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Vector displacement(0);
   const FEValuesExtractors::Scalar concentration(dim);
   const FEValuesExtractors::Scalar pressure(dim+1);
+  {
+    auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
 
-  auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, alpha);
+    auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
 
-  auto &ps = fe_cache.get_values("solution", "p", pressure, alpha);
+    auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
 
-  auto &cs = fe_cache.get_values("solution", "c", concentration, alpha);
+    const unsigned int n_q_points = ps.size();
 
-  const unsigned int n_q_points = ps.size();
+    auto &JxW = fe_cache.get_JxW_values();
 
-  auto &JxW = fe_cache.get_JxW_values();
-
-  for (unsigned int q=0; q<n_q_points; ++q)
-    {
-      const Tensor<2, dim, EnergyType>  &F = Fs[q];
-      const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
-      const EnergyType &c = cs[q];
-      const EnergyType &p = ps[q];
-
-
-      const EnergyType I = trace(C);
-      const EnergyType J = determinant(F);
+    for (unsigned int q=0; q<n_q_points; ++q)
+      {
+        const Tensor<2, dim, EnergyType>  &F = Fs[q];
+        const Tensor<2, dim, EnergyType>   C = transpose(F)*F;
+        const EnergyType &c = cs[q];
+        const EnergyType &p = ps[q];
 
 
-      EnergyType psi = ( 0.5*G*l0_3*(l02*I - dim)
+        const EnergyType I = trace(C);
+        const EnergyType J = determinant(F);
 
-                         + (l0_3*R*T/Omega)*(
-                           (Omega*l03*c)*std::log(
-                             (Omega*l03*c)/(1.+Omega*l03*c)
+
+        EnergyType psi = ( 0.5*G*l0_3*(l02*I - dim)
+
+                           + (l0_3*R*T/Omega)*(
+                             (Omega*l03*c)*std::log(
+                               (Omega*l03*c)/(1.+Omega*l03*c)
+                             )
+                             + chi*(
+                               (Omega*l03*c)/(1.+Omega*l03*c)
+                             )
                            )
-                           + chi*(
-                             (Omega*l03*c)/(1.+Omega*l03*c)
-                           )
-                         )
 
-                         - (mu0)*c - p*(J-l0_3-Omega*c)
-                       ) ;
+                           - (mu0)*c - p*(J-l0_3-Omega*c)
+                         ) ;
 
-      energies[0] += psi*JxW[q];
+        energies[0] += psi*JxW[q];
 
-      if (!compute_only_system_terms)
-        {
-          EnergyType pp = 0.5*p*p ;
-          energies[1] += pp*JxW[q];
-        }
-    }
+        if (!compute_only_system_terms)
+          {
+            EnergyType pp = 0.5*p*p ;
+            energies[1] += pp*JxW[q];
+          }
+      }
+  }
+
+  /// (quasi) automatic nitsche bcs
+  {
+    EnergyType dummy;
+    const double h = cell->diameter();
+
+    for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+      {
+        unsigned int face_id = cell->face(face)->boundary_id();
+        if (cell->face(face)->at_boundary() && nitsche.acts_on_id(face_id))
+          {
+            this->reinit(dummy, cell, face, fe_cache);
+            auto &ps = fe_cache.get_values("solution", "p", pressure, dummy);
+            auto &us = fe_cache.get_values("solution", "u", displacement, dummy);
+            auto &Fs = fe_cache.get_deformation_gradients("solution", "Fu", displacement, dummy);
+
+
+            auto &fev = fe_cache.get_current_fe_values();
+            auto &q_points = fe_cache.get_quadrature_points();
+            auto &JxW = fe_cache.get_JxW_values();
+
+            for (unsigned int q=0; q<q_points.size(); ++q)
+              {
+                auto &u = us[q];
+                auto &p = ps[q];
+                const Tensor<1,spacedim> n = fev.normal_vector(q);
+
+                auto &F = Fs[q];
+                Tensor<2,dim,EnergyType> C = transpose(F)*F;
+                Tensor<2,dim,EnergyType> F_inv=invert(F);
+
+                EnergyType Ic = trace(C);
+                EnergyType J = determinant(F);
+                EnergyType lnJ = std::log (J);
+
+
+                Tensor<2,dim,EnergyType> S = invert(transpose(F));
+                S *= -p*J;
+                S += G/l0*F;
+
+                // update time for nitsche_bcs
+                nitsche.set_time(this->get_current_time());
+
+                // get mapped function acting on this face_id
+                Vector<double> func(this->n_components);
+                nitsche.get_mapped_function(face_id)->vector_value(q_points[q], func);
+
+                Tensor<1,spacedim> u0;
+
+                for (unsigned int c=0; c<spacedim; ++c)
+                  u0[c] = func[c];
+
+                energies[0] +=(
+                                (S*n)*(u-u0)
+
+                                + (1.0/(2.0*gamma*h))*(u-u0)*(u-u0)
+                              )*JxW[q];
+
+
+              }// end loop over quadrature points
+
+            break;
+
+          } // endif face->at_boundary
+
+      }// end loop over faces
+  }
+
 
 }
 
@@ -196,20 +267,8 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &it_c_lumped, "iteration c lumped", "10", Patterns::Integer(1));
   this->add_parameter(prm, &it_s_approx, "iteration s approx", "10", Patterns::Integer(1));
   this->add_parameter(prm, &it_s, "iteration s", "10", Patterns::Integer(1));
-  this->add_parameter(prm, &agg, "aggregation", "0.8", Patterns::Double(0.0));
 
-  this->add_parameter(prm, &elliptic, "elliptic", "true", Patterns::Bool());
-  this->add_parameter(prm, &high_order_elements, "high_order_elements", "true", Patterns::Bool());
-  this->add_parameter(prm, &w_cycle, "w_cycle", "true", Patterns::Bool());
-  this->add_parameter(prm, &output_details, "output_details", "true", Patterns::Bool());
-
-  this->add_parameter(prm, &n_cycles, "n_cycles", "2", Patterns::Integer(1));
-  this->add_parameter(prm, &smoother_sweeps, "smoother_sweeps", "2", Patterns::Integer(1));
-  this->add_parameter(prm, &smoother_overlap, "smoother_overlap", "1", Patterns::Integer(0));
-
-  this->add_parameter(prm, &smoother_type, "smoother_type", "Chebyshev", Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
-  this->add_parameter(prm, &coarse_type, "coarse_type", "Amesos-KLU",Patterns::Selection("Aztec|IFPACK|Jacobi|ML symmetric Gauss-Seidel|symmetric Gauss-Seidel|ML Gauss-Seidel|Gauss-Seidel|block Gauss-Seidel|symmetric block Gauss-Seidel|Chebyshev|MLS|Hiptmair|Amesos-KLU|Amesos-Superlu|Amesos-UMFPACK|Amesos-Superludist|Amesos-MUMPS|user-defined|SuperLU|IFPACK-Chebyshev|self|do-nothing|IC|ICT|ILU|ILUT|Block Chebyshev|IFPACK-Block Chebyshev"));
-
+  this->add_parameter(prm, &gamma, "Gamma", "0.001", Patterns::Double(0));
 
 
 }
@@ -235,66 +294,36 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
                          LinearOperator<LATrilinos::VectorType> &) const
 {
 
+  //  auto &pcout = this->get_pcout();
   clock_t inizio = clock();
-  clock_t totale = clock();
 
 
   double tempo;
 
+  //  auto &fe = this->pfe;
 
   p_prec_ssor.reset (new TrilinosWrappers::PreconditionSSOR());
-  c_prec_amg.reset (new TrilinosWrappers::PreconditionAMG());
 
-//    if (U_prec == 0)
-//      {
-  U_prec.reset (new TrilinosWrappers::PreconditionAMG());
-
-  TrilinosWrappers::PreconditionAMG::AdditionalData U_amg_data;
-  U_amg_data.elliptic = elliptic;
-  U_amg_data.higher_order_elements = high_order_elements;
-  U_amg_data.n_cycles = n_cycles;
-  U_amg_data.w_cycle = w_cycle;
-  U_amg_data.smoother_sweeps = smoother_sweeps;
-  U_amg_data.smoother_overlap = smoother_overlap;
-  U_amg_data.output_details = output_details;
-  U_amg_data.smoother_type = smoother_type.c_str();
-  U_amg_data.coarse_type = coarse_type.c_str();
-  U_amg_data.aggregation_threshold = agg;
-
-
-  /* U_amg_data.elliptic = true; */
-  /* U_amg_data.higher_order_elements = true; */
-  /* U_amg_data.smoother_sweeps = 2; */
-  /* U_amg_data.coarse_type = "Amesos-MUMPS"; */
-
-  U_prec->initialize (matrices[0]->block(0,0), U_amg_data);
+  U_prec.initialize_preconditioner(matrices[0]->block(0,0));
 
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
-  pcout << "u amg " << tempo << " seconds" << std::endl;
+  //  pcout << "u amg " << tempo << " seconds" << std::endl;
   //      }
 
 
-  TrilinosWrappers::PreconditionAMG::AdditionalData c_amg_data;
-  c_amg_data.elliptic = true;
-  c_amg_data.higher_order_elements = true;
-  c_amg_data.smoother_sweeps = 1;
-  c_amg_data.aggregation_threshold = 0.03;
-  //  c_amg_data.coarse_type = "Amesos-MUMPS";
-
-
-  c_prec_amg->initialize (matrices[0]->block(1,1), c_amg_data);
+  c_prec_amg.initialize_preconditioner (matrices[0]->block(1,1));
 
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "c amg " << tempo << " seconds" << std::endl;
+  //  pcout << "c amg " << tempo << " seconds" << std::endl;
 
   p_prec_ssor->initialize (matrices[1]->block(2,2));
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "p ssor " << tempo << " seconds" << std::endl;
+  //  pcout << "p ssor " << tempo << " seconds" << std::endl;
 
 
   // SYSTEM MATRIX:
@@ -318,23 +347,23 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   /*  static auto A_lumped =   linear_operator< LATrilinos::VectorType::BlockType >( matrices[0]->block(0,0) ); */
 
 ////////////////// C_lumped
-  LATrilinos::VectorType::BlockType c_ones;
-  C_lumped.reinit_domain_vector(c_ones, false);
-  c_ones = 1.0;
+  /* LATrilinos::VectorType::BlockType c_ones; */
+  /* C_lumped.reinit_domain_vector(c_ones, false); */
+  /* c_ones = 1.0; */
 
-  static  LATrilinos::VectorType::BlockType vec;
-  vec.reinit(c_ones);
-  vec=c_ones;
+  /* static  LATrilinos::VectorType::BlockType vec; */
+  /* vec.reinit(c_ones); */
+  /* vec=c_ones; */
 
-  C_lumped.vmult(vec, c_ones);
+  /* C_lumped.vmult(vec, c_ones); */
 
-  C_lumped.vmult = [&vec] (LATrilinos::VectorType::BlockType &dst,
-                           const LATrilinos::VectorType::BlockType &src)
-  {
-    dst = src;
-    dst.scale(vec);
-  };
-  ///////////////
+  /* C_lumped.vmult = [&vec] (LATrilinos::VectorType::BlockType &dst, */
+  /*                          const LATrilinos::VectorType::BlockType &src) */
+  /* { */
+  /*   dst = src; */
+  /*   dst.scale(vec); */
+  /* }; */
+  /* /////////////// */
 
   const std::array<std::array<LinearOperator<LATrilinos::VectorType::BlockType>, 3 >, 3 > matrix_array = {{
       {{ A   , Z01 ,  Bt  }},
@@ -348,7 +377,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "system " << tempo << " seconds" << std::endl;
+  //  pcout << "system " << tempo << " seconds" << std::endl;
 
 
   static ReductionControl solver_control_pre(5000, 1e-6);
@@ -364,8 +393,8 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   /* auto C_inv = inverse_operator( PE, solver_CG, *c_prec); */
   //  auto P_inv = inverse_operator( Pp, solver_CG, *p_prec_ssor);
   auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec_ssor);
-  auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), *U_prec);
-  auto C_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), *c_prec_amg);
+  auto A_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(0,0), U_prec);
+  auto C_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[0]->block(1,1), c_prec_amg);
   //  auto P_inv = linear_operator<LATrilinos::VectorType::BlockType>( matrices[1]->block(2,2), *p_prec);
 
 
@@ -399,7 +428,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "L inv " << tempo << " seconds" << std::endl;
+  //  pcout << "L inv " << tempo << " seconds" << std::endl;
 
 
   auto U02 = null_operator(Bt) - A_inv*Bt;
@@ -419,7 +448,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "u inv " << tempo << " seconds" << std::endl;
+  //  pcout << "u inv " << tempo << " seconds" << std::endl;
 
 
   ///////////////////////////////////////////////////////////////
@@ -462,7 +491,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "definizione di schur " << tempo << " seconds" << std::endl;
+  //  pcout << "definizione di schur " << tempo << " seconds" << std::endl;
 
 
 
@@ -470,7 +499,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "S approx inv " << tempo << " seconds" << std::endl;
+  //  pcout << "S approx inv " << tempo << " seconds" << std::endl;
 
 
 
@@ -486,7 +515,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "S  inv " << tempo << " seconds" << std::endl;
+  //  pcout << "S  inv " << tempo << " seconds" << std::endl;
 
 
 
@@ -498,16 +527,18 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "D inv " << tempo << " seconds" << std::endl;
+  //  pcout << "D inv " << tempo << " seconds" << std::endl;
 
   prec_op = U_inv_op*D_inv_op*L_inv_op;
 
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  pcout << "prodotto " << tempo << " seconds" << std::endl;
+  (void)tempo;
 
-  pcout << "TOTALE  " << double(clock() - totale)/(double)CLOCKS_PER_SEC << std::endl;
+  //  pcout << "prodotto " << tempo << " seconds" << std::endl;
+
+  //  pcout << "TOTALE  " << double(clock() - totale)/(double)CLOCKS_PER_SEC << std::endl;
 //prec_op = U_inv_op;
 //  prec_op = L_inv_op;
 // prec_op = D_inv_op;

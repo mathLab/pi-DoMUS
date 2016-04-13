@@ -111,7 +111,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       if (!compute_only_system_terms)
         energies[1] += 0.5*u*u*JxW[q];
 
-      (void)compute_only_system_terms;
 
     }
 
