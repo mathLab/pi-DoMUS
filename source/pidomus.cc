@@ -131,7 +131,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   interface.initialize_simulator (*this);
 
-  interface.connect_to_signals();
 
   for (unsigned int i=0; i<n_matrices; ++i)
     {
@@ -861,6 +860,9 @@ template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
 {
   interface.set_stepper(time_stepper);
+
+  interface.connect_to_signals();
+
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
       if (current_cycle == 0)
