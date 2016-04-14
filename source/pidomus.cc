@@ -131,11 +131,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   interface.initialize_simulator (*this);
 
+  interface.connect_to_signals();
+
   for (unsigned int i=0; i<n_matrices; ++i)
     {
       matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
       matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
+
 }
 
 
@@ -256,7 +259,6 @@ apply_neumann_bcs (
   std::vector<double> &local_residual) const
 {
 
-
   double dummy = 0.0;
 
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
@@ -359,6 +361,7 @@ template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 {
   auto _timer = computing_timer.scoped_timer("Setup dof systems");
+  signals.begin_setup_dofs();
   std::vector<unsigned int> sub_blocks = interface.pfe.get_component_blocks();
   dof_handler->distribute_dofs (*fe);
   DoFRenumbering::component_wise (*dof_handler, sub_blocks);
@@ -402,23 +405,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       relevant_partitioning.push_back(relevant_set.get_view(std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i, 0),
                                                             std::accumulate(dofs_per_block.begin(), dofs_per_block.begin() + i + 1, 0)));
   }
-  constraints.clear ();
-  constraints.reinit (relevant_set);
 
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
-
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
-  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
-  constraints.close ();
-
-  constraints_dot.clear();
-  DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints_dot);
-
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
-
-  constraints_dot.close ();
+  update_functions_and_constraints(current_time);
 
   ScopedLACInitializer initializer(dofs_per_block,
                                    partitioning,
@@ -493,21 +481,25 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
             }
         }
 
+      signals.fix_initial_conditions(solution, solution_dot);
       explicit_solution = solution;
       locally_relevant_explicit_solution = solution;
 
     }
+  signals.end_setup_dofs();
 }
 
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double &t)
 {
-  dirichlet_bcs.set_time(t);
-  dirichlet_bcs_dot.set_time(t);
-  forcing_terms.set_time(t);
-  neumann_bcs.set_time(t);
-
+  if (!std::isnan(t))
+    {
+      dirichlet_bcs.set_time(t);
+      dirichlet_bcs_dot.set_time(t);
+      forcing_terms.set_time(t);
+      neumann_bcs.set_time(t);
+    }
   constraints.clear();
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
@@ -523,7 +515,7 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
                                            constraints_dot);
 
   apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
-
+  signals.update_constraint_matrices(constraints,constraints_dot);
   constraints_dot.close ();
 }
 
@@ -627,6 +619,8 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 {
   auto _timer = computing_timer.scoped_timer ("Assemble matrices");
 
+  signals.begin_assemble_matrices();
+
   current_alpha = alpha;
   syncronize(t,solution,solution_dot);
 
@@ -698,6 +692,7 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
                               LATrilinos::VectorType &locally_relevant_y_expl,
                               bool adaptive_refinement)
 {
+  signals.begin_refine_and_transfer_solutions();
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
   locally_relevant_y_expl = y_expl;
@@ -746,6 +741,7 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
   locally_relevant_y_dot = y_dot;
   locally_relevant_y_expl = y_expl;
 
+  signals.end_refine_and_transfer_solutions();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -758,6 +754,7 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
                               LADealII::VectorType &locally_relevant_y_expl,
                               bool adaptive_refinement)
 {
+  signals.begin_refine_and_transfer_solutions();
   SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
 
   std::vector<LADealII::VectorType> old_sols (3);
@@ -802,12 +799,15 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   locally_relevant_y_dot = y_dot;
   locally_relevant_y_expl = y_expl;
 
+  signals.end_refine_and_transfer_solutions();
 }
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 {
   auto _timer = computing_timer.scoped_timer ("Mesh refinement");
+
+  signals.begin_refine_mesh();
 
   if (adaptive_refinement)
     {
@@ -829,16 +829,20 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
   locally_relevant_explicit_solution = explicit_solution;
   current_time = std::numeric_limits<double>::quiet_NaN();
   previous_time =   std::numeric_limits<double>::quiet_NaN();
+
+  signals.end_refine_mesh();
 }
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::make_grid_fe()
 {
+  signals.begin_make_grid_fe();
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
-  interface.postprocess_newly_created_triangulation(*triangulation);
+  signals.postprocess_newly_created_triangulation(*triangulation);
   fe = SP(interface.pfe());
   triangulation->refine_global (initial_global_refinement);
+  signals.end_make_grid_fe();
 }
 
 /* ------------------------ OUTPUTS ------------------------ */
@@ -938,6 +942,7 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
 {
 
   auto _timer = computing_timer.scoped_timer ("Solver should restart");
+  signals.begin_solver_should_restart();
   if (use_space_adaptivity)
     {
       double max_kelly=0;
@@ -978,20 +983,25 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
           constraints.distribute(solution);
           constraints_dot.distribute(solution_dot);
 
+          signals.fix_solutions_after_refinement(solution,solution_dot);
+
           MPI::COMM_WORLD.Barrier();
           current_time = std::numeric_limits<double>::quiet_NaN();
+          signals.end_solver_should_restart();
           return true;
         }
       else // if max_kelly > kelly_threshold
         {
-
+          signals.end_solver_should_restart();
           return false;
         }
 
     }
   else // use space adaptivity
-
-    return false;
+    {
+      signals.end_solver_should_restart();
+      return false;
+    }
 }
 
 
@@ -1003,6 +1013,8 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
                                       typename LAC::VectorType &dst)
 {
   auto _timer = computing_timer.scoped_timer ("Residual");
+
+  signals.begin_residual();
 
   syncronize(t,solution,solution_dot);
 
@@ -1069,6 +1081,8 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
 
   dst.compress(VectorOperation::insert);
 
+  signals.end_residual();
+
   return 0;
 }
 
@@ -1084,6 +1098,9 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
                                                    typename LAC::VectorType &dst) const
 {
   auto _timer = computing_timer.scoped_timer ("Solve system");
+
+  signals.begin_solve_jacobian_system();
+
   set_constrained_dofs_to_zero(dst);
 
   typedef dealii::BlockSparseMatrix<double> sMAT;
@@ -1173,7 +1190,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
     }
 
   set_constrained_dofs_to_zero(dst);
-
+  signals.end_solve_jacobian_system();
   return 0;
 }
 
@@ -1202,6 +1219,8 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
 {
   auto _timer = computing_timer.scoped_timer ("Setup Jacobian");
 
+  signals.begin_setup_jacobian();
+
   current_alpha = alpha;
   syncronize(t,solution,solution_dot);
 
@@ -1215,7 +1234,7 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                          jacobian_preconditioner_op,
                                          jacobian_preconditioner_op_finer);
     }
-
+  signals.end_setup_jacobian();
   return 0;
 }
 
@@ -1230,7 +1249,7 @@ piDoMUS<dim, spacedim, LAC>::differential_components() const
   std::vector<unsigned int> block_diff = interface.get_differential_blocks();
   for (unsigned int i = 0; i < block_diff.size(); ++i)
     diff_comps.block(i) = block_diff[i];
-
+  signals.fix_differential_components(diff_comps);
   set_constrained_dofs_to_zero(diff_comps);
   return diff_comps;
 }

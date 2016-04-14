@@ -29,6 +29,7 @@
 #include "copy_data.h"
 #include "base_interface.h"
 #include "simulator_access.h"
+#include "pidomus_signals.h"
 
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -463,11 +464,18 @@ private:
                   const typename LAC::VectorType &solution,
                   const typename LAC::VectorType &solution_dot);
 
+
   /**
-   * SimulatoAccess accesses to all internal variables and returns a
+   * Struct containing the signals
+   */
+  Signals<dim,spacedim,LAC>    signals;
+
+  /**
+   * SimulatorAccess accesses to all internal variables and returns a
    * const reference to them through functions named get_variable()
    */
   friend class SimulatorAccess<dim,spacedim,LAC>;
+
 };
 
 #endif

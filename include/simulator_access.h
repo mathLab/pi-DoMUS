@@ -14,6 +14,7 @@ using namespace dealii;
 // forward declaration
 
 template <int dim, int spacedim, typename LAC> class piDoMUS;
+template <int dim, int spacedim, typename LAC> struct Signals;
 
 template <int dim, int spacedim, typename LAC>
 class SimulatorAccess
@@ -64,6 +65,12 @@ public:
    */
   const piDoMUS<dim,spacedim,LAC> &
   get_simulator () const;
+
+  /**
+   * Get access to the structure containing the signals of piDoMUS
+   */
+  Signals<dim,spacedim,LAC> &
+  get_signals() const;
 
   /**
    * Return the MPI communicator for this simulation.
