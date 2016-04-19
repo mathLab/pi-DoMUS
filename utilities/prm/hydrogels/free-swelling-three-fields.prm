@@ -1,0 +1,120 @@
+# Parameter file generated with 
+# D2K_GIT_BRANCH=       kinsol_implementation
+# D2K_GIT_SHORTREV=     f667f6f
+# DEAL_II_GIT_BRANCH=   master
+# DEAL_II_GIT_SHORTREV= b3f2eeb
+
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0=u.N % 2=u.N % 4=u.N
+  set IDs and expressions     = 0=0;0;0;0;0 %2=0;0;0;0;0 %4=0;0;0;0;0
+  set Known component names   = u,u,u,c,p
+  set Used constants          = 
+end
+
+subsection Domain
+  set Colorize                      = true
+  set Grid to generate              = rectangle
+  set Optional Point<spacedim> 1    = 0,0,0
+  set Optional Point<spacedim> 2    = 1,1,1
+end
+
+subsection Forcing terms
+  set IDs and component masks = 7=c
+  set IDs and expressions     = 7=0;0;0;-(R*T*(log((l0^3-1.)/l0^3) + 1./l0^3 + chi/l0^6) + G*Omega/l0)*t;0
+  set Known component names   = u,u,u,c,p
+  set Used constants          = R=8.314, T=298.0, l0=1.5, chi=0.1, G=1e4, Omega=1e-5
+end
+
+subsection Free Swelling Three Fields
+  set Block of differential components = 0,0,0
+  set Blocking of the finite element   = u,u,u,c,p
+  set Finite element space             = FESystem[FE_Q(1)^d-\
+                                                  FE_DGPMonomial(0)-\
+						  FE_DGPMonomial(0)]
+  set G                                = 1e4
+  set Gamma                            = 0.001
+  set Omega                            = 1e-5
+  set T                                = 298.0
+  set chi                              = 0.1
+  set l0                               = 1.5
+end
+
+subsection IDA Solver Parameters
+  set Absolute error tolerance                      = 1e-4
+  set Final time                                    = 1
+  set Ignore algebraic terms for error computations = false
+  set Initial condition Newton max iterations       = 5
+  set Initial condition Newton parameter            = 0.33
+  set Initial condition type                        = use_y_diff
+  set Initial condition type after restart          = use_y_dot
+  set Initial step size                             = 1e-4
+  set Initial time                                  = 0
+  set Maximum number of nonlinear iterations        = 10
+  set Maximum order of BDF                          = 5
+  set Min step size                                 = 5e-5
+  set Relative error tolerance                      = 1e-3
+  set Seconds between each output                   = 1e-2
+  set Show output of time steps                     = true
+  set Use local tolerances                          = false
+end
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 0.000001
+  set Final time                                   = 0
+  set Initial time                                 = 0
+  set Intervals between outputs                    = 1
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 5
+  set Method used                                  = fixed_alpha
+  set Newton relaxation parameter                  = 1.000000
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 0.000000
+  set Step size                                    = 0.001000
+  set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+subsection Initial solution
+  set Function constants  = G=1e4, l0=1.5, Omega=1e-5
+  set Function expression = 0; 0; 0; (l0^3-1)/(Omega*l0^3); G/l0
+  set Variable names      = x,y,z,t
+end
+subsection Initial solution_dot
+  set Function constants  = 
+  set Function expression = 0; 0; 0; 0; 0
+  set Variable names      = x,y,z,t
+end
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 10
+  set Maximum number of iterations                       = 200
+  set Step tolerance                                     = 1e-11
+  set Strategy                                           = newton
+  set Tolerance for residuals                            = 1e-9
+  set Use internal KINSOL direct solver                  = false
+end
+
+subsection Output Parameters
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = free-swelling-three-fields
+  set Solution names                 = u
+  set Subdivisions                   = 2
+end
+
+subsection piDoMUS
+  set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = false
+  set Initial global refinement                      = 0
+  set Jacobian solver tolerance                      = 1e-8
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 0
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Refine mesh during transient                   = false
+  set Show timer                                     = false
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = ida
+  set Use direct solver if available                 = true
+end
