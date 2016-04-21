@@ -9,6 +9,8 @@
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/sacado_tools.h>
 
+#include <deal.II/grid/grid_tools.h>
+
 template <int dim, int spacedim, typename LAC>
 class HydroGelOneField : public PDESystemInterface<dim,spacedim, HydroGelOneField<dim,spacedim,LAC>, LAC>
 {
@@ -36,6 +38,21 @@ public:
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
 
+  virtual void connect_to_signals() const
+  {
+    auto &signals = this->get_signals();
+    if (this->wrinkling)
+      {
+        auto &pcout = this->get_pcout();
+        pcout << "applying random distortion to grid" <<std::endl;
+        signals.postprocess_newly_created_triangulation.connect(
+          [&](typename parallel::distributed::Triangulation<dim,spacedim> &tria)
+        {
+          GridTools::distort_random(factor,tria,false);
+        });
+      }
+
+  }
 
 private:
   double T;
@@ -50,6 +67,11 @@ private:
   double l0_3;
   double l0_6;
   const double R=8.314;
+
+
+  double factor;
+  bool wrinkling;
+
 
 
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
@@ -132,6 +154,8 @@ void HydroGelOneField<dim,spacedim,LAC>::declare_parameters (ParameterHandler &p
   this->add_parameter(prm, &chi, "chi", "0.1", Patterns::Double(0.0));
   this->add_parameter(prm, &l0, "l0", "1.5", Patterns::Double(1.0));
   this->add_parameter(prm, &G, "G", "10e3", Patterns::Double(0.0));
+  this->add_parameter(prm, &factor, "distortion factor", "1e-4", Patterns::Double(0.0));
+  this->add_parameter(prm, &wrinkling, "distort triangulation", "false", Patterns::Bool());
 }
 
 template <int dim, int spacedim, typename LAC>

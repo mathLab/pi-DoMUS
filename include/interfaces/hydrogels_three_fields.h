@@ -66,7 +66,66 @@ public:
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
+  virtual void connect_to_signals() const
+  {
+    auto &signals = this->get_signals();
+    auto &pcout = this->get_pcout();
+    if (this->wrinkling)
+      {
+        pcout << "applying random distortion to grid" <<std::endl;
+        signals.postprocess_newly_created_triangulation.connect(
+          [&](typename parallel::distributed::Triangulation<dim,spacedim> &tria)
+        {
+          GridTools::distort_random(factor,tria,false);
+        });
+      }
+    signals.begin_make_grid_fe.connect(
+      [&]()
+    {
+      pcout << "#########  make_grid_fe"<<std::endl;
+    });
+    signals.begin_setup_dofs.connect(
+      [&]()
+    {
+      pcout << "#########  setup_dofs"<<std::endl;
+    });
+    signals.begin_refine_mesh.connect(
+      [&]()
+    {
+      pcout << "#########  refine_mesh"<<std::endl;
+    });
+    signals.begin_setup_jacobian.connect(
+      [&]()
+    {
+      pcout << "#########  setup_jacobian"<<std::endl;
+    });
+    signals.begin_residual.connect(
+      [&]()
+    {
+      pcout << "#########  residual"<<std::endl;
+    });
+    signals.begin_solve_jacobian_system.connect(
+      [&]()
+    {
+      pcout << "#########  solve_jacobian_system"<<std::endl;
+    });
+    signals.begin_refine_and_transfer_solutions.connect(
+      [&]()
+    {
+      pcout << "#########  refine_and_transfer_solutions"<<std::endl;
+    });
+    signals.begin_assemble_matrices.connect(
+      [&]()
+    {
+      pcout << "#########  assemble_matrices"<<std::endl;
+    });
+    signals.begin_solver_should_restart.connect(
+      [&]()
+    {
+      pcout << "#########  solver_should_restart"<<std::endl;
+    });
 
+  }
 
 private:
   double T;
@@ -81,6 +140,10 @@ private:
   double l0_3;
   double l0_6;
   const double R=8.314;
+
+
+  double factor;
+  bool wrinkling;
 
   mutable ParsedAMGPreconditioner U_prec;
   mutable ParsedAMGPreconditioner c_prec_amg;
@@ -269,7 +332,8 @@ void HydroGelThreeFields<dim,spacedim,LAC>::declare_parameters (ParameterHandler
   this->add_parameter(prm, &it_s, "iteration s", "10", Patterns::Integer(1));
 
   this->add_parameter(prm, &gamma, "Gamma", "0.001", Patterns::Double(0));
-
+  this->add_parameter(prm, &factor, "distortion factor", "1e-4", Patterns::Double(0.0));
+  this->add_parameter(prm, &wrinkling, "distort triangulation", "false", Patterns::Bool());
 
 }
 
@@ -294,7 +358,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
                          LinearOperator<LATrilinos::VectorType> &) const
 {
 
-  //  auto &pcout = this->get_pcout();
+  auto &pcout = this->get_pcout();
   clock_t inizio = clock();
 
 
@@ -308,7 +372,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
 
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
-  //  pcout << "u amg " << tempo << " seconds" << std::endl;
+  pcout << "u amg " << tempo << " seconds" << std::endl;
   //      }
 
 
@@ -317,13 +381,13 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "c amg " << tempo << " seconds" << std::endl;
+  pcout << "c amg " << tempo << " seconds" << std::endl;
 
   p_prec_ssor->initialize (matrices[1]->block(2,2));
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "p ssor " << tempo << " seconds" << std::endl;
+  pcout << "p ssor " << tempo << " seconds" << std::endl;
 
 
   // SYSTEM MATRIX:
@@ -377,7 +441,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "system " << tempo << " seconds" << std::endl;
+  pcout << "system " << tempo << " seconds" << std::endl;
 
 
   static ReductionControl solver_control_pre(5000, 1e-6);
@@ -428,7 +492,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "L inv " << tempo << " seconds" << std::endl;
+  pcout << "L inv " << tempo << " seconds" << std::endl;
 
 
   auto U02 = null_operator(Bt) - A_inv*Bt;
@@ -448,7 +512,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "u inv " << tempo << " seconds" << std::endl;
+  pcout << "u inv " << tempo << " seconds" << std::endl;
 
 
   ///////////////////////////////////////////////////////////////
@@ -491,7 +555,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "definizione di schur " << tempo << " seconds" << std::endl;
+  pcout << "definizione di schur " << tempo << " seconds" << std::endl;
 
 
 
@@ -499,7 +563,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "S approx inv " << tempo << " seconds" << std::endl;
+  pcout << "S approx inv " << tempo << " seconds" << std::endl;
 
 
 
@@ -515,7 +579,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "S  inv " << tempo << " seconds" << std::endl;
+  pcout << "S  inv " << tempo << " seconds" << std::endl;
 
 
 
@@ -527,7 +591,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
   tempo =  double(clock() - inizio)/(double)CLOCKS_PER_SEC;
   inizio = clock();
 
-  //  pcout << "D inv " << tempo << " seconds" << std::endl;
+  pcout << "D inv " << tempo << " seconds" << std::endl;
 
   prec_op = U_inv_op*D_inv_op*L_inv_op;
 
@@ -536,7 +600,7 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
 
   (void)tempo;
 
-  //  pcout << "prodotto " << tempo << " seconds" << std::endl;
+  pcout << "prodotto " << tempo << " seconds" << std::endl;
 
   //  pcout << "TOTALE  " << double(clock() - totale)/(double)CLOCKS_PER_SEC << std::endl;
 //prec_op = U_inv_op;
