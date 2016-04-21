@@ -79,11 +79,15 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include <deal2lkit/sacado_tools.h>
 #include <deal2lkit/parsed_preconditioner/amg.h>
 #include <deal2lkit/parsed_preconditioner/jacobi.h>
 
 namespace NSUtilities
 {
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Structs and classes:
 
   template <int dim>
   struct CopyForce
@@ -208,6 +212,9 @@ private:
   */
   std::string prec_name;
 
+  // PHYSICAL PARAMETERS:
+  ////////////////////////////////////////////
+
   /**
    * Density
    */
@@ -218,10 +225,17 @@ private:
    */
   double nu;
 
+  // STABILIZATION:
+  ////////////////////////////////////////////
   /**
    * div-grad stabilization parameter
    */
   double gamma;
+
+  /**
+   * SUPG stabilization term
+   */
+  double SUPG_alpha;
 
   /**
    * p-q stabilization parameter
@@ -302,6 +316,10 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Bool(),
                       "Compute the mean resulting force acting\n"
                       "on the obstacle.");
+  this->add_parameter(prm, &SUPG_alpha,
+                      "SUPG alpha", "0.0",
+                      Patterns::Double(0.0),
+                      "Use SUPG alpha");
   this->add_parameter(prm, &dynamic,
                       "Enable dynamic term (\\partial_t u)", "true",
                       Patterns::Bool(),
@@ -314,8 +332,8 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Selection("fully_non_linear|linear|RHS"),
                       "Available options: \n"
                       " fully_non_linear\n"
-                      "u_linear\n"
-                      "RHS\n");
+                      " linear\n"
+                      " RHS\n");
   this->add_parameter(prm, &linearize_in_time,
                       "Linearize using time", "true",
                       Patterns::Bool(),
@@ -354,6 +372,8 @@ void
 NavierStokes<dim,spacedim,LAC>::
 solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
 {
+  if (!compute_force) return;
+
   Tensor<1, dim, double> global_force;
 
   typedef
@@ -496,7 +516,7 @@ void NavierStokes<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
   if (is_parallel)
-    couplings[0] = "1,1;0,0"; // Direct solver uses block(1,0)
+    couplings[0] = "1,1;0,0";
   else
     couplings[0] = "1,1;1,0";
 
@@ -519,6 +539,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   ResidualType et = 0;
   double dummy = 0.0;
+  double h = cell->diameter();
+
   // dummy number to define the type of variables
   this->reinit (et, cell, fe_cache);
 
@@ -576,6 +598,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto div_v = fev[velocity ].divergence(i,quad);
           auto sym_grad_v = fev[ velocity ].symmetric_gradient(i,quad);
 
+          auto grad_v = fev[ velocity ].gradient(i,quad);
           // Pressure:
           auto q = fev[ pressure ].value(i,quad);
           auto grad_q = fev[ pressure ].gradient(i,quad);
@@ -612,7 +635,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               else if (non_linear_term=="RHS")
                 nl_u = gradoldu * oldu;
 
-              res += rho * scalar_product(nl_u,v);
+              double norm = std::sqrt(SacadoTools::to_double(oldu*oldu));
+
+              if (norm > 0 && SUPG_alpha > 0)
+                res += rho * scalar_product( nl_u, v + SUPG_alpha * (h/norm) * grad_v  * oldu);
+              else
+                res += rho * scalar_product( nl_u, v);
+
             }
           // grad-div stabilization term:
           if (gamma!=0.0)
@@ -651,7 +680,9 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<LATrilinos::VectorType> &prec_op,
   LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
+
   auto alpha = this->get_alpha();
+  // double dt = this->get_timestep();
 
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;
@@ -664,8 +695,8 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
 
   // SYSTEM MATRIX:
-  auto A  = linear_operator<BVEC>( matrices[0]->block(0,0) );
-  auto Bt  = linear_operator<BVEC>( matrices[0]->block(0,1) );
+  auto A = linear_operator<BVEC>( matrices[0]->block(0,0) );
+  auto Bt = linear_operator<BVEC>( matrices[0]->block(0,1) );
   auto B = transpose_operator<BVEC>( Bt );
   auto C  = B*Bt;
   auto ZeroP = null_operator(C);

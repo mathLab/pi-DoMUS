@@ -73,11 +73,11 @@ double SimulatorAccess<dim,spacedim,LAC>::get_alpha () const
   return simulator->current_alpha;
 }
 
-// template <int dim, int spacedim, typename LAC>
-// double SimulatorAccess<dim,spacedim,LAC>::get_timestep () const
-// {
-//   return simulator->time_step;
-// }
+template <int dim, int spacedim, typename LAC>
+double SimulatorAccess<dim,spacedim,LAC>::get_timestep () const
+{
+  return simulator->current_dt;
+}
 
 
 // template <int dim, int spacedim, typename LAC>

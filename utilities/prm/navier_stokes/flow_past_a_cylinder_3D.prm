@@ -48,14 +48,14 @@ subsection Navier Stokes Interface
   set Invert Ap using inverse_operator     = true
   set Invert Mp using inverse_operator     = true
   
-  set nu [Pa s]                            = 0.001
+  set nu [Pa s]                            = 0.01
   set rho [kg m^3]                         = 1.0
-  set div-grad stabilization parameter     = 0.099
+  set div-grad stabilization parameter     = 0.1
 end
 
 subsection piDoMUS
-  set Initial global refinement                      = 2
-  set Adaptive refinement                            = true
+  set Initial global refinement                      = 3
+  set Adaptive refinement                            = false
   
   set Max iterations                                 = 30
   set Enable finer preconditioner                    = true
@@ -66,7 +66,7 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Refine mesh during transient                   = true
+  set Refine mesh during transient                   = false
   set Show timer                                     = true
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = euler
@@ -75,7 +75,7 @@ end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 1 = u % 2 = u % 4 = u 
-  set IDs and expressions     = 2 = (1-y^2) * (1-z^2) ;0;0;0  %\
+  set IDs and expressions     = 2 = (1-y^2) * z*(1-z) ;0;0;0  %\
                                 1 = 0;0;0;0 %\
                                 4 = 0;0;0;0 
   set Known component names   = u,u,u,p
@@ -88,8 +88,19 @@ subsection Domain
   # set Colorize                   = true
   # set Manifold descriptors       = 5=SphericalManifold
   # set Manifold descriptors       = 4=HyperBallBoundary
-  # set Optional Point<spacedim> 1 = 0,0,0
-  # set Optional double 1          = 0.2020305089
+  set Manifold descriptors       = 4=GeneralCylinderBoundary
+  set Optional Point<spacedim> 1 = 0,0,1
+  set Optional Point<spacedim> 2 = 0,0,0
+  set Optional int 1             = 2
+  #set Optional int 2                = 2
+ ##  set Optional Point<spacedim> 2    = 1,1
+  set Optional double 1             = 0.25
+ #  set Optional double 2             = 0.5
+ #  set Optional double 3             = 1.5
+ #
+ #  set Optional int 2                = 2
+ #  set Optional vector of dim int    = 1,1
+ #  set Output grid file name         = 
 end
 
 subsection IMEX Parameters

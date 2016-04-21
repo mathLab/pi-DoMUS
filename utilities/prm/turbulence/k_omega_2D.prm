@@ -1,7 +1,7 @@
 subsection Amg for A
-  set Aggregation threshold              = 10
+  set Aggregation threshold              = 2
   set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
+  set Elliptic                           = false
   set High Order Elements                = false
   set Number of cycles                   = 1
   set Output details                     = false
@@ -67,19 +67,20 @@ subsection k-omega
   set beta                                 = 0.075
   set beta_star                            = 0.09
   set sigma                                = .5
-  set sigma_star                           = .5
+  set sigma_star                           = .6
 
-  set div-grad stabilization parameter     = 0 #0.09999
+  set SUPG alpha                           = 1.0
+  set div-grad stabilization parameter     = 0.9 #0.09999
 end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0 = u % 1 = u  % 2 = u  # % 3 = p
   set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 ; 0 % \
                                 1 = 0 ; 0 ; 0 ; 0 ; 0 % \
-                                2 = 0 ; (a-x)*(x+a) > 0 ? (a-x)*(x+a) * ( t < k ? (t/k) : 1) : 0 ;  0 ; 0 ; 0 # % \
+                                2 = 0 ; (a-x)*(x+a) > 0 ? (1/(a*a))*(a-x)*(x+a) * ( t < k ? (t/k) : 1) : 0 ;  0 ; 0 ; 0 # % \
                               #  3 = 0 ; 0 ; 0 ; 0 ; 0
   set Known component names   = u,u,p,w,k
-  set Used constants          = k=.75, a=0.5
+  set Used constants          = k=1.0, a=0.01
 end
 
 # subsection Dirichlet boundary conditions
@@ -102,7 +103,7 @@ subsection Domain
 #  set Optional Point<spacedim> 1    = 0,0
 #  set Optional Point<spacedim> 2    = 1,1  
   set Optional Point<spacedim> 1    = -.5,0
-  set Optional Point<spacedim> 2    = .5,1
+  set Optional Point<spacedim> 2    = .5,2
   set Optional double 1             = 1.0
   set Optional double 2             = 0.5
   set Optional double 3             = 1.5
@@ -114,26 +115,63 @@ end
 
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1e-8
-  set Relative error tolerance                     = 1e-6
-  
-  set Final time                                   = 1
-  set Initial time                                 = 0
-  
+  set Final time                                   = 5.0
+  set Initial time                                 = 0.0
   set Intervals between outputs                    = 1
   
+  # At each inner iteration the Jacobian is NOT updated.
   set Maximum number of inner nonlinear iterations = 3
-  set Maximum number of outer nonlinear iterations = 15
-  
-  set Newton relaxation parameter                  = 1
 
-  # set Method used                                  = LS_backtracking
-  set Method used                                  = fixed_alpha
+  # At each outer iteration the Jacobian is updated if it is set that the
+  # Jacobian is continuously updated and a cycle of inner iterations is
+  # perfomed.
+  set Maximum number of outer nonlinear iterations = 5
+
+  # Fixed alpha means that the parsed alpha is used in each Newton iteration
+  # LS_backtracking is the line search with backtracking method.
+  set Method used                                  = LS_backtracking
+  set Newton relaxation parameter                  = 1.000000
+
+  # In the line seach method with backtracking the following alphas are
+  # tested: 1, 1/2, 1/4,..., 2^-i. This parameter sets the maximum i.
   set Number of elements in backtracking sequence  = 5
-  
-  set Print useful informations                    = true
-  set Step size                                    = 1e-3
-  
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 1e-6
+  set Step size                                    = 1e-2
   set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+
+subsection KINSOL for IMEX
+  # Allowed values [0,3]
+  set Level of verbosity of the KINSOL solver            = 0
+
+  # Maximum number of nonlinear iterations that can be done with an outdated
+  # Jacobian.
+  # If set to 1 the Jacobian is updated at each nonlinear iteration
+  set Maximum number of iteration before Jacobian update = 1
+
+  # The non-linear solver will stop when reaching this number ofNewton
+  # iterations no matter what.
+  set Maximum number of iterations                       = 200
+
+  # The Newton method will terminate when the maximum scaled step is below the
+  # given tolerance.
+  set Step tolerance                                     = 1e-8
+
+  # newton        = basic Newton iteration
+  # global_newton = Newton with line search
+  # fixed_point   = fixed-point iteration with Anderson Acceleration
+  # picard        = Picard iteration with Anderson Acceleration
+  set Strategy                                           = global_newton
+
+  # This define the condition (small residual) for a successful completion of
+  # KINSOL.
+  # 0 means the default value for KINSOL
+  set Tolerance for residuals                            = 1e-6
+
+  # If true the dense direct linear solver of KINSOL is used
+  set Use internal KINSOL direct solver                  = false
 end
 
 subsection Initial solution
@@ -145,7 +183,7 @@ end
 subsection Output Parameters
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = solution
+  set Problem base name              = k-omega-2D
   set Solution names                 = u
   set Subdivisions                   = 2
 end
@@ -155,15 +193,15 @@ subsection piDoMUS
   set Initial global refinement                      = 7
   set Jacobian solver tolerance                      = 1e-6
 
-  set Max iterations                                 = 20
+  set Max iterations                                 = 40
   set Enable finer preconditioner                    = true
-  set Max iterations finer prec.                     = 20
+  set Max iterations finer prec.                     = 40
     
   set Time stepper                                   = euler
 
-  set Adaptive refinement                            = true
-  set Refine mesh during transient                   = true
-  set Threshold for solver's restart                 = 1e-3
+  set Adaptive refinement                            = false
+  set Refine mesh during transient                   = false
+  set Threshold for solver's restart                 = 1e-2
   
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
