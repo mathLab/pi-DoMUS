@@ -16,11 +16,17 @@
 SET(TARGET pidomus)
 
 # Declare all source files the target consists of:
-file(GLOB _files source/*cc)
+file(GLOB _files source/*cc
+  include/*h
+  include/interfaces/*h
+  include/lac/*h
+  )
+
 file(GLOB _mains main/*cc)
 
 
 INCLUDE_DIRECTORIES(include)
+
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
@@ -35,6 +41,17 @@ FIND_PACKAGE(deal2lkit 1.0 REQUIRED
   HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
   )
 D2K_INITIALIZE_CACHED_VARIABLES()
+
+# pidomus requires sundials 
+IF(NOT D2K_WITH_SUNDIALS)
+  MESSAGE(FATAL_ERROR "
+  Error! The deal2lkit library found at ${D2K_PATH} was not configured with
+  D2K_WITH_SUNDIALS = ON
+  Please recompile deal2lkit enabling this feature."
+  )
+ENDIF()
+
+
 OPTION(ENABLE_APP_TESTING "Enable tests in this application." ON)
 OPTION(ENABLE_DOCUMENTATION "Enable Doxygen documentation." ON)
 
@@ -110,12 +127,3 @@ ADD_CUSTOM_TARGET(indent
   COMMAND ./scripts/indent
   )
 
-
-## dummy targets for IDEs
-FILE(GLOB _misc
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.h
-)
-ADD_CUSTOM_TARGET(dummy_include_files
-  SOURCES ${_misc}
-  )
