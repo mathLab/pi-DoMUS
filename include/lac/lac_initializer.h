@@ -59,38 +59,49 @@ public:
   };
 
   /**
-   * Initialize a Trilinos Sparsity Pattern.
+   * Initialize a Trilinos Block Sparse Matrix.
    */
   template<int dim, int spacedim>
-  void operator() (TrilinosWrappers::BlockSparsityPattern &s,
+  void operator() (TrilinosWrappers::BlockSparseMatrix &matrix,
                    const DoFHandler<dim, spacedim> &dh,
                    const ConstraintMatrix &cm,
                    const Table<2,DoFTools::Coupling> &coupling)
   {
-    s.reinit(owned, owned, relevant, comm);
+    TrilinosWrappers::BlockSparsityPattern sp(owned,
+                                              owned,
+                                              relevant,
+                                              comm);
+
     DoFTools::make_sparsity_pattern (dh,
-                                     coupling, s,
+                                     coupling, sp,
                                      cm, false,
                                      Utilities::MPI::this_mpi_process(comm));
-    s.compress();
+    sp.compress();
+
+    matrix.reinit(sp);
   }
 
   /**
-   * Initialize a Deal.II Sparsity Pattern.
+   * Initialize a Deal.II Block Sparse Matrix.
    */
   template<int dim, int spacedim>
-  void operator() (dealii::BlockSparsityPattern &s,
+  void operator() (dealii::BlockSparseMatrix<double> &matrix,
                    const DoFHandler<dim, spacedim> &dh,
                    const ConstraintMatrix &cm,
                    const Table<2,DoFTools::Coupling> &coupling)
   {
-    dealii::BlockDynamicSparsityPattern csp(dofs_per_block, dofs_per_block);
+    dealii::BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
     DoFTools::make_sparsity_pattern (dh,
-                                     coupling, csp,
+                                     coupling, dsp,
                                      cm, false);
-    csp.compress();
-    s.copy_from(csp);
+    dsp.compress();
+
+    dealii::BlockSparsityPattern sp;
+
+    sp.copy_from(dsp);
+
+    matrix.reinit(sp);
   }
 
 private:

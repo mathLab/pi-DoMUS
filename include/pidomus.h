@@ -210,7 +210,6 @@ private:
 
   void refine_and_transfer_solutions (LADealII::VectorType &y,
                                       LADealII::VectorType &y_dot,
-                                      LADealII::VectorType &y_expl,
                                       LADealII::VectorType &locally_relevant_y,
                                       LADealII::VectorType &locally_relevant_y_dot,
                                       LADealII::VectorType &locally_relevant_y_expl,
@@ -219,7 +218,6 @@ private:
 
   void refine_and_transfer_solutions (LATrilinos::VectorType &y,
                                       LATrilinos::VectorType &y_dot,
-                                      LATrilinos::VectorType &y_expl,
                                       LATrilinos::VectorType &locally_relevant_y,
                                       LATrilinos::VectorType &locally_relevant_y_dot,
                                       LATrilinos::VectorType &locally_relevant_y_expl,
@@ -295,24 +293,9 @@ private:
   //// previous time step
 
   /**
-   * solution at previous time step
-   */
-  typename LAC::VectorType        explicit_solution;
-
-  /**
-   * solution_dot at previous time step
-   */
-  typename LAC::VectorType        explicit_solution_dot;
-
-  /**
    * distributed solution at previous time step
    */
   mutable typename LAC::VectorType        locally_relevant_explicit_solution;
-
-  /**
-   * distributed solution_dot at previous time step
-   */
-  mutable typename LAC::VectorType        locally_relevant_explicit_solution_dot;
 
   /**
    * previous time
@@ -328,25 +311,12 @@ private:
 
   //// second-to-last time step
 
-  /**
-   * solution at second-to-last time step
-   */
-  typename LAC::VectorType        previous_explicit_solution;
-
-  /**
-   * solution_dot at second-to-last time step
-   */
-  typename LAC::VectorType        previous_explicit_solution_dot;
 
   /**
    * distributed solution at second-to-last time step
    */
   mutable typename LAC::VectorType        locally_relevant_previous_explicit_solution;
 
-  /**
-   * distributed solution_dot at second-to-last time step
-   */
-  mutable typename LAC::VectorType        locally_relevant_previous_explicit_solution_dot;
 
   /**
    * second-to-last time
@@ -370,7 +340,6 @@ private:
 
 
   const unsigned int n_matrices;
-  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;
   std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
 
   ErrorHandler<1>       eh;

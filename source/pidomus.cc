@@ -135,7 +135,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   for (unsigned int i=0; i<n_matrices; ++i)
     {
       matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
-      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
 
 }
@@ -414,10 +413,6 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 
   initializer(solution);
   initializer(solution_dot);
-  initializer(explicit_solution);
-  initializer(explicit_solution_dot);
-  initializer(previous_explicit_solution);
-  initializer(previous_explicit_solution_dot);
 
 
   if (we_are_parallel)
@@ -425,29 +420,24 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       initializer.ghosted(locally_relevant_solution);
       initializer.ghosted(locally_relevant_solution_dot);
       initializer.ghosted(locally_relevant_explicit_solution);
-      initializer.ghosted(locally_relevant_explicit_solution_dot);
       initializer.ghosted(locally_relevant_previous_explicit_solution);
-      initializer.ghosted(locally_relevant_previous_explicit_solution_dot);
     }
   else
     {
       initializer(locally_relevant_solution);
       initializer(locally_relevant_solution_dot);
       initializer(locally_relevant_explicit_solution);
-      initializer(locally_relevant_explicit_solution_dot);
       initializer(locally_relevant_previous_explicit_solution);
-      initializer(locally_relevant_previous_explicit_solution_dot);
     }
 
 
   for (unsigned int i=0; i < n_matrices; ++i)
     {
       matrices[i]->clear();
-      initializer(*matrix_sparsities[i],
+      initializer(*matrices[i],
                   *dof_handler,
                   constraints,
                   interface.get_matrix_coupling(i));
-      matrices[i]->reinit(*matrix_sparsities[i]);
     }
 
   if (first_run)
@@ -481,7 +471,6 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
         }
 
       signals.fix_initial_conditions(solution, solution_dot);
-      explicit_solution = solution;
       locally_relevant_explicit_solution = solution;
 
     }
@@ -544,7 +533,6 @@ syncronize(const double &t,
 
       locally_relevant_solution = tmp;
       locally_relevant_solution_dot = tmp_dot;
-      explicit_solution = tmp;
       locally_relevant_explicit_solution = tmp;
     }
   else if (current_time < t) // next temporal step
@@ -557,15 +545,8 @@ syncronize(const double &t,
       previous_time = current_time;
       current_time = t;
 
-      previous_explicit_solution     = explicit_solution;
-      previous_explicit_solution_dot = explicit_solution_dot;
-      explicit_solution              = solution;
-      explicit_solution_dot          = solution_dot;
-
-      locally_relevant_previous_explicit_solution     = explicit_solution;
-      locally_relevant_previous_explicit_solution_dot = explicit_solution_dot;
+      locally_relevant_previous_explicit_solution     = locally_relevant_explicit_solution;
       locally_relevant_explicit_solution     = solution;
-      locally_relevant_explicit_solution_dot = solution_dot;
 
       update_functions_and_constraints(t);
       typename LAC::VectorType tmp(solution);
@@ -685,7 +666,6 @@ template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LATrilinos::VectorType &y,
                               LATrilinos::VectorType &y_dot,
-                              LATrilinos::VectorType &y_expl,
                               LATrilinos::VectorType &locally_relevant_y,
                               LATrilinos::VectorType &locally_relevant_y_dot,
                               LATrilinos::VectorType &locally_relevant_y_expl,
@@ -694,7 +674,6 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
   signals.begin_refine_and_transfer_solutions();
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
-  locally_relevant_y_expl = y_expl;
 
   parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
 
@@ -727,10 +706,7 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
   y = new_sol;
   y_dot = new_sol_dot;
-  y_expl = new_sol_expl;
 
-  update_functions_and_constraints(previous_time);
-  constraints.distribute(y_expl);
 
   update_functions_and_constraints(current_time);
   constraints.distribute(y);
@@ -738,7 +714,7 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
-  locally_relevant_y_expl = y_expl;
+  locally_relevant_y_expl = new_sol_expl;
 
   signals.end_refine_and_transfer_solutions();
 }
@@ -747,10 +723,9 @@ template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LADealII::VectorType &y,
                               LADealII::VectorType &y_dot,
-                              LADealII::VectorType &y_expl,
                               LADealII::VectorType &locally_relevant_y,
                               LADealII::VectorType &locally_relevant_y_dot,
-                              LADealII::VectorType &locally_relevant_y_expl,
+                              LADealII::VectorType &y_expl,
                               bool adaptive_refinement)
 {
   signals.begin_refine_and_transfer_solutions();
@@ -770,10 +745,6 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
     triangulation->refine_global (1);
 
   setup_dofs(false);
-
-  LADealII::VectorType new_sol;
-  LADealII::VectorType new_sol_dot;
-  LADealII::VectorType new_sol_expl;
 
   std::vector<LADealII::VectorType> new_sols (3);
 
@@ -796,7 +767,6 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
 
   locally_relevant_y = y;
   locally_relevant_y_dot = y_dot;
-  locally_relevant_y_expl = y_expl;
 
   signals.end_refine_and_transfer_solutions();
 }
@@ -819,13 +789,11 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 
   refine_and_transfer_solutions(solution,
                                 solution_dot,
-                                explicit_solution,
                                 locally_relevant_solution,
                                 locally_relevant_solution_dot,
                                 locally_relevant_explicit_solution,
                                 adaptive_refinement);
 
-  locally_relevant_explicit_solution = explicit_solution;
   current_time = std::numeric_limits<double>::quiet_NaN();
   previous_time =   std::numeric_limits<double>::quiet_NaN();
 
@@ -975,7 +943,6 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
 
           refine_and_transfer_solutions(solution,
                                         solution_dot,
-                                        explicit_solution,
                                         locally_relevant_solution,
                                         locally_relevant_solution_dot,
                                         locally_relevant_explicit_solution,
