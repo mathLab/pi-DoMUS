@@ -340,6 +340,7 @@ private:
 
 
   const unsigned int n_matrices;
+  std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;
   std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
 
   ErrorHandler<1>       eh;

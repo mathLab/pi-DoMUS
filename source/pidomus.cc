@@ -135,6 +135,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   for (unsigned int i=0; i<n_matrices; ++i)
     {
       matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
     }
 
 }
@@ -434,10 +435,11 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
   for (unsigned int i=0; i < n_matrices; ++i)
     {
       matrices[i]->clear();
-      initializer(*matrices[i],
+      initializer(*matrix_sparsities[i],
                   *dof_handler,
                   constraints,
                   interface.get_matrix_coupling(i));
+      matrices[i]->reinit(*matrix_sparsities[i]);
     }
 
   if (first_run)
