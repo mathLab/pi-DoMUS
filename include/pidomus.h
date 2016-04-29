@@ -288,6 +288,10 @@ private:
    */
   double current_dt;
 
+  /**
+    * step_number (it is used in output solution)
+    */
+  unsigned int step_number;
 
 
   //// previous time step
@@ -328,11 +332,11 @@ private:
    */
   double second_to_last_dt;
 
-
   /**
    * Show timer statistics
    */
   bool                     output_timer;
+
   /**
    * Teucos timer file
    */
@@ -423,6 +427,16 @@ private:
    */
   bool enable_finer_preconditioner;
 
+  /**
+   * resume computation from a previously created snapshot
+   */
+  bool resume_computation;
+
+  /**
+    * folder used for read and store snapshots
+    */
+  std::string snapshot_folder;
+
 
   /**
    * Syncronize to time t. This function update functions and
@@ -434,6 +448,60 @@ private:
                   const typename LAC::VectorType &solution,
                   const typename LAC::VectorType &solution_dot);
 
+  /**
+   * Save the state of this program to a set of files in the output
+   * directory. In reality, however, only some variables are stored (in
+   * particular the mesh, the solution vectors, etc) whereas others can
+   * either be re-generated (matrices, DoFHandler objects, etc) or are
+   * read from the input parameter file.
+   *
+   * This function is implemented in
+   * <code>source/checkpoint_restart.cc</code>.
+   */
+  void create_snapshot() const;
+
+  void save_solutions_and_triangulation(const LADealII::VectorType &y,
+                                        const LADealII::VectorType &y_dot,
+                                        const LADealII::VectorType &y_expl,
+                                        const LADealII::VectorType &,
+                                        const LADealII::VectorType &,
+                                        const LADealII::VectorType &) const;
+
+  void save_solutions_and_triangulation(const LATrilinos::VectorType &,
+                                        const LATrilinos::VectorType &,
+                                        const LATrilinos::VectorType &,
+                                        const LATrilinos::VectorType &locally_relevant_y,
+                                        const LATrilinos::VectorType &locally_relevant_y_dot,
+                                        const LATrilinos::VectorType &locally_relevant_y_expl) const;
+
+
+  /**
+   * Restore the state of this program from a set of files in the output
+   * directory.
+   *
+   * This function is implemented in
+   * <code>source/checkpoint_restart.cc</code>.
+   */
+  void resume_from_snapshot();
+
+  void load_solutions(LADealII::VectorType &y,
+                      LADealII::VectorType &y_expl,
+                      LADealII::VectorType &y_dot);
+
+  void load_solutions(LATrilinos::VectorType &y,
+                      LATrilinos::VectorType &y_expl,
+                      LATrilinos::VectorType &y_dot);
+
+public:
+  /**
+   * Save a number of variables using BOOST serialization mechanism.
+   *
+   * This function is implemented in
+   * <code>source/checkpoint_restart.cc</code>.
+   */
+  template <class Archive>
+  void serialize (Archive &ar, const unsigned int version);
+private:
 
   /**
    * Struct containing the signals
@@ -445,6 +513,8 @@ private:
    * const reference to them through functions named get_variable()
    */
   friend class SimulatorAccess<dim,spacedim,LAC>;
+
+
 
 };
 

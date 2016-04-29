@@ -57,6 +57,17 @@
 #include <math.h>
 #include <cmath>
 
+#include <deal.II/grid/grid_tools.h>
+#include <deal.II/distributed/solution_transfer.h>
+
+#ifdef DEAL_II_WITH_ZLIB
+#  include <zlib.h>
+#endif
+
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
+
 #include <Teuchos_TimeMonitor.hpp>
 
 #include "lac/lac_initializer.h"
@@ -89,6 +100,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   // IDA calls residual first with alpha = 0
   current_alpha(0.0),
   current_dt(std::numeric_limits<double>::quiet_NaN()),
+  step_number(0),
   previous_time(std::numeric_limits<double>::quiet_NaN()),
   previous_dt(std::numeric_limits<double>::quiet_NaN()),
   second_to_last_time(std::numeric_limits<double>::quiet_NaN()),
@@ -243,6 +255,18 @@ declare_parameters (ParameterHandler &prm)
                   "Enable finer preconditioner",
                   "false",
                   Patterns::Bool());
+
+  add_parameter(  prm,
+                  &resume_computation,
+                  "Resume computation from a snapshot",
+                  "false",
+                  Patterns::Bool());
+
+  add_parameter( prm,
+                 &snapshot_folder,
+                 "Snapshot folder",
+                 "snapshots",
+                 Patterns::Anything());
 
 }
 
@@ -896,6 +920,7 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
 {
   auto _timer = computing_timer.scoped_timer ("Postprocessing");
 
+  this->step_number = step_number;
   syncronize(t,solution,solution_dot);
 
   interface.output_solution(current_cycle,
@@ -1319,6 +1344,293 @@ piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &ds
   dst.compress(VectorOperation::add);
 
 }
+
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim,spacedim,LAC>::create_snapshot() const
+{
+  auto _timer = computing_timer.scoped_timer ("Create snapshot");
+  unsigned int my_id = Utilities::MPI::this_mpi_process (comm);
+
+  if (my_id == 0)
+    {
+      // if we have previously written a snapshot, then keep the last
+      // snapshot in case this one fails to save. Note: static variables
+      // will only be initialied once per model run.
+      static bool previous_snapshot_exists = (resume_computation == true && file_exists(snapshot_folder + "restart.mesh"));
+
+      if (previous_snapshot_exists == true)
+        {
+          rename_file (snapshot_folder + "restart.mesh",
+                       snapshot_folder + "restart.mesh.old");
+          rename_file (snapshot_folder + "restart.mesh.info",
+                       snapshot_folder + "restart.mesh.info.old");
+          rename_file (snapshot_folder + "restart.resume.z",
+                       snapshot_folder + "restart.resume.z.old");
+        }
+      // from now on, we know that if we get into this
+      // function again that a snapshot has previously
+      // been written
+      previous_snapshot_exists = true;
+    }
+
+// save Triangulation and Solution vectors:
+
+  save_solutions_and_triangulation(solution,explicit_solution,solution_dot,
+                                   locally_relevant_solution,
+                                   locally_relevant_explicit_solution,
+                                   locally_relevant_solution_dot);
+
+// save general information This calls the serialization functions on all
+// processes but only writes to the restart file on process 0
+  {
+    std::ostringstream oss;
+
+    // serialize into a stringstream
+    boost::archive::binary_oarchive oa (oss);
+    oa << (*this);
+
+    // compress with zlib and write to file on the root processor
+#ifdef DEAL_II_WITH_ZLIB
+    if (my_id == 0)
+      {
+        uLongf compressed_data_length = compressBound (oss.str().length());
+        std::vector<char *> compressed_data (compressed_data_length);
+        int err = compress2 ((Bytef *) &compressed_data[0],
+                             &compressed_data_length,
+                             (const Bytef *) oss.str().data(),
+                             oss.str().length(),
+                             Z_BEST_COMPRESSION);
+        (void)err;
+        Assert (err == Z_OK, ExcInternalError());
+
+        // build compression header
+        const uint32_t compression_header[4]
+          = { 1,                                   /* number of blocks */
+              (uint32_t)oss.str().length(), /* size of block */
+              (uint32_t)oss.str().length(), /* size of last block */
+              (uint32_t)compressed_data_length
+            }; /* list of compressed sizes of blocks */
+
+        std::ofstream f ((snapshot_folder + "restart.resume.z").c_str());
+        f.write((const char *)compression_header, 4 * sizeof(compression_header[0]));
+        f.write((char *)&compressed_data[0], compressed_data_length);
+      }
+#else
+    AssertThrow (false,
+                 ExcMessage ("You need to have deal.II configured with the 'libz' "
+                             "option to support checkpoint/restart, but deal.II "
+                             "did not detect its presence when you called 'cmake'."));
+#endif
+
+  }
+  pcout << "*** Snapshot created!" << std::endl << std::endl;
+}
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::
+save_solutions_and_triangulation(const LADealII::VectorType &y,
+                                 const LADealII::VectorType &y_dot,
+                                 const LADealII::VectorType &y_expl,
+                                 const LADealII::VectorType &,
+                                 const LADealII::VectorType &,
+                                 const LADealII::VectorType &) const
+{
+  std::vector<LADealII::VectorType> x_system (3);
+  x_system[0] = y;
+  x_system[1] = y_dot;
+  x_system[2] = y_expl;
+
+
+  SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> >
+  system_trans (*dof_handler);
+
+  //system_trans.prepare_serialization (x_system);
+
+  triangulation->save ((snapshot_folder + "restart.mesh").c_str());
+}
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::
+save_solutions_and_triangulation(const LATrilinos::VectorType &,
+                                 const LATrilinos::VectorType &,
+                                 const LATrilinos::VectorType &,
+                                 const LATrilinos::VectorType &locally_relevant_y,
+                                 const LATrilinos::VectorType &locally_relevant_y_dot,
+                                 const LATrilinos::VectorType &locally_relevant_y_expl) const
+{
+  std::vector<const LATrilinos::VectorType *> x_system (3);
+  x_system[0] = &locally_relevant_y;
+  x_system[1] = &locally_relevant_y_expl;
+  x_system[2] = &locally_relevant_y_dot;
+
+
+  parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> >
+  system_trans (*dof_handler);
+
+  system_trans.prepare_serialization (x_system);
+
+  triangulation->save ((snapshot_folder + "restart.mesh").c_str());
+}
+
+
+
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim,spacedim,LAC>::resume_from_snapshot()
+{
+  // first check existence of the two restart files
+  {
+    const std::string filename = snapshot_folder + "restart.mesh";
+    std::ifstream in (filename.c_str());
+    if (!in)
+      AssertThrow (false,
+                   ExcMessage (std::string("You are trying to restart a previous computation, "
+                                           "but the restart file <")
+                               +
+                               filename
+                               +
+                               "> does not appear to exist!"));
+  }
+  {
+    const std::string filename = snapshot_folder + "restart.resume.z";
+    std::ifstream in (filename.c_str());
+    if (!in)
+      AssertThrow (false,
+                   ExcMessage (std::string("You are trying to restart a previous computation, "
+                                           "but the restart file <")
+                               +
+                               filename
+                               +
+                               "> does not appear to exist!"));
+  }
+
+  pcout << "*** Resuming from snapshot!" << std::endl << std::endl;
+
+  try
+    {
+      triangulation->load ((snapshot_folder + "restart.mesh").c_str());
+    }
+  catch (...)
+    {
+      AssertThrow(false, ExcMessage("Cannot open snapshot mesh file or read the triangulation stored there."));
+    }
+  setup_dofs(false);
+
+  load_solutions(solution,
+                 explicit_solution,
+                 solution_dot);
+  locally_relevant_solution = solution;
+  locally_relevant_explicit_solution = explicit_solution;
+  locally_relevant_explicit_solution_dot = solution_dot;
+
+
+
+  // read zlib compressed resume.z
+  try
+    {
+#ifdef DEAL_II_WITH_ZLIB
+      std::ifstream ifs ((snapshot_folder + "restart.resume.z").c_str());
+      AssertThrow(ifs.is_open(),
+                  ExcMessage("Cannot open snapshot resume file."));
+
+      uint32_t compression_header[4];
+      ifs.read((char *)compression_header, 4 * sizeof(compression_header[0]));
+      Assert(compression_header[0]==1, ExcInternalError());
+
+      std::vector<char> compressed(compression_header[3]);
+      std::vector<char> uncompressed(compression_header[1]);
+      ifs.read(&compressed[0],compression_header[3]);
+      uLongf uncompressed_size = compression_header[1];
+
+      const int err = uncompress((Bytef *)&uncompressed[0], &uncompressed_size,
+                                 (Bytef *)&compressed[0], compression_header[3]);
+      AssertThrow (err == Z_OK,
+                   ExcMessage (std::string("Uncompressing the data buffer resulted in an error with code <")
+                               +
+                               Utilities::int_to_string(err)));
+
+      {
+        std::istringstream ss;
+        ss.str(std::string (&uncompressed[0], uncompressed_size));
+        boost::archive::binary_iarchive ia (ss);
+        ia >> (*this);
+      }
+#else
+      AssertThrow (false,
+                   ExcMessage ("You need to have deal.II configured with the 'libz' "
+                               "option to support checkpoint/restart, but deal.II "
+                               "did not detect its presence when you called 'cmake'."));
+#endif
+    }
+  catch (std::exception &e)
+    {
+      AssertThrow (false,
+                   ExcMessage (std::string("Cannot seem to deserialize the data previously stored!\n")
+                               +
+                               "Some part of the machinery generated an exception that says <"
+                               +
+                               e.what()
+                               +
+                               ">"));
+    }
+}
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::load_solutions(LATrilinos::VectorType &y,
+                                          LATrilinos::VectorType &y_expl,
+                                          LATrilinos::VectorType &y_dot)
+{
+  LATrilinos::VectorType distributed_system (y);
+  LATrilinos::VectorType expl_distributed_system (y_expl);
+  LATrilinos::VectorType distributed_system_dot (y_dot);
+
+  std::vector<LATrilinos::VectorType *> x_system (3);
+  x_system[0] = & (distributed_system);
+  x_system[1] = & (expl_distributed_system);
+  x_system[2] = & (distributed_system_dot);
+
+  parallel::distributed::SolutionTransfer<dim, LATrilinos::VectorType, DoFHandler<dim,spacedim> >
+  system_trans (*dof_handler);
+
+  system_trans.deserialize (x_system);
+
+  y = distributed_system;
+  y_expl = expl_distributed_system;
+  y_dot = distributed_system_dot;
+
+}
+
+
+template <int dim, int spacedim, typename LAC>
+void
+piDoMUS<dim,spacedim,LAC>::load_solutions(LADealII::VectorType &y,
+                                          LADealII::VectorType &y_expl,
+                                          LADealII::VectorType &y_dot)
+{
+  LADealII::VectorType distributed_system (y);
+  LADealII::VectorType expl_distributed_system (y_expl);
+  LADealII::VectorType distributed_system_dot (y_dot);
+
+  std::vector<LADealII::VectorType > x_system (3);
+  x_system[0] = distributed_system;
+  x_system[1] = expl_distributed_system;
+  x_system[2] = distributed_system_dot;
+
+  SolutionTransfer<dim, LADealII::VectorType, DoFHandler<dim,spacedim> >
+  system_trans (*dof_handler);
+
+//system_trans.deserialize (x_system);
+
+  y = distributed_system;
+  y_expl = expl_distributed_system;
+  y_dot = distributed_system_dot;
+
+}
+
 
 template class piDoMUS<2, 2, LATrilinos>;
 template class piDoMUS<2, 3, LATrilinos>;
