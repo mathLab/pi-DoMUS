@@ -139,16 +139,6 @@ public:
   get_solution_dot () const;
 
   /**
-   * Return a reference to the vector that has the solution of the
-   * entire system at the previous time step. This vector is
-   * associated with the DoFHandler object returned by
-   * get_dof_handler().
-   */
-  const typename LAC::VectorType &
-  get_explicit_solution () const;
-
-
-  /**
    * Return a reference to the vector that has the current
    * solution of the entire system. This vector is associated with
    * the DoFHandler object returned by get_dof_handler().

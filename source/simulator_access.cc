@@ -111,13 +111,6 @@ SimulatorAccess<dim,spacedim,LAC>::get_solution_dot () const
 
 template <int dim, int spacedim, typename LAC>
 const typename LAC::VectorType &
-SimulatorAccess<dim,spacedim,LAC>::get_explicit_solution () const
-{
-  return simulator->explicit_solution;
-}
-
-template <int dim, int spacedim, typename LAC>
-const typename LAC::VectorType &
 SimulatorAccess<dim,spacedim,LAC>::get_locally_relevant_solution () const
 {
   return simulator->locally_relevant_solution;
