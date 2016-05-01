@@ -412,11 +412,23 @@ private:
   unsigned int max_iterations;
 
   /**
+   * Maximum number of temporary vectors used by FGMRES for the solution of the
+   * linear system using the coarse preconditioner.
+   */
+  unsigned int max_tmp_vector;
+
+  /**
    * Maximum number of iterations for solving the Newtons's system
    * using the finer preconditioner.  If this variables is 0, then the
    * size of the matrix is used.
    */
   unsigned int max_iterations_finer;
+
+  /**
+   * Maximum number of temporary vectors used by FGMRES for the solution of the
+   * linear system using the finer preconditioner.
+   */
+  unsigned int max_tmp_vector_finer;
 
   /**
    * use a coarse preconditioner and then a finer preconditioner

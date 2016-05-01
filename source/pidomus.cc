@@ -244,6 +244,22 @@ declare_parameters (ParameterHandler &prm)
                   "false",
                   Patterns::Bool());
 
+  add_parameter(  prm,
+                  &max_tmp_vector,
+                  "Max tmp vectors",
+                  "30",
+                  Patterns::Integer (1),
+                  "Maximum number of temporary vectors used by FGMRES for the \n"
+                  "solution of the linear system using the coarse preconditioner.");
+
+  add_parameter(  prm,
+                  &max_tmp_vector_finer,
+                  "Max tmp vectors for finer system",
+                  "50",
+                  Patterns::Integer (1),
+                  "Maximum number of temporary vectors used by FGMRES for the \n"
+                  "solution of the linear system using the finer preconditioner.");
+
 }
 
 
@@ -1106,7 +1122,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
           SolverFGMRES<typename LAC::VectorType>
           solver(solver_control, mem,
-                 typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(50, true));
+                 typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(max_tmp_vector, true));
 
           auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
           S_inv.vmult(dst, src);
@@ -1132,7 +1148,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
 
               SolverFGMRES<typename LAC::VectorType>
               solver(solver_control, mem,
-                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(80, true));
+                     typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(max_tmp_vector_finer, true));
 
               auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op_finer);
               S_inv.vmult(dst, src);
