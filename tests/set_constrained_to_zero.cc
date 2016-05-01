@@ -33,12 +33,10 @@ void test(piDoMUS<fdim,fspacedim,fn_LAC>  &pi_foo)
     foo_vector[1] += 1.;
   foo_vector.compress(VectorOperation::add);
   if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
-    std::cout<<foo_vector[0]<<std::endl;
+    deallog << foo_vector[0]<<std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
   if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==1)
-    std::cout<<foo_vector[1]<<std::endl;
-
-
+    deallog << foo_vector[1]<<std::endl;
 
 }
 
@@ -49,6 +47,7 @@ int main (int argc, char *argv[])
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv,
                                                       numbers::invalid_unsigned_int);
 
+  MPILogInitAll log;
 
   const int dim = 2;
   const int spacedim = 3;
