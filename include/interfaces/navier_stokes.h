@@ -79,8 +79,8 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
-#include <deal2lkit/parsed_preconditioner_amg.h>
-#include <deal2lkit/parsed_preconditioner_jacobi.h>
+#include <deal2lkit/parsed_preconditioner/amg.h>
+#include <deal2lkit/parsed_preconditioner/jacobi.h>
 
 namespace NSUtilities
 {
