@@ -7,7 +7,7 @@
 
 #include "pde_system_interface.h"
 #include <deal2lkit/parsed_function.h>
-#include <deal2lkit/parsed_preconditioner_amg.h>
+#include <deal2lkit/parsed_preconditioner/amg.h>
 #include <deal2lkit/parsed_mapped_functions.h>
 
 #include <deal.II/lac/linear_operator.h>
