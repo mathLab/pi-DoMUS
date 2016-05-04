@@ -6,38 +6,60 @@ subsection Navier Stokes Interface
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,u,p
   
-  set CG Solver tolerance                  = 1e-10
-  set GMRES Solver tolerance               = 1e-10
+  set CG Solver tolerance                  = 1e-8
+  set GMRES Solver tolerance               = 1e-8
   
+  set Compute sigma on the obstacle        = false
   set Enable convection term ((\nabla u)u) = true
-  set Enable dynamic term (\partial_t u)   = true
-  
+  set Enable dynamic term (\partial_t u)   = false
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-  
   set Invert Ap using inverse_operator     = false
   set Invert Mp using inverse_operator     = true
-  
-  set Linearize using time                 = false
-  
+  set Linearize using time                 = true
   set Non linear term                      = linear
   set Preconditioner                       = default
-  set div-grad stabilization parameter     = .001
-  set nu [Pa s]                            = 1
+  
+  set div-grad stabilization parameter     = 1.0
+  set SUPG alpha                           = 0.5
   set p-q stabilization parameter          = 0.0
+  
+  set nu [Pa s]                            = 1e-2
   set rho [kg m^3]                         = 1.0
 end
 
 subsection piDoMUS
-  set Adaptive refinement                            = false
-  set Initial global refinement                      = 3
-  set Jacobian solver tolerance                      = 1e-6
+  set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = true
+  set Jacobian solver tolerance                      = 1e-10
+  
+  set Initial global refinement                      = 4
+  
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 0
+  
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
+  set Refine mesh during transient                   = false
+  set Show timer                                     = true
+  
+  set Threshold for solver's restart                 = 1e-3
+  
   set Time stepper                                   = euler
-  set Show timer                                     = false
   set Use direct solver if available                 = true
+end
+
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u % 4 = u % 5 = u
+  set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 % \
+                                1 = 0 ; 0 ; 0 ; 0 % \
+                                2 = 0 ; 0 ; 0 ; 0 % \
+                                3 = 1 ; 0 ; 0 ; 0 % \
+                                4 = 0 ; 0 ; 0 ; 0 % \
+                                5 = 0 ; 0 ; 0 ; 0
+  set Known component names   = u,u,u,p
+  set Used constants          = k=.9
 end
 
 subsection AMG for A
@@ -68,18 +90,6 @@ subsection AMG for Ap
   set w-cycle                            = false
 end
 
-subsection Dirichlet boundary conditions
-  set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u % 4 = u % 5 = u
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 % \
-                                1 = 0 ; 0 ; 0 ; 0 % \
-                                2 = 0 ; 0 ; 0 ; 0 % \
-                                3 = 1 ; 0 ; 0 ; 0 % \
-                                4 = 0 ; 0 ; 0 ; 0 % \
-                                5 = 0 ; 0 ; 0 ; 0
-  set Known component names   = u,u,u,p
-  set Used constants          = k=.9
-end
-
 subsection Zero average constraints
   set Known component names        = u,u,u,p
   set Zero average on boundary     = 
@@ -92,12 +102,8 @@ subsection Domain
   set Copy material to manifold ids = false
   set Create default manifolds      = true
   set Grid to generate              = rectangle
-  set Input grid file name          = 
-  set Manifold descriptors          = 
-  set Mesh smoothing alogrithm      = none
   set Optional Point<spacedim> 1    = 0, 0, 0
   set Optional Point<spacedim> 2    = 1, 1, 1
-  set Output grid file name         = 
 end
 
 subsection Error Tables
@@ -119,14 +125,24 @@ subsection IMEX Parameters
   set Method used                                  = LS_backtracking
   set Newton relaxation parameter                  = 1
   set Number of elements in backtracking sequence  = 5
-
+  set Print useful informations                    = false
   set Step size                                    = 1.0e-1
-  set Update continuously Jacobian                 = false
+  set Update continuously Jacobian                 = true
+  
+  set Use the KINSOL solver                        = true
+end
+
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 1
+  set Maximum number of iterations                       = 200
+  set Step tolerance                                     = 1e-8
+  set Tolerance for residuals                            = 1e-8
+  set Strategy                                           = global_newton
+  set Use internal KINSOL direct solver                  = false
 end
 
 subsection Output Parameters
-  set Files to save in run directory = 
-  set Incremental run prefix         = 
   set Output format                  = vtu
   set Output partitioning            = false
   set Problem base name              = lid_cavity_3D

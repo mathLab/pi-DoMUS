@@ -16,6 +16,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 
+#include <deal2lkit/sacado_tools.h>
 #include <deal2lkit/parsed_preconditioner/amg.h>
 #include <deal2lkit/parsed_preconditioner/jacobi.h>
 
@@ -108,10 +109,17 @@ private:
    */
   double sigma_star;
 
+  // STABILIZATION:
+  ////////////////////////////////////////////
   /**
    * div-grad stabilization parameter
    */
   double gamma;
+
+  /**
+   * SUPG stabilization term
+   */
+  double SUPG_alpha;
 
   /**
    * p-q stabilization parameter
@@ -191,6 +199,10 @@ declare_parameters (ParameterHandler &prm)
                       "div-grad stabilization parameter", "0.0",
                       Patterns::Double(0.0),
                       "");
+  this->add_parameter(prm, &SUPG_alpha,
+                      "SUPG alpha", "0.0",
+                      Patterns::Double(0.0),
+                      "Use SUPG alpha");
   this->add_parameter(prm, &rho,
                       "rho [kg m^3]", "1.0",
                       Patterns::Double(0.0),
@@ -239,7 +251,7 @@ set_matrix_couplings(std::vector<std::string> &couplings) const
   //couplings[0] = "1,1,1,1;1,1,1,1;1,1,1,1"; // Direct solver uses block(1,0)
   //couplings[1] = "0,0,0,0;0,1,0,0;0,0,0,0";
   //couplings[2] = "0,0,0,0;0,1,0,0;0,0,0,0";
-  couplings[0] = "1,1,1,1; 1,1,1,1; 1,1,1,1; 1,1,1,1";
+  couplings[0] = "1,1,1,1; 1,0,1,1; 1,1,1,1; 1,1,1,1";
   couplings[1] = "0,0,0,0; 0,1,0,0; 0,0,0,0; 0,0,0,0";
   couplings[2] = "0,0,0,0; 0,1,0,0; 0,0,0,0; 0,0,0,0"; // TODO: fix me!
 }
@@ -258,6 +270,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Scalar pressure(dim);
   const FEValuesExtractors::Scalar kinetic_energy(dim+1);
   const FEValuesExtractors::Scalar turbulence_frequency(dim+2);
+
+  double h = cell->diameter();
 
   ResidualType et = 0;
   double dummy = 0.0;
@@ -289,9 +303,11 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &ue_ = fe_cache.get_values("explicit_solution", "u", velocity, dummy);
   auto &we_ = fe_cache.get_values("explicit_solution", "w", turbulence_frequency, dummy);
   auto &ke_ = fe_cache.get_values("explicit_solution", "k", kinetic_energy, dummy);
+  auto &grad_ke_ = fe_cache.get_gradients("explicit_solution", "grad_k", kinetic_energy, dummy);
+  auto &grad_we_ = fe_cache.get_gradients("explicit_solution", "grad_w", turbulence_frequency, dummy);
   auto &grad_ue_ = fe_cache.get_gradients("explicit_solution", "grad_u", velocity, dummy);
   // auto &div_ue_ = fe_cache.get_divergences("explicit_solution", "div_u", velocity, dummy);
-  auto &sym_grad_ue_ = fe_cache.get_symmetric_gradients("explicit_solution", "sym_grad_u", velocity, dummy);
+  // auto &sym_grad_ue_ = fe_cache.get_symmetric_gradients("explicit_solution", "sym_grad_u", velocity, dummy);
 
   const unsigned int n_quad_points = u_.size();
   auto &JxW = fe_cache.get_JxW_values();
@@ -315,11 +331,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const ResidualType &w = w_[q];
       const ResidualType &w_dot = w_dot_[q];
       const Tensor<1, dim, ResidualType> &grad_w = grad_w_[q];
+      const Tensor<1, dim, double> &grad_we = grad_we_[q];
 
       // Kinetic Energy:
       const ResidualType &k = k_[q];
       const ResidualType &k_dot = k_dot_[q];
       const Tensor<1, dim, ResidualType> &grad_k = grad_k_[q];
+      const Tensor<1, dim, double> &grad_ke = grad_ke_[q];
 
       // Previous time step solution:
       const Tensor<1, dim, double> &ue = ue_[q];
@@ -327,7 +345,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const double &we = we_[q];
       const Tensor<2, dim, double> &grad_ue = grad_ue_[q];
       // const double &div_ue = div_ue_[q];
-      const Tensor<2, dim, double> &sym_grad_ue = sym_grad_ue_[q];
+      // const Tensor<2, dim, double> &sym_grad_ue = sym_grad_ue_[q];
 
       for (unsigned int i=0; i<residual[0].size(); ++i)
         {
@@ -353,15 +371,28 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           Tensor<1, dim, ResidualType> nl_u;
           ResidualType res = 0.0;
 
+          // Generic Tensors:
+          //////////////////////////////
+
+          // Identity tensor:
+          Tensor<2, dim, ResidualType> Id;
+          for (unsigned int i = 0; i<dim; ++i)
+            Id[i][i] = 1.0;
+
+          // Turbulence:
+          //////////////////////////////
+
+          // Tensor<2, dim, ResidualType> S = sym_grad_ue;
+
           // Turbulent viscosity:
           nu_T = ke/we;
 
           // Reynold Stress Tensor
-          Tensor<2, dim, ResidualType> tau = 2 * nu_T * sym_grad_ue;
+          Tensor<2, dim, ResidualType> tau = 2 * nu_T * sym_grad_u;
           for (unsigned int i = 0; i<dim; ++i)
-            tau[i][i] -= 2/3 * ke;
+            tau[i][i] -= 2 * nu_T *1./3. * div_u + 2./3. * ke;
 
-
+          // Tensor<2, dim, ResidualType> tau = 2 * nu_T * ( S - (1./3. * div_u) * Id) - 2./3. * rho * k * Id; -> Not working
 
           // -> Navier Stokes:
           //////////////////////////////
@@ -376,7 +407,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
             nl_u = grad_u * ue;
           else if (non_linear_term=="RHS")
             nl_u = grad_ue * ue;
-          res += rho * scalar_product(nl_u,u_test);
+          double norm = std::sqrt(SacadoTools::to_double(ue*ue));
+
+          if (norm > 0 && SUPG_alpha > 0)
+            res += rho * scalar_product( nl_u, u_test + SUPG_alpha * (h/norm) * grad_u_test  * ue);
+          else
+            res += rho * scalar_product( nl_u, u_test);
+
 
           // Turbulent term:
           res += rho * scalar_product(tau, grad_u_test);
@@ -396,23 +433,38 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
           // -> Kinetic Energy:
           //////////////////////////////
-          res +=
-            rho * k_dot * k_test
-            - rho * ue * k * grad_k_test
 
-            - rho * trace(tau * grad_ue) * k_test
-            + beta_star * rho * k * we * k_test
-            + (nu + sigma*k/we) * scalar_product(grad_k, grad_k_test);
+          double u_norm = std::sqrt(SacadoTools::to_double(ue*ue));
+
+          res += // LHS
+            rho * k_dot * k_test;
+          if (u_norm > 0 && SUPG_alpha > 0)
+            res += ue * grad_k * (k_test + SUPG_alpha * (h/u_norm) * grad_k_test  * ue);
+          else
+            res += ue * grad_k * k_test;
+
+          res -= // RHS
+            + scalar_product(tau, grad_ue) * k_test
+            - beta_star * k * we * k_test
+            - (nu + sigma_star*k/we) * scalar_product(grad_k, grad_k_test);
 
           // -> Turbulenc Frequency:
           //////////////////////////////
-          res +=
-            rho * w_dot * w_test
-            - rho * ue * w * grad_w_test
 
-            - alpha * (w/ke) * rho * trace(tau * grad_ue) * w_test
-            + rho * beta * w * w * w_test
-            + (nu + sigma*ke/w) * scalar_product(grad_w, grad_w_test);
+          double sigma_d = scalar_product(grad_ke, grad_we) <= 0 ? 0 : 1./8.;
+
+          res += // LHS
+            rho * w_dot * w_test;
+          if (u_norm > 0 && SUPG_alpha > 0)
+            res += ue * grad_w * (w_test + SUPG_alpha * (h/u_norm) * grad_w_test  * ue);
+          else
+            res += ue * grad_w * w_test;
+
+          res -= // RHS
+            + alpha * (w/ke) * scalar_product(tau, grad_ue) * w_test
+            - beta * w * w * w_test
+            + sigma_d / w * scalar_product(grad_ke, grad_we)
+            - (nu + sigma*ke/w) * scalar_product(grad_w, grad_w_test);
 
 
           residual[0][i] += res * JxW[q];
