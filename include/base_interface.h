@@ -194,6 +194,7 @@ public:
                                                FEValuesCache<dim,spacedim> &scratch,
                                                CopyData &data) const;
 
+#ifdef DEAL_II_WITH_TRILINOS
   /**
    * Compute linear operators needed by the problem: - @p system_op
    * represents the system matrix associated to the Newton's
@@ -226,6 +227,14 @@ public:
                                         LinearOperator<LATrilinos::VectorType> &system_op,
                                         LinearOperator<LATrilinos::VectorType> &prec_op,
                                         LinearOperator<LATrilinos::VectorType> &prec_op_finer) const;
+#endif //DEAL_II_WITH_TRILINOS
+
+#ifdef DEAL_II_WITH_PETSC
+  virtual void compute_system_operators(const std::vector<shared_ptr<typename LAPETSc::BlockMatrix> >,
+                                        LinearOperator<LAPETSc::VectorType> &system_op,
+                                        LinearOperator<LAPETSc::VectorType> &prec_op,
+                                        LinearOperator<LAPETSc::VectorType> &prec_op_finer) const;
+#endif //DEAL_II_WITH_PETSC
 
   /**
    * Compute linear operators needed by the problem. When using

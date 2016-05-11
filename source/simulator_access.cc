@@ -152,12 +152,18 @@ SimulatorAccess<dim,spacedim,LAC>::get_fe () const
 }
 
 
-
+#ifdef DEAL_II_WITH_TRILINOS
 template class SimulatorAccess<2, 2, LATrilinos>;
 template class SimulatorAccess<2, 3, LATrilinos>;
 template class SimulatorAccess<3, 3, LATrilinos>;
+#endif // DEAL_II_WITH_TRILINOS
 
 template class SimulatorAccess<2, 2, LADealII>;
 template class SimulatorAccess<2, 3, LADealII>;
 template class SimulatorAccess<3, 3, LADealII>;
 
+#ifdef DEAL_II_WITH_PETSC
+template class SimulatorAccess<2, 2, LAPETSc>;
+template class SimulatorAccess<2, 3, LAPETSc>;
+template class SimulatorAccess<3, 3, LAPETSc>;
+#endif // DEAL_II_WITH_PETSC

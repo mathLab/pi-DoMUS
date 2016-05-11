@@ -215,14 +215,24 @@ private:
                                       LADealII::VectorType &locally_relevant_y_expl,
                                       bool adaptive_refinement);
 
-
+#ifdef DEAL_II_WITH_TRILINOS
   void refine_and_transfer_solutions (LATrilinos::VectorType &y,
                                       LATrilinos::VectorType &y_dot,
                                       LATrilinos::VectorType &locally_relevant_y,
                                       LATrilinos::VectorType &locally_relevant_y_dot,
                                       LATrilinos::VectorType &locally_relevant_y_expl,
                                       bool adaptive_refinement);
+#endif //DEAL_II_WITH_TRILINOS
 
+#ifdef DEAL_II_WITH_PETSC
+  void refine_and_transfer_solutions (LAPETSc::VectorType &y,
+                                      LAPETSc::VectorType &y_dot,
+                                      LAPETSc::VectorType &y_expl,
+                                      LAPETSc::VectorType &distributed_y,
+                                      LAPETSc::VectorType &distributed_y_dot,
+                                      LAPETSc::VectorType &distributed_y_expl,
+                                      bool adaptive_refinement);
+#endif //DEAL_II_WITH_PETSC
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 

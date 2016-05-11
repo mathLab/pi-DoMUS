@@ -68,7 +68,7 @@ public:
    */
   typedef PETScWrappers::MPI::BlockSparseMatrix BlockMatrix;
 
-  typedef dealii::BlockSparsityPattern BlockSparsityPattern;
+  typedef dealii::BlockDynamicSparsityPattern BlockSparsityPattern;
 };
 
 #endif // DEAL_II_WITH_PETSC

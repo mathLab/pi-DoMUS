@@ -455,7 +455,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
                   *dof_handler,
                   constraints,
                   interface.get_matrix_coupling(i));
-      matrices[i]->reinit(*matrix_sparsities[i]);
+      initializer(*matrices[i], *matrix_sparsities[i]);
     }
 
   if (first_run)
@@ -680,6 +680,7 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
 
 /* ------------------------ MESH AND GRID ------------------------ */
 
+#ifdef DEAL_II_WITH_TRILINOS
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
 refine_and_transfer_solutions(LATrilinos::VectorType &y,
@@ -736,6 +737,56 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
   signals.end_refine_and_transfer_solutions();
 }
+#endif //DEAL_II_WITH_TRILINOS
+
+#ifdef DEAL_II_WITH_PETSC
+template <int dim, int spacedim, typename LAC>
+void piDoMUS<dim, spacedim, LAC>::
+refine_and_transfer_solutions(LAPETSc::VectorType &y,
+                              LAPETSc::VectorType &y_dot,
+                              LAPETSc::VectorType &y_expl,
+                              LAPETSc::VectorType &distributed_y,
+                              LAPETSc::VectorType &distributed_y_dot,
+                              LAPETSc::VectorType &distributed_y_expl,
+                              bool adaptive_refinement)
+{
+  distributed_y = y;
+  distributed_y_dot = y_dot;
+  distributed_y_expl = y_expl;
+
+  parallel::distributed::SolutionTransfer<dim, LAPETSc::VectorType, DoFHandler<dim,spacedim> > sol_tr(*dof_handler);
+
+  std::vector<const LAPETSc::VectorType *> old_sols (3);
+  old_sols[0] = &distributed_y;
+  old_sols[1] = &distributed_y_dot;
+  old_sols[2] = &distributed_y_expl;
+
+  triangulation->prepare_coarsening_and_refinement();
+  sol_tr.prepare_for_coarsening_and_refinement (old_sols);
+
+  if (adaptive_refinement)
+    triangulation->execute_coarsening_and_refinement ();
+  else
+    triangulation->refine_global (1);
+
+  setup_dofs(false);
+
+  LAPETSc::VectorType new_sol (y);
+  LAPETSc::VectorType new_sol_dot (y_dot);
+  LAPETSc::VectorType new_sol_expl (y_expl);
+
+  std::vector<LAPETSc::VectorType *> new_sols (3);
+  new_sols[0] = &new_sol;
+  new_sols[1] = &new_sol_dot;
+  new_sols[2] = &new_sol_expl;
+
+  sol_tr.interpolate (new_sols);
+
+  y = new_sol;
+  y_dot = new_sol_dot;
+  y_expl = new_sol_expl;
+}
+#endif //DEAL_II_WITH_PETSC
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::
@@ -1264,7 +1315,6 @@ piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorTy
     }
 }
 
-
 template <int dim, int spacedim, typename LAC>
 void
 piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &dst) const
@@ -1336,11 +1386,18 @@ piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &ds
 
 }
 
+#ifdef DEAL_II_WITH_TRILINOS
 template class piDoMUS<2, 2, LATrilinos>;
 template class piDoMUS<2, 3, LATrilinos>;
 template class piDoMUS<3, 3, LATrilinos>;
+#endif // DEAL_II_WITH_TRILINOS
 
 template class piDoMUS<2, 2, LADealII>;
 template class piDoMUS<2, 3, LADealII>;
 template class piDoMUS<3, 3, LADealII>;
 
+#ifdef DEAL_II_WITH_PETSC
+template class piDoMUS<2, 2, LAPETSc>;
+template class piDoMUS<2, 3, LAPETSc>;
+template class piDoMUS<3, 3, LAPETSc>;
+#endif // DEAL_II_WITH_PETSC

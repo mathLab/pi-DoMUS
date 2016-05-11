@@ -28,9 +28,14 @@ public:
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
 
+  void compute_system_operators(const std::vector<shared_ptr<LAPETSc::BlockMatrix> >,
+                                LinearOperator<LAPETSc::VectorType> &,
+                                LinearOperator<LAPETSc::VectorType> &,
+                                LinearOperator<LAPETSc::VectorType> &) const;
+
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
-
+  mutable shared_ptr<PETScWrappers::PreconditionJacobi> PETSc_preconditioner;
 };
 
 template <int dim, int spacedim, typename LAC>
@@ -120,4 +125,34 @@ PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const std::vector<sha
   });
 }
 
+template <int dim, int spacedim, typename LAC>
+void
+PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LAPETSc::BlockMatrix> > matrices,
+                                                           LinearOperator<LAPETSc::VectorType> &system_op,
+                                                           LinearOperator<LAPETSc::VectorType> &prec_op,
+                                                           LinearOperator<LAPETSc::VectorType> &) const
+{
+
+  PETSc_preconditioner.reset  (new PETScWrappers::PreconditionJacobi());
+  PETSc_preconditioner->initialize(matrices[0]->block(0,0));
+  //
+  auto A  = linear_operator<LAPETSc::VectorType::BlockType>( matrices[0]->block(0,0) );
+  //
+  // LinearOperator<LAPETSc::VectorType::BlockType> P_inv;
+  //
+  auto Id = identity_operator(A.reinit_range_vector); //linear_operator<LAPETSc::VectorType::BlockType>(matrices[0]->block(0,0), *PETSc_preconditioner);
+  //
+  // auto P00 = P_inv;
+  //
+  // // ASSEMBLE THE PROBLEM:
+  system_op  = block_operator<1, 1, LAPETSc::VectorType>({{
+      {{ A }}
+    }
+  });
+
+  prec_op = block_operator<1, 1, LAPETSc::VectorType>({{
+      {{ Id }} ,
+    }
+  });
+}
 #endif

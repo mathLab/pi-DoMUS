@@ -194,7 +194,7 @@ compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMa
                          LinearOperator<typename LADealII::VectorType> &) const
 {}
 
-
+#ifdef DEAL_II_WITH_TRILINOS
 template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
@@ -205,7 +205,20 @@ compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >
 {
   Assert(false, ExcPureFunctionCalled ());
 }
+#endif //DEAL_II_WITH_TRILINOS
 
+#ifdef DEAL_II_WITH_PETSC
+template <int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+compute_system_operators(const std::vector<shared_ptr<LAPETSc::BlockMatrix> >,
+                         LinearOperator<LAPETSc::VectorType> &,
+                         LinearOperator<LAPETSc::VectorType> &,
+                         LinearOperator<LAPETSc::VectorType> &) const
+{
+  Assert(false, ExcPureFunctionCalled ());
+}
+#endif //DEAL_II_WITH_PETSC
 
 template<int dim, int spacedim, typename LAC>
 void
@@ -410,10 +423,18 @@ void
 BaseInterface<dim,spacedim,LAC>::connect_to_signals() const
 {}
 
+#ifdef DEAL_II_WITH_TRILINOS
 template class BaseInterface<2, 2, LATrilinos>;
 template class BaseInterface<2, 3, LATrilinos>;
 template class BaseInterface<3, 3, LATrilinos>;
+#endif // DEAL_II_WITH_TRILINOS
 
 template class BaseInterface<2, 2, LADealII>;
 template class BaseInterface<2, 3, LADealII>;
 template class BaseInterface<3, 3, LADealII>;
+
+#ifdef DEAL_II_WITH_PETSC
+template class BaseInterface<2, 2, LAPETSc>;
+template class BaseInterface<2, 3, LAPETSc>;
+template class BaseInterface<3, 3, LAPETSc>;
+#endif // DEAL_II_WITH_PETSC

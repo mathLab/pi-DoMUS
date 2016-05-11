@@ -22,6 +22,7 @@ public:
     comm(comm)
   {};
 
+#ifdef DEAL_II_WITH_TRILINOS
   /**
    * Initialize a non ghosted TrilinosWrappers::MPI::BlockVector.
    */
@@ -30,7 +31,42 @@ public:
     v.reinit(owned, comm, fast);
   };
 
+  /**
+   * Initialize a non ghosted PETScWrappers::MPI::BlockVector.
+   */
+  void operator() (TrilinosWrappers::BlockSparseMatrix &M, TrilinosWrappers::BlockSparsityPattern &sp, bool fast=false)
+  {
+    M.reinit(sp);
+  };
+#endif // DEAL_II_WITH_TRILINOS
 
+#ifdef DEAL_II_WITH_PETSC
+  /**
+   * Initialize a non ghosted PETScWrappers::MPI::BlockVector.
+   */
+  void operator() (PETScWrappers::MPI::BlockVector &v, bool fast=false)
+  {
+    v.reinit(owned, comm);
+  };
+
+  /**
+   * Initialize a non ghosted PETScWrappers::MPI::BlockVector.
+   */
+  void operator() (PETScWrappers::MPI::BlockSparseMatrix &M, dealii::BlockDynamicSparsityPattern &sp, bool fast=false)
+  {
+    M.reinit(owned, relevant, sp, comm);
+  };
+#endif // DEAL_II_WITH_PETSC
+
+  /**
+   * Initialize a non ghosted PETScWrappers::MPI::BlockVector.
+   */
+  void operator() (BlockSparseMatrix<double > &M,  dealii::BlockSparsityPattern &sp, bool fast=false)
+  {
+    M.reinit(sp);
+  };
+
+#ifdef DEAL_II_WITH_TRILINOS
   /**
    * Initialize a ghosted TrilinosWrappers::MPI::BlockVector.
    */
@@ -38,6 +74,17 @@ public:
   {
     v.reinit(owned, relevant, comm, fast);
   };
+#endif // DEAL_II_WITH_TRILINOS
+
+#ifdef DEAL_II_WITH_PETSC
+  /**
+   * Initialize a ghosted PETScWrappers::MPI::BlockVector.
+   */
+  void ghosted(PETScWrappers::MPI::BlockVector &v, bool fast=false)
+  {
+    v.reinit(owned, relevant, comm);
+  };
+#endif // DEAL_II_WITH_PETSC
 
   /**
    * Initialize a serial BlockVector<double>.
@@ -58,6 +105,7 @@ public:
     (void)fast;
   };
 
+#ifdef DEAL_II_WITH_TRILINOS
   /**
    * Initialize a Trilinos Sparsity Pattern.
    */
@@ -74,6 +122,7 @@ public:
                                      Utilities::MPI::this_mpi_process(comm));
     s.compress();
   }
+#endif // DEAL_II_WITH_TRILINOS
 
   /**
    * Initialize a Deal.II Sparsity Pattern.
@@ -91,6 +140,24 @@ public:
                                      cm, false);
     csp.compress();
     s.copy_from(csp);
+  }
+
+
+  /**
+   * Initialize a Deal.II Dynamic Sparsity Pattern.
+   */
+  template<int dim, int spacedim>
+  void operator() (dealii::BlockDynamicSparsityPattern &s,
+                   const DoFHandler<dim, spacedim> &dh,
+                   const ConstraintMatrix &cm,
+                   const Table<2,DoFTools::Coupling> &coupling)
+  {
+    s.reinit(dofs_per_block, dofs_per_block);
+
+    DoFTools::make_sparsity_pattern (dh,
+                                     coupling, s,
+                                     cm, false);
+    s.compress();
   }
 
 private:
