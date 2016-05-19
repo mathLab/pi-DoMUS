@@ -27,14 +27,14 @@ namespace pidomus
       local_matrices     (n_matrices,
                           FullMatrix<double>(dofs_per_cell,
                                              dofs_per_cell))
-    {};
+    {}
 
     CopyData (const CopyData &data)
       :
       local_dof_indices  (data.local_dof_indices),
       local_residual     (data.local_residual),
       local_matrices     (data.local_matrices)
-    {};
+    {}
 
     ~CopyData()
     {}
@@ -43,6 +43,29 @@ namespace pidomus
     std::vector<double>                   local_residual;
     std::vector<FullMatrix<double> >      local_matrices;
   };
+
+  struct CopyMass
+  {
+    CopyMass (const unsigned int &dofs_per_cell)
+      :
+      local_dof_indices  (dofs_per_cell),
+      local_matrix     (FullMatrix<double>(dofs_per_cell,
+                                           dofs_per_cell))
+    {}
+
+    CopyMass (const CopyMass &data)
+      :
+      local_dof_indices  (data.local_dof_indices),
+      local_matrix       (data.local_matrix)
+    {}
+
+    ~CopyMass()
+    {}
+
+    std::vector<types::global_dof_index>  local_dof_indices;
+    FullMatrix<double>                    local_matrix;
+  };
+
 
 }
 
