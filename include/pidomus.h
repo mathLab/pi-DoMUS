@@ -22,7 +22,11 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/linear_operator.h>
+
+
+
 #include <mpi.h>
+
 
 // #include <deal.II/lac/precondition.h>
 
@@ -154,6 +158,83 @@ public:
    * used as scaling vector in KINSOL
    */
   virtual void get_lumped_mass_matrix(typename LAC::VectorType &diag) const;
+
+
+#ifdef DEAL_II_WITH_ARPACK
+  /**
+    * solve eigenvalue problem
+    */
+  void solve_eigenproblem();
+
+  /**
+   * get eigenvalues
+   *
+   */
+  const std::vector<std::complex<double> > &get_eigenvalues();
+
+  /**
+   * get eigenvectors
+   *
+   */
+  const std::vector<typename LAC::VectorType> &get_eigenvectors();
+
+
+
+private:
+  void do_solve_eigenproblem(const LADealII::BlockMatrix &mat,
+                             const LADealII::BlockMatrix &mass,
+                             const LinearOperator<LADealII::VectorType> &jac,
+                             const LinearOperator<LADealII::VectorType> &jac_prec,
+                             const LinearOperator<LADealII::VectorType> &jac_prec_fin,
+                             std::vector<LADealII::VectorType> &eigenvectors,
+                             std::vector<std::complex<double> > &eigenvalues);
+
+
+  void do_solve_eigenproblem(const LATrilinos::BlockMatrix &mat,
+                             const LATrilinos::BlockMatrix &mass,
+                             const LinearOperator<LATrilinos::VectorType> &jac,
+                             const LinearOperator<LATrilinos::VectorType> &jac_prec,
+                             const LinearOperator<LATrilinos::VectorType> &jac_prec_fin,
+                             std::vector<LATrilinos::VectorType> &eigenvectors,
+                             std::vector<std::complex<double> > &eigenvalues);
+
+  /**
+   * number of eigenvalues to compute
+   */
+  unsigned int n_eigenvalues;
+
+  /**
+   * number of Arnoldi vectors used by Arpack
+   */
+  unsigned int n_arnoldi_vectors;
+
+  /**
+   * available options:
+   *
+   * algebraically_largest
+   * algebraically_smallest
+   * largest_magnitude
+   * smallest_magnitude
+   * largest_real_part
+   * smallest_real_part
+   * largest_imaginary_part
+   * smallest_imaginary_part
+   * both_ends
+   */
+  std::string which_eigenvalues;
+
+  /**
+   * eigenvectors
+   */
+  std::vector<typename LAC::VectorType> eigv;
+
+  /**
+   * eigenvalues
+   */
+  std::vector<std::complex<double> > eigval;
+
+
+#endif
 
 private:
 
@@ -338,7 +419,6 @@ private:
    */
   mutable TimeMonitor       computing_timer;
 
-
   const unsigned int n_matrices;
   std::vector<shared_ptr<typename LAC::BlockSparsityPattern> > matrix_sparsities;
   std::vector<shared_ptr<typename LAC::BlockMatrix> >  matrices;
@@ -459,5 +539,7 @@ private:
   friend class SimulatorAccess<dim,spacedim,LAC>;
 
 };
+
+
 
 #endif

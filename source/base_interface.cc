@@ -2,6 +2,8 @@
 #include "lac/lac_type.h"
 #include "copy_data.h"
 
+#include "pidomus_macros.h"
+
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
@@ -16,6 +18,7 @@
 #include <deal2lkit/any_data.h>
 #include <deal2lkit/utilities.h>
 #include <deal2lkit/sacado_tools.h>
+#include <deal2lkit/fe_values_cache.h>
 
 using namespace dealii;
 using namespace deal2lkit;
@@ -397,6 +400,95 @@ output_solution (const unsigned int &current_cycle,
 
 }
 
+#ifdef DEAL_II_WITH_ARPACK
+
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+output_eigenvectors(const std::vector<typename LAC::VectorType> &eigenvectors,
+                    const std::vector<std::complex<double> > &eigenvalues,
+                    const unsigned int &current_cycle) const
+{
+  auto &pcout = this->get_pcout();
+
+  for (unsigned int i=0; i<eigenvectors.size(); ++i)
+    {
+      pcout << "eigenvalues[" <<i<<"] = " << eigenvalues[i]<< std::endl;
+      std::stringstream suffix;
+      suffix << ".eig." << current_cycle << "."<<i;
+      data_out.prepare_data_output(this->get_dof_handler(),suffix.str());
+
+      std::vector<std::string> eig_names =
+        Utilities::split_string_list(get_component_names());
+      for (auto &name : eig_names)
+        {
+          name += "_";
+          name += Utilities::int_to_string(i);
+        }
+
+      data_out.add_data_vector (eigenvectors[i],
+                                get_component_names());
+
+      data_out.write_data_and_clear(get_mapping());
+
+    }
+}
+
+
+template<int dim, int spacedim, typename LAC>
+void
+BaseInterface<dim,spacedim,LAC>::
+assemble_local_mass_matrix (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                            FEValuesCache<dim,spacedim> &scratch,
+                            CopyMass &data) const
+{
+  const unsigned dofs_per_cell = data.local_dof_indices.size();
+
+  cell->get_dof_indices (data.local_dof_indices);
+
+  double dummy=0;
+  reinit(dummy,cell,scratch);
+  auto &fev = scratch.get_current_fe_values();
+  const unsigned int nq = fev.n_quadrature_points;
+
+  data.local_matrix = 0;
+
+
+  const auto &fe = fev.get_fe();
+
+  if (fe.is_primitive())
+    {
+      for (unsigned int q=0; q<nq; ++q)
+        for (unsigned int i=0; i<dofs_per_cell; ++i)
+          for (unsigned int j=0; j<dofs_per_cell; ++j)
+            {
+              if (fe.system_to_component_index(i).first == fe.system_to_component_index(j).first)
+                {
+                  data.local_matrix(i,j) +=
+                    fev.shape_value(i,q)
+                    *
+                    fev.shape_value(j,q)
+                    *fev.JxW(q);
+                }
+            }
+
+    }
+  else
+    {
+      for (unsigned int q=0; q<nq; ++q)
+        for (unsigned int c=0; c<n_components; ++c)
+          for (unsigned int i=0; i<dofs_per_cell; ++i)
+            for (unsigned int j=0; j<dofs_per_cell; ++j)
+              data.local_matrix(i,j) +=
+                fev.shape_value_component(i,q,c)
+                *
+                fev.shape_value_component(j,q,c)
+                *fev.JxW(q);
+    }
+}
+
+#endif
+
 template<int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
@@ -405,15 +497,16 @@ set_stepper (const std::string &s) const
   stepper = s;
 }
 
+
 template<int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::connect_to_signals() const
 {}
 
-template class BaseInterface<2, 2, LATrilinos>;
-template class BaseInterface<2, 3, LATrilinos>;
-template class BaseInterface<3, 3, LATrilinos>;
+#define INSTANTIATE(dim,spacedim,LAC) \
+  template class BaseInterface<dim,spacedim,LAC>;
 
-template class BaseInterface<2, 2, LADealII>;
-template class BaseInterface<2, 3, LADealII>;
-template class BaseInterface<3, 3, LADealII>;
+
+PIDOMUS_INSTANTIATE(INSTANTIATE)
+
+

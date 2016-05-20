@@ -17,10 +17,12 @@
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/identity_matrix.h>
 //
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/packaged_operation.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -35,6 +37,12 @@
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
+
+#ifdef DEAL_II_WITH_ARPACK
+#include <deal.II/lac/arpack_solver.h>
+#include <deal.II/lac/parpack_solver.h>
+#include <deal.II/lac/iterative_inverse.h>
+#endif
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
@@ -260,6 +268,35 @@ declare_parameters (ParameterHandler &prm)
                   "Maximum number of temporary vectors used by FGMRES for the \n"
                   "solution of the linear system using the finer preconditioner.");
 
+#ifdef DEAL_II_WITH_ARPACK
+  add_parameter(  prm,
+                  &n_eigenvalues,
+                  "Number of eigenvalues to compute",
+                  "10",
+                  Patterns::Integer (1));
+
+  add_parameter(  prm,
+                  &n_arnoldi_vectors,
+                  "Number of used Arnoldi vectors",
+                  "0",
+                  Patterns::Integer (0),
+                  "If 0, the number of vectors used will be\n"
+                  "2*number_of_eigenvalues+2");
+
+  add_parameter(  prm,
+                  &which_eigenvalues,
+                  "Which eigenvalues",
+                  "smallest_real_part",
+                  Patterns::Selection("algebraically_largest"
+                                      "|algebraically_smallest"
+                                      "|largest_magnitude"
+                                      "|smallest_magnitude"
+                                      "|largest_real_part"
+                                      "|smallest_real_part"
+                                      "|largest_imaginary_part"
+                                      "|smallest_imaginary_part"
+                                      "|both_ends"));
+#endif
 }
 
 
@@ -367,6 +404,10 @@ void
 piDoMUS<dim, spacedim, LAC>::parse_parameters_call_back()
 {
   use_direct_solver &= (typeid(typename LAC::BlockMatrix) == typeid(dealii::BlockSparseMatrix<double>));
+#ifdef DEAL_II_WITH_ARPACK
+  if (n_arnoldi_vectors == 0)
+    n_arnoldi_vectors = 2*n_eigenvalues+2;
+#endif
 }
 
 
@@ -874,11 +915,6 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
   eh.output_table(pcout);
 
-  if (output_timer)
-    {
-      pcout << std::endl;
-      Teuchos::TimeMonitor::summarize(std::cout,true);
-    }
 }
 
 /*** ODE Argument Interface ***/
@@ -1335,6 +1371,7 @@ piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &ds
   dst.compress(VectorOperation::add);
 
 }
+
 
 template class piDoMUS<2, 2, LATrilinos>;
 template class piDoMUS<2, 3, LATrilinos>;

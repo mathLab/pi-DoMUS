@@ -149,6 +149,14 @@ public:
   virtual void output_solution (const unsigned int &cycle,
                                 const unsigned int &step_number) const;
 
+#ifdef DEAL_II_WITH_ARPACK
+  /**
+    * This function is called after an eigenvalue calculation
+    */
+  virtual void output_eigenvectors(const std::vector<typename LAC::VectorType> &eigenfunctions,
+                                   const std::vector<std::complex<double> > &eigenvalues,
+                                   const unsigned int &current_cycle) const;
+#endif
 
   /** @name Functions dedicated to assemble system and preconditioners */
   /** @{ */
@@ -193,6 +201,17 @@ public:
   virtual void assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                                                FEValuesCache<dim,spacedim> &scratch,
                                                CopyData &data) const;
+#ifdef DEAL_II_WITH_ARPACK
+  /**
+   * Assemble the local mass matrix. The mass matrix is used for solving
+   * the generalized eigenvalue problem. By default the mass matrix is
+   * assembled. If you want to solve a different eigenvalue problem
+   * you need to override this function.
+   */
+  virtual void assemble_local_mass_matrix(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
+                                          FEValuesCache<dim,spacedim> &scratch,
+                                          CopyMass &data) const;
+#endif
 
   /**
    * Compute linear operators needed by the problem: - @p system_op
@@ -343,6 +362,8 @@ public:
   * @param s
   */
   void set_stepper(const std::string &s) const;
+
+
 
 protected:
 
