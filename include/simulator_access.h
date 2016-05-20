@@ -93,7 +93,7 @@ public:
 
   /**
    * Return the current alpha in the expression
-   * $\dot{y}=\alpha y + \beta \bar{y}$
+   * \f$\dot{y}=\alpha y + \beta \bar{y}\f$
    */
   double get_alpha () const;
 
@@ -190,6 +190,7 @@ public:
   /** @} */
 
 private:
+
   /**
    * A pointer to the simulator object to which we want to get
    * access.

@@ -24,13 +24,11 @@ declare_parameters (ParameterHandler &prm)
                   "1",
                   Patterns::Integer (0));
 
-    add_parameter(  prm,
-                    &max_time_iterations,
-                    "Maximum number of time steps",
-                    "10000",
-                    Patterns::Integer (0));
-
-
+  add_parameter(  prm,
+                  &max_time_iterations,
+                  "Maximum number of time steps",
+                  "10000",
+                  Patterns::Integer (0));
 
   add_parameter(  prm,
                   &jacobian_solver_tolerance,
