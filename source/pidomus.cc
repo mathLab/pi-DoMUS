@@ -138,7 +138,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
       if (time_stepper == "ida")
         ida.start_ode(solution, solution_dot, max_time_iterations);
-      else if (time_stepper == "euler")
+      else if (time_stepper == "euler" || time_stepper == "imex")
         {
           current_alpha = euler.get_alpha();
           euler.start_ode(solution, solution_dot);

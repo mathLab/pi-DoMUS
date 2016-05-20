@@ -409,11 +409,6 @@ private:
    */
   double second_to_last_dt;
 
-
-  /**
-   * Show timer statistics
-   */
-  bool                     output_timer;
   /**
    * Teucos timer file
    */

@@ -23,12 +23,14 @@ declare_parameters (ParameterHandler &prm)
                   "Number of cycles",
                   "1",
                   Patterns::Integer (0));
-// to be removed
-  add_parameter(  prm,
-                  &max_time_iterations,
-                  "Maximum number of time steps",
-                  "10000",
-                  Patterns::Integer (0));
+
+    add_parameter(  prm,
+                    &max_time_iterations,
+                    "Maximum number of time steps",
+                    "10000",
+                    Patterns::Integer (0));
+
+
 
   add_parameter(  prm,
                   &jacobian_solver_tolerance,
@@ -37,14 +39,14 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Double (0.0));
 
   add_parameter(  prm,
-                  &adaptive_refinement,
-                  "Adaptive refinement",
-                  "true",
-                  Patterns::Bool());
-//to be removed
-  add_parameter(  prm,
                   &use_direct_solver,
                   "Use direct solver if available",
+                  "true",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
+                  &adaptive_refinement,
+                  "Adaptive refinement",
                   "true",
                   Patterns::Bool());
 
@@ -64,7 +66,7 @@ declare_parameters (ParameterHandler &prm)
                   &time_stepper,
                   "Time stepper",
                   "euler",
-                  Patterns::Selection("ida|euler")); //imex
+                  Patterns::Selection("ida|euler|imex")); //imex
 
   add_parameter(  prm,
                   &use_space_adaptivity,
@@ -77,13 +79,6 @@ declare_parameters (ParameterHandler &prm)
                   "Threshold for solver's restart",
                   "1e-2",
                   Patterns::Double(0.0));
-
-  //to be removed
-  add_parameter(  prm,
-                  &output_timer,
-                  "Show timer",
-                  "false",
-                  Patterns::Bool());
 
   add_parameter(  prm,
                   &max_iterations,
