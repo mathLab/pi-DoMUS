@@ -154,6 +154,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::make_grid_fe()
 {
+  auto _timer = computing_timer.scoped_timer("Make grid and finite element");
   signals.begin_make_grid_fe();
   triangulation = SP(pgg.distributed(comm));
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));

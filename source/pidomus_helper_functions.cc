@@ -42,6 +42,7 @@ syncronize(const double &t,
            const typename LAC::VectorType &solution,
            const typename LAC::VectorType &solution_dot)
 {
+  auto _timer = computing_timer.scoped_timer ("Syncronize");
   if (std::isnan(current_time))
     {
       // we are at the very first time step
@@ -119,6 +120,7 @@ syncronize(const double &t,
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double &t)
 {
+  auto _timer = computing_timer.scoped_timer ("Update functions and constraints");
   if (!std::isnan(t))
     {
       dirichlet_bcs.set_time(t);

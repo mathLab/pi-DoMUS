@@ -23,8 +23,6 @@ piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                             const typename LAC::VectorType &,
                                             const double alpha)
 {
-  auto _timer = computing_timer.scoped_timer ("Setup Jacobian");
-
   signals.begin_setup_jacobian();
 
   current_alpha = alpha;

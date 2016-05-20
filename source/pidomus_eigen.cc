@@ -47,7 +47,6 @@ using namespace deal2lkit;
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
 {
-  auto _timer = computing_timer.scoped_timer ("Setup and solve eigenproblem");
   interface.set_stepper(time_stepper);
 
   interface.connect_to_signals();
@@ -89,13 +88,12 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
                                        relevant_partitioning,
                                        comm);
 
-//      matrices[n_matrices]->clear();
       mass_matrix.clear();
-      initializer(mass_pattern, //*matrix_sparsities[n_matrices],
+      initializer(mass_pattern,
                   *dof_handler,
                   constraints,
                   mass_coupling);
-//      matrices[n_matrices]->reinit(*matrix_sparsities[n_matrices]);
+
       mass_matrix.reinit(mass_pattern);
 
       setup_jacobian(current_time,solution,solution_dot,solution_dot,current_alpha);
@@ -137,20 +135,22 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
         this->interface.assemble_local_mass_matrix(cell, scratch, data);
       };
 
+      {
+        auto _timer = computing_timer.scoped_timer ("Assemble mass matrix");
 
 
-      WorkStream::
-      run (CellFilter (IteratorFilters::LocallyOwnedCell(),
-                       dof_handler->begin_active()),
-           CellFilter (IteratorFilters::LocallyOwnedCell(),
-                       dof_handler->end()),
-           local_assemble,
-           local_copy,
-           fev_cache,
-           pidomus::CopyMass(fe->dofs_per_cell));
+        WorkStream::
+        run (CellFilter (IteratorFilters::LocallyOwnedCell(),
+                         dof_handler->begin_active()),
+             CellFilter (IteratorFilters::LocallyOwnedCell(),
+                         dof_handler->end()),
+             local_assemble,
+             local_copy,
+             fev_cache,
+             pidomus::CopyMass(fe->dofs_per_cell));
 
-      mass_matrix.compress(VectorOperation::add);
-
+        mass_matrix.compress(VectorOperation::add);
+      }
       // call the eigensolver
 
       do_solve_eigenproblem(*matrices[0],
@@ -160,9 +160,11 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
                             jacobian_preconditioner_op_finer,
                             eigv,
                             eigval);
+      {
+        auto _timer = computing_timer.scoped_timer ("Save eigenvectors");
 
-      interface.output_eigenvectors(eigv,eigval,current_cycle);
-
+        interface.output_eigenvectors(eigv,eigval,current_cycle);
+      }
     }
 
 
