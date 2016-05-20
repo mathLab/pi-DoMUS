@@ -37,6 +37,9 @@ using namespace dealii;
 using namespace deal2lkit;
 
 
+// This file contains the implementation of the functions
+// needed for the solution of an eigenvalue problem
+// through Arpack/Parpack.
 
 
 #ifdef DEAL_II_WITH_ARPACK
@@ -63,10 +66,8 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
 
   // add the mass matrix
 
-  typename LAC::BlockMatrix mass_matrix;
   typename LAC::BlockSparsityPattern mass_pattern;
-//  matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
-//  matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+  typename LAC::BlockMatrix mass_matrix;
 
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
