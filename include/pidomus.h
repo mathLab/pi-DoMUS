@@ -30,7 +30,7 @@
 
 // #include <deal.II/lac/precondition.h>
 
-#include "copy_data.h"
+
 #include "base_interface.h"
 #include "simulator_access.h"
 #include "pidomus_signals.h"
@@ -409,11 +409,6 @@ private:
    */
   double second_to_last_dt;
 
-
-  /**
-   * Show timer statistics
-   */
-  bool                     output_timer;
   /**
    * Teucos timer file
    */
