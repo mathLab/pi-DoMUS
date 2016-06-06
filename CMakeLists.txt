@@ -80,14 +80,31 @@ FOREACH(_build_type ${_d2_build_types})
     STRING(TOUPPER "${_build_type}" _BUILD_TYPE)
 
     ADD_LIBRARY(${_lib} SHARED ${_files})
+
+    OPTION( ENABLE_ALL_EXECUTABLES 
+            "Enable all executable" OFF)
+  
     FOREACH(_main ${_mains})
-	MESSAGE("-- Processing ${_main}")
-	GET_FILENAME_COMPONENT(_app_name ${_main} NAME_WE)
-    	SET(_exe "${_app_name}${_p}")
-    	MESSAGE("-- Configuring executable ${_exe}")
-    	ADD_EXECUTABLE(${_exe} ${_main})
-    	TARGET_LINK_LIBRARIES(${_exe} ${_lib})
-	D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+      GET_FILENAME_COMPONENT(_app_name ${_main} NAME_WE)
+      OPTION( ENABLE_EXEC_${_app_name} 
+        "Enable ${_app_name} executable" OFF)
+      IF(ENABLE_ALL_EXECUTABLES)
+        SET( ENABLE_EXEC_${_app_name} ON CACHE BOOL "-- Executable ${_app_name} enabled" FORCE)
+      ENDIF()
+    ENDFOREACH()
+    
+    FOREACH(_main ${_mains})
+      MESSAGE("-- Processing ${_main}")
+      GET_FILENAME_COMPONENT(_app_name ${_main} NAME_WE)
+      IF(ENABLE_EXEC_${_app_name})
+        SET(_exe "${_app_name}${_p}")
+        MESSAGE("-- Configuring executable ${_app_name}")
+        ADD_EXECUTABLE(${_exe} ${_main})
+        TARGET_LINK_LIBRARIES(${_exe} ${_lib})
+        D2K_SETUP_TARGET(${_exe} ${_BUILD_TYPE})
+      ELSE()
+        MESSAGE("-- Executable ${_app_name} disabled")
+      ENDIF()
     ENDFOREACH()
 
     SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
