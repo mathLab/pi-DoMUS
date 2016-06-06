@@ -1,0 +1,148 @@
+
+# Parameter file generated with 
+# D2K_GIT_BRANCH=       master
+# D2K_GIT_SHORTREV=     fc320d8
+# DEAL_II_GIT_BRANCH=   master
+# DEAL_II_GIT_SHORTREV= f9930f9
+subsection AMG A
+  set Aggregation threshold              = 1
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = true
+end
+subsection AMG B
+  set Aggregation threshold              = 1
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = true
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = none
+  set w-cycle                            = false
+end
+subsection Dirichlet boundary conditions
+  #set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
+  #set IDs and expressions     = 0 = 0 % 1 = 0 % 2 = 0 % 3 = 0
+  set IDs and component masks = 0 = ALL % 3 = ALL % 2 = ALL
+  set IDs and expressions     = 0 = 0;0 % 3 = 0;0 % 2 = 0;0
+  set Known component names   = d,a
+  set Used constants          = k=1
+end
+subsection Domain
+  set Colorize                      = true
+  set Optional Point<spacedim> 1    = 0,0
+  set Optional Point<spacedim> 2    = 1,1
+end
+
+subsection Eikonal Equation
+  set Block of differential components = 1,1
+  set Blocking of the finite element   = d,a
+  set Finite element space             = FESystem[FE_Q(3)-FE_Q(1)]
+  set Laplacian stabilization          = 5e-3
+  set Use Heat Equation                = false
+end
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 1e-8
+  set Final time                                   = 0.0
+  set Initial time                                 = 0.0
+  set Intervals between outputs                    = 1
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 5
+  set Method used                                  = fixed_alpha
+  set Newton relaxation parameter                  = .00100000
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 0.000000
+  set Step size                                    = 1.0e-4
+  set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+subsection Initial solution
+  set Function constants  = 
+  set Function expression = 0; 0
+  set Variable names      = x,y,t
+end
+subsection Initial solution_dot
+  set Function constants  = 
+  set Function expression = 0; 0
+  set Variable names      = x,y,t
+end
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 1
+  set Maximum number of iterations                       = 200
+  set Step tolerance                                     = 1e-7
+  set Strategy                                           = newton
+  set Tolerance for residuals                            = 1e-7
+  set Use internal KINSOL direct solver                  = false
+end
+subsection Output Parameters
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = eikonal_equation
+  set Solution names                 = d
+  set Subdivisions                   = 1
+end
+subsection Refinement
+  set Bottom fraction                        = 0.100000
+  set Maximum number of cells (if available) = 0
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.300000
+end
+subsection pidomus
+  set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = true
+  set Initial global refinement                      = 4
+  set Jacobian solver tolerance                      = 1e-8
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 20
+  set Max tmp vectors                                = 30
+  set Max tmp vectors for finer system               = 50
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = false
+  set Print some useful informations about processes = true
+  set Refine mesh during transient                   = true
+  set Show timer                                     = false
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = euler
+  set Use direct solver if available                 = true
+end
+
+
+subsection Error Tables
+  set Compute error            = true
+  set Error file format        = tex
+  set Error precision          = 3
+  set Output error tables      = true
+  set Solution names           = d,a
+  set Solution names for latex = d,a
+  set Table names              = error
+  set Write error files        = false
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = Linfty,L2,H1; Linfty,L2,H1
+    set Rate key                       =
+  end
+end
+subsection Exact solution
+  set Function constants  = 
+  set Function expression = y < .5 ? (y<x ? y : x ) : (y>1-x ? 1-y : x )   ;\
+                            y < .5 ? (y<x ? y : x ) : (y>1-x ? 1-y : x ) 
+  set Variable names      = x,y,t
+end

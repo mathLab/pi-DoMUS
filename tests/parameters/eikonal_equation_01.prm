@@ -1,0 +1,160 @@
+
+subsection Dirichlet boundary conditions
+  #set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
+  #set IDs and expressions     = 0 = 0 % 1 = 0 % 2 = 0 % 3 = 0
+  set IDs and component masks = 3 = d % 0 = d %2 = d 
+  set IDs and expressions     = 3 = 0 % 0 = 0 %2 = 0
+  set Known component names   = d
+  set Used constants          = k=1
+end
+subsection AMG A
+  set Aggregation threshold              = 100
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = false
+  set High Order Elements                = false
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = d
+  set w-cycle                            = false
+end
+
+subsection Domain
+  set Colorize                   = true
+  set Grid to generate           = rectangle
+  set Optional Point<spacedim> 1 = 0,0
+  set Optional Point<spacedim> 2 = 1,1
+end
+
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 1e-8
+  set Final time                                   = 0.9
+  set Initial time                                 = 0.0
+  set Intervals between outputs                    = 1
+  
+  # At each inner iteration the Jacobian is NOT updated.
+  set Maximum number of inner nonlinear iterations = 3
+
+  # At each outer iteration the Jacobian is updated if it is set that the
+  # Jacobian is continuously updated and a cycle of inner iterations is
+  # perfomed.
+  set Maximum number of outer nonlinear iterations = 5
+
+  # Fixed alpha means that the parsed alpha is used in each Newton iteration
+  # LS_backtracking is the line search with backtracking method.
+  set Method used                                  = LS_backtracking
+  set Newton relaxation parameter                  = 1.000000
+
+  # In the line seach method with backtracking the following alphas are
+  # tested: 1, 1/2, 1/4,..., 2^-i. This parameter sets the maximum i.
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 1e-6
+  set Step size                                    = 3e-1
+  set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+
+subsection KINSOL for IMEX
+  # Allowed values [0,3]
+  set Level of verbosity of the KINSOL solver            = 0
+
+  # Maximum number of nonlinear iterations that can be done with an outdated
+  # Jacobian.
+  # If set to 1 the Jacobian is updated at each nonlinear iteration
+  set Maximum number of iteration before Jacobian update = 1
+
+  # The non-linear solver will stop when reaching this number ofNewton
+  # iterations no matter what.
+  set Maximum number of iterations                       = 200
+
+  # The Newton method will terminate when the maximum scaled step is below the
+  # given tolerance.
+  set Step tolerance                                     = 1e-6
+
+  # newton        = basic Newton iteration
+  # global_newton = Newton with line search
+  # fixed_point   = fixed-point iteration with Anderson Acceleration
+  # picard        = Picard iteration with Anderson Acceleration
+  set Strategy                                           = global_newton
+
+  # This define the condition (small residual) for a successful completion of
+  # KINSOL.
+  # 0 means the default value for KINSOL
+  set Tolerance for residuals                            = 1e-6
+
+  # If true the dense direct linear solver of KINSOL is used
+  set Use internal KINSOL direct solver                  = false
+end
+
+
+subsection Output Parameters
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = eikonal_equation
+  set Solution names                 = d
+  set Subdivisions                   = 1
+end
+subsection Eikonal Equation
+  set Block of differential components = 1
+  set Blocking of the finite element   = d
+  set Finite element space             = FESystem[FE_Q(1)]
+  set Laplacian stabilization          = 5e-2
+end
+subsection Initial solution
+  set Function constants  =
+  set Function expression = 0
+  set Variable names      = x,y,t
+end
+subsection Initial solution_dot
+  set Function constants  =
+  set Function expression = 0
+  set Variable names      = x,y,t
+end
+subsection pidomus
+  set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = true
+  set Initial global refinement                      = 6
+  set Jacobian solver tolerance                      = 1e-8
+  set Max iterations                                 = 50
+  set Max iterations finer prec.                     = 20
+  set Max tmp vectors                                = 30
+  set Max tmp vectors for finer system               = 50
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Overwrite Newton's iterations                  = false
+  set Print some useful informations about processes = true
+  set Refine mesh during transient                   = true
+  set Show timer                                     = false
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = euler
+  set Use direct solver if available                 = true
+end
+
+
+subsection Error Tables
+  set Compute error            = true
+  set Error file format        = tex
+  set Error precision          = 3
+  set Output error tables      = true
+  set Solution names           = d
+  set Solution names for latex = d
+  set Table names              = error
+  set Write error files        = false
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = Linfty,L2,H1
+    set Rate key                       =
+  end
+end
+subsection Exact solution
+  set Function constants  = 
+  set Function expression = y < .5 ? (y<x ? y : x ) : (y>1-x ? 1-y : x )  
+  set Variable names      = x,y,t
+end
