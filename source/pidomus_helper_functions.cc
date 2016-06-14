@@ -34,6 +34,13 @@ get_solution()
   return solution;
 }
 
+template <int dim, int spacedim, typename LAC>
+const DoFHandler<dim,spacedim> &
+piDoMUS<dim, spacedim, LAC>::
+get_dof_handler () const
+{
+  return *dof_handler;
+}
 
 template <int dim, int spacedim, typename LAC>
 void

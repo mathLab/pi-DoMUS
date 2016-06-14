@@ -15,6 +15,7 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/numerics/fe_field_function.h>
 
 #include <deal2lkit/sacado_tools.h>
 #include <deal2lkit/parsed_preconditioner/amg.h>
@@ -28,7 +29,7 @@ class KOmega
 
 public:
   ~KOmega () {};
-  KOmega ();
+  KOmega (piDoMUS<dim,spacedim,LAC> &distance, std::string interface_name = "Interface");
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -52,7 +53,46 @@ public:
   void
   set_matrix_couplings(std::vector<std::string> &couplings) const;
 
+  virtual void connect_to_signals() const
+  {
+    auto &signals = this->get_signals();
+    auto &pcout = this->get_pcout();
+    signals.begin_make_grid_fe.connect(
+      [&]()
+    {
+      pcout << std::endl
+            << " --------------------------------------------------------------"
+            << std::endl
+            << " --------------------- Eikonal Equation -----------------------"
+            << std::endl
+            << " --------------------------------------------------------------"
+            << std::endl << std::endl;
+      distance.run ();
+      pcout << std::endl
+            << " --------------------------------------------------------------"
+            << std::endl
+            << " --------------------- Eikonal Equation -----------------------"
+            << std::endl
+            << " --------------------------------------------------------------"
+            << std::endl << std::endl;
+      const typename LAC::VectorType &distance_sol = distance.get_solution();
+      const DoFHandler<dim,spacedim> &distance_dh  = distance.get_dof_handler();
+      Functions::FEFieldFunction<dim, DoFHandler<dim,spacedim>, typename LAC::VectorType> dist(distance_dh, distance_sol);
+      {
+        Point<spacedim> p;
+        p[0] = 0.5;
+        p[1] = 0.5;
+        pcout << "-->" << dist.value(p,0) << std::endl;
+      }
+      //
+    });
+  }
 private:
+  /**
+   * TODO: Distance
+   */
+  piDoMUS<dim,spacedim,LAC> &distance;
+
   /**
    * Determine to handle \f$ (\nabla u)u \f$.
    */
@@ -164,15 +204,16 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 KOmega<dim,spacedim, LAC>::
-KOmega()
+KOmega(piDoMUS<dim,spacedim,LAC> &distance, std::string interface_name)
   :
   PDESystemInterface<dim,spacedim,KOmega<dim,spacedim,LAC>, LAC>(
-    "k-omega",
+    interface_name,
     dim+3,
     3,
     "FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(1)-FE_Q(1)]",
     (dim==3) ? "u,u,u,p,k,w" : "u,u,p,k,w",
     "1,0,1,1"),
+  distance(distance),
   amg_A("Amg for A"),
   amg_Ap("Amg for Ap"),
   amg_k("Amg for k"),

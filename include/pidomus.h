@@ -154,6 +154,12 @@ public:
   typename LAC::VectorType &get_solution();
 
   /**
+   * Get bach the dof handler.
+   */
+  const DoFHandler<dim,spacedim> &
+  get_dof_handler () const;
+
+  /**
    * save the diagonal of the lumped mass matrix in @p diag, which is
    * used as scaling vector in KINSOL
    */

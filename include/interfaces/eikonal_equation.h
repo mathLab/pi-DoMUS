@@ -64,7 +64,7 @@ private:
 template <int dim, int spacedim, typename LAC>
 EikonalEquation<dim,spacedim, LAC>::
 EikonalEquation():
-  PDESystemInterface<dim,spacedim,EikonalEquation<dim,spacedim,LAC>, LAC >("Eikonal Equation",
+  PDESystemInterface<dim,spacedim,EikonalEquation<dim,spacedim,LAC>, LAC >("EikonalEquation",
       1, 1,
       "FESystem[FE_Q(1)]",
       "d","1"),

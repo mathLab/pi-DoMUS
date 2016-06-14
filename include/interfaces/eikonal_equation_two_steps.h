@@ -60,7 +60,7 @@ class EikonalEquation : public PDESystemInterface<dim,spacedim, EikonalEquation<
 
 public:
   ~EikonalEquation () {};
-  EikonalEquation ();
+  EikonalEquation (std::string interface_name = "Interface");
 
   template <typename EnergyType, typename ResidualType>
   void energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
@@ -113,11 +113,12 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 EikonalEquation<dim,spacedim, LAC>::
-EikonalEquation():
-  PDESystemInterface<dim,spacedim,EikonalEquation<dim,spacedim,LAC>, LAC >("Eikonal Equation",
-      2, 1,
-      "FESystem[FE_Q(1)-FE_Q(1)]",
-      "d,a","1,1"),
+EikonalEquation(std::string interface_name):
+  PDESystemInterface<dim,spacedim,EikonalEquation<dim,spacedim,LAC>, LAC >(
+    interface_name,
+    2, 1,
+    "FESystem[FE_Q(1)-FE_Q(1)]",
+    "d,a","1,1"),
   AMG_A("AMG A"),
   AMG_B("AMG B")
 {}

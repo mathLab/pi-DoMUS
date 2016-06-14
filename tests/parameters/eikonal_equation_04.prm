@@ -44,7 +44,7 @@ subsection Domain
   set Optional Point<spacedim> 2    = 1,1
 end
 
-subsection Eikonal Equation
+subsection EikonalEquation
   set Block of differential components = 1,1
   set Blocking of the finite element   = d,a
   set Finite element space             = FESystem[FE_Q(3)-FE_Q(1)]

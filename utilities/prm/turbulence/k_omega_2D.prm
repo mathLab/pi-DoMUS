@@ -1,234 +1,365 @@
-subsection Amg for A
-  set Aggregation threshold              = 2
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = false
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = none
-  set w-cycle                            = false
+
+################################################################################
+# -> K-Omega
+################################################################################
+subsection KOmega
+  subsection Amg for A
+    set Aggregation threshold              = 2
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = false
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = false
+  end
+  subsection Amg for Ap
+    set Aggregation threshold              = 0.100
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = true
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = false
+  end
+  subsection Amg for k
+    set Aggregation threshold              = 1.0
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = true
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = false
+  end
+  subsection Amg for omega
+    set Aggregation threshold              = 1.0
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = true
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = false
+  end
+  subsection Dirichlet boundary conditions
+    set IDs and component masks = 0 = u % 1 = u  % 2 = u
+    set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 ; 0 % 1 = 0 ; 0 ; 0 ; 0 ; 0 % 2 = 0 ; (a-x)*(x+a) > 0 ? (1/(a*a))*(a-x)*(x+a) * ( t < k ? (t/k) : 1) : 0 ;  0 ; 0 ; 0
+    set Known component names   = u,u,p,w,k
+    set Used constants          = k=1.0, a=0.01
+  end
+  subsection Domain
+    set Colorize                      = true
+    set Copy boundary to manifold ids = false
+    set Copy material to manifold ids = false
+    set Create default manifolds      = true
+    set Grid to generate              = rectangle
+    set Input grid file name          = 
+    set Manifold descriptors          = 
+    set Mesh smoothing alogrithm      = none
+    set Optional Point<spacedim> 1    = -.5,0
+    set Optional Point<spacedim> 2    = .5,2
+    set Optional double 1             = 1.0
+    set Optional double 2             = 0.5
+    set Optional double 3             = 1.5
+    set Optional int 1                = 1
+    set Optional int 2                = 2
+    set Optional vector of dim int    = 1,1
+    set Output grid file name         = 
+  end
+  subsection Error Tables
+    set Compute error            = true
+    set Error file format        = tex
+    set Error precision          = 3
+    set Output error tables      = true
+    set Solution names           = u,u,p,k,w
+    set Solution names for latex = u,u,p,k,w
+    set Table names              = error
+    set Write error files        = false
+    subsection Table 0
+      set Add convergence rates          = true
+      set Extra terms                    = cells,dofs
+      set Latex table caption            = error
+      set List of error norms to compute = L2,H1;L2,H1;L2,H1;L2,H1;L2,H1
+      set Rate key                       = 
+    end
+  end
+  subsection Exact solution
+    set Function constants  = 
+    set Function expression = 0; 0; 0; 0; 0
+    set Variable names      = x,y,t
+  end
+  subsection Forcing terms
+    set IDs and component masks = 
+    set IDs and expressions     = 
+    set Known component names   = u,u,p,k,w
+    set Used constants          = 
+  end
+  subsection IDA Solver Parameters
+    set Absolute error tolerance                      = 1e-4
+    set Final time                                    = 1
+    set Ignore algebraic terms for error computations = false
+    set Initial condition Newton max iterations       = 5
+    set Initial condition Newton parameter            = 0.33
+    set Initial condition type                        = use_y_diff
+    set Initial condition type after restart          = use_y_dot
+    set Initial step size                             = 1e-4
+    set Initial time                                  = 0
+    set Maximum number of nonlinear iterations        = 10
+    set Maximum order of BDF                          = 5
+    set Min step size                                 = 5e-5
+    set Relative error tolerance                      = 1e-3
+    set Seconds between each output                   = 1e-1
+    set Show output of time steps                     = true
+    set Use local tolerances                          = false
+  end
+  subsection IMEX Parameters
+    set Absolute error tolerance                     = 1e-8
+    set Final time                                   = 5.0
+    set Initial time                                 = 0.0
+    set Intervals between outputs                    = 1
+    set Maximum number of inner nonlinear iterations = 3
+    set Maximum number of outer nonlinear iterations = 5
+    set Method used                                  = LS_backtracking
+    set Newton relaxation parameter                  = 1.000000
+    set Number of elements in backtracking sequence  = 5
+    set Print useful informations                    = false
+    set Relative error tolerance                     = 1e-6
+    set Step size                                    = 1e-2
+    set Update continuously Jacobian                 = true
+    set Use the KINSOL solver                        = true
+  end
+  subsection Initial solution
+    set Function constants  = 
+    set Function expression = 0; 0; 0; 1; 1
+    set Variable names      = x,y,t
+  end
+  subsection Initial solution_dot
+    set Function constants  = 
+    set Function expression = 0; 0; 0; 0; 0
+    set Variable names      = x,y,t
+  end
+  subsection Interface
+    set Block of differential components = 1,0,1,1
+    set Blocking of the finite element   = u,u,p,k,w
+    set CG Solver tolerance              = 1e-8
+    set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(1)-FE_Q(1)]
+    set GMRES Solver tolerance           = 1e-8
+    set Non linear term                  = linear
+    set SUPG alpha                       = 0.0
+    set alpha                            = 0.5555555556
+    set beta                             = 0.075
+    set beta_star                        = 0.09
+    set div-grad stabilization parameter = 0.0
+    set nu [Pa s]                        = 1.0
+    set rho [kg m^3]                     = 1.0
+    set sigma                            = .5
+    set sigma_star                       = .5
+  end
+  subsection Jacobi for Mp
+    set Min Diagonal     = 0.000000
+    set Number of sweeps = 1
+    set Omega            = 1.400000
+  end
+  subsection KINSOL for IMEX
+    set Level of verbosity of the KINSOL solver            = 0
+    set Maximum number of iteration before Jacobian update = 1
+    set Maximum number of iterations                       = 200
+    set Step tolerance                                     = 1e-8
+    set Strategy                                           = global_newton
+    set Tolerance for residuals                            = 1e-6
+    set Use internal KINSOL direct solver                  = false
+  end
+  subsection KOmegaSolver
+    set Adaptive refinement                            = true
+    set Enable finer preconditioner                    = false
+    set Initial global refinement                      = 1
+    set Jacobian solver tolerance                      = 1e-8
+    set Max iterations                                 = 50
+    set Max iterations finer prec.                     = 0
+    set Max tmp vectors                                = 30
+    set Max tmp vectors for finer system               = 50
+    set Maximum number of time steps                   = 10000
+    set Number of cycles                               = 1
+    set Number of eigenvalues to compute               = 10
+    set Number of used Arnoldi vectors                 = 0
+    set Overwrite Newton's iterations                  = true
+    set Print some useful informations about processes = true
+    set Refine mesh during transient                   = false
+    set Threshold for solver's restart                 = 1e-2
+    set Time stepper                                   = euler
+    set Use direct solver if available                 = true
+    set Which eigenvalues                              = smallest_real_part
+  end
+  subsection Neumann boundary conditions
+    set IDs and component masks = 
+    set IDs and expressions     = 
+    set Known component names   = u,u,p,k,w
+    set Used constants          = 
+  end
+  subsection Output Parameters
+    set Files to save in run directory = 
+    set Incremental run prefix         = 
+    set Output format                  = vtu
+    set Output partitioning            = false
+    set Problem base name              = k-omega-2D
+    set Solution names                 = u
+    set Subdivisions                   = 2
+  end
+  subsection Refinement
+    set Bottom fraction                        = 0.100000
+    set Maximum number of cells (if available) = 40000
+    set Order (optimize)                       = 2
+    set Refinement strategy                    = number
+    set Top fraction                           = 0.300000
+  end
+  subsection Time derivative of Dirichlet boundary conditions
+    set IDs and component masks = 
+    set IDs and expressions     = 
+    set Known component names   = u,u,p,k,w
+    set Used constants          = 
+  end
+  subsection Zero average constraints
+    set Known component names        = u,u,p,k,w
+    set Zero average on boundary     = 
+    set Zero average on whole domain = 
+  end
 end
-subsection Amg for Ap
-  set Aggregation threshold              = 0.100
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = none
-  set w-cycle                            = false
+
+################################################################################
+# -> Eikonal Equation
+################################################################################
+subsection EikonalEquation
+  subsection AMG A
+    set Aggregation threshold              = 1
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = true
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = true
+  end
+  subsection AMG B
+    set Aggregation threshold              = 1
+    set Coarse type                        = Amesos-KLU
+    set Elliptic                           = true
+    set High Order Elements                = false
+    set Number of cycles                   = 1
+    set Output details                     = false
+    set Smoother overlap                   = 0
+    set Smoother sweeps                    = 2
+    set Smoother type                      = Chebyshev
+    set Variable related to constant modes = none
+    set w-cycle                            = false
+  end
+  subsection Dirichlet boundary conditions
+    #set IDs and component masks = 0 = u % 1 = u % 2 = u % 3 = u
+    #set IDs and expressions     = 0 = 0 % 1 = 0 % 2 = 0 % 3 = 0
+    set IDs and component masks =  0 = ALL % 3 = ALL % 2 = ALL
+    set IDs and expressions     =  0 = 0;0 % 3 = 0;0 % 2 = 0;0
+    set Known component names   = d,a
+    set Used constants          = k=1
+  end
+  subsection Domain
+    set Colorize                      = true
+    set Optional Point<spacedim> 1    = 0,0
+    set Optional Point<spacedim> 2    = 1,1
+  end
+
+  subsection Interface
+    set Block of differential components = 1,1
+    set Blocking of the finite element   = d,a
+    set Finite element space             = FESystem[FE_Q(3)-FE_Q(1)]
+    set Laplacian stabilization          = 5e-3
+    set Use Heat Equation                = false
+  end
+  subsection IMEX Parameters
+    set Absolute error tolerance                     = 1e-8
+    set Final time                                   = 0.0
+    set Initial time                                 = 0.0
+    set Intervals between outputs                    = 1
+    set Maximum number of inner nonlinear iterations = 3
+    set Maximum number of outer nonlinear iterations = 5
+    set Method used                                  = fixed_alpha
+    set Newton relaxation parameter                  = .00100000
+    set Number of elements in backtracking sequence  = 5
+    set Print useful informations                    = false
+    set Relative error tolerance                     = 0.000000
+    set Step size                                    = 1.0e-4
+    set Update continuously Jacobian                 = true
+    set Use the KINSOL solver                        = true
+  end
+  subsection Initial solution
+    set Function constants  = 
+    set Function expression = 0; 0
+    set Variable names      = x,y,t
+  end
+  subsection Initial solution_dot
+    set Function constants  = 
+    set Function expression = 0; 0
+    set Variable names      = x,y,t
+  end
+  subsection KINSOL for IMEX
+    set Level of verbosity of the KINSOL solver            = 0
+    set Maximum number of iteration before Jacobian update = 1
+    set Maximum number of iterations                       = 50
+    set Step tolerance                                     = 1e-7
+    set Strategy                                           = newton
+    set Tolerance for residuals                            = 1e-7
+    set Use internal KINSOL direct solver                  = false
+  end
+  subsection Output Parameters
+    set Files to save in run directory = 
+    set Incremental run prefix         = 
+    set Output format                  = vtu
+    set Output partitioning            = false
+    set Problem base name              = eikonal_equation
+    set Solution names                 = d
+    set Subdivisions                   = 1
+  end
+  subsection Refinement
+    set Bottom fraction                        = 0.100000
+    set Maximum number of cells (if available) = 0
+    set Order (optimize)                       = 2
+    set Refinement strategy                    = fraction
+    set Top fraction                           = 0.300000
+  end
+  subsection DistanceSolver
+    set Adaptive refinement                            = true
+    set Enable finer preconditioner                    = true
+    set Initial global refinement                      = 2
+    set Jacobian solver tolerance                      = 1e-8
+    set Max iterations                                 = 50
+    set Max iterations finer prec.                     = 30
+    set Max tmp vectors                                = 30
+    set Max tmp vectors for finer system               = 50
+    set Maximum number of time steps                   = 10000
+    set Number of cycles                               = 1
+    set Overwrite Newton's iterations                  = false
+    set Print some useful informations about processes = true
+    set Refine mesh during transient                   = true
+    set Threshold for solver's restart                 = 1e-2
+    set Time stepper                                   = euler
+    set Use direct solver if available                 = true
+  end
+  subsection Error Tables
+    set Compute error            = false
+  end
 end
-subsection Amg for k
-  set Aggregation threshold              = 1.0
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = none
-  set w-cycle                            = false
-end
-subsection Amg for omega
-  set Aggregation threshold              = 1.0
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = none
-  set w-cycle                            = false
-end
-subsection k-omega  
-  set Block of differential components     = 1,0,1,1
-  set Blocking of the finite element       = u,u,p,k,w
-  set CG Solver tolerance                  = 1e-8
-  set GMRES Solver tolerance               = 1e-8
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(1)-FE_Q(1)]
-
-  set Non linear term                      = linear
-
-  # Parameters:
-  set nu [Pa s]                            = 1e-5
-  set rho [kg m^3]                         = 1.0
-
-  set alpha                                = 0.5555555556
-  set beta                                 = 0.075
-  set beta_star                            = 0.09
-  set sigma                                = .5
-  set sigma_star                           = .6
-
-  set SUPG alpha                           = 1.0
-  set div-grad stabilization parameter     = 0.9 #0.09999
-end
-
-subsection Dirichlet boundary conditions
-  set IDs and component masks = 0 = u % 1 = u  % 2 = u  # % 3 = p
-  set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 ; 0 % \
-                                1 = 0 ; 0 ; 0 ; 0 ; 0 % \
-                                2 = 0 ; (a-x)*(x+a) > 0 ? (1/(a*a))*(a-x)*(x+a) * ( t < k ? (t/k) : 1) : 0 ;  0 ; 0 ; 0 # % \
-                              #  3 = 0 ; 0 ; 0 ; 0 ; 0
-  set Known component names   = u,u,p,w,k
-  set Used constants          = k=1.0, a=0.01
-end
-
-# subsection Dirichlet boundary conditions
-#   set IDs and component masks = 0 = u % 1 = u  % 2 = u % 3 = u
-#   set IDs and expressions     = 0 = 0 ; 0 ; 0 ; 0 ; 0 % \
-#       1 = 0 ; 0 ; 0 ; 0 ; 0 % \
-#       2 = 0 ; 0 ; 0 ; 0 ; 0 % \
-#       3 = t<.5? 2*t : 1 ; 0 ; 0 ; 0 ; 0
-# end
-
-subsection Domain
-  set Colorize                      = true
-  set Copy boundary to manifold ids = false
-  set Copy material to manifold ids = false
-  set Create default manifolds      = true
-  set Grid to generate              = rectangle
-  set Input grid file name          = 
-  set Manifold descriptors          = 
-  set Mesh smoothing alogrithm      = none
-#  set Optional Point<spacedim> 1    = 0,0
-#  set Optional Point<spacedim> 2    = 1,1  
-  set Optional Point<spacedim> 1    = -.5,0
-  set Optional Point<spacedim> 2    = .5,2
-  set Optional double 1             = 1.0
-  set Optional double 2             = 0.5
-  set Optional double 3             = 1.5
-  set Optional int 1                = 1
-  set Optional int 2                = 2
-  set Optional vector of dim int    = 1,1
-  set Output grid file name         = 
-end
-
-subsection IMEX Parameters
-  set Absolute error tolerance                     = 1e-8
-  set Final time                                   = 5.0
-  set Initial time                                 = 0.0
-  set Intervals between outputs                    = 1
-  
-  # At each inner iteration the Jacobian is NOT updated.
-  set Maximum number of inner nonlinear iterations = 3
-
-  # At each outer iteration the Jacobian is updated if it is set that the
-  # Jacobian is continuously updated and a cycle of inner iterations is
-  # perfomed.
-  set Maximum number of outer nonlinear iterations = 5
-
-  # Fixed alpha means that the parsed alpha is used in each Newton iteration
-  # LS_backtracking is the line search with backtracking method.
-  set Method used                                  = LS_backtracking
-  set Newton relaxation parameter                  = 1.000000
-
-  # In the line seach method with backtracking the following alphas are
-  # tested: 1, 1/2, 1/4,..., 2^-i. This parameter sets the maximum i.
-  set Number of elements in backtracking sequence  = 5
-  set Print useful informations                    = false
-  set Relative error tolerance                     = 1e-6
-  set Step size                                    = 1e-2
-  set Update continuously Jacobian                 = true
-  set Use the KINSOL solver                        = true
-end
-
-subsection KINSOL for IMEX
-  # Allowed values [0,3]
-  set Level of verbosity of the KINSOL solver            = 0
-
-  # Maximum number of nonlinear iterations that can be done with an outdated
-  # Jacobian.
-  # If set to 1 the Jacobian is updated at each nonlinear iteration
-  set Maximum number of iteration before Jacobian update = 1
-
-  # The non-linear solver will stop when reaching this number ofNewton
-  # iterations no matter what.
-  set Maximum number of iterations                       = 200
-
-  # The Newton method will terminate when the maximum scaled step is below the
-  # given tolerance.
-  set Step tolerance                                     = 1e-8
-
-  # newton        = basic Newton iteration
-  # global_newton = Newton with line search
-  # fixed_point   = fixed-point iteration with Anderson Acceleration
-  # picard        = Picard iteration with Anderson Acceleration
-  set Strategy                                           = global_newton
-
-  # This define the condition (small residual) for a successful completion of
-  # KINSOL.
-  # 0 means the default value for KINSOL
-  set Tolerance for residuals                            = 1e-6
-
-  # If true the dense direct linear solver of KINSOL is used
-  set Use internal KINSOL direct solver                  = false
-end
-
-subsection Initial solution
-  set Function constants  = 
-  set Function expression = 0; 0; 0; 1; 1
-  set Variable names      = x,y,t
-end
-
-subsection Output Parameters
-  set Output format                  = vtu
-  set Output partitioning            = false
-  set Problem base name              = k-omega-2D
-  set Solution names                 = u
-  set Subdivisions                   = 2
-end
-
-subsection piDoMUS
-  set Use direct solver if available                 = true
-  set Initial global refinement                      = 7
-  set Jacobian solver tolerance                      = 1e-6
-
-  set Max iterations                                 = 40
-  set Enable finer preconditioner                    = true
-  set Max iterations finer prec.                     = 40
-    
-  set Time stepper                                   = euler
-
-  set Adaptive refinement                            = false
-  set Refine mesh during transient                   = false
-  set Threshold for solver's restart                 = 1e-2
-  
-  set Maximum number of time steps                   = 10000
-  set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
-  set Print some useful informations about processes = true
-  set Show timer                                     = false
-end
-
-subsection Refinement
-  set Bottom fraction                        = 0.100000
-  set Maximum number of cells (if available) = 40000
-  set Order (optimize)                       = 2
-  set Refinement strategy                    = number
-  set Top fraction                           = 0.300000
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
