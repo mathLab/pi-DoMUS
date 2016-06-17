@@ -13,6 +13,18 @@
 #include <iostream>
 #include <string>
 
+////////////////////////////////////////////////////////////////////////////////
+// Begin macros
+#define problem(dim,spacedim,LAC) \
+  KOmega<dim,spacedim,LAC> energy; \
+  piDoMUS<dim,spacedim,LAC> equation ( \
+                                       "piDoMUS", \
+                                       energy); \
+  ParameterAcceptor::initialize(prm_file, model_name+"_used.prm"); \
+  equation.run ();
+// End macros
+////////////////////////////////////////////////////////////////////////////////
+
 void print_status(  std::string name,
                     std::string prm_file,
                     int dim,
@@ -112,38 +124,22 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  KOmega<2> energy;
-                  piDoMUS<2,2> k_omega ("piDoMUS",energy);
-                  ParameterAcceptor::initialize(prm_file, model_name+"_used.prm");
-                  ParameterAcceptor::prm.log_parameters(deallog);
-                  k_omega.run ();
+                  problem(2,2,LATrilinos);
                 }
               else
                 {
-                  KOmega<2,2,LADealII> energy;
-                  piDoMUS<2,2,LADealII> k_omega ("piDoMUS",energy);
-                  ParameterAcceptor::initialize(prm_file, model_name+"_used.prm");
-                  ParameterAcceptor::prm.log_parameters(deallog);
-                  k_omega.run ();
+                  problem(2,2,LADealII);
                 }
             }
           else
             {
               if (trilinos)
                 {
-                  KOmega<3> energy;
-                  piDoMUS<3,3> k_omega ("piDoMUS",energy);
-                  ParameterAcceptor::initialize(prm_file, model_name+"_used.prm");
-                  ParameterAcceptor::prm.log_parameters(deallog);
-                  k_omega.run ();
+                  problem(3,3,LATrilinos);
                 }
               else
                 {
-                  KOmega<3,3,LADealII> energy;
-                  piDoMUS<3,3,LADealII> k_omega ("piDoMUS",energy);
-                  ParameterAcceptor::initialize(prm_file, model_name+"_used.prm");
-                  ParameterAcceptor::prm.log_parameters(deallog);
-                  k_omega.run ();
+                  problem(3,3,LADealII);
                 }
             }
         }
