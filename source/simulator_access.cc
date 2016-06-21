@@ -151,6 +151,13 @@ SimulatorAccess<dim,spacedim,LAC>::get_fe () const
   return simulator->dof_handler->get_fe();
 }
 
+template <int dim, int spacedim, typename LAC>
+const ParsedDirichletBCs<dim, spacedim> &
+SimulatorAccess<dim,spacedim,LAC>::get_dirichlet_bcs() const
+{
+  return simulator->dirichlet_bcs;
+}
+
 
 
 template class SimulatorAccess<2, 2, LATrilinos>;

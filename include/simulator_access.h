@@ -6,6 +6,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/mapping_q.h>
+#include <deal2lkit/parsed_dirichlet_bcs.h>
 
 using namespace dealii;
 //using namespace deal2lkit;
@@ -186,6 +187,13 @@ public:
    */
   const FiniteElement<dim,spacedim> &
   get_fe () const;
+
+  /**
+   * Return a reference to the ParsedDirichletBCs that stores
+   * the Dirichlet boundary conditions set in the parameter file.
+   */
+  const ParsedDirichletBCs<dim,spacedim> &
+  get_dirichlet_bcs () const;
 
   /** @} */
 
