@@ -19,6 +19,8 @@
 #include <deal.II/lac/solver_gmres.h>
 
 #include <deal2lkit/parsed_mapped_functions.h>
+#include <deal2lkit/parsed_preconditioner/amg.h>
+#include <deal2lkit/parsed_preconditioner/jacobi.h>
 
 namespace ALEUtilities
 {
@@ -128,28 +130,32 @@ private:
   double c;
   double k;
 
-
   bool use_mass_matrix_for_d_dot;
 
   bool Mp_use_inverse_operator;
+  bool AMG_u_use_inverse_operator;
+  bool AMG_d_use_inverse_operator;
+  bool AMG_v_use_inverse_operator;
 
-// AMG
-  double Amg_data_d_smoother_sweeps;
-  double Amg_data_d_aggregation_threshold;
-  bool   Amg_d_use_inverse_operator;
+  /**
+   * AMG preconditioner for velocity-velocity matrix.
+   */
+  mutable ParsedAMGPreconditioner AMG_u;
 
-  double Amg_data_v_smoother_sweeps;
-  double Amg_data_v_aggregation_threshold;
-  bool   Amg_v_use_inverse_operator;
+  /**
+   * AMG preconditioner for the pressure stifness matrix.
+   */
+  mutable ParsedAMGPreconditioner AMG_d;
 
-  double Amg_data_u_smoother_sweeps;
-  double Amg_data_u_aggregation_threshold;
-  bool   Amg_u_use_inverse_operator;
+  /**
+   * AMG preconditioner for the pressure stifness matrix.
+   */
+  mutable ParsedAMGPreconditioner AMG_v;
 
-// mutable shared_ptr<TrilinosWrappers::PreconditionAMG> amg_A;
-  mutable shared_ptr<TrilinosWrappers::PreconditionAMG> P00_preconditioner, P11_preconditioner, P22_preconditioner;
-  mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> P33_preconditioner;
-
+  /**
+   * Jacobi preconditioner for the pressure mass matrix.
+   */
+  mutable ParsedJacobiPreconditioner jac_M;
 };
 
 
@@ -161,14 +167,18 @@ ALENavierStokes()
     "ALE Navier Stokes Interface",
     dim+dim+dim+1,
     2,
-    "FESystem[FE_Q(1)^d-FE_Q(1)^d-FE_Q(2)^d-FE_Q(1)]",
+    "FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]",
     "d,d,v,v,u,u,p",
     "1,1,1,0"),
   nitsche("Nitsche boundary conditions",
           this->n_components,
           this->get_component_names(),
           "" /* do nothing by default */
-         )
+         ),
+  AMG_u("AMG for u"),
+  AMG_d("AMG for d"),
+  AMG_v("AMG for v"),
+  jac_M("Jacobi for M")
 {
   this->init();
 }
@@ -201,7 +211,7 @@ declare_parameters (ParameterHandler &prm)
                       "k");
 
   this->add_parameter(prm, &use_mass_matrix_for_d_dot,
-                      "Use mass matrix for d_dot", "true",
+                      "Use mass matrix for d_dot", "false",
                       Patterns::Bool(),
                       "Use d_dot mass matrix to close the system \n"
                       "If false it uses the stifness matrix");
@@ -211,47 +221,18 @@ declare_parameters (ParameterHandler &prm)
                       Patterns::Bool(),
                       "Invert Mp usign inverse operator");
 
-  this->add_parameter(prm, &Amg_data_d_smoother_sweeps,
-                      "AMG d - smoother sweeps", "2",
-                      Patterns::Integer(0),
-                      "AMG d - smoother sweeps");
-
-  this->add_parameter(prm, &Amg_data_d_aggregation_threshold,
-                      "AMG d - aggregation threshold", "0.02",
-                      Patterns::Double(0.0),
-                      "AMG d - aggregation threshold");
-
-  this->add_parameter(prm, &Amg_d_use_inverse_operator,
+  this->add_parameter(prm, &AMG_d_use_inverse_operator,
                       "AMG d - use inverse operator", "false",
                       Patterns::Bool(),
                       "Enable the use of inverse operator for AMG d");
 
-  this->add_parameter(prm, &Amg_data_v_smoother_sweeps,
-                      "AMG v - smoother sweeps", "2",
-                      Patterns::Integer(0),
-                      "AMG v - smoother sweeps");
 
-  this->add_parameter(prm, &Amg_data_v_aggregation_threshold,
-                      "AMG v - aggregation threshold", "0.02",
-                      Patterns::Double(0.0),
-                      "AMG v - aggregation threshold");
-
-  this->add_parameter(prm, &Amg_v_use_inverse_operator,
+  this->add_parameter(prm, &AMG_v_use_inverse_operator,
                       "AMG v - use inverse operator", "false",
                       Patterns::Bool(),
                       "Enable the use of inverse operator for AMG v");
 
-  this->add_parameter(prm, &Amg_data_u_smoother_sweeps,
-                      "AMG u - smoother sweeps", "2",
-                      Patterns::Integer(0),
-                      "AMG u - smoother sweeps");
-
-  this->add_parameter(prm, &Amg_data_u_aggregation_threshold,
-                      "AMG u - aggregation threshold", "0.02",
-                      Patterns::Double(0.0),
-                      "AMG u - aggregation threshold");
-
-  this->add_parameter(prm, &Amg_u_use_inverse_operator,
+  this->add_parameter(prm, &AMG_u_use_inverse_operator,
                       "AMG u - use inverse operator", "false",
                       Patterns::Bool(),
                       "Enable the use of inverse operator for AMG u");
@@ -470,8 +451,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   Tensor<1, dim, double> f;
                   f[1] = force[1];
                   residual[0][i] += (
-                                      (v_dot + c * d_dot + k * d - f) * v_test
-                                      + (u - v) * u_test
+                                      // (v_dot + c * d_dot + k * d - f) * v_test  +
+                                      (u - d_dot) * u_test
                                       + (d_dot - v) * d_test
                                     )*JxW[q];
                 }
@@ -491,6 +472,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // Displacement velocity:
   auto &v_ = fe_cache.get_values( "solution", "v", displacement_velocity, et);
+  auto &grad_vs = fe_cache.get_gradients( "solution", "grad_v", displacement_velocity, et);
 
 // velocity:
   auto &us = fe_cache.get_values( "solution", "u", velocity, et);
@@ -527,6 +509,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
 // Displacement velocity:
       const Tensor<1, dim, ResidualType> &v = v_[quad];
+      const Tensor<2, dim, ResidualType> &grad_v = grad_vs[quad];
 
       const Tensor <2, dim, ResidualType> &F = Fs[quad];
       ResidualType J = determinant(F);
@@ -559,34 +542,35 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 // velocity:
           auto u_test = fev[velocity].value(i,quad);
-          auto grad_v = fev[velocity].gradient(i,quad);
-          auto div_v = fev[velocity].divergence(i,quad);
+          auto grad_u_test = fev[velocity].gradient(i,quad);
+          auto div_u_test = fev[velocity].divergence(i,quad);
 
 // displacement:
-          auto grad_e = fev[displacement].gradient(i,quad);
+          auto grad_d_test = fev[displacement].gradient(i,quad);
 
 // pressure:
-          auto m = fev[pressure].value(i,quad);
+          auto p_test = fev[pressure].value(i,quad);
 //          auto q = fev[pressure].value(i,quad);
 
           residual[1][i] +=
             (
-              (1./nu)*p*m
+              (1./nu)*p*p_test
             )*JxW[quad];
+          // std::cout <<  " --->" <<  scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test ) << std::endl;
           residual[0][i] +=
             (
-// time derivative term
+              // time derivative term
               rho*scalar_product( u_dot * J_ale , u_test )
 //
               + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
 //
-              + scalar_product( J_ale * sigma * Ft_inv, grad_v )
+              + scalar_product( J_ale * sigma * Ft_inv, grad_u_test )
 // divergence free constriant
-              - div_u * m
+              - div_u * p_test
 // pressure term
-              - p * div_v
+              - p * div_u_test
 // Impose armonicity of d and v=d_dot
-              + scalar_product( grad_d , grad_e )
+              + scalar_product( grad_d , grad_d_test )
             )*JxW[quad];
 
           if (use_mass_matrix_for_d_dot)
@@ -616,51 +600,14 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   typedef LATrilinos::VectorType::BlockType BVEC;
   typedef LATrilinos::VectorType VEC;
 
-// AMG data d
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_d;
-  Amg_data_d.elliptic = true;
-  // Amg_data_d.higher_order_elements = true;
-  Amg_data_d.smoother_sweeps = Amg_data_d_smoother_sweeps;
-  Amg_data_d.aggregation_threshold = Amg_data_d_aggregation_threshold;
-
-// AMG data v
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_v;
-  std::vector<std::vector<bool>> constant_modes_v;
-  FEValuesExtractors::Vector d_velocity_components(dim);
-  DoFTools::extract_constant_modes (
-    this->get_dof_handler(),
-    this->get_dof_handler().get_fe().component_mask(d_velocity_components),
-    constant_modes_v);
-  Amg_data_v.constant_modes = constant_modes_v;
-  Amg_data_v.elliptic = true;
-  // Amg_data_v.higher_order_elements = true;
-  Amg_data_v.smoother_sweeps = Amg_data_v_smoother_sweeps;
-  Amg_data_v.aggregation_threshold = Amg_data_v_aggregation_threshold;
-
-// AMG data u
-  TrilinosWrappers::PreconditionAMG::AdditionalData Amg_data_u;
-  std::vector<std::vector<bool>> constant_modes_u;
-  FEValuesExtractors::Vector velocity_components(2*dim);
-  DoFTools::extract_constant_modes (
-    this->get_dof_handler(),
-    this->get_dof_handler().get_fe().component_mask(velocity_components),
-    constant_modes_u);
-  Amg_data_u.constant_modes = constant_modes_u;
-  // Amg_data_u.elliptic = false;
-  Amg_data_u.higher_order_elements = true;
-  Amg_data_u.smoother_sweeps = Amg_data_u_smoother_sweeps;
-  Amg_data_u.aggregation_threshold = Amg_data_u_aggregation_threshold;
-
 // Preconditioners:
+  const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
+  const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
 
-  P00_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-  P00_preconditioner ->initialize (matrices[0]->block(0,0), Amg_data_d);
-  P11_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-  P11_preconditioner ->initialize (matrices[0]->block(1,1), Amg_data_v);
-  P22_preconditioner.reset (new TrilinosWrappers::PreconditionAMG());
-  P22_preconditioner ->initialize (matrices[0]->block(2,2), Amg_data_u);
-  P33_preconditioner.reset (new TrilinosWrappers::PreconditionJacobi());
-  P33_preconditioner ->initialize (matrices[1]->block(3,3), 1.4);
+  AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
+  AMG_v.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
+  AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(2,2), fe, dh);
+  jac_M.initialize_preconditioner<>(matrices[1]->block(3,3));
 
 ////////////////////////////////////////////////////////////////////////////
 // SYSTEM MATRIX:
@@ -695,16 +642,16 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   auto Bt = transpose_operator< >(B);
 
   LinearOperator<BVEC> A_inv;
-  if (Amg_v_use_inverse_operator)
+  if (AMG_v_use_inverse_operator)
     {
       A_inv = inverse_operator( S[2][2],
                                 solver_GMRES,
-                                *P22_preconditioner);
+                                AMG_u);
     }
   else
     {
       A_inv = linear_operator<BVEC>(matrices[0]->block(2,2),
-                                    *P22_preconditioner);
+                                    AMG_u);
     }
 
   auto Mp = linear_operator< TrilinosWrappers::MPI::Vector >( matrices[1]->block(3,3) );
@@ -714,38 +661,38 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
     {
       Mp_inv = inverse_operator(Mp,
                                 solver_GMRES,
-                                *P33_preconditioner);
+                                jac_M);
     }
   else
     {
       Mp_inv = linear_operator<BVEC>(matrices[1]->block(3,3),
-                                     *P33_preconditioner);
+                                     jac_M);
     }
 
   auto Schur_inv = nu * Mp_inv;
 
-  if (Amg_d_use_inverse_operator)
+  if (AMG_d_use_inverse_operator)
     {
       P[0][0] = inverse_operator( S[0][0],
                                   solver_CG,
-                                  *P00_preconditioner);
+                                  AMG_d);
     }
   else
     {
       P[0][0] = linear_operator<BVEC>(matrices[0]->block(0,0),
-                                      *P00_preconditioner);
+                                      AMG_d);
     }
 
-  if (Amg_v_use_inverse_operator)
+  if (AMG_v_use_inverse_operator)
     {
       P[1][1] = inverse_operator( S[1][1],
                                   solver_CG,
-                                  *P11_preconditioner);
+                                  AMG_v);
     }
   else
     {
       P[1][1] = linear_operator<BVEC>(matrices[0]->block(1,1),
-                                      *P11_preconditioner);
+                                      AMG_v);
     }
 
   P[2][2] = A_inv;
