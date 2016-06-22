@@ -2,36 +2,29 @@
 subsection ALE Navier Stokes Interface
   set AMG d - use inverse operator     = true
   set AMG u - use inverse operator     = true
-  set AMG v - use inverse operator     = true
-  set Block of differential components = 1,1,1,0
-  set Blocking of the finite element   = d,d,v,v,u,u,p
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set Invert Mp using inverse operator = false
-  set Use mass matrix for d_dot        = true
-  set c                                = 0.0
-  set k                                = 1.0
+  
+  set Block of differential components = 1,1,0
+  set Blocking of the finite element   = d,d,u,u,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
+
   set nu [Pa s]                        = 10
   set rho [Kg m^-d]                    = 1.0
 end
 
 subsection Dirichlet boundary conditions
   set IDs and component masks = 2=d % 3=d
-  set IDs and expressions     = 2=0; a*((x-0.5)^2)*sin(t*v);0;0;0;0;0; %\
-                                3=0;-a*((x-0.5)^2)*sin(t*v);0;0;0;0;0;
-  set Known component names   = d,d,v,v,u,u,p
+  set IDs and expressions     = 2=0; a*((x-0.5)^2)*sin(t*v);0;0;0; %\
+                                3=0;-a*((x-0.5)^2)*sin(t*v);0;0;0;
+  set Known component names   = d,d,u,u,p
   set Used constants          = a=0.1, v=16
 end
 subsection Time derivative of Dirichlet boundary conditions
   set IDs and component masks = 2=d % 3=d
-  set IDs and expressions     = 2=0; a*((x-0.5)^2)*v*cos(t*v);0;0;0;0;0; %\
-                                3=0;-a*((x-0.5)^2)*v*cos(t*v);0;0;0;0;0;
-  set Known component names   = d,d,v,v,u,u,p
+  set IDs and expressions     = 2=0; a*((x-0.5)^2)*v*cos(t*v);0;0;0; %\
+                                3=0;-a*((x-0.5)^2)*v*cos(t*v);0;0;0;
+  set Known component names   = d,d,u,u,p
   set Used constants          = a=0.1, v=16
-end
-subsection Nitsche boundary conditions
-  set IDs and component masks = 2=u % 3=u
-  set Known component names   = d,d,v,v,u,u,p
-  set Used constants          =
 end
 subsection Domain
   set Colorize                      = true
@@ -72,7 +65,7 @@ subsection Output Parameters
   set Incremental run prefix         =
   set Output format                  = vtu
   set Output partitioning            = false
-  set Problem base name              = bug
+  set Problem base name              = ALE_test
   set Solution names                 = u
   set Subdivisions                   = 1
 end
@@ -84,7 +77,7 @@ subsection Refinement
   set Top fraction                           = 0.3
 end
 subsection Zero average constraints
-  set Known component names        = d,d,v,v,u,u,p
+  set Known component names        = d,d,u,u,p
   set Zero average on boundary     =
   set Zero average on whole domain =
 end
@@ -126,19 +119,6 @@ subsection AMG for d
   set w-cycle                            = false
 end
 subsection AMG for u
-  set Aggregation threshold              = 10
-  set Coarse type                        = Amesos-KLU
-  set Elliptic                           = true
-  set High Order Elements                = false
-  set Number of cycles                   = 1
-  set Output details                     = false
-  set Smoother overlap                   = 0
-  set Smoother sweeps                    = 2
-  set Smoother type                      = Chebyshev
-  set Variable related to constant modes = none
-  set w-cycle                            = false
-end
-subsection AMG for v
   set Aggregation threshold              = 10
   set Coarse type                        = Amesos-KLU
   set Elliptic                           = true
