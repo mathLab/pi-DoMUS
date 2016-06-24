@@ -151,11 +151,11 @@ int main (int argc, char *argv[])
             {
               if (trilinos)
                 {
-                  problem_ALE(3,3,LATrilinos);
+                  problem_ALE(2,2,LATrilinos);
                 }
               else
                 {
-                  problem_ALE(3,3,LADealII);
+                  problem_ALE(2,2,LADealII);
                 }
             }
           else
