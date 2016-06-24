@@ -124,7 +124,7 @@ ALENavierStokes()
     dim+dim+1,
     2,
     "FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]",
-    (dim==3)?"d,d,d,u,u,u,p":"d,d,u,u,p",
+    "d,d,d,u,u,u,p",
     "1,1,0"),
   AMG_u("AMG for u"),
   AMG_d("AMG for d"),
