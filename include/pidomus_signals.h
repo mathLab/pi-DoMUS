@@ -40,7 +40,10 @@ struct Signals
    * i.e., when the setup_dofs() is called and when a time step is
    * done and so the constraints, which might be time dependent,
    * must be updated. Specifically, it is called inside the
-   * function update_functions_and_constraints().
+   * function update_functions_and_constraints() after that the
+   * hanging nodes have been computed and after that the boundary values
+   * have been included. Note that ConstraintMatrix::close() will be called
+   * after this signal, so no need to call it inside.
    *
    * The functions that can attach to this signal must take two
    * ConstraintMatrix.

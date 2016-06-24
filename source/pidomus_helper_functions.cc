@@ -128,22 +128,30 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
       forcing_terms.set_time(t);
       neumann_bcs.set_time(t);
     }
+  // clear previously stored constraints
   constraints.clear();
+  constraints_dot.clear();
+
+  // compute hanging nodes
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints);
 
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
-
-  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
-
-  constraints.close ();
-
-  constraints_dot.clear();
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints_dot);
 
+  // compute boundary values
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
   apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
+
+
+  // apply zero average constraints
+  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
+
+  // add user-supplied bcs
   signals.update_constraint_matrices(constraints,constraints_dot);
+
+  // close the constraints
+  constraints.close ();
   constraints_dot.close ();
 }
 
