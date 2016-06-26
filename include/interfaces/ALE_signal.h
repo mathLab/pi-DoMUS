@@ -11,6 +11,7 @@
 #define _pidomus_ALE_navier_stokes_h_
 
 #include "pde_system_interface.h"
+#include "../boundary_values.h"
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
@@ -50,7 +51,7 @@ public:
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
-
+  /*
   virtual void connect_to_signals() const
   {
     auto &signals = this->get_signals();
@@ -63,27 +64,28 @@ public:
       [&,this](ConstraintMatrix &constraints, ConstraintMatrix &)
     {
 
-      // TODO: - include header file of BoundaryValues
+      // TODO: - include header file of BoundaryValues (check) 
       //       - make sure the change of the fourth entry is still doing the same as before!  
-      VectorTools::interpolate_boundary_values (dof_handler,
+      VectorTools::interpolate_boundary_values (dof,
                                                 2,
                                                 BoundaryValues<dim>(2),
                                                 constraints);
 
       // bottom face
-      VectorTools::interpolate_boundary_values (dof_handler,
+      VectorTools::interpolate_boundary_values (dof,
                                                 1,
-                                                BoundaryValues<dim>(1, timestep, false, 2),
+                                                BoundaryValues<dim>(1, 0, false, 2),
                                                 constraints);
 
       // hull
-      VectorTools::interpolate_boundary_values (dof_handler,
+      VectorTools::interpolate_boundary_values (dof,
                                                 0,
-                                                BoundaryValues<dim>(0, timestep, true, 4),
+                                                BoundaryValues<dim>(0, 0, true, 4),
                                                 constraints);
     }
     );
   }
+  */
 
   void
   set_matrix_couplings(std::vector<std::string> &couplings) const;
@@ -213,7 +215,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                 {
                   this->reinit(et, cell, face, fe_cache);
 // Displacement:
-                  auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
+                  //auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
                   auto &d_dot_ = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
 // Velocity:
@@ -230,7 +232,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   for (unsigned int q=0; q<q_points.size(); ++q)
                     {
 // Displacement:
-                      const Tensor<1, dim, ResidualType> &d = d_[q];
+                      // const Tensor<1, dim, ResidualType> &d = d_[q];
                       const Tensor<1, dim, ResidualType> &d_dot = d_dot_[q];
 
 // Velocity:
@@ -239,7 +241,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                       for (unsigned int i=0; i<residual[0].size(); ++i)
                         {
 // Test functions:
-                          auto d_test = fev[displacement].value(i,q);
+                          // auto d_test = fev[displacement].value(i,q);
                           auto u_test = fev[velocity].value(i,q);
 
                           residual[0][i] += (1./h)*(
