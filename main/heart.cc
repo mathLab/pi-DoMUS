@@ -1,5 +1,4 @@
 #include "interfaces/ALE_signal.h"
-#include "interfaces/navier_stokes.h"
 #include "pidomus.h"
 
 #include "deal.II/base/numbers.h"
@@ -24,13 +23,6 @@
   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm"); \
   equation.run ();
 
-#define problem_NS(dynamic,stokes,dim,spacedim,LAC) \
-  NavierStokes<dim,spacedim,LAC> energy(dynamic, stokes); \
-  piDoMUS<dim,spacedim,LAC> equation ( \
-                                       "piDoMUS", \
-                                       energy); \
-  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm"); \
-  equation.run ();
 // End macros
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +51,7 @@ int main (int argc, char *argv[])
   );
 
   std::string pde_name="ALE";
-  My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes, NS for navier stokes, or ALE for ALE navier stokes)");
+  //My_CLP.setOption("pde", &pde_name, "name of the PDE (stokes, NS for navier stokes, or ALE for ALE navier stokes)");
 
   bool trilinos = true;
   My_CLP.setOption("trilinos","dealii", &trilinos, "select the vector type to use");
@@ -71,7 +63,7 @@ int main (int argc, char *argv[])
   // My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
 
   int dim = 3;
-  My_CLP.setOption("dim", &dim, "dimension of the problem");
+  //My_CLP.setOption("dim", &dim, "dimension of the problem");
 
   int n_threads = 0;
   My_CLP.setOption("n_threads", &n_threads, "number of threads");
@@ -109,28 +101,10 @@ int main (int argc, char *argv[])
   if (dynamic)
     string_dynamic="Dynamic";
 
-  bool stokes;
-  std::string string_pde_name="";
-  if (pde_name == "NS")
-    {
-      string_pde_name = "Navier Stokes";
-      stokes = false;
-    }
-  else if (pde_name == "ALE")
-    {
-      string_pde_name = "ALE Navier Stokes";
-      stokes = false;
-    }
-  else if (pde_name == "stokes")
-    {
-      string_pde_name = "Stokes";
-      stokes = false;
-    }
-  else
-    {
-      AssertThrow(false, ExcNotImplemented());
-      return 1;
-    }
+  bool stokes = false;
+  std::string string_pde_name="ALE Navier Stokes";
+      //string_pde_name = "ALE Navier Stokes";
+      //stokes = false;
 
   My_CLP.printHelpMessage(argv[0], out);
 
@@ -145,57 +119,15 @@ int main (int argc, char *argv[])
                       comm,
                       check_prm);
 
-      if ( pde_name == "ALE" )
+      if (trilinos)
         {
-          if (dim==2)
-            {
-              if (trilinos)
-                {
-                  problem_ALE(3,3,LATrilinos);
-                }
-              else
-                {
-                  problem_ALE(3,3,LADealII);
-                }
-            }
-          else
-            {
-              if (trilinos)
-                {
-                  problem_ALE(3,3,LATrilinos);
-                }
-              else
-                {
-                  problem_ALE(3,3,LADealII);
-                }
-            }
+          problem_ALE(3,3,LATrilinos);
         }
       else
         {
-          if (dim==2)
-            {
-              if (trilinos)
-                {
-                  problem_NS(dynamic,stokes,2,2,LATrilinos);
-                }
-              else
-                {
-                  problem_NS(dynamic,stokes,2,2,LADealII);
-                }
-            }
-          else
-            {
-              if (trilinos)
-                {
-                  problem_NS(dynamic,stokes,3,3,LATrilinos);
-                }
-              else
-                {
-                  problem_NS(dynamic,stokes,3,3,LADealII);
-                }
-            }
+          problem_ALE(3,3,LADealII);
         }
-
+     
       out << std::endl;
     }
   catch (std::exception &exc)
