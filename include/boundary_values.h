@@ -11,10 +11,10 @@ template <int dim>
 class BoundaryValues : public Function<dim>
 {
 public:
-  BoundaryValues (int cl) : Function<dim>(dim), color(cl) {}
+  BoundaryValues (int cl) : Function<dim>(2*dim+1), color(cl) {}
   BoundaryValues (int cl, int ts, bool side, int degree) 
     : 
-    Function<dim>(dim),
+    Function<dim>(2*dim+1),
     color(cl), 
     timestep(ts),
     heart(side, degree) 
