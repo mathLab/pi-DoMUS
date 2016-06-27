@@ -51,41 +51,43 @@ public:
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
-  /*
+  
   virtual void connect_to_signals() const
   {
     auto &signals = this->get_signals();
-    auto &dof=this->get_dof_handler();
-
-    //TODO: find out how to create an object once and pass a function to 
-    //      interpolate_boundary_values
 
     signals.update_constraint_matrices.connect(
       [&,this](ConstraintMatrix &constraints, ConstraintMatrix &)
     {
+      auto &dof=this->get_dof_handler();
+      auto &fe =this->get_fe();
 
-      // TODO: - include header file of BoundaryValues (check) 
-      //       - make sure the change of the fourth entry is still doing the same as before!  
+      FEValuesExtractors::Vector displacements (0);
+      ComponentMask displacement_mask = fe.component_mask (displacements);
+
       VectorTools::interpolate_boundary_values (dof,
                                                 2,
                                                 BoundaryValues<dim>(2),
-                                                constraints);
+                                                constraints,
+                                                displacement_mask);
 
-      // bottom face
-      VectorTools::interpolate_boundary_values (dof,
-                                                1,
-                                                BoundaryValues<dim>(1, 0, false, 2),
-                                                constraints);
+      //// bottom face
+      //VectorTools::interpolate_boundary_values (dof,
+      //                                          1,
+      //                                          BoundaryValues<dim>(1, 0, false, 2),
+      //                                          constraints,
+      //                                          displacement_mask);
 
-      // hull
-      VectorTools::interpolate_boundary_values (dof,
-                                                0,
-                                                BoundaryValues<dim>(0, 0, true, 4),
-                                                constraints);
+      //// hull
+      //VectorTools::interpolate_boundary_values (dof,
+      //                                          0,
+      //                                          BoundaryValues<dim>(0, 0, true, 4),
+      //                                          constraints,
+      //                                          displacement_mask);
     }
     );
   }
-  */
+  
 
   void
   set_matrix_couplings(std::vector<std::string> &couplings) const;
