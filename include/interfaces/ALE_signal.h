@@ -15,6 +15,7 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+ #include <deal.II/grid/grid_tools.h>
 
 #include <deal2lkit/parsed_mapped_functions.h>
 #include <deal2lkit/parsed_preconditioner/amg.h>
@@ -56,6 +57,15 @@ public:
   {
     auto &signals = this->get_signals();
 
+    signals.postprocess_newly_created_triangulation.connect(
+      [&,this](Triangulation<dim> &tria)
+    {
+      Tensor<1, 3> shift_vec;
+      shift_vec[0] = -0.9081;
+      GridTools::shift(shift_vec, tria);
+    }
+    );
+
     signals.update_constraint_matrices.connect(
       [&,this](ConstraintMatrix &constraints, ConstraintMatrix &)
     {
@@ -65,25 +75,38 @@ public:
       FEValuesExtractors::Vector displacements (0);
       ComponentMask displacement_mask = fe.component_mask (displacements);
 
+      auto timestep = this->get_current_time();
+      int step;
+
+      //std::cout << "step " << timestep*200 << std::endl;
+      if (timestep*200 > 4)
+      {
+        step = 0;
+      }
+      else
+      {
+        step = 10;
+      }
+      // hull
+      VectorTools::interpolate_boundary_values (dof,
+                                                0,
+                                                BoundaryValues<dim>(0, step, true, 4),
+                                                constraints,
+                                                displacement_mask);
+
+      // top face
       VectorTools::interpolate_boundary_values (dof,
                                                 2,
                                                 BoundaryValues<dim>(2),
                                                 constraints,
                                                 displacement_mask);
+      // bottom face
+      VectorTools::interpolate_boundary_values (dof,
+                                                1,
+                                                BoundaryValues<dim>(1, step, false, 2),
+                                                constraints,
+                                                displacement_mask);
 
-      //// bottom face
-      //VectorTools::interpolate_boundary_values (dof,
-      //                                          1,
-      //                                          BoundaryValues<dim>(1, 0, false, 2),
-      //                                          constraints,
-      //                                          displacement_mask);
-
-      //// hull
-      //VectorTools::interpolate_boundary_values (dof,
-      //                                          0,
-      //                                          BoundaryValues<dim>(0, 0, true, 4),
-      //                                          constraints,
-      //                                          displacement_mask);
     }
     );
   }
