@@ -75,18 +75,19 @@ public:
       FEValuesExtractors::Vector displacements (0);
       ComponentMask displacement_mask = fe.component_mask (displacements);
 
-      auto timestep = this->get_current_time();
+      double timestep = this->get_current_time();
       int step;
-
-      //std::cout << "step " << timestep*200 << std::endl;
-      if (timestep*200 > 4)
+      if (timestep != timestep)
       {
         step = 0;
       }
       else
       {
-        step = 10;
+        step = timestep*200;
       }
+
+      std::cout << "step " << step << std::endl;
+
       // hull
       VectorTools::interpolate_boundary_values (dof,
                                                 0,

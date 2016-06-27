@@ -61,11 +61,11 @@ void Heart<dim,spacedim>::reinit_data()
   std::string filename;
   if (side)
   {
-    filename = "side_boundary.txt";
+    filename = "../source/side_boundary.txt";
   }
   else
   {
-    filename =  "bottom_boundary.txt";
+    filename =  "../source/bottom_boundary.txt";
   }
   std::fstream in (filename);
   int n_dofs = dof_handler.n_dofs();
