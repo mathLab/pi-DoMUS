@@ -101,10 +101,7 @@ int main (int argc, char *argv[])
   if (dynamic)
     string_dynamic="Dynamic";
 
-  bool stokes = false;
   std::string string_pde_name="ALE Navier Stokes";
-      //string_pde_name = "ALE Navier Stokes";
-      //stokes = false;
 
   My_CLP.printHelpMessage(argv[0], out);
 
