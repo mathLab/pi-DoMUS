@@ -3,6 +3,7 @@
 
 using namespace dealii;
 
+// - - - - -  public functions - - - - -
 template <int dim>
 double
 BoundaryValues<dim>::value (const Point<dim>  &p,
@@ -27,6 +28,54 @@ template <int dim>
 void
 BoundaryValues<dim>::vector_value (const Point<dim> &p,
                                    Vector<double>   &values) const
+{
+    if(dt)
+        BoundaryValues<dim>::get_values_dt(p, values);
+    else
+        BoundaryValues<dim>::get_values(p, values, timestep);
+}
+
+
+
+// - - - - -  private functions - - - - -
+
+template <int dim>
+void
+BoundaryValues<dim>::transform_to_polar_coord (const Point<3> &p,
+                                               double rot,
+                                               double &angle, 
+                                               double &height) const
+{
+  // convert point to polar coordinates
+  double x   = p[0],
+         y   = p[1],
+         z   = p[2],
+         phi = atan2(y,z); // returns angle in the range from -Pi to Pi
+
+  // need to rotate to match heart_fe
+  phi = phi+rot;
+
+  // angle needs to be in the range from 0 to 2Pi
+  phi = (phi < 0) ? phi+2*PI : phi;
+  
+  angle = phi;
+  height = x;
+}
+
+template <int dim>
+void
+BoundaryValues<dim>::swap_coord (Point<3> &p) const
+{
+  // swap x and z coordinate
+  double tmp = p(0);
+  p(0) = p(2);
+  p(2) = tmp;
+}
+template <int dim>
+void
+BoundaryValues<dim>::get_values (const Point<dim> &p,
+                                 Vector<double>   &values,
+                                 int timestep) const
 {
   //for (unsigned int c=0; c<this->n_components; ++c)
   //  values(c) = BoundaryValues<dim>::value (p, c);
@@ -87,37 +136,24 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
 }
 
 
-template <int dim>
-void
-BoundaryValues<dim>::transform_to_polar_coord(const Point<3> &p,
-                                              double rot,
-                                              double &angle, 
-                                              double &height) const
-{
-  // convert point to polar coordinates
-  double x   = p[0],
-         y   = p[1],
-         z   = p[2],
-         phi = atan2(y,z); // returns angle in the range from -Pi to Pi
-
-  // need to rotate to match heart_fe
-  phi = phi+rot;
-
-  // angle needs to be in the range from 0 to 2Pi
-  phi = (phi < 0) ? phi+2*PI : phi;
-  
-  angle = phi;
-  height = x;
-}
 
 template <int dim>
 void
-BoundaryValues<dim>::swap_coord(Point<3> &p) const
+BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
+                                    Vector<double>   &values) const
 {
-  // swap x and z coordinate
-  double tmp = p(0);
-  p(0) = p(2);
-  p(2) = tmp;
+    double h = 0.005; 
+    Vector<double> u(dim);      // u_t
+    Vector<double> u_(dim);     // u_t+1
+
+    BoundaryValues<dim>::get_values(p, u, timestep);
+    BoundaryValues<dim>::get_values(p, u_, (timestep+1 > 99) ? 0 : timestep+1);
+
+    // (u_t+1 - u_t) / h
+    u_ -= u;
+    u_ /= h;
+
+    values = u_;
 }
 
 // Explicit instantiations
