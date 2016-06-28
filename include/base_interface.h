@@ -298,13 +298,48 @@ public:
   const std::vector<unsigned int> get_differential_blocks() const;
 
   /**
-   * This function is called in order to know which Mapping should be
-   * used.  By default it returns
-   * dealii::StaticMappingQ1<dim,spacedim>::mapping.
-   * If you want to use different mapping you need to overwrite this
-   * function.
+   * Return the mapping used when no different mapping has been
+   *  specified.
+   * Return dealii::StaticMappingQ1<dim,spacedim>::mapping by default.
    */
-  virtual const Mapping<dim,spacedim> &get_mapping() const;
+  virtual const Mapping<dim,spacedim> &get_default_mapping() const;
+
+  /**
+   * Return the mapping to use with the output.
+   */
+  virtual const Mapping<dim,spacedim> &get_output_mapping() const;
+
+  /**
+   * Return the mapping to use with FEValues.
+   */
+  virtual const Mapping<dim,spacedim> &get_fe_mapping() const;
+
+  /**
+   * Return the mapping to use with boundary conditions.
+   */
+  virtual const Mapping<dim,spacedim> &get_bc_mapping() const;
+
+  /**
+   * Return the mapping to use with the class
+   *  dealii::KellyErrorEstimator< dim, spacedim >.
+   */
+  virtual const Mapping<dim,spacedim> &get_kelly_mapping() const;
+
+  /**
+   * Return the mapping to use with errors and convergence
+   * rates.
+   */
+  virtual const Mapping<dim,spacedim> &get_error_mapping() const;
+
+  /**
+   * Return the mapping to use with interpolation of functions..
+   */
+  virtual const Mapping<dim,spacedim> &get_interpolate_mapping() const;
+
+  /**
+   * Return the mapping to use with projection of functions...
+   */
+  virtual const Mapping<dim,spacedim> &get_project_mapping() const;
 
   /**
    * This function is called in order to know what are the update flags

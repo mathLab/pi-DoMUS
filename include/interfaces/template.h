@@ -64,7 +64,7 @@ public:
   /* and when the the error_from_exact is performed.  By default it */
   /* returns  StaticMappingQ1<dim,spacedim>::mapping; */
 
-  // const Mapping<dim,spacedim> & get_mapping () const;
+  // const Mapping<dim,spacedim> & get_default_mapping () const;
 
 private:
 // additional variables such as preconditioners

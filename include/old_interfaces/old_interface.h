@@ -290,8 +290,8 @@ public:
                                               Scratch &scratch,
                                               CopyPreconditioner &data) const;
 
-  virtual shared_ptr<Mapping<dim,spacedim> > get_mapping(const DoFHandler<dim,spacedim> &,
-                                                         const typename LAC::VectorType &) const;
+  virtual shared_ptr<Mapping<dim,spacedim> > get_default_mapping(const DoFHandler<dim,spacedim> &,
+      const typename LAC::VectorType &) const;
 
   virtual UpdateFlags get_jacobian_flags() const;
 

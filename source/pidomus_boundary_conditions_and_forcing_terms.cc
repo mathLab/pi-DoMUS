@@ -88,7 +88,7 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
 {
   try
     {
-      bc.interpolate_boundary_values(interface.get_mapping(),dof_handler,constraints);
+      bc.interpolate_boundary_values(interface.get_bc_mapping(),dof_handler,constraints);
     }
   catch (...)
     {
@@ -97,11 +97,11 @@ apply_dirichlet_bcs (const DoFHandler<dim,spacedim> &dof_handler,
                              "currently supported on deal.II in parallel settings.\n"
                              "Feel free to submit a patch :)"));
       const QGauss<dim-1> quad(fe->degree+1);
-      bc.project_boundary_values(interface.get_mapping(),dof_handler,quad,constraints);
+      bc.project_boundary_values(interface.get_bc_mapping(),dof_handler,quad,constraints);
     }
   unsigned int codim = spacedim - dim;
   if (codim == 0)
-    bc.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_mapping(),constraints);
+    bc.compute_nonzero_normal_flux_constraints(dof_handler,interface.get_bc_mapping(),constraints);
 }
 
 

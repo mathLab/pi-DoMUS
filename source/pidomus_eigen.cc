@@ -102,7 +102,7 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
       const QGauss<dim> quadrature_formula(fe->degree + 1);
       const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
-      FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+      FEValuesCache<dim,spacedim> fev_cache(interface.get_fe_mapping(),
                                             *fe, quadrature_formula,
                                             interface.get_cell_update_flags(),
                                             face_quadrature_formula,

@@ -143,7 +143,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
           current_alpha = euler.get_alpha();
           euler.start_ode(solution, solution_dot);
         }
-      eh.error_from_exact(interface.get_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
+      eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
     }
 
   eh.output_table(pcout);
@@ -256,14 +256,14 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
     {
       if (fe->has_support_points())
         {
-          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution, solution);
-          VectorTools::interpolate(interface.get_mapping(), *dof_handler, initial_solution_dot, solution_dot);
+          VectorTools::interpolate(interface.get_interpolate_mapping(), *dof_handler, initial_solution, solution);
+          VectorTools::interpolate(interface.get_interpolate_mapping(), *dof_handler, initial_solution_dot, solution_dot);
         }
       else if (!we_are_parallel)
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          VectorTools::project(interface.get_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          VectorTools::project(interface.get_project_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
+          VectorTools::project(interface.get_project_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
         }
       else
         {
