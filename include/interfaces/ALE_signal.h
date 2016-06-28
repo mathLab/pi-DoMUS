@@ -75,6 +75,8 @@ public:
       FEValuesExtractors::Vector displacements (0);
       ComponentMask displacement_mask = fe.component_mask (displacements);
 
+      // displacement_mask = [1 1 1 0 0 0 0]
+
       double timestep = this->get_current_time();
       int step;
       if (timestep != timestep)
@@ -86,7 +88,7 @@ public:
         step = timestep*200;
       }
 
-      std::cout << "step " << step << std::endl;
+      //std::cout << "step " << step << std::endl;
 
       // hull
       VectorTools::interpolate_boundary_values (dof,
@@ -231,14 +233,14 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       unsigned int face_id = cell->face(face)->boundary_id();
       if (cell->face(face)->at_boundary())
         {
-          auto nitsche = this->get_dirichlet_bcs();
-          if (nitsche.acts_on_id(face_id))
-            {
-              bool check = false;
-              for (unsigned int i = 0; i<spacedim; i++)
-                check |= nitsche.get_mapped_mask(face_id)[i];
-              if (check)
-                {
+          //auto nitsche = this->get_dirichlet_bcs();
+          //if (nitsche.acts_on_id(face_id))
+          //  {
+          //    bool check = false;
+          //    for (unsigned int i = 0; i<spacedim; i++)
+          //      check |= nitsche.get_mapped_mask(face_id)[i];
+          //    if (check)
+          //      {
                   this->reinit(et, cell, face, fe_cache);
 // Displacement:
                   //auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
@@ -276,8 +278,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                         }
                     } // end loop over quadrature points
                   break;
-                } // endif face->at_boundary
-            }
+                //} // endif face->at_boundary
+            //}
         }
     } // end loop over faces
 
