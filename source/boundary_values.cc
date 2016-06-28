@@ -153,7 +153,9 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     u_ -= u;
     u_ /= h;
 
-    values = u_;
+    values(0) = u_(0);
+    values(1) = u_(1);
+    values(2) = u_(2);
 }
 
 // Explicit instantiations
