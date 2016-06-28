@@ -140,8 +140,31 @@ public:
       //                                            constraints,
       //                                            velocity_mask);
       //}
-      //else
-      //{
+      if(step==0)
+      {
+        // time derivatives of dirichlet BC for d
+        // hull
+        VectorTools::interpolate_boundary_values (dof,
+                                                  0,
+                                                  ZeroFunction<dim>(7),
+                                                  constraints_dot,
+                                                  displacement_mask);
+
+        // top face
+        VectorTools::interpolate_boundary_values (dof,
+                                                  2,
+                                                  ZeroFunction<dim>(7),
+                                                  constraints_dot,
+                                                  displacement_mask);
+        // bottom face
+        VectorTools::interpolate_boundary_values (dof,
+                                                  1,
+                                                  ZeroFunction<dim>(7),
+                                                  constraints_dot,
+                                                  displacement_mask);
+      }
+      else
+      {
         // time derivatives of dirichlet BC for d
         // hull
         VectorTools::interpolate_boundary_values (dof,
@@ -162,7 +185,7 @@ public:
                                                   BoundaryValues<dim>(1, step, false, 2, true),
                                                   constraints_dot,
                                                   displacement_mask);
-      //}
+      }
     }
     );
   } 
