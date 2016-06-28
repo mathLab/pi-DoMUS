@@ -67,16 +67,19 @@ public:
     );
 
     signals.update_constraint_matrices.connect(
-      [&,this](ConstraintMatrix &constraints, ConstraintMatrix &)
+      [&,this](ConstraintMatrix &constraints, ConstraintMatrix &constraints_dot) 
     {
       auto &dof=this->get_dof_handler();
       auto &fe =this->get_fe();
 
       FEValuesExtractors::Vector displacements (0);
+      FEValuesExtractors::Vector velocities (dim);
       ComponentMask displacement_mask = fe.component_mask (displacements);
+      ComponentMask velocity_mask = fe.component_mask (velocities);
 
       // displacement_mask = [1 1 1 0 0 0 0]
-
+      // velocity_mask     = [0 0 0 1 1 1 0]
+      
       double timestep = this->get_current_time();
       int step;
       if (timestep != timestep)
@@ -89,7 +92,11 @@ public:
       }
 
       //std::cout << "step " << step << std::endl;
+      // TODO:
+      // - volocity_mask -> setting the BC for u to Zero for step 0
+      // - d_dot -> apply d_dot to constraints_dot
 
+      // dirichlet BC for d 
       // hull
       VectorTools::interpolate_boundary_values (dof,
                                                 0,
@@ -109,10 +116,56 @@ public:
                                                 BoundaryValues<dim>(1, step, false, 2),
                                                 constraints,
                                                 displacement_mask);
+      //if(step == 0)
+      //{
+      //  // setting velocities to zero when deforming the cylinder 
+      //  // to start the computation with the heart geometry
+      //  // hull
+      //  VectorTools::interpolate_boundary_values (dof,
+      //                                            0,
+      //                                            ZeroFunction<dim>(7),
+      //                                            constraints,
+      //                                            velocity_mask);
+      //  
+      //  // top face
+      //  VectorTools::interpolate_boundary_values (dof,
+      //                                            2,
+      //                                            ZeroFunction<dim>(7),
+      //                                            constraints,
+      //                                            velocity_mask);
+      //  // bottom face
+      //  VectorTools::interpolate_boundary_values (dof,
+      //                                            1,
+      //                                            ZeroFunction<dim>(7),
+      //                                            constraints,
+      //                                            velocity_mask);
+      //}
+      //else
+      //{
+        // time derivatives of dirichlet BC for d
+        // hull
+        VectorTools::interpolate_boundary_values (dof,
+                                                  0,
+                                                  BoundaryValues<dim>(0, step, true, 4, true),
+                                                  constraints_dot,
+                                                  displacement_mask);
 
+        // top face
+        VectorTools::interpolate_boundary_values (dof,
+                                                  2,
+                                                  BoundaryValues<dim>(2, true),
+                                                  constraints_dot,
+                                                  displacement_mask);
+        // bottom face
+        VectorTools::interpolate_boundary_values (dof,
+                                                  1,
+                                                  BoundaryValues<dim>(1, step, false, 2, true),
+                                                  constraints_dot,
+                                                  displacement_mask);
+      //}
     }
     );
-  }
+  } 
   
 
   void
@@ -230,7 +283,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
-      unsigned int face_id = cell->face(face)->boundary_id();
+      //unsigned int face_id = cell->face(face)->boundary_id();
       if (cell->face(face)->at_boundary())
         {
           //auto nitsche = this->get_dirichlet_bcs();
