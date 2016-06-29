@@ -88,10 +88,10 @@ public:
       }
       else
       {
-        step = timestep*200;
+        step = timestep/0.005;
       }
 
-      //std::cout << "step " << step << std::endl;
+      std::cout << "step " << step << std::endl;
       // TODO:
       // - volocity_mask -> setting the BC for u to Zero for step 0
       // - d_dot -> apply d_dot to constraints_dot
