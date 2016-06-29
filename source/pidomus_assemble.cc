@@ -60,7 +60,7 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
   const QGauss<dim> quadrature_formula(fe->degree + 1);
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
-  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_fe_mapping(),
                                         *fe, quadrature_formula,
                                         interface.get_cell_update_flags(),
                                         face_quadrature_formula,
@@ -126,7 +126,7 @@ piDoMUS<dim, spacedim, LAC>::get_lumped_mass_matrix(typename LAC::VectorType &ds
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
-  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_fe_mapping(),
                                         *fe, quadrature_formula,
                                         interface.get_cell_update_flags(),
                                         face_quadrature_formula,
@@ -205,7 +205,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   const QGauss < dim - 1 > face_quadrature_formula(fe->degree + 1);
 
 
-  FEValuesCache<dim,spacedim> fev_cache(interface.get_mapping(),
+  FEValuesCache<dim,spacedim> fev_cache(interface.get_fe_mapping(),
                                         *fe, quadrature_formula,
                                         interface.get_cell_update_flags(),
                                         face_quadrature_formula,

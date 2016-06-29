@@ -280,9 +280,58 @@ BaseInterface<dim,spacedim,LAC>::get_component_names() const
 
 template <int dim, int spacedim, typename LAC>
 const Mapping<dim,spacedim> &
-BaseInterface<dim,spacedim,LAC>::get_mapping() const
+BaseInterface<dim,spacedim,LAC>::get_default_mapping() const
 {
   return StaticMappingQ1<dim,spacedim>::mapping;
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_output_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_fe_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_bc_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_kelly_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_error_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_interpolate_mapping() const
+{
+  return get_default_mapping();
+}
+
+template <int dim, int spacedim, typename LAC>
+const Mapping<dim,spacedim> &
+BaseInterface<dim,spacedim,LAC>::get_project_mapping() const
+{
+  return get_default_mapping();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -357,7 +406,7 @@ BaseInterface<dim,spacedim,LAC>::
 estimate_error_per_cell(Vector<float> &estimated_error) const
 {
   const DoFHandler<dim,spacedim> &dof = this->get_dof_handler();
-  KellyErrorEstimator<dim,spacedim>::estimate (get_mapping(),
+  KellyErrorEstimator<dim,spacedim>::estimate (get_kelly_mapping(),
                                                dof,
                                                QGauss <dim-1> (dof.get_fe().degree + 1),
                                                typename FunctionMap<spacedim>::type(),
@@ -396,7 +445,7 @@ output_solution (const unsigned int &current_cycle,
   data_out.add_data_vector (this->get_locally_relevant_solution_dot(),
                             print(sol_dot_names, ","));
 
-  data_out.write_data_and_clear(get_mapping());
+  data_out.write_data_and_clear(get_output_mapping());
 
 }
 
@@ -429,7 +478,7 @@ output_eigenvectors(const std::vector<typename LAC::VectorType> &eigenvectors,
       data_out.add_data_vector (eigenvectors[i],
                                 get_component_names());
 
-      data_out.write_data_and_clear(get_mapping());
+      data_out.write_data_and_clear(get_output_mapping());
 
     }
 }

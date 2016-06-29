@@ -480,7 +480,7 @@ output_solution (const unsigned int &current_cycle,
     }
   this->data_out.add_data_vector (this->get_locally_relevant_solution_dot(), print(sol_dot_names, ","));
 
-  this->data_out.write_data_and_clear(this->get_mapping());
+  this->data_out.write_data_and_clear(this->get_output_mapping());
 
   auto &pcout = this->get_pcout();
   if (compute_force && is_parallel)
