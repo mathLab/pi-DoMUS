@@ -91,7 +91,7 @@ public:
         step = timestep/0.005;
       }
 
-      std::cout << "step " << step << std::endl;
+      //std::cout << "step " << step << std::endl;
       // TODO:
       // - volocity_mask -> setting the BC for u to Zero for step 0
       // - d_dot -> apply d_dot to constraints_dot
@@ -150,12 +150,6 @@ public:
                                                   constraints_dot,
                                                   displacement_mask);
 
-        // top face
-        VectorTools::interpolate_boundary_values (dof,
-                                                  2,
-                                                  ZeroFunction<dim>(7),
-                                                  constraints_dot,
-                                                  displacement_mask);
         // bottom face
         VectorTools::interpolate_boundary_values (dof,
                                                   1,
@@ -170,13 +164,6 @@ public:
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
                                                   BoundaryValues<dim>(0, step, true, 4, true),
-                                                  constraints_dot,
-                                                  displacement_mask);
-
-        // top face
-        VectorTools::interpolate_boundary_values (dof,
-                                                  2,
-                                                  BoundaryValues<dim>(2, true),
                                                   constraints_dot,
                                                   displacement_mask);
         // bottom face
