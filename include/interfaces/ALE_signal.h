@@ -83,13 +83,17 @@ public:
       double timestep = this->get_current_time();
       double dt = this->get_timestep();
 
+      //std::cout << "timestep " << timestep << std::endl;
+      //std::cout << "dt " << dt << std::endl;
       // if timestep == nan
       if (timestep != timestep)
       {
         timestep = 0;
       }
+      if (dt != dt) {
+          dt = 1;
+      }
 
-      //std::cout << "step " << step << std::endl;
 
       // dirichlet BC for d 
       // hull

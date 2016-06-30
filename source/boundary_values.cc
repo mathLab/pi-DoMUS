@@ -30,7 +30,7 @@ void
 BoundaryValues<dim>::vector_value (const Point<dim> &p,
                                    Vector<double>   &values) const
 {
-    if(dt)
+    if(derivative)
         BoundaryValues<dim>::get_values_dt(p, values);
     else
     {
