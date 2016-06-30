@@ -11,18 +11,24 @@ template <int dim>
 class BoundaryValues : public Function<dim>
 {
 public:
-  BoundaryValues (int cl, bool derivative=false) 
+  BoundaryValues (int color, bool derivative=false) 
     : 
     Function<dim>(2*dim+1), 
-    color(cl),
-    dt(derivative)
+    color(color),
+    derivative(derivative)
     {}
-  BoundaryValues (int cl, int ts, bool side, int degree, bool derivative=false) 
+  BoundaryValues (int color, 
+                  double timestep, 
+                  double dt, 
+                  bool side, 
+                  int degree, 
+                  bool derivative=false) 
     : 
     Function<dim>(2*dim+1),
-    color(cl), 
-    timestep(ts),
-    dt(derivative),
+    color(color), 
+    timestep(timestep),
+    dt(dt),
+    derivative(derivative),
     heart(side, degree)
   {}
 
@@ -32,15 +38,19 @@ public:
                              Vector<double>   &value) const;
 private:
   int color;
-  int timestep;
-  bool dt;
+  double timestep;
+  double dt;
+  double heartinterval = 0.005
+  int heartstep = timestep / heartinterval;
+  bool derivative;
   Heart<2,3> heart; 
   void transform_to_polar_coord(const Point<3> &p, 
                                 double rot, 
                                 double &angle, 
                                 double &height) const;
   void swap_coord(Point<3> &p) const;
-  void get_values (const Point<dim> &p, Vector<double> &value, int timestep) const;
+  void get_heartdelta (const Point<dim> &p, Vector<double> &value, int heartstep) const;
+  void get_values (const Point<dim> &p, Vector<double> &value) const;
   void get_values_dt (const Point<dim> &p, Vector<double> &value) const;
 };
 
