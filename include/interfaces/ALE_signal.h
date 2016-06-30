@@ -95,7 +95,7 @@ public:
       // hull
       VectorTools::interpolate_boundary_values (dof,
                                                 0,
-                                                BoundaryValues<dim>(0, step, dt, true, 4),
+                                                BoundaryValues<dim>(0, timestep, dt, true, 4),
                                                 constraints,
                                                 displacement_mask);
 
@@ -108,7 +108,7 @@ public:
       // bottom face
       VectorTools::interpolate_boundary_values (dof,
                                                 1,
-                                                BoundaryValues<dim>(1, step, dt, false, 2),
+                                                BoundaryValues<dim>(1, timestep, dt, false, 2),
                                                 constraints,
                                                 displacement_mask);
       //if(step == 0)
@@ -158,13 +158,13 @@ public:
         // hull
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
-                                                  BoundaryValues<dim>(0, step, dt, true, 4, true),
+                                                  BoundaryValues<dim>(0, timestep, dt, true, 4, true),
                                                   constraints_dot,
                                                   displacement_mask);
         // bottom face
         VectorTools::interpolate_boundary_values (dof,
                                                   1,
-                                                  BoundaryValues<dim>(1, step, dt, false, 2, true),
+                                                  BoundaryValues<dim>(1, timestep, dt, false, 2, true),
                                                   constraints_dot,
                                                   displacement_mask);
       }

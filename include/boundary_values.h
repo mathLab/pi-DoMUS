@@ -28,6 +28,7 @@ public:
     color(color), 
     timestep(timestep),
     dt(dt),
+    heartstep(timestep/heartinterval),
     derivative(derivative),
     heart(side, degree)
   {}
@@ -40,8 +41,8 @@ private:
   int color;
   double timestep;
   double dt;
-  double heartinterval = 0.005
-  int heartstep = timestep / heartinterval;
+  double heartinterval = 0.005;
+  int heartstep;// = timestep / heartinterval;
   bool derivative;
   Heart<2,3> heart; 
   void transform_to_polar_coord(const Point<3> &p, 
