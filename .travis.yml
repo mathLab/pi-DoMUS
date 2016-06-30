@@ -15,5 +15,5 @@ before_install:
 - docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "cd pi-DoMUS; ./scripts/check_indentation.sh"
 
 script:
-- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "mkdir pi-DoMUS/build; cd pi-DoMUS/build; cmake -GNinja -DENABLE_DOCUMENTATION=OFF  -DENABLE_ALL_EXECUTABLES=ON ../; ninja"
-- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "cd pi-DoMUS/build; ctest  -V"
+- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "mkdir pi-DoMUS/build; cd pi-DoMUS/build; cmake -GNinja -DENABLE_DOCUMENTATION=OFF  -DENABLE_ALL_EXECUTABLES=ON ../; ninja -j2"
+- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "cd pi-DoMUS/build; ctest -j2 -V"
