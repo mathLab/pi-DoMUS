@@ -81,26 +81,21 @@ public:
       // velocity_mask     = [0 0 0 1 1 1 0]
       
       double timestep = this->get_current_time();
-      int step;
+      double dt = this->get_timestep();
+
+      // if timestep == nan
       if (timestep != timestep)
       {
-        step = 0;
-      }
-      else
-      {
-        step = timestep/0.005;
+        timestep = 0;
       }
 
       //std::cout << "step " << step << std::endl;
-      // TODO:
-      // - volocity_mask -> setting the BC for u to Zero for step 0
-      // - d_dot -> apply d_dot to constraints_dot
 
       // dirichlet BC for d 
       // hull
       VectorTools::interpolate_boundary_values (dof,
                                                 0,
-                                                BoundaryValues<dim>(0, step, true, 4),
+                                                BoundaryValues<dim>(0, step, dt, true, 4),
                                                 constraints,
                                                 displacement_mask);
 
@@ -113,7 +108,7 @@ public:
       // bottom face
       VectorTools::interpolate_boundary_values (dof,
                                                 1,
-                                                BoundaryValues<dim>(1, step, false, 2),
+                                                BoundaryValues<dim>(1, step, dt, false, 2),
                                                 constraints,
                                                 displacement_mask);
       //if(step == 0)
@@ -140,7 +135,7 @@ public:
       //                                            constraints,
       //                                            velocity_mask);
       //}
-      if(step==0)
+      if(timestep < 0.005)  // 0.005 is the time of one heart interval
       {
         // time derivatives of dirichlet BC for d
         // hull
@@ -163,13 +158,13 @@ public:
         // hull
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
-                                                  BoundaryValues<dim>(0, step, true, 4, true),
+                                                  BoundaryValues<dim>(0, step, dt, true, 4, true),
                                                   constraints_dot,
                                                   displacement_mask);
         // bottom face
         VectorTools::interpolate_boundary_values (dof,
                                                   1,
-                                                  BoundaryValues<dim>(1, step, false, 2, true),
+                                                  BoundaryValues<dim>(1, step, dt, false, 2, true),
                                                   constraints_dot,
                                                   displacement_mask);
       }
