@@ -32,7 +32,13 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
     if(dt)
         BoundaryValues<dim>::get_values_dt(p, values);
     else
-        BoundaryValues<dim>::get_values(p, values);
+    {
+        if (color == 2) {
+            get_heartdelta(p, values, heartstep);
+        }
+        else
+            BoundaryValues<dim>::get_values(p, values);
+    }
 }
 
 
