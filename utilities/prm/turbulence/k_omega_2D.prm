@@ -207,7 +207,6 @@ subsection piDoMUS
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
-  set Show timer                                     = false
 end
 
 subsection Refinement

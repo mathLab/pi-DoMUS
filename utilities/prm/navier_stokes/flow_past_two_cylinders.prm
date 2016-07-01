@@ -17,7 +17,6 @@ subsection piDoMUS
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = true
-  set Show timer                                     = true
   set Threshold for solver's restart                 = 1e-1
   set Time stepper                                   = euler
   set Use direct solver if available                 = true

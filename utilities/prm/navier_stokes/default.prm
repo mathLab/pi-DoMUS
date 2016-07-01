@@ -535,7 +535,6 @@ subsection piDoMUS<2, 2, 3, LATrilinos>
   set Initial global refinement      = 1
   set Maximum number of time steps   = 10000
   set Number of cycles               = 3
-  set Show timer                     = false
   set Use direct solver if available = true
 end
 

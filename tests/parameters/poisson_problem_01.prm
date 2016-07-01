@@ -135,6 +135,5 @@ subsection pidomus
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Time stepper                                   = euler
-  set Show timer                                     = false
   set Use direct solver if available                 = true
 end
