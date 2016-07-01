@@ -99,7 +99,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
 
   ida("IDA Solver Parameters", comm),
-  imex(*this),
+  imex("IMEX Parameters", comm),
   we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
   lambdas(*this)
 {
@@ -137,6 +137,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
       constraints.distribute(solution);
       constraints_dot.distribute(solution_dot);
+      std::cout << "1111111111111111111111111111" << std::endl << std::flush;
 
       if (time_stepper == "ida")
         {
@@ -152,6 +153,15 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       else if (time_stepper == "euler" || time_stepper == "imex")
         {
           current_alpha = imex.get_alpha();
+          imex.create_new_vector = lambdas.create_new_vector;
+          imex.residual = lambdas.residual;
+          imex.setup_jacobian = lambdas.setup_jacobian;
+          std::cout << "5555555555555555555555555555" << std::endl << std::flush;
+          imex.solver_should_restart = lambdas.solver_should_restart;
+          imex.solve_jacobian_system = lambdas.solve_jacobian_system;
+          imex.output_step = lambdas.output_step;
+          imex.get_lumped_mass_matrix = lambdas.get_lumped_mass_matrix;
+          std::cout << "2222222222222222222222222" << std::endl << std::flush;
           imex.solve_dae(solution, solution_dot);
         }
       eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);

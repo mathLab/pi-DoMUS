@@ -1,8 +1,8 @@
 # Parameter file generated with 
-# D2K_GIT_BRANCH=       kinsol_implementation
-# D2K_GIT_SHORTREV=     f667f6f
+# D2K_GIT_BRANCH=       rev-sundials
+# D2K_GIT_SHORTREV=     6327a95
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= b3f2eeb
+# DEAL_II_GIT_SHORTREV= eb652bf
 subsection AMG for U
   set Aggregation threshold              = 0.000100
   set Coarse type                        = Amesos-KLU
@@ -91,6 +91,8 @@ subsection Free Swelling Three Fields
   set Omega                            = 1e-5
   set T                                = 298.0
   set chi                              = 0.1
+  set distort triangulation            = false
+  set distortion factor                = 1e-4
   set iteration c lumped               = 10
   set iteration s                      = 10
   set iteration s approx               = 10
@@ -195,13 +197,17 @@ subsection piDoMUS
   set Jacobian solver tolerance                      = 1e-8
   set Max iterations                                 = 50
   set Max iterations finer prec.                     = 0
+  set Max tmp vectors                                = 30
+  set Max tmp vectors for finer system               = 50
   set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
+  set Number of eigenvalues to compute               = 10
+  set Number of used Arnoldi vectors                 = 0
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = false
-  set Show timer                                     = true
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = euler
   set Use direct solver if available                 = true
+  set Which eigenvalues                              = smallest_real_part
 end

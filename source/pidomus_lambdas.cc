@@ -97,6 +97,12 @@ set_functions_to_default()
     return *lm;
   };
 
+  jacobian_vmult = [this](const typename LAC::VectorType &src,
+                          typename LAC::VectorType &dst) ->int
+  {
+      return this->simulator->jacobian_vmult(src,dst);
+    };
+
 }
 
 #define INSTANTIATE(dim,spacedim,LAC) \
