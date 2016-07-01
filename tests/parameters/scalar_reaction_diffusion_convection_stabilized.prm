@@ -1,0 +1,122 @@
+# Solver
+################################################################################
+
+subsection AMG for A
+  set Aggregation threshold              = 1
+end
+subsection AMG for B
+  set Aggregation threshold              = 1
+end
+
+subsection Error Tables
+  set Compute error            = true
+  subsection Table 0
+    set List of error norms to compute = L2,H1;L2;AddUp
+  end
+end
+
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 0.000001
+  set Final time                                   = 1.000000
+  set Initial time                                 = 0.000000
+  set Intervals between outputs                    = 1
+  # At each inner iteration the Jacobian is NOT updated.
+  set Maximum number of inner nonlinear iterations = 3
+
+  # At each outer iteration the Jacobian is updated if it is set that the
+  # Jacobian is continuously updated and a cycle of inner iterations is
+  # perfomed.
+  set Maximum number of outer nonlinear iterations = 5
+
+  # Fixed alpha means that the parsed alpha is used in each Newton iteration
+  # LS_backtracking is the line search with backtracking method.
+  set Method used                                  = fixed_alpha
+  set Newton relaxation parameter                  = 1.000000
+
+  # In the line seach method with backtracking the following alphas are
+  # tested: 1, 1/2, 1/4,..., 2^-i. This parameter sets the maximum i.
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 0.000000
+
+  # Conditional statement can be used as well:
+  # (t<0.5?1e-2:1e-3)
+  set Step size                                    = 1e-1
+  set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+
+
+subsection KINSOL for IMEX
+  # Allowed values [0,3]
+  set Level of verbosity of the KINSOL solver            = 0
+
+  # Maximum number of nonlinear iterations that can be done with an outdated
+  # Jacobian.
+  # If set to 1 the Jacobian is updated at each nonlinear iteration
+  set Maximum number of iteration before Jacobian update = 10
+
+  # The non-linear solver will stop when reaching this number ofNewton
+  # iterations no matter what.
+  set Maximum number of iterations                       = 200
+
+  # The Newton method will terminate when the maximum scaled step is below the
+  # given tolerance.
+  set Step tolerance                                     = 1e-11
+
+  # newton        = basic Newton iteration
+  # global_newton = Newton with line search
+  # fixed_point   = fixed-point iteration with Anderson Acceleration
+  # picard        = Picard iteration with Anderson Acceleration
+  set Strategy                                           = newton
+
+  # This define the condition (small residual) for a successful completion of
+  # KINSOL.
+  # 0 means the default value for KINSOL
+  set Tolerance for residuals                            = 1e-9
+
+  # If true the dense direct linear solver of KINSOL is used
+  set Use internal KINSOL direct solver                  = false
+end
+
+
+subsection piDoMUS<2, 2, LATrilinos>
+  set Adaptive refinement                            = true
+  set Initial global refinement                      = 4
+  set Jacobian solver tolerance                      = 1e-8
+end
+
+
+
+# Problem
+################################################################################
+subsection Exact solution
+  set Function expression = cos(x)*y; -y*sin(x); cos(x)
+  set Variable names      = x,y,t
+end
+subsection Convection Diffusion Reaction Problem
+  set Block of differential components = 1,1
+  set Blocking of the finite element   = u,q,q
+
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)]
+  
+  set Reaction coefficient             = 1.0
+  set Diffusion coefficient            = 1.0
+  
+  set Stabilization coefficient        = 1.0
+end
+subsection Convection parameter
+  set Function constants  = 
+  set Function expression = 1; 2
+  set Variable names      = x,y,t
+end
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0=ALL
+  set IDs and expressions     = 0=cos(x)*y; -y*sin(x); cos(x)
+end
+subsection Forcing terms
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=-y*sin(x) + 2*(1+y)*cos(x);0;0
+  set Known component names   = u,q,q
+  set Used constants          = 
+end
