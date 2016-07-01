@@ -1,0 +1,173 @@
+# Parameter file generated with 
+# D2K_GIT_BRANCH=       checkpoint_restart
+# D2K_GIT_SHORTREV=     7dd3c7e
+# DEAL_II_GIT_BRANCH=   master
+# DEAL_II_GIT_SHORTREV= 372f54d
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0=ALL
+  set IDs and expressions     = 0=(1-y)*y*sin(2*pi*(x-t))
+  set Known component names   = u
+  set Used constants          = 
+end
+subsection Domain
+  set Colorize                      = false
+  set Copy boundary to manifold ids = false
+  set Copy material to manifold ids = false
+  set Create default manifolds      = true
+  set Grid to generate              = rectangle
+  set Input grid file name          = 
+  set Manifold descriptors          = 
+  set Mesh smoothing alogrithm      = none
+  set Optional Point<spacedim> 1    = 0,0
+  set Optional Point<spacedim> 2    = 1,1
+  set Optional double 1             = 1.0
+  set Optional double 2             = 0.5
+  set Optional double 3             = 1.5
+  set Optional int 1                = 1
+  set Optional int 2                = 2
+  set Optional vector of dim int    = 1,1
+  set Output grid file name         = 
+end
+subsection Error Tables
+  set Compute error            = true
+  set Error file format        = tex
+  set Error precision          = 3
+  set Output error tables      = true
+  set Solution names           = u
+  set Solution names for latex = u
+  set Table names              = error
+  set Write error files        = false
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = L2,H1
+    set Rate key                       = 
+  end
+end
+subsection Exact solution
+  set Function constants  = 
+  set Function expression = (1-y)*y*sin(2*pi*(x-t))
+  set Variable names      = x,y,t
+end
+subsection Forcing terms
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=2*pi*(y-1)*y*cos(-2*pi*(t-x))-2*(2*pi^2*(y-1)*y*sin(-2*pi*(t-x))-sin(-2*pi*(t-x)))
+  set Known component names   = u
+  set Used constants          = 
+end
+subsection IDA Solver Parameters
+  set Absolute error tolerance                      = 1e-4
+  set Final time                                    = 1
+  set Ignore algebraic terms for error computations = false
+  set Initial condition Newton max iterations       = 5
+  set Initial condition Newton parameter            = 0.33
+  set Initial condition type                        = use_y_dot
+  set Initial condition type after restart          = use_y_dot
+  set Initial step size                             = 1e-4
+  set Initial time                                  = 0.
+  set Maximum number of nonlinear iterations        = 10
+  set Maximum order of BDF                          = 5
+  set Min step size                                 = 5e-5
+  set Relative error tolerance                      = 1e-3
+  set Seconds between each output                   = 1e-2
+  set Show output of time steps                     = true
+  set Use local tolerances                          = false
+end
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 1e-6
+  set Final time                                   = 0.03
+  set Initial time                                 = 0
+  set Intervals between outputs                    = 1
+  set Maximum number of inner nonlinear iterations = 3
+  set Maximum number of outer nonlinear iterations = 5
+  set Method used                                  = fixed_alpha
+  set Newton relaxation parameter                  = 1.000000
+  set Number of elements in backtracking sequence  = 5
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 0.000000
+  set Step size                                    = 0.01
+  set Update continuously Jacobian                 = true
+  set Use the KINSOL solver                        = true
+end
+subsection Initial solution
+  set Function constants  = 
+  set Function expression = 0
+  set Variable names      = x,y,t
+end
+subsection Initial solution_dot
+  set Function constants  = 
+  set Function expression = 0
+  set Variable names      = x,y,t
+end
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 10
+  set Maximum number of iterations                       = 200
+  set Step tolerance                                     = 1e-11
+  set Strategy                                           = newton
+  set Tolerance for residuals                            = 1e-9
+  set Use internal KINSOL direct solver                  = false
+end
+subsection Neumann boundary conditions
+  set IDs and component masks = 
+  set IDs and expressions     = 
+  set Known component names   = u
+  set Used constants          = 
+end
+subsection Output Parameters
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = checkpoint
+  set Solution names                 = u
+  set Subdivisions                   = 1
+end
+subsection Poisson problem
+  set Block of differential components = 1
+  set Blocking of the finite element   = u
+  set Finite element space             = FESystem[FE_Q(1)]
+end
+subsection Refinement
+  set Bottom fraction                        = 0.2
+  set Maximum number of cells (if available) = 0
+  set Order (optimize)                       = 2
+  set Refinement strategy                    = fraction
+  set Top fraction                           = 0.2
+end
+subsection Time derivative of Dirichlet boundary conditions
+  set IDs and component masks = 
+  set IDs and expressions     = 
+  set Known component names   = u
+  set Used constants          = 
+end
+subsection Zero average constraints
+  set Known component names        = u
+  set Zero average on boundary     = 
+  set Zero average on whole domain = 
+end
+subsection pidomus
+  set Adaptive refinement                            = true
+  set Enable finer preconditioner                    = false
+  set Initial global refinement                      = 4
+  set Jacobian solver tolerance                      = 1e-8
+  set Max iterations                                 = 500
+  set Max iterations finer prec.                     = 0
+  set Max tmp vectors                                = 30
+  set Max tmp vectors for finer system               = 50
+  set Maximum number of time steps                   = 10000
+  set Number of cycles                               = 1
+  set Number of eigenvalues to compute               = 10
+  set Number of used Arnoldi vectors                 = 0
+  set Overwrite Newton's iterations                  = true
+  set Print some useful informations about processes = true
+  set Refine mesh during transient                   = false
+  set Resume computation from snapshot               = true
+  set Save snapshots during simulation               = false
+  set Snapshot prefix                                = ../../../tests/snapshots/__dealii__test___
+  set Threshold for solver's restart                 = 1e-2
+  set Time stepper                                   = imex
+  set Use direct solver if available                 = true
+  set Which eigenvalues                              = smallest_real_part
+end

@@ -3,6 +3,7 @@
 
 // This includes all types we know of.
 #include "lac/lac_type.h"
+#include <deal.II/base/mpi.h>
 #include <mpi.h>
 
 /**
@@ -15,12 +16,12 @@ public:
   ScopedLACInitializer(const std::vector<types::global_dof_index> &dofs_per_block,
                        const std::vector<IndexSet> &owned,
                        const std::vector<IndexSet> &relevant,
-                       const MPI_Comm &comm = MPI_COMM_WORLD):
+                       const MPI_Comm extcomm= MPI_COMM_WORLD):
     dofs_per_block(dofs_per_block),
     owned(owned),
     relevant(relevant),
-    comm(comm)
-  {};
+    comm(Utilities::MPI::duplicate_communicator(extcomm))
+  {}
 
   /**
    * Initialize a non ghosted TrilinosWrappers::MPI::BlockVector.
@@ -28,7 +29,7 @@ public:
   void operator() (TrilinosWrappers::MPI::BlockVector &v, bool fast=false)
   {
     v.reinit(owned, comm, fast);
-  };
+  }
 
 
   /**
@@ -37,7 +38,7 @@ public:
   void ghosted(TrilinosWrappers::MPI::BlockVector &v, bool fast=false)
   {
     v.reinit(owned, relevant, comm, fast);
-  };
+  }
 
   /**
    * Initialize a serial BlockVector<double>.
@@ -45,7 +46,7 @@ public:
   void operator() (BlockVector<double> &v, bool fast=false)
   {
     v.reinit(dofs_per_block, fast);
-  };
+  }
 
 
   /**
@@ -56,7 +57,7 @@ public:
   {
     Assert(false, ExcInternalError("You tried to create a ghosted vector in a serial run."));
     (void)fast;
-  };
+  }
 
   /**
    * Initialize a Trilinos Sparsity Pattern.
@@ -112,7 +113,7 @@ private:
   /**
    * MPI Communicator.
    */
-  const MPI_Comm &comm;
+  MPI_Comm comm;
 };
 
 

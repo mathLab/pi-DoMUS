@@ -146,6 +146,25 @@ declare_parameters (ParameterHandler &prm)
                                       "|smallest_imaginary_part"
                                       "|both_ends"));
 #endif
+
+  add_parameter (prm,
+                 &resume_computation,
+                 "Resume computation from snapshot",
+                 "false",
+                 Patterns::Bool());
+
+  add_parameter(prm,
+                &snap_prefix,
+                "Snapshot prefix",
+                "",
+                Patterns::Anything());
+
+  add_parameter (prm,
+                 &save_snapshot,
+                 "Save snapshots during simulation",
+                 "true",
+                 Patterns::Bool());
+
 }
 
 

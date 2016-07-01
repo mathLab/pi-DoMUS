@@ -224,8 +224,13 @@ piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
 
   syncronize(t,solution,solution_dot);
 
+  this->step_number = old_step + step_number;
+
+  if (save_snapshot)
+    create_snapshot();
+
   interface.output_solution(current_cycle,
-                            step_number);
+                            this->step_number);
 }
 
 

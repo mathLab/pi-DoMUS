@@ -44,11 +44,11 @@ using namespace deal2lkit;
 template <int dim, int spacedim, typename LAC>
 piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                                       const BaseInterface<dim, spacedim, LAC> &interface,
-                                      const MPI_Comm &communicator)
+                                      const MPI_Comm communicator)
   :
   ParameterAcceptor(name),
   SundialsInterface<typename LAC::VectorType>(communicator),
-  comm(communicator),
+  comm(Utilities::MPI::duplicate_communicator(communicator)),
   interface(interface),
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
@@ -100,7 +100,9 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   ida(*this),
   euler(*this),
-  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
+  step_number(0),
+  old_step(0)
 {
 
   interface.initialize_simulator (*this);
@@ -123,15 +125,31 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
   interface.connect_to_signals();
 
-  for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
+  if (resume_computation)
     {
-      if (current_cycle == 0)
+      resume_from_snapshot();
+
+      syncronize(current_time,solution,solution_dot);
+      ida.set_initial_time(current_time);
+      euler.set_initial_time(current_time+current_dt);
+    }
+
+  current_cycle = (resume_computation? current_cycle : 0);
+  old_step = (resume_computation? step_number : 0);
+
+  for (; current_cycle < n_cycles; ++current_cycle)
+    {
+      if (!resume_computation)
         {
-          make_grid_fe();
-          setup_dofs(true);
+          if (current_cycle == 0)
+            {
+              make_grid_fe();
+              setup_dofs(true);
+            }
+          else
+            refine_mesh();
         }
-      else
-        refine_mesh();
+      resume_computation = false;
 
       constraints.distribute(solution);
       constraints_dot.distribute(solution_dot);

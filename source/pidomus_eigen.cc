@@ -30,7 +30,6 @@
 
 #include <deal2lkit/utilities.h>
 
-
 #include "lac/lac_initializer.h"
 
 using namespace dealii;

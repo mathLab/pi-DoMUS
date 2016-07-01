@@ -17,23 +17,17 @@
 
 
 #include <deal.II/base/timer.h>
-// #include <deal.II/base/parameter_handler.h>
 
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/linear_operator.h>
 
-
-
 #include <mpi.h>
-
-
-// #include <deal.II/lac/precondition.h>
-
 
 #include "base_interface.h"
 #include "simulator_access.h"
 #include "pidomus_signals.h"
+#include "copy_data.h"
 
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -72,7 +66,7 @@ public:
 
   piDoMUS (const std::string &name,
            const BaseInterface<dim, spacedim, LAC> &energy,
-           const MPI_Comm &comm = MPI_COMM_WORLD);
+           const MPI_Comm comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
@@ -307,7 +301,7 @@ private:
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
-  const MPI_Comm &comm;
+  MPI_Comm comm;
   const BaseInterface<dim, spacedim, LAC>    &interface;
 
   unsigned int n_cycles;
@@ -520,6 +514,86 @@ private:
   void syncronize(const double &t,
                   const typename LAC::VectorType &solution,
                   const typename LAC::VectorType &solution_dot);
+
+
+  // checkpoint restart
+
+  // used in output solution
+  unsigned int step_number;
+
+  unsigned int old_step;
+
+  /** resume compuatation
+   * from a previously created snapshot
+   */
+  bool resume_computation;
+
+  /**
+   * create snapshot throughout the simulation
+   */
+  bool save_snapshot;
+
+  /**
+   * this prefix is put in front of the
+   * common names used for checkpoint- restart
+   */
+  std::string snap_prefix;
+
+  /**
+    * Save the state of this program to a set of files in the output
+    * directory. In reality, however, only some variables are stored (in
+    * particular the mesh, the solution vectors, etc) whereas others can
+    * either be re-generated (matrices, DoFHandler objects, etc) or are
+    * read from the input parameter file.
+    *
+    * This function is implemented in
+    * <code>source/checkpoint_restart.cc</code>.
+    */
+  void create_snapshot() const;
+
+  void save_solutions_and_triangulation(const LADealII::VectorType &y,
+                                        const LADealII::VectorType &y_dot,
+                                        const LADealII::VectorType &locally_relevant_y_expl,
+                                        const LADealII::VectorType &,
+                                        const LADealII::VectorType &) const;
+
+  void save_solutions_and_triangulation(const LATrilinos::VectorType &y,
+                                        const LATrilinos::VectorType &y_dot,
+                                        const LATrilinos::VectorType &locally_relevant_y_expl,
+                                        const LATrilinos::VectorType &,
+                                        const LATrilinos::VectorType &) const;
+
+
+  /**
+   * Restore the state of this program from a set of files in the output
+   * directory.
+   *
+   * This function is implemented in
+   * <code>source/checkpoint_restart.cc</code>.
+   */
+  void resume_from_snapshot();
+
+  void load_solutions(LADealII::VectorType &y,
+                      LADealII::VectorType &y_expl,
+                      LADealII::VectorType &y_dot);
+
+  void load_solutions(LATrilinos::VectorType &y,
+                      LATrilinos::VectorType &y_expl,
+                      LATrilinos::VectorType &y_dot);
+
+public:
+  /**
+   * Save a number of variables using BOOST serialization mechanism.
+   *
+   * This function is implemented in
+   * <code>source/checkpoint_restart.cc</code>.
+   */
+  template <class Archive>
+  void serialize (Archive &ar, const unsigned int /*version*/);
+
+private:
+
+
 
 
   /**
