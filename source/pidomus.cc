@@ -44,11 +44,11 @@ using namespace deal2lkit;
 template <int dim, int spacedim, typename LAC>
 piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                                       const BaseInterface<dim, spacedim, LAC> &interface,
-                                      const MPI_Comm &communicator)
+                                      const MPI_Comm communicator)
   :
   ParameterAcceptor(name),
   SundialsInterface<typename LAC::VectorType>(communicator),
-  comm(communicator),
+  comm(Utilities::MPI::duplicate_communicator(communicator)),
   interface(interface),
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
@@ -98,12 +98,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                interface.get_component_names() ),
 
 
-  ida(*this),
-  euler(*this),
-  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
+  ida("IDA Solver Parameters", comm),
+  imex(*this),
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
+  lambdas(*this)
 {
 
   interface.initialize_simulator (*this);
+  lambdas.set_functions_to_default();
 
 
   for (unsigned int i=0; i<n_matrices; ++i)
@@ -137,11 +139,20 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       constraints_dot.distribute(solution_dot);
 
       if (time_stepper == "ida")
-        ida.start_ode(solution, solution_dot, max_time_iterations);
+        {
+          ida.create_new_vector = lambdas.create_new_vector;
+          ida.residual = lambdas.residual;
+          ida.setup_jacobian = lambdas.setup_jacobian;
+          ida.solver_should_restart = lambdas.solver_should_restart;
+          ida.solve_jacobian_system = lambdas.solve_jacobian_system;
+          ida.output_step = lambdas.output_step;
+          ida.differential_components = lambdas.differential_components;
+          ida.solve_dae(solution, solution_dot);
+        }
       else if (time_stepper == "euler" || time_stepper == "imex")
         {
-          current_alpha = euler.get_alpha();
-          euler.start_ode(solution, solution_dot);
+          current_alpha = imex.get_alpha();
+          imex.solve_dae(solution, solution_dot);
         }
       eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
     }

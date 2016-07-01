@@ -34,6 +34,8 @@
 #include "base_interface.h"
 #include "simulator_access.h"
 #include "pidomus_signals.h"
+#include "pidomus_lambdas.h"
+
 
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -72,7 +74,7 @@ public:
 
   piDoMUS (const std::string &name,
            const BaseInterface<dim, spacedim, LAC> &energy,
-           const MPI_Comm &comm = MPI_COMM_WORLD);
+           const MPI_Comm comm = MPI_COMM_WORLD);
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
@@ -307,7 +309,7 @@ private:
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
-  const MPI_Comm &comm;
+  const MPI_Comm comm;
   const BaseInterface<dim, spacedim, LAC>    &interface;
 
   unsigned int n_cycles;
@@ -436,7 +438,7 @@ private:
 
 
   IDAInterface<typename LAC::VectorType>  ida;
-  IMEXStepper<typename LAC::VectorType> euler;
+  IMEXStepper<typename LAC::VectorType> imex;
 
 
   std::vector<types::global_dof_index> dofs_per_block;
@@ -532,6 +534,12 @@ private:
    * const reference to them through functions named get_variable()
    */
   friend class SimulatorAccess<dim,spacedim,LAC>;
+
+public:
+
+  friend class Lambdas<dim,spacedim,LAC>;
+
+  Lambdas<dim,spacedim,LAC> lambdas;
 
 };
 

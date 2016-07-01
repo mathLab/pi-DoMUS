@@ -31,7 +31,7 @@ public:
   SimulatorAccess ();
 
   /**
-   * Create a piDoMUSAccess object that is already initialized for
+   * Create a SimulatorAccess object that is already initialized for
    * a particular piDoMUS.
    */
   SimulatorAccess (const piDoMUS<dim,spacedim,LAC> &simulator_object);
