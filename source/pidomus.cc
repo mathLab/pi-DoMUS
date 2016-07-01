@@ -48,6 +48,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                                       const MPI_Comm communicator)
   :
   ParameterAcceptor(name),
+  SundialsInterface<typename LAC::VectorType>(communicator),
   comm(Utilities::MPI::duplicate_communicator(communicator)),
   interface(interface),
   pcout (std::cout,
@@ -99,7 +100,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
 
   ida("IDA Solver Parameters", comm),
-  imex("IMEX Parameters", comm),
+  imex(*this),
   we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
   lambdas(*this)
 {
@@ -224,14 +225,6 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       else if (time_stepper == "euler" || time_stepper == "imex")
         {
           current_alpha = imex.get_alpha();
-          imex.create_new_vector = lambdas.create_new_vector;
-          imex.residual = lambdas.residual;
-          imex.setup_jacobian = lambdas.setup_jacobian;
-          imex.solver_should_restart = lambdas.solver_should_restart;
-          imex.solve_jacobian_system = lambdas.solve_jacobian_system;
-          imex.output_step = lambdas.output_step;
-          imex.get_lumped_mass_matrix = lambdas.get_lumped_mass_matrix;
-          imex.jacobian_vmult = lambdas.jacobian_vmult;
           imex.solve_dae(solution, solution_dot);
         }
       eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
