@@ -83,6 +83,9 @@ public:
 
   std::function<typename LAC::VectorType&()> get_lumped_mass_matrix;
 
+  std::function<int(const typename LAC::VectorType &src,
+                    typename LAC::VectorType &dst)> jacobian_vmult;
+
   /**
    * A pointer to the simulator object to which we want to get
    * access.
