@@ -748,14 +748,12 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<BVEC> P00,P01,P10,P11;
   LinearOperator<BVEC> P00_finer,P01_finer,P10_finer,P11_finer;
 
-  if (prec_name=="default")
-    Schur_inv = (gamma + nu) * Mp_inv;
-  else if (prec_name=="low-nu")
-    Schur_inv = (alpha * rho)  * Ap_inv;
+  if (prec_name=="default" || prec_name=="cah-cha")
+    Schur_inv = (gamma + 1/nu) * Mp_inv;
+  else if (prec_name=="low-nu" || prec_name=="cah-cha")
+    Schur_inv += (alpha * rho)  * Ap_inv;
   else if (prec_name=="identity")
     Schur_inv = identity_operator((C).reinit_range_vector);
-  else if (prec_name=="cah-cha")
-    Schur_inv = ((gamma + nu) * Mp_inv) + ((alpha * rho) * Ap_inv);
 
 
   BlockLinearOperator<VEC> M = block_operator<2, 2, VEC>({{
