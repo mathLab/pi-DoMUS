@@ -90,9 +90,9 @@ set_functions_to_default()
     return this->simulator->get_local_tolerances();
   };
 
-  get_lumped_mass_matrix = [this]() ->typename LAC::VectorType &
+  get_lumped_mass_matrix = [&]() ->typename LAC::VectorType &
   {
-    auto lm = this->create_new_vector();
+    static auto lm = this->create_new_vector();
     this->simulator->get_lumped_mass_matrix(*lm);
     return *lm;
   };
@@ -100,8 +100,8 @@ set_functions_to_default()
   jacobian_vmult = [this](const typename LAC::VectorType &src,
                           typename LAC::VectorType &dst) ->int
   {
-      return this->simulator->jacobian_vmult(src,dst);
-    };
+    return this->simulator->jacobian_vmult(src,dst);
+  };
 
 }
 
