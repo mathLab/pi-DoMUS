@@ -150,7 +150,6 @@ subsection pidomus
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = true
-  set Show timer                                     = false
   set Threshold for solver's restart                 = 1e-2
   set Time stepper                                   = ida
   set Use direct solver if available                 = true
