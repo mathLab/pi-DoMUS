@@ -69,13 +69,17 @@ public:
    */
   std::function<shared_ptr<typename LAC::VectorType>()> create_new_vector;
 
-  /** Compute residual. */
+  /**
+   * Compute residual.
+   */
   std::function<int(const double t,
                     const typename LAC::VectorType &y,
                     const typename LAC::VectorType &y_dot,
                     typename LAC::VectorType &res)> residual;
 
-  /** Compute Jacobian. */
+  /**
+   * Compute Jacobian.
+   */
   std::function<int(const double t,
                     const typename LAC::VectorType &y,
                     const typename LAC::VectorType &y_dot,
@@ -93,7 +97,7 @@ public:
                       const unsigned int step_number)> output_step;
 
   /**
-   * Evaluate if the mesh should be refined or not. If so,
+   * Evaluate wether the mesh should be refined or not. If so,
    * it refines and interpolate the solutions from the old to the
    * new mesh.
    */
@@ -110,7 +114,7 @@ public:
 
   /**
    * Return a vector whose components are the weights used by
-   * IDA to compute the norm. By default this function is not
+   * IDA to compute the vector norm. By default this function is not
    * implemented.
    */
   std::function<typename LAC::VectorType&()> get_local_tolerances;
@@ -124,10 +128,15 @@ public:
 
   /**
    * Compute the matrix-vector product Jacobian times @p src,
-   * and the result is put in @p dst.
+   * and the result is put in @p dst. It is required by Kinsol.
    */
   std::function<int(const typename LAC::VectorType &src,
                     typename LAC::VectorType &dst)> jacobian_vmult;
+
+  /**
+   * Return the norm of @p vector, which is used by IMEXStepper.
+   */
+  std::function<double(const typename LAC::VectorType &vector)> vector_norm;
 
   /**
    * A pointer to the simulator object to which we want to get

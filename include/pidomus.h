@@ -74,6 +74,10 @@ public:
   piDoMUS (const std::string &name,
            const BaseInterface<dim, spacedim, LAC> &energy,
            const MPI_Comm comm = MPI_COMM_WORLD);
+#else
+  piDoMUS (const std::string &name,
+           const BaseInterface<dim, spacedim, LAC> &energy);
+#endif
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
@@ -299,7 +303,9 @@ private:
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
+#ifdef DEAL_II_WITH_MPI
   const MPI_Comm comm;
+#endif
   const BaseInterface<dim, spacedim, LAC>    &interface;
 
   unsigned int n_cycles;
