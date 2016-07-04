@@ -63,7 +63,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &time_stepper,
                   "Time stepper",
-                  "euler",
+                  "imex",
                   Patterns::Selection("ida|euler|imex")); //imex
 
   add_parameter(  prm,
