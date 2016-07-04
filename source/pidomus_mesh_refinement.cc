@@ -50,8 +50,6 @@ void piDoMUS<dim, spacedim, LAC>::refine_mesh ()
 template <int dim, int spacedim, typename LAC>
 bool
 piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
-                                                   const unsigned int /*step_number*/,
-                                                   const double /*h*/,
                                                    typename LAC::VectorType &solution,
                                                    typename LAC::VectorType &solution_dot)
 {

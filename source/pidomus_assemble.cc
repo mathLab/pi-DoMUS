@@ -20,7 +20,6 @@ int
 piDoMUS<dim, spacedim, LAC>::setup_jacobian(const double t,
                                             const typename LAC::VectorType &src_yy,
                                             const typename LAC::VectorType &src_yp,
-                                            const typename LAC::VectorType &,
                                             const double alpha)
 {
   signals.begin_setup_jacobian();

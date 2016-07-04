@@ -47,7 +47,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                                       const MPI_Comm communicator)
   :
   ParameterAcceptor(name),
-  SundialsInterface<typename LAC::VectorType>(communicator),
   comm(Utilities::MPI::duplicate_communicator(communicator)),
   interface(interface),
   pcout (std::cout,
@@ -137,7 +136,6 @@ void piDoMUS<dim, spacedim, LAC>::run ()
 
       constraints.distribute(solution);
       constraints_dot.distribute(solution_dot);
-      std::cout << "1111111111111111111111111111" << std::endl << std::flush;
 
       if (time_stepper == "ida")
         {
@@ -312,12 +310,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 
 template <int dim, int spacedim, typename LAC>
 int
-piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
-                                                   const typename LAC::VectorType &/*y*/,
-                                                   const typename LAC::VectorType &/*y_dot*/,
-                                                   const typename LAC::VectorType &,
-                                                   const double /*alpha*/,
-                                                   const typename LAC::VectorType &src,
+piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const typename LAC::VectorType &src,
                                                    typename LAC::VectorType &dst) const
 {
   auto _timer = computing_timer.scoped_timer ("Solve system");

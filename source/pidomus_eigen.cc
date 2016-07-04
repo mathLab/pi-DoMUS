@@ -96,7 +96,7 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
 
       mass_matrix.reinit(mass_pattern);
 
-      setup_jacobian(current_time,solution,solution_dot,solution_dot,current_alpha);
+      setup_jacobian(current_time,solution,solution_dot,current_alpha);
 
       // assemble mass matrix
       const QGauss<dim> quadrature_formula(fe->degree + 1);

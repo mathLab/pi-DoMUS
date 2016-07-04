@@ -216,8 +216,7 @@ void
 piDoMUS<dim, spacedim, LAC>::output_step(const double  t,
                                          const typename LAC::VectorType &solution,
                                          const typename LAC::VectorType &solution_dot,
-                                         const unsigned int step_number,
-                                         const double // h
+                                         const unsigned int step_number
                                         )
 {
   auto _timer = computing_timer.scoped_timer ("Postprocessing");
