@@ -101,6 +101,11 @@ set_functions_to_default()
     return this->simulator->jacobian_vmult(src,dst);
   };
 
+  vector_norm = [this](const typename LAC::VectorType &vector) ->double
+  {
+    return this->simulator->vector_norm(vector);
+  };
+
 }
 
 #define INSTANTIATE(dim,spacedim,LAC) \

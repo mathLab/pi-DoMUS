@@ -17,6 +17,12 @@ piDoMUS<dim, spacedim, LAC>::create_new_vector() const
   return ret;
 }
 
+template <int dim, int spacedim, typename LAC>
+double
+piDoMUS<dim, spacedim, LAC>::vector_norm(const typename LAC::VectorType &v) const
+{
+  return interface.vector_norm(v);
+}
 
 template <int dim, int spacedim, typename LAC>
 unsigned int

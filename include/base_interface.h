@@ -399,7 +399,11 @@ public:
   */
   void set_stepper(const std::string &s) const;
 
-
+  /**
+    * Return norm of vector @p v. This function is called by the IMEX stepper.
+    * By default it returns the l2 norm.
+    */
+  virtual double vector_norm(const typename LAC::VectorType &v) const;
 
 protected:
 

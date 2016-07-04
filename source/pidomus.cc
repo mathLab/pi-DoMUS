@@ -40,6 +40,7 @@ using namespace deal2lkit;
 //
 
 
+#ifdef DEAL_II_WITH_MPI
 
 template <int dim, int spacedim, typename LAC>
 piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
@@ -115,6 +116,78 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
 }
 
+#else
+
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
+                                      const BaseInterface<dim, spacedim, LAC> &interface)
+  :
+  ParameterAcceptor(name),
+  interface(interface),
+  pcout (std::cout),
+
+  pgg("Domain"),
+
+  pgr("Refinement"),
+
+
+  current_time(std::numeric_limits<double>::quiet_NaN()),
+  // IDA calls residual first with alpha = 0
+  current_alpha(0.0),
+  current_dt(std::numeric_limits<double>::quiet_NaN()),
+  previous_time(std::numeric_limits<double>::quiet_NaN()),
+  previous_dt(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_time(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_dt(std::numeric_limits<double>::quiet_NaN()),
+
+  n_matrices(interface.n_matrices),
+
+  eh("Error Tables", interface.get_component_names(),
+     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
+
+  exact_solution("Exact solution",
+                 interface.n_components),
+  initial_solution("Initial solution",
+                   interface.n_components),
+  initial_solution_dot("Initial solution_dot",
+                       interface.n_components),
+
+  forcing_terms("Forcing terms",
+                interface.n_components,
+                interface.get_component_names(), ""),
+  neumann_bcs("Neumann boundary conditions",
+              interface.n_components,
+              interface.get_component_names(), ""),
+  dirichlet_bcs("Dirichlet boundary conditions",
+                interface.n_components,
+                interface.get_component_names(), "0=ALL"),
+  dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
+                    interface.n_components,
+                    interface.get_component_names(), ""),
+
+  zero_average("Zero average constraints",
+               interface.n_components,
+               interface.get_component_names() ),
+
+
+  ida("IDA Solver Parameters"),
+  imex("IMEX Parameters"),
+  we_are_parallel(false),
+  lambdas(*this)
+{
+
+  interface.initialize_simulator (*this);
+  lambdas.set_functions_to_default();
+
+
+  for (unsigned int i=0; i<n_matrices; ++i)
+    {
+      matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+    }
+
+}
+#endif
 
 
 template <int dim, int spacedim, typename LAC>
