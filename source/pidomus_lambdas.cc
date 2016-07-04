@@ -52,17 +52,13 @@ set_functions_to_default()
                           const typename LAC::VectorType &y_dot,
                           const double alpha) ->int
   {
-    shared_ptr<typename LAC::VectorType> res;
-    return this->simulator->setup_jacobian(t,y,y_dot,*res,alpha);
+    return this->simulator->setup_jacobian(t,y,y_dot,alpha);
   };
 
   solve_jacobian_system = [this](const typename LAC::VectorType &rhs,
                                  typename LAC::VectorType &dst) ->int
   {
-    shared_ptr<typename LAC::VectorType> y;
-    shared_ptr<typename LAC::VectorType> y_d;
-    shared_ptr<typename LAC::VectorType> re;
-    return this->simulator->solve_jacobian_system(0,*y,*y_d,*re,0,rhs,dst);
+    return this->simulator->solve_jacobian_system(rhs,dst);
   };
 
   output_step = [this](const double t,
@@ -70,14 +66,14 @@ set_functions_to_default()
                        const typename LAC::VectorType &y_dot,
                        const unsigned int step_number)
   {
-    this->simulator->output_step(t,y,y_dot,step_number,0);
+    this->simulator->output_step(t,y,y_dot,step_number);
   };
 
   solver_should_restart = [this](const double t,
                                  typename LAC::VectorType &y,
                                  typename LAC::VectorType &y_dot) ->bool
   {
-    return this->simulator->solver_should_restart(t,0,0,y,y_dot);
+    return this->simulator->solver_should_restart(t,y,y_dot);
   };
 
   differential_components = [this]() ->typename LAC::VectorType &
@@ -87,7 +83,9 @@ set_functions_to_default()
 
   get_local_tolerances = [this]() ->typename LAC::VectorType &
   {
-    return this->simulator->get_local_tolerances();
+    AssertThrow(false, ExcPureFunctionCalled("Please implement get_local_tolerances function."));
+    static auto lt = this->create_new_vector();
+    return *lt;
   };
 
   get_lumped_mass_matrix = [&]() ->typename LAC::VectorType &
