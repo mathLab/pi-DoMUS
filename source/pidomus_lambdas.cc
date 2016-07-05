@@ -90,7 +90,8 @@ set_functions_to_default()
 
   get_lumped_mass_matrix = [&]() ->typename LAC::VectorType &
   {
-    static auto lm = this->create_new_vector();
+    static shared_ptr<typename LAC::VectorType> lm;
+    lm = this->create_new_vector();
     this->simulator->get_lumped_mass_matrix(*lm);
     return *lm;
   };
