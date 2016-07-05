@@ -311,7 +311,6 @@ private:
   unsigned int n_cycles;
   unsigned int current_cycle;
   unsigned int initial_global_refinement;
-  unsigned int max_time_iterations;
 
   ConditionalOStream        pcout;
 

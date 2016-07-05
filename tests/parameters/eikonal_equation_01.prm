@@ -124,7 +124,6 @@ subsection pidomus
   set Max iterations finer prec.                     = 20
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50
-  set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true

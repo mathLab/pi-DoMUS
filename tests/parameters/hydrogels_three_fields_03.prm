@@ -199,7 +199,6 @@ subsection piDoMUS
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50
-  set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Number of eigenvalues to compute               = 10
   set Number of used Arnoldi vectors                 = 0
