@@ -25,12 +25,6 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Integer (0));
 
   add_parameter(  prm,
-                  &max_time_iterations,
-                  "Maximum number of time steps",
-                  "10000",
-                  Patterns::Integer (0));
-
-  add_parameter(  prm,
                   &jacobian_solver_tolerance,
                   "Jacobian solver tolerance",
                   "1e-8",
@@ -63,7 +57,7 @@ declare_parameters (ParameterHandler &prm)
   add_parameter(  prm,
                   &time_stepper,
                   "Time stepper",
-                  "euler",
+                  "imex",
                   Patterns::Selection("ida|euler|imex")); //imex
 
   add_parameter(  prm,

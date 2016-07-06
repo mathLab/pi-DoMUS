@@ -47,12 +47,14 @@ SimulatorAccess<dim,spacedim,LAC>::get_signals() const
 }
 
 
-
+#ifdef DEAL_II_WITH_MPI
 template <int dim, int spacedim, typename LAC>
 MPI_Comm SimulatorAccess<dim,spacedim,LAC>::get_mpi_communicator () const
 {
   return simulator->comm;
 }
+#endif
+
 
 template <int dim, int spacedim, typename LAC>
 const ConditionalOStream &

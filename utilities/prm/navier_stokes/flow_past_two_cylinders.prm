@@ -12,7 +12,6 @@ subsection piDoMUS
   set Adaptive refinement                            = true
   set Initial global refinement                      = 0
   set Jacobian solver tolerance                      = 1e-6
-  set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true

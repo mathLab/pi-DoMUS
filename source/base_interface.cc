@@ -552,6 +552,15 @@ void
 BaseInterface<dim,spacedim,LAC>::connect_to_signals() const
 {}
 
+template<int dim, int spacedim, typename LAC>
+double
+BaseInterface<dim,spacedim,LAC>::
+vector_norm (const typename LAC::VectorType &v) const
+{
+  return v.l2_norm();
+}
+
+
 #define INSTANTIATE(dim,spacedim,LAC) \
   template class BaseInterface<dim,spacedim,LAC>;
 

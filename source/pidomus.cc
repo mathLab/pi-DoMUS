@@ -40,15 +40,15 @@ using namespace deal2lkit;
 //
 
 
+#ifdef DEAL_II_WITH_MPI
 
 template <int dim, int spacedim, typename LAC>
 piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                                       const BaseInterface<dim, spacedim, LAC> &interface,
-                                      const MPI_Comm &communicator)
+                                      const MPI_Comm communicator)
   :
   ParameterAcceptor(name),
-  SundialsInterface<typename LAC::VectorType>(communicator),
-  comm(communicator),
+  comm(Utilities::MPI::duplicate_communicator(communicator)),
   interface(interface),
   pcout (std::cout,
          (Utilities::MPI::this_mpi_process(comm)
@@ -98,12 +98,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
                interface.get_component_names() ),
 
 
-  ida(*this),
-  euler(*this),
-  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1)
+  ida("IDA Solver Parameters", comm),
+  imex("IMEX Parameters", comm),
+  we_are_parallel(Utilities::MPI::n_mpi_processes(comm) > 1),
+  lambdas(*this)
 {
 
   interface.initialize_simulator (*this);
+  lambdas.set_functions_to_default();
 
 
   for (unsigned int i=0; i<n_matrices; ++i)
@@ -114,6 +116,78 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
 }
 
+#else
+
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
+                                      const BaseInterface<dim, spacedim, LAC> &interface)
+  :
+  ParameterAcceptor(name),
+  interface(interface),
+  pcout (std::cout),
+
+  pgg("Domain"),
+
+  pgr("Refinement"),
+
+
+  current_time(std::numeric_limits<double>::quiet_NaN()),
+  // IDA calls residual first with alpha = 0
+  current_alpha(0.0),
+  current_dt(std::numeric_limits<double>::quiet_NaN()),
+  previous_time(std::numeric_limits<double>::quiet_NaN()),
+  previous_dt(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_time(std::numeric_limits<double>::quiet_NaN()),
+  second_to_last_dt(std::numeric_limits<double>::quiet_NaN()),
+
+  n_matrices(interface.n_matrices),
+
+  eh("Error Tables", interface.get_component_names(),
+     print(std::vector<std::string>(interface.n_components, "L2,H1"), ";")),
+
+  exact_solution("Exact solution",
+                 interface.n_components),
+  initial_solution("Initial solution",
+                   interface.n_components),
+  initial_solution_dot("Initial solution_dot",
+                       interface.n_components),
+
+  forcing_terms("Forcing terms",
+                interface.n_components,
+                interface.get_component_names(), ""),
+  neumann_bcs("Neumann boundary conditions",
+              interface.n_components,
+              interface.get_component_names(), ""),
+  dirichlet_bcs("Dirichlet boundary conditions",
+                interface.n_components,
+                interface.get_component_names(), "0=ALL"),
+  dirichlet_bcs_dot("Time derivative of Dirichlet boundary conditions",
+                    interface.n_components,
+                    interface.get_component_names(), ""),
+
+  zero_average("Zero average constraints",
+               interface.n_components,
+               interface.get_component_names() ),
+
+
+  ida("IDA Solver Parameters"),
+  imex("IMEX Parameters"),
+  we_are_parallel(false),
+  lambdas(*this)
+{
+
+  interface.initialize_simulator (*this);
+  lambdas.set_functions_to_default();
+
+
+  for (unsigned int i=0; i<n_matrices; ++i)
+    {
+      matrices.push_back( SP( new typename LAC::BlockMatrix() ) );
+      matrix_sparsities.push_back( SP( new typename LAC::BlockSparsityPattern() ) );
+    }
+
+}
+#endif
 
 
 template <int dim, int spacedim, typename LAC>
@@ -137,11 +211,28 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       constraints_dot.distribute(solution_dot);
 
       if (time_stepper == "ida")
-        ida.start_ode(solution, solution_dot, max_time_iterations);
+        {
+          ida.create_new_vector = lambdas.create_new_vector;
+          ida.residual = lambdas.residual;
+          ida.setup_jacobian = lambdas.setup_jacobian;
+          ida.solver_should_restart = lambdas.solver_should_restart;
+          ida.solve_jacobian_system = lambdas.solve_jacobian_system;
+          ida.output_step = lambdas.output_step;
+          ida.differential_components = lambdas.differential_components;
+          ida.solve_dae(solution, solution_dot);
+        }
       else if (time_stepper == "euler" || time_stepper == "imex")
         {
-          current_alpha = euler.get_alpha();
-          euler.start_ode(solution, solution_dot);
+          current_alpha = imex.get_alpha();
+          imex.create_new_vector = lambdas.create_new_vector;
+          imex.residual = lambdas.residual;
+          imex.setup_jacobian = lambdas.setup_jacobian;
+          imex.solver_should_restart = lambdas.solver_should_restart;
+          imex.solve_jacobian_system = lambdas.solve_jacobian_system;
+          imex.output_step = lambdas.output_step;
+          imex.get_lumped_mass_matrix = lambdas.get_lumped_mass_matrix;
+          imex.jacobian_vmult = lambdas.jacobian_vmult;
+          imex.solve_dae(solution, solution_dot);
         }
       eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
     }
@@ -292,12 +383,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
 
 template <int dim, int spacedim, typename LAC>
 int
-piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const double /*t*/,
-                                                   const typename LAC::VectorType &/*y*/,
-                                                   const typename LAC::VectorType &/*y_dot*/,
-                                                   const typename LAC::VectorType &,
-                                                   const double /*alpha*/,
-                                                   const typename LAC::VectorType &src,
+piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const typename LAC::VectorType &src,
                                                    typename LAC::VectorType &dst) const
 {
   auto _timer = computing_timer.scoped_timer ("Solve system");

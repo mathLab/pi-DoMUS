@@ -7,7 +7,6 @@
 subsection piDoMUS<2, 2, LATrilinos>
   set Adaptive refinement                            = false
   set Initial global refinement                      = 1
-  set Maximum number of time steps                   = 10000
   set Number of cycles                               = 3
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = false

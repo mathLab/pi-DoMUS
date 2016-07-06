@@ -34,6 +34,8 @@
 #include "base_interface.h"
 #include "simulator_access.h"
 #include "pidomus_signals.h"
+#include "pidomus_lambdas.h"
+
 
 #include <deal2lkit/parsed_grid_generator.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -41,7 +43,6 @@
 #include <deal2lkit/error_handler.h>
 #include <deal2lkit/parsed_function.h>
 #include <deal2lkit/parameter_acceptor.h>
-#include <deal2lkit/sundials_interface.h>
 #include <deal2lkit/ida_interface.h>
 #include <deal2lkit/imex_stepper.h>
 #include <deal2lkit/parsed_zero_average_constraints.h>
@@ -59,7 +60,7 @@ using namespace deal2lkit;
 using namespace pidomus;
 
 template <int dim, int spacedim = dim, typename LAC = LATrilinos>
-class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC::VectorType>
+class piDoMUS : public ParameterAcceptor
 {
 
 
@@ -69,10 +70,14 @@ class piDoMUS : public ParameterAcceptor, public SundialsInterface<typename LAC:
 
 public:
 
-
+#ifdef DEAL_II_WITH_MPI
   piDoMUS (const std::string &name,
            const BaseInterface<dim, spacedim, LAC> &energy,
-           const MPI_Comm &comm = MPI_COMM_WORLD);
+           const MPI_Comm comm = MPI_COMM_WORLD);
+#else
+  piDoMUS (const std::string &name,
+           const BaseInterface<dim, spacedim, LAC> &energy);
+#endif
 
   virtual void declare_parameters(ParameterHandler &prm);
   virtual void parse_parameters_call_back();
@@ -96,8 +101,7 @@ public:
   virtual void output_step(const double t,
                            const typename LAC::VectorType &solution,
                            const typename LAC::VectorType &solution_dot,
-                           const unsigned int step_number,
-                           const double h);
+                           const unsigned int step_number);
 
   /** Check the behaviour of the solution. If it
    * is converged or if it is becoming unstable the time integrator
@@ -105,8 +109,6 @@ public:
    * calculation will be continued. If necessary, it can also reset
    * the time stepper. */
   virtual bool solver_should_restart(const double t,
-                                     const unsigned int step_number,
-                                     const double h,
                                      typename LAC::VectorType &solution,
                                      typename LAC::VectorType &solution_dot);
 
@@ -121,17 +123,11 @@ public:
   virtual int setup_jacobian(const double t,
                              const typename LAC::VectorType &src_yy,
                              const typename LAC::VectorType &src_yp,
-                             const typename LAC::VectorType &residual,
                              const double alpha);
 
 
   /** Inverse of the Jacobian vector product. */
-  virtual int solve_jacobian_system(const double t,
-                                    const typename LAC::VectorType &y,
-                                    const typename LAC::VectorType &y_dot,
-                                    const typename LAC::VectorType &residual,
-                                    const double alpha,
-                                    const typename LAC::VectorType &src,
+  virtual int solve_jacobian_system(const typename LAC::VectorType &src,
                                     typename LAC::VectorType &dst) const;
 
   /**
@@ -307,13 +303,14 @@ private:
 
   void set_constrained_dofs_to_zero(typename LAC::VectorType &v) const;
 
-  const MPI_Comm &comm;
+#ifdef DEAL_II_WITH_MPI
+  const MPI_Comm comm;
+#endif
   const BaseInterface<dim, spacedim, LAC>    &interface;
 
   unsigned int n_cycles;
   unsigned int current_cycle;
   unsigned int initial_global_refinement;
-  unsigned int max_time_iterations;
 
   ConditionalOStream        pcout;
 
@@ -436,7 +433,7 @@ private:
 
 
   IDAInterface<typename LAC::VectorType>  ida;
-  IMEXStepper<typename LAC::VectorType> euler;
+  IMEXStepper<typename LAC::VectorType> imex;
 
 
   std::vector<types::global_dof_index> dofs_per_block;
@@ -523,6 +520,12 @@ private:
 
 
   /**
+   * Return the norm of vector @p v. Internally it calls the
+   * virtual function BaseInterface::vector_norm().
+   */
+  double vector_norm(const typename LAC::VectorType &v) const;
+
+  /**
    * Struct containing the signals
    */
   Signals<dim,spacedim,LAC>    signals;
@@ -532,6 +535,12 @@ private:
    * const reference to them through functions named get_variable()
    */
   friend class SimulatorAccess<dim,spacedim,LAC>;
+
+public:
+
+  friend class Lambdas<dim,spacedim,LAC>;
+
+  Lambdas<dim,spacedim,LAC> lambdas;
 
 };
 

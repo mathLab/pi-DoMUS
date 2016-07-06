@@ -38,7 +38,6 @@ subsection piDoMUS
   set Max iterations finer prec.                     = 0
   
   set Initial global refinement                      = 4
-  set Maximum number of time steps                   = 10000
   set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true

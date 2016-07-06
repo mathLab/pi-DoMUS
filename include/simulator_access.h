@@ -31,7 +31,7 @@ public:
   SimulatorAccess ();
 
   /**
-   * Create a piDoMUSAccess object that is already initialized for
+   * Create a SimulatorAccess object that is already initialized for
    * a particular piDoMUS.
    */
   SimulatorAccess (const piDoMUS<dim,spacedim,LAC> &simulator_object);
@@ -73,11 +73,13 @@ public:
   Signals<dim,spacedim,LAC> &
   get_signals() const;
 
+#ifdef DEAL_II_WITH_MPI
   /**
    * Return the MPI communicator for this simulation.
    */
   MPI_Comm
   get_mpi_communicator () const;
+#endif
 
   /**
    * Return a reference to the stream object that only outputs something
