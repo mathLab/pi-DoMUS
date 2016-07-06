@@ -193,6 +193,11 @@ private:
   bool convection;
 
   /**
+   * TODO:
+   */
+  bool use_skew_symmetric_advection;
+
+  /**
    * Hot to handle \f$ (\nabla u)u \f$.
    */
   std::string non_linear_term;
@@ -320,6 +325,10 @@ declare_parameters (ParameterHandler &prm)
                       "SUPG alpha", "0.0",
                       Patterns::Double(0.0),
                       "Use SUPG alpha");
+  this->add_parameter(prm, &use_skew_symmetric_advection,
+                      "Use Skew symmetric form", "true",
+                      Patterns::Bool(),
+                      "");
   this->add_parameter(prm, &dynamic,
                       "Enable dynamic term (\\partial_t u)", "true",
                       Patterns::Bool(),
@@ -635,13 +644,17 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               else if (non_linear_term=="RHS")
                 nl_u = gradoldu * oldu;
 
+              ResidualType non_linear_term = 0;
+
+              if (use_skew_symmetric_advection)
+                res += 0.5 * ( scalar_product( nl_u, v) + scalar_product(grad_v * oldu, u) );
+              else
+                res += scalar_product( nl_u, v);
+
               double norm = std::sqrt(SacadoTools::to_double(oldu*oldu));
 
               if (norm > 0 && SUPG_alpha > 0)
-                res += rho * scalar_product( nl_u, v + SUPG_alpha * (h/norm) * grad_v  * oldu);
-              else
-                res += rho * scalar_product( nl_u, v);
-
+                res += scalar_product( nl_u, SUPG_alpha * (h/norm) * grad_v  * oldu);
             }
           // grad-div stabilization term:
           if (gamma!=0.0)
@@ -752,14 +765,12 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
   LinearOperator<BVEC> P00,P01,P10,P11;
   LinearOperator<BVEC> P00_finer,P01_finer,P10_finer,P11_finer;
 
-  if (prec_name=="default")
-    Schur_inv = (gamma + nu) * Mp_inv;
-  else if (prec_name=="low-nu")
-    Schur_inv = (alpha * rho)  * Ap_inv;
+  if (prec_name=="default" || prec_name=="cah-cha")
+    Schur_inv = (gamma + 1/nu) * Mp_inv;
+  else if (prec_name=="low-nu" || prec_name=="cah-cha")
+    Schur_inv += (alpha * rho)  * Ap_inv;
   else if (prec_name=="identity")
     Schur_inv = identity_operator((C).reinit_range_vector);
-  else if (prec_name=="cah-cha")
-    Schur_inv = ((gamma + nu) * Mp_inv) + ((alpha * rho) * Ap_inv);
 
 
   BlockLinearOperator<VEC> M = block_operator<2, 2, VEC>({{

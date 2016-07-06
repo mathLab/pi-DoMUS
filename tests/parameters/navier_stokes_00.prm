@@ -42,7 +42,7 @@ subsection Navier Stokes Interface
   set GMRES Solver tolerance               = 1e-8
   set Invert Ap using inverse_operator     = false
   set Invert Mp using inverse_operator     = false
-
+  set Use Skew symmetric form              = false
   set Linearize using time                 = false
   set Non linear term                      = fully_non_linear
   
