@@ -7,10 +7,6 @@
  * Test:     Stokes interface.
  * Method:   Iterative - Euler
  * Problem:  Stokes
- * Exact solution:
- * \f[
- *    u=(x, -y\) \textrm{ and } p=x*y;
- * \f]
  */
 
 using namespace dealii;
@@ -27,7 +23,7 @@ int main (int argc, char *argv[])
   StokesInterface<2,2,LATrilinos> interface;
   piDoMUS<2,2,LATrilinos> stokes ("pi-DoMUS",interface);
   ParameterAcceptor::initialize(
-    SOURCE_DIR "/parameters/stokes_01.prm",
+    SOURCE_DIR "/parameters/stokes_05.prm",
     "used_parameters.prm");
 
   stokes.run ();

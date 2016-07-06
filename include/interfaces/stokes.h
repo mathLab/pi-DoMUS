@@ -6,8 +6,8 @@
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal2lkit/sacado_tools.h>
-#include <deal2lkit/parsed_preconditioner_amg.h>
-#include <deal2lkit/parsed_preconditioner_jacobi.h>
+#include <deal2lkit/parsed_preconditioner/amg.h>
+#include <deal2lkit/parsed_preconditioner/jacobi.h>
 
 using namespace SacadoTools;
 

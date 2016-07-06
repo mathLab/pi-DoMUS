@@ -23,25 +23,6 @@
  *  \f]
  *  can be recoverd setting @p dynamic = false
  *
- *  Dynamic Stokes Equation:
- *  \f[
- *     \begin{cases}
- *       \partial_t u - \nu\textrm{div} \epsilon(u)
- *     + \frac{1}{\rho}\nabla p = f \\
- *       \textrm{div}u=0
- *     \end{cases}
- *  \f]
- *  can be recoverd setting @p convection = false
- *
- *  Stokes Equation:
- *  \f[
- *     \begin{cases}
- *       - \nu\textrm{div} \epsilon(u)
- *     + \frac{1}{\rho}\nabla p = f \\
- *       \textrm{div}u=0
- *     \end{cases}
- *  \f]
- *  can be recoverd setting @p dynamic = false and @p convection = false
  *
  * In the code we adopt the following notations:
  * - Mp := block resulting from \f$ ( \partial_t p, q ) \f$
@@ -119,7 +100,7 @@ class NavierStokes
 
 public:
   ~NavierStokes () {};
-  NavierStokes (bool dynamic, bool convection);
+  NavierStokes (bool dynamic);
 
   void declare_parameters (ParameterHandler &prm);
   void parse_parameters_call_back ();
@@ -185,12 +166,6 @@ private:
    * Enable dynamic term: \f$ \partial_t u\f$.
    */
   bool dynamic;
-
-  /**
-   * Enable convection term: \f$ (\nabla u)u \f$.
-   * This term introduce the non-linearity of Navier Stokes Equations.
-   */
-  bool convection;
 
   /**
    * TODO:
@@ -282,7 +257,7 @@ private:
 
 template <int dim, int spacedim, typename LAC>
 NavierStokes<dim,spacedim, LAC>::
-NavierStokes(bool dynamic, bool convection)
+NavierStokes(bool dynamic)
   :
   PDESystemInterface<dim,spacedim,NavierStokes<dim,spacedim,LAC>, LAC>(
     "Navier Stokes Interface",
@@ -295,7 +270,6 @@ NavierStokes(bool dynamic, bool convection)
   AMG_Ap("AMG for Ap"),
   jac_Mp("Jacobi for Mp", 1.4),
   dynamic(dynamic),
-  convection(convection),
   compute_Mp(false),
   compute_Ap(false),
   is_parallel(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 1)
@@ -333,10 +307,6 @@ declare_parameters (ParameterHandler &prm)
                       "Enable dynamic term (\\partial_t u)", "true",
                       Patterns::Bool(),
                       "Enable the dynamic term of the equation.");
-  this->add_parameter(prm, &convection,
-                      "Enable convection term ((\\nabla u)u)", "true",
-                      Patterns::Bool(),
-                      "Enable the convection term of the equation. Set it false if you want to solve Stokes Equation.");
   this->add_parameter(prm, &non_linear_term, "Non linear term","linear",
                       Patterns::Selection("fully_non_linear|linear|RHS"),
                       "Available options: \n"
@@ -415,8 +385,8 @@ solution_preprocessing(FEValuesCache<dim,spacedim> &fe_cache) const
               {
                 this->reinit(dummy, cell, face, fe_cache);
 // Velocity:
-                auto &sym_grad_u_ = fe_cache.get_symmetric_gradients( "explicit_solution", "grad_u", velocity, dummy);
-                auto &p_ = fe_cache.get_values( "explicit_solution", "p", pressure, dummy);
+                auto &sym_grad_u_ = fe_cache.get_symmetric_gradients( "explicit_solution", "f_grad_u", velocity, dummy);
+                auto &p_ = fe_cache.get_values( "explicit_solution", "f_p", pressure, dummy);
 
                 auto &fev = fe_cache.get_current_fe_values();
                 auto &q_points = fe_cache.get_quadrature_points();
@@ -565,14 +535,14 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &grad_ps = fe_cache.get_gradients("solution", "grad_p", pressure,et);
 
   // Previous time step solution:
-  auto &u_olds = fe_cache.get_values("explicit_solution", "u", velocity, dummy);
-  auto &grad_u_olds = fe_cache.get_gradients("explicit_solution", "grad_u", velocity, dummy);
+  auto &u_olds = fe_cache.get_values("explicit_solution", "ue", velocity, dummy);
+  auto &grad_u_olds = fe_cache.get_gradients("explicit_solution", "grad_ue", velocity, dummy);
 
   // Previous Jacobian step solution:
   fe_cache.cache_local_solution_vector("prev_solution",
                                        this->get_locally_relevant_solution(), dummy);
-  auto &u_prevs = fe_cache.get_values("prev_solution", "u", velocity, dummy);
-  auto &grad_u_prevs = fe_cache.get_gradients("prev_solution", "grad_u", velocity, dummy);
+  auto &u_prevs = fe_cache.get_values("prev_solution", "up", velocity, dummy);
+  auto &grad_u_prevs = fe_cache.get_gradients("prev_solution", "grad_up", velocity, dummy);
 
   const unsigned int n_quad_points = us.size();
   auto &JxW = fe_cache.get_JxW_values();
@@ -620,42 +590,40 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           if (dynamic)
             res += rho * u_dot * v;
 
-          // Convection:
-          if (convection)
+          Tensor<2, dim, ResidualType> gradoldu;
+          Tensor<1, dim, ResidualType> oldu;
+
+          if (linearize_in_time)
             {
-              Tensor<2, dim, ResidualType> gradoldu;
-              Tensor<1, dim, ResidualType> oldu;
-
-              if (linearize_in_time)
-                {
-                  gradoldu=grad_u_old;
-                  oldu=u_old;
-                }
-              else
-                {
-                  gradoldu=grad_u_prev;
-                  oldu=u_prev;
-                }
-
-              if (non_linear_term=="fully_non_linear")
-                nl_u = grad_u * u;
-              else if (non_linear_term=="linear")
-                nl_u = grad_u * oldu;
-              else if (non_linear_term=="RHS")
-                nl_u = gradoldu * oldu;
-
-              ResidualType non_linear_term = 0;
-
-              if (use_skew_symmetric_advection)
-                res += 0.5 * ( scalar_product( nl_u, v) + scalar_product(grad_v * oldu, u) );
-              else
-                res += scalar_product( nl_u, v);
-
-              double norm = std::sqrt(SacadoTools::to_double(oldu*oldu));
-
-              if (norm > 0 && SUPG_alpha > 0)
-                res += scalar_product( nl_u, SUPG_alpha * (h/norm) * grad_v  * oldu);
+              gradoldu=grad_u_old;
+              oldu=u_old;
             }
+          else
+            {
+              gradoldu=grad_u_prev;
+              oldu=u_prev;
+            }
+
+          if (non_linear_term=="fully_non_linear")
+            nl_u = grad_u * u;
+          else if (non_linear_term=="linear")
+            nl_u = grad_u * oldu;
+          else if (non_linear_term=="RHS")
+            nl_u = gradoldu * oldu;
+
+          ResidualType non_linear_term = 0;
+
+          if (use_skew_symmetric_advection)
+            res += 0.5 * ( scalar_product( nl_u, v) + scalar_product(grad_v * oldu, u) );
+          else
+            res += scalar_product( nl_u, v);
+
+          double norm = std::sqrt(SacadoTools::to_double(oldu*oldu));
+
+          if (norm > 0 && SUPG_alpha > 0)
+            res += scalar_product( nl_u, SUPG_alpha * (h/norm) * grad_v  * oldu);
+
+
           // grad-div stabilization term:
           if (gamma!=0.0)
             res += gamma * div_u * div_v;

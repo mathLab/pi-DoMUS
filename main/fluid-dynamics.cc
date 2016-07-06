@@ -1,5 +1,6 @@
 #include "interfaces/ALE_navier_stokes.h"
 #include "interfaces/navier_stokes.h"
+#include "interfaces/stokes.h"
 #include "pidomus.h"
 
 #include "deal.II/base/numbers.h"
@@ -24,8 +25,16 @@
   ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm"); \
   equation.run ();
 
-#define problem_NS(dynamic,stokes,dim,spacedim,LAC) \
-  NavierStokes<dim,spacedim,LAC> energy(dynamic, stokes); \
+#define problem_stokes(dim,spacedim,LAC) \
+  StokesInterface<dim,spacedim,LAC> energy; \
+  piDoMUS<dim,spacedim,LAC> equation ( \
+                                       "piDoMUS", \
+                                       energy); \
+  ParameterAcceptor::initialize(prm_file, pde_name+"_used.prm"); \
+  equation.run ();
+
+#define problem_NS(dynamic,dim,spacedim,LAC) \
+  NavierStokes<dim,spacedim,LAC> energy(dynamic); \
   piDoMUS<dim,spacedim,LAC> equation ( \
                                        "piDoMUS", \
                                        energy); \
@@ -109,22 +118,18 @@ int main (int argc, char *argv[])
   if (dynamic)
     string_dynamic="Dynamic";
 
-  bool stokes;
   std::string string_pde_name="";
   if (pde_name == "NS")
     {
       string_pde_name = "Navier Stokes";
-      stokes = false;
     }
   else if (pde_name == "ALE")
     {
       string_pde_name = "ALE Navier Stokes";
-      stokes = false;
     }
   else if (pde_name == "stokes")
     {
       string_pde_name = "Stokes";
-      stokes = false;
     }
   else
     {
@@ -170,28 +175,53 @@ int main (int argc, char *argv[])
                 }
             }
         }
-      else
+      else if ( pde_name == "stokes" )
         {
           if (dim==2)
             {
               if (trilinos)
                 {
-                  problem_NS(dynamic,stokes,2,2,LATrilinos);
+                  problem_stokes(2,2,LATrilinos);
                 }
               else
                 {
-                  problem_NS(dynamic,stokes,2,2,LADealII);
+                  problem_stokes(2,2,LADealII);
                 }
             }
           else
             {
               if (trilinos)
                 {
-                  problem_NS(dynamic,stokes,3,3,LATrilinos);
+                  problem_stokes(3,3,LATrilinos);
                 }
               else
                 {
-                  problem_NS(dynamic,stokes,3,3,LADealII);
+                  problem_stokes(3,3,LADealII);
+                }
+            }
+        }
+      else
+        {
+          if (dim==2)
+            {
+              if (trilinos)
+                {
+                  problem_NS(dynamic,2,2,LATrilinos);
+                }
+              else
+                {
+                  problem_NS(dynamic,2,2,LADealII);
+                }
+            }
+          else
+            {
+              if (trilinos)
+                {
+                  problem_NS(dynamic,3,3,LATrilinos);
+                }
+              else
+                {
+                  problem_NS(dynamic,3,3,LADealII);
                 }
             }
         }
