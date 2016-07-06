@@ -77,7 +77,7 @@ ScalarReactionDiffusionConvection():
   PDESystemInterface<dim,spacedim,ScalarReactionDiffusionConvection<dim,spacedim,LAC>, LAC >("Convection Diffusion Reaction Problem",
       1 + dim,
       1,
-      "FESystem[FE_Q(2)^d-FE_Q(1)]",
+      "FESystem[FE_Q(1)-FE_Q(2)^d]",
       dim==2 ? "u,q,q" : "u,q,q,q",
       "1,0"),
   AMG_A("AMG for A"),
@@ -162,8 +162,8 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                                gamma * u * u_test
                              )*JxW[quad];
 
-          for (unsigned int d=0; d<dim; ++d)
-            residuals[0][i] += (grad_u[d]*b[d]*u_test)*JxW[quad];
+          for (unsigned int h = 0; h<dim; h++)
+            residuals[0][i] += (grad_u[h]*b[h])*u_test*JxW[quad];
 
           residuals[0][i] += (
                                alpha*(grad_u*grad_u_test)
