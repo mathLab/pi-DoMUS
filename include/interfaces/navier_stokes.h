@@ -654,6 +654,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           res -= p * div_v;
 
           // Incompressible constraint:
+          // if serial I use a direct solver over the 
+          // whole (A B', B 0) and i need to assemble B
+          // otherwise I use linear operators to implement 
+          // tha action of transpose(B').
           if (!is_parallel)
             res -= div_u * q;
 
