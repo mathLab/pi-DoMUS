@@ -78,7 +78,7 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
       else
         refine_mesh();
 
-      constraints.distribute(solution);
+      train_constraints[0]->distribute(solution);
       constraints_dot.distribute(solution_dot);
 
       // initialize mass matrix
@@ -91,7 +91,7 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
       mass_matrix.clear();
       initializer(mass_pattern,
                   *dof_handler,
-                  constraints,
+                  *train_constraints[0],
                   mass_coupling);
 
       mass_matrix.reinit(mass_pattern);
@@ -122,9 +122,9 @@ void piDoMUS<dim, spacedim, LAC>::solve_eigenproblem()
                         (const pidomus::CopyMass & data)
       {
 
-        this->constraints.distribute_local_to_global (data.local_matrix,
-                                                      data.local_dof_indices,
-                                                      mass_matrix);
+        this->train_constraints[0]->distribute_local_to_global (data.local_matrix,
+                                                                data.local_dof_indices,
+                                                                mass_matrix);
       };
 
       auto local_assemble = [ this ]

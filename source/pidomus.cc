@@ -58,6 +58,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   pgr("Refinement"),
 
+  train_constraints(interface.n_matrices),
 
   current_time(std::numeric_limits<double>::quiet_NaN()),
   // IDA calls residual first with alpha = 0
@@ -107,6 +108,10 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   interface.initialize_simulator (*this);
   lambdas.set_functions_to_default();
 
+  train_constraints[0] = SP(new ConstraintMatrix);
+
+  for (unsigned int i=1; i<n_matrices; ++i)
+    train_constraints[i] = std::make_shared<ConstraintMatrix>(*train_constraints[0]);
 
   for (unsigned int i=0; i<n_matrices; ++i)
     {
@@ -130,6 +135,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 
   pgr("Refinement"),
 
+  train_constraints(interface.n_matrices),
 
   current_time(std::numeric_limits<double>::quiet_NaN()),
   // IDA calls residual first with alpha = 0
@@ -179,6 +185,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   interface.initialize_simulator (*this);
   lambdas.set_functions_to_default();
 
+  train_constraints[0] = SP(new ConstraintMatrix);
 
   for (unsigned int i=0; i<n_matrices; ++i)
     {
@@ -207,7 +214,7 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       else
         refine_mesh();
 
-      constraints.distribute(solution);
+      train_constraints[0]->distribute(solution);
       constraints_dot.distribute(solution_dot);
 
       if (time_stepper == "ida")
@@ -338,7 +345,7 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       matrices[i]->clear();
       initializer(*matrix_sparsities[i],
                   *dof_handler,
-                  constraints,
+                  *train_constraints[i],
                   interface.get_matrix_coupling(i));
       matrices[i]->reinit(*matrix_sparsities[i]);
     }
@@ -353,8 +360,8 @@ void piDoMUS<dim, spacedim, LAC>::setup_dofs (const bool &first_run)
       else if (!we_are_parallel)
         {
           const QGauss<dim> quadrature_formula(fe->degree + 1);
-          VectorTools::project(interface.get_project_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution, solution);
-          VectorTools::project(interface.get_project_mapping(), *dof_handler, constraints, quadrature_formula, initial_solution_dot, solution_dot);
+          VectorTools::project(interface.get_project_mapping(), *dof_handler, *train_constraints[0], quadrature_formula, initial_solution, solution);
+          VectorTools::project(interface.get_project_mapping(), *dof_handler, *train_constraints[0], quadrature_formula, initial_solution_dot, solution_dot);
         }
       else
         {

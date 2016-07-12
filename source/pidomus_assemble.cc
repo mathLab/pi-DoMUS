@@ -82,9 +82,9 @@ void piDoMUS<dim, spacedim, LAC>::assemble_matrices (const double t,
   {
 
     for (unsigned int i=0; i<n_matrices; ++i)
-      this->constraints.distribute_local_to_global (data.local_matrices[i],
-                                                    data.local_dof_indices,
-                                                    *(this->matrices[i]));
+      this->train_constraints[i]->distribute_local_to_global (data.local_matrices[i],
+                                                              data.local_dof_indices,
+                                                              *(this->matrices[i]));
   };
 
   auto local_assemble = [ this ]
@@ -217,9 +217,9 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   auto local_copy = [&dst, this] (const pidomus::CopyData & data)
   {
 
-    this->constraints.distribute_local_to_global (data.local_residual,
-                                                  data.local_dof_indices,
-                                                  dst);
+    this->train_constraints[0]->distribute_local_to_global (data.local_residual,
+                                                            data.local_dof_indices,
+                                                            dst);
   };
 
   auto local_assemble = [ this ]
@@ -257,7 +257,7 @@ piDoMUS<dim, spacedim, LAC>::residual(const double t,
   for (unsigned int i = 0; i < id.n_elements(); ++i)
     {
       auto j = id.nth_index_in_set(i);
-      if (constraints.is_constrained(j))
+      if (train_constraints[0]->is_constrained(j))
         dst[j] = solution(j) - locally_relevant_solution(j);
     }
 

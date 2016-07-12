@@ -321,8 +321,8 @@ private:
   shared_ptr<FiniteElement<dim, spacedim> >       fe;
   shared_ptr<DoFHandler<dim, spacedim> >          dof_handler;
 
-  ConstraintMatrix                          constraints;
-  ConstraintMatrix                          constraints_dot;
+  std::vector<shared_ptr<ConstraintMatrix> >      train_constraints;
+  ConstraintMatrix                                constraints_dot;
 
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op;
   LinearOperator<typename LAC::VectorType> jacobian_preconditioner_op_finer;

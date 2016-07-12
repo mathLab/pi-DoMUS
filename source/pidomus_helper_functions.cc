@@ -61,7 +61,7 @@ syncronize(const double &t,
       update_functions_and_constraints(t);
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
-      constraints.distribute(tmp);
+      train_constraints[0]->distribute(tmp);
       constraints_dot.distribute(tmp_dot);
 
       locally_relevant_solution = tmp;
@@ -84,7 +84,7 @@ syncronize(const double &t,
       update_functions_and_constraints(t);
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
-      constraints.distribute(tmp);
+      train_constraints[0]->distribute(tmp);
       constraints_dot.distribute(tmp_dot);
 
       locally_relevant_solution = tmp;
@@ -98,8 +98,9 @@ syncronize(const double &t,
 
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
-      constraints.distribute(tmp);
+      train_constraints[0]->distribute(tmp);
       constraints_dot.distribute(tmp_dot);
+
       locally_relevant_solution = tmp;
       locally_relevant_solution_dot = tmp_dot;
     }
@@ -113,7 +114,7 @@ syncronize(const double &t,
 
       typename LAC::VectorType tmp(solution);
       typename LAC::VectorType tmp_dot(solution_dot);
-      constraints.distribute(tmp);
+      train_constraints[0]->distribute(tmp);
       constraints_dot.distribute(tmp_dot);
 
       locally_relevant_solution = tmp;
@@ -134,31 +135,38 @@ void piDoMUS<dim, spacedim, LAC>::update_functions_and_constraints (const double
       forcing_terms.set_time(t);
       neumann_bcs.set_time(t);
     }
+
   // clear previously stored constraints
-  constraints.clear();
+  for (unsigned int i=0; i<n_matrices; ++i)
+    train_constraints[i]->clear();
   constraints_dot.clear();
 
   // compute hanging nodes
   DoFTools::make_hanging_node_constraints (*dof_handler,
-                                           constraints);
+                                           *train_constraints[0]);
 
   DoFTools::make_hanging_node_constraints (*dof_handler,
                                            constraints_dot);
 
-  // compute boundary values
-  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, constraints);
+  zero_average.apply_zero_average_constraints(*dof_handler, *train_constraints[0]);
+
+
+
+  // compute boundary values for the system matrix
+  apply_dirichlet_bcs(*dof_handler, dirichlet_bcs, *train_constraints[0]);
   apply_dirichlet_bcs(*dof_handler, dirichlet_bcs_dot, constraints_dot);
 
 
-  // apply zero average constraints
-  zero_average.apply_zero_average_constraints(*dof_handler, constraints);
+  // apply zero average constraints to the system matrix
+  zero_average.apply_zero_average_constraints(*dof_handler, *train_constraints[0]);
 
   // add user-supplied bcs
-  signals.update_constraint_matrices(constraints,constraints_dot);
+  signals.update_constraint_matrices(train_constraints, constraints_dot);
 
   // close the constraints
-  constraints.close ();
-  constraints_dot.close ();
+  for (unsigned int i=0; i<n_matrices; ++i)
+    train_constraints[i]->close();
+  constraints_dot.close();
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -201,14 +209,14 @@ piDoMUS<dim, spacedim, LAC>::set_constrained_dofs_to_zero(typename LAC::VectorTy
   if (global_partitioning.n_elements() > 0)
     {
       auto k = global_partitioning.nth_index_in_set(0);
-      if (constraints.is_constrained(k))
+      if (train_constraints[0]->is_constrained(k))
         v[k] = 0;
       else
         v[k] = v[k];
       for (unsigned int i = 1; i < global_partitioning.n_elements(); ++i)
         {
           auto j = global_partitioning.nth_index_in_set(i);
-          if (constraints.is_constrained(j))
+          if (train_constraints[0]->is_constrained(j))
             v[j] = 0;
         }
       v.compress(VectorOperation::insert);

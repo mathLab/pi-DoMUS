@@ -48,7 +48,7 @@ struct Signals
    * The functions that can attach to this signal must take two
    * ConstraintMatrix.
    */
-  boost::signals2::signal<void (ConstraintMatrix &constraints,
+  boost::signals2::signal<void (std::vector<shared_ptr<ConstraintMatrix> > &constraints,
                                 ConstraintMatrix &constraints_dot)> update_constraint_matrices;
 
   /**
