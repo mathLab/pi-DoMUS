@@ -108,10 +108,10 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   interface.initialize_simulator (*this);
   lambdas.set_functions_to_default();
 
-  train_constraints[0] = SP(new ConstraintMatrix);
+  train_constraints[0] = SP(new ConstraintMatrix());
 
   for (unsigned int i=1; i<n_matrices; ++i)
-    train_constraints[i] = std::make_shared<ConstraintMatrix>(*train_constraints[0]);
+    train_constraints[i] = train_constraints[0];
 
   for (unsigned int i=0; i<n_matrices; ++i)
     {
