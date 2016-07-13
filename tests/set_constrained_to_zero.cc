@@ -6,9 +6,9 @@ using namespace dealii;
 template<int fdim, int fspacedim, typename fn_LAC>
 void test(piDoMUS<fdim,fspacedim,fn_LAC>  &pi_foo)
 {
-  pi_foo.constraints.clear();
-  pi_foo.constraints.add_line(0);
-  pi_foo.constraints.close();
+  pi_foo.train_constraints[0]->clear();
+  pi_foo.train_constraints[0]->add_line(0);
+  pi_foo.train_constraints[0]->close();
 
   pi_foo.global_partitioning.clear();
   pi_foo.global_partitioning.set_size(2);
