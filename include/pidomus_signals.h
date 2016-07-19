@@ -45,10 +45,15 @@ struct Signals
    * have been included. Note that ConstraintMatrix::close() will be called
    * after this signal, so no need to call it inside.
    *
-   * The functions that can attach to this signal must take two
+   * By default, all the shared_ptrs points to the same
+   * ConstraintMatrix, which is constructed according to the boundary
+   * conditions set in the parameter file.
+   *
+   * The functions that can attach to this signal must take a
+   * std::vector<shared_ptr<ConstraintMatrix> > and a
    * ConstraintMatrix.
    */
-  boost::signals2::signal<void (ConstraintMatrix &constraints,
+  boost::signals2::signal<void (std::vector<shared_ptr<ConstraintMatrix> > &constraints,
                                 ConstraintMatrix &constraints_dot)> update_constraint_matrices;
 
   /**

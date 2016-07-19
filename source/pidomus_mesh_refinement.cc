@@ -62,7 +62,7 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
       auto _timer = computing_timer.scoped_timer ("Compute error estimator");
       update_functions_and_constraints(t);
 
-      constraints.distribute(solution);
+      train_constraints[0]->distribute(solution);
       locally_relevant_solution = solution;
       constraints_dot.distribute(solution_dot);
       locally_relevant_solution_dot = solution_dot;
@@ -92,7 +92,7 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
                                         adaptive_refinement);
 
           update_functions_and_constraints(t);
-          constraints.distribute(solution);
+          train_constraints[0]->distribute(solution);
           constraints_dot.distribute(solution_dot);
 
           signals.fix_solutions_after_refinement(solution,solution_dot);
@@ -163,7 +163,7 @@ refine_and_transfer_solutions(LATrilinos::VectorType &y,
 
 
   update_functions_and_constraints(current_time);
-  constraints.distribute(y);
+  train_constraints[0]->distribute(y);
   constraints_dot.distribute(y_dot);
 
   locally_relevant_y = y;
@@ -213,10 +213,10 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   y_expl = new_sols[2];
 
   update_functions_and_constraints(previous_time);
-  constraints.distribute(y_expl);
+  train_constraints[0]->distribute(y_expl);
 
   update_functions_and_constraints(current_time);
-  constraints.distribute(y);
+  train_constraints[0]->distribute(y);
   constraints_dot.distribute(y_dot);
 
   locally_relevant_y = y;
