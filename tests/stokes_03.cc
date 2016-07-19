@@ -2,15 +2,11 @@
 #include "interfaces/stokes.h"
 #include "tests.h"
 
+
 /**
  * Test:     Stokes interface.
  * Method:   Iterative - Euler
  * Problem:  Stokes
- * Exact solution:
- * \f[
- *    u=\big(\cos(x)\cos(y), \sin(x)\sin(y)\big)
- *    \textrm{ and }p=0;
- * \f]
  */
 
 using namespace dealii;

@@ -24,7 +24,7 @@ int main (int argc, char *argv[])
   deallog.depth_file(1);
   deallog.threshold_double(1.0e-3);
 
-  NavierStokes<2,2> energy(false, true);
+  NavierStokes<2,2> energy(false);
   piDoMUS<2,2> navier_stokes ("",energy);
   ParameterAcceptor::initialize(
     SOURCE_DIR "/parameters/navier_stokes_01.prm",

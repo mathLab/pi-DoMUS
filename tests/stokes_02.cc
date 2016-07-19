@@ -1,9 +1,9 @@
 #include "pidomus.h"
-#include "interfaces/navier_stokes.h"
+#include "interfaces/stokes.h"
 #include "tests.h"
 
 /**
- * Test:     Navier Stokes interface.
+ * Test:     Stokes interface.
  * Method:   Iterative - Euler
  * Problem:  Stokes
  * Exact solution:
@@ -24,8 +24,8 @@ int main (int argc, char *argv[])
   deallog.depth_file(1);
   deallog.threshold_double(1.0e-6);
 
-  NavierStokes<2,2> energy(false, false);
-  piDoMUS<2,2> stokes ("",energy);
+  StokesInterface<2,2,LATrilinos> interface;
+  piDoMUS<2,2,LATrilinos> stokes ("pi-DoMUS",interface);
   ParameterAcceptor::initialize(
     SOURCE_DIR "/parameters/stokes_02.prm",
     "used_parameters.prm");

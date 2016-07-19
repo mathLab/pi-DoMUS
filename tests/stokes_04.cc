@@ -1,16 +1,12 @@
 #include "pidomus.h"
-#include "interfaces/navier_stokes.h"
+#include "interfaces/stokes.h"
 #include "tests.h"
 
+
 /**
- * Test:     Navier Stokes interface.
+ * Test:     Stokes interface.
  * Method:   Iterative - Euler
- * Problem:  Dynamic Stokes
- * Exact solution:
- * \f[
- *    u=\big(\cos(x)\cos(y), \sin(x)\sin(y)\big)
- *    \textrm{ and }p=0;
- * \f]
+ * Problem:  Stokes
  */
 
 using namespace dealii;
@@ -22,17 +18,17 @@ int main (int argc, char *argv[])
 
   initlog();
   deallog.depth_file(1);
-  deallog.threshold_double(1.0e-3);
+  deallog.threshold_double(1.0e-6);
 
-  NavierStokes<2,2> energy(true, false);
-  piDoMUS<2,2> dynamic_stokes ("",energy);
+  StokesInterface<2,2,LATrilinos> interface;
+  piDoMUS<2,2,LATrilinos> stokes ("pi-DoMUS",interface);
   ParameterAcceptor::initialize(
-    SOURCE_DIR "/parameters/dynamic_stokes_01.prm",
+    SOURCE_DIR "/parameters/stokes_04.prm",
     "used_parameters.prm");
 
-  dynamic_stokes.run ();
+  stokes.run ();
 
-  auto sol = dynamic_stokes.get_solution();
+  auto sol = stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;

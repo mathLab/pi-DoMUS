@@ -14,15 +14,18 @@ subsection piDoMUS<2, 2, LATrilinos>
   set Use direct solver if available                 = false
 end
 
-subsection Navier Stokes Interface
-  set Block of differential components     = 1,0
-  set Blocking of the finite element       = u,u,p
-  set Enable convection term ((\nabla u)u) = false
-  set Enable dynamic term (\partial_t u)   = true
-  set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
-  set div-grad stabilization parameter     = 0.0
-  set nu [Pa s]                            = 1.0
-  set rho [kg m^3]                         = 1.0
+subsection Amg preconditioner for velocity
+  set Aggregation threshold              = 1.5
+  set Coarse type                        = Amesos-KLU
+  set Elliptic                           = false
+  set High Order Elements                = true
+  set Number of cycles                   = 1
+  set Output details                     = false
+  set Smoother overlap                   = 0
+  set Smoother sweeps                    = 2
+  set Smoother type                      = Chebyshev
+  set Variable related to constant modes = u
+  set w-cycle                            = false
 end
 
 subsection Initial solution
@@ -94,24 +97,6 @@ subsection Error Tables
   end
 end
 
-subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
-  set Initial time                                  = 1.0
-  set Final time                                    = 0.0
-  set Ignore algebraic terms for error computations = false
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_diff
-  set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
-  set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
-  set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-1
-  set Show output of time steps                     = true
-  set Use local tolerances                          = false
-end
 
 subsection IMEX Parameters
   set Final time                                   = 1.0
@@ -128,12 +113,3 @@ subsection IMEX Parameters
   set Update continuously Jacobian                 = false
 end
 
-subsection Output Parameters
-  set Files to save in run directory =
-  set Incremental run prefix         =
-  set Output format                  = none
-  set Output partitioning            = false
-  set Problem base name              = solution
-  set Solution names                 = u
-  set Subdivisions                   = 1
-end
