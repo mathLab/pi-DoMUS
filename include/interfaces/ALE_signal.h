@@ -67,7 +67,7 @@ public:
     );
 
     signals.update_constraint_matrices.connect(
-      [&,this](ConstraintMatrix &constraints, ConstraintMatrix &constraints_dot) 
+      [&,this](std::vector<std::shared_ptr<dealii::ConstraintMatrix> > &constraints, ConstraintMatrix &constraints_dot) 
     {
       auto &dof=this->get_dof_handler();
       auto &fe =this->get_fe();
@@ -100,20 +100,20 @@ public:
       VectorTools::interpolate_boundary_values (dof,
                                                 0,
                                                 BoundaryValues<dim>(0, timestep, dt, true, 4),
-                                                constraints,
+                                                *constraints[0],
                                                 displacement_mask);
 
       // top face
       VectorTools::interpolate_boundary_values (dof,
                                                 2,
                                                 BoundaryValues<dim>(2),
-                                                constraints,
+                                                *constraints[0],
                                                 displacement_mask);
       // bottom face
       VectorTools::interpolate_boundary_values (dof,
                                                 1,
                                                 BoundaryValues<dim>(1, timestep, dt, false, 2),
-                                                constraints,
+                                                *constraints[0],
                                                 displacement_mask);
       //if(step == 0)
       //{
