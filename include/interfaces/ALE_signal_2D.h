@@ -61,7 +61,7 @@ public:
       [&,this](Triangulation<dim> &tria)
     {
       Tensor<1, dim> shift_vec;
-      shift_vec[1] = -0.9081;
+      shift_vec[1] = -1.318;
       GridTools::shift(shift_vec, tria);
     }
     );
@@ -92,6 +92,8 @@ public:
       if (dt != dt) {
           dt = 1;
       }
+      // loop the heartbeat
+      timestep = fmod(timestep*1000,500)/1000;
 
 
       // dirichlet BC for d 

@@ -4,6 +4,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/lac/vector.h>
 #include "heart_fe.h"
+#include <cmath>
 
 using namespace dealii;
 

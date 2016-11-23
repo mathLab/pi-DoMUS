@@ -1,5 +1,4 @@
 #include "boundary_values_2D.h"
-#include <cmath>
 #define PI 3.14159265358979323846
 
 using namespace dealii;
@@ -140,8 +139,8 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> &p,
       //values(0) = heart_p(0) - p(0);
       //values(1) = heart_p(1) - p(1);
       //values(2) = heart_p(2) - p(2);
-      values(0) = heart_p(1) - p(0);
-      values(1) = heart_p(0) - p(1);
+      values(0) = heart_p(1) - artificial_p(1);
+      values(1) = heart_p(0) - artificial_p(0);
   }
 }
 
@@ -156,10 +155,10 @@ BoundaryValues<dim>::get_values (const Point<dim> &p,
     double substep = (fmod (timestep, heartinterval)/dt + 1)
                      / (heartinterval / dt);
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 0 : heartstep-1);
+    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 99 : heartstep-1);
     BoundaryValues<dim>::get_heartdelta(p, u, heartstep);
 
-    // calc delta_u
+    // calc delta_u = (u - u_)
     delta_u = u;
     delta_u -= u_;
     // scale delta_u
@@ -185,7 +184,7 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     //double substep = (fmod (timestep, heartinterval)/dt + 1)
     //                 / (heartinterval / dt);
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 0 : heartstep-1);
+    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 99 : heartstep-1);
     BoundaryValues<dim>::get_heartdelta(p, u, heartstep);
 
     // (u_t - u_t-1) / h
@@ -193,7 +192,7 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     delta_u -= u_;
     delta_u /= heartinterval;
     // scale u_
-    delta_u /= (heartinterval/dt);
+    //delta_u /= (heartinterval/dt);
 
     values(0) = delta_u(0);
     values(1) = delta_u(1);

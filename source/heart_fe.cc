@@ -69,7 +69,7 @@ void Heart<dim,spacedim>::reinit_data()
   }
   std::fstream in (filename);
   int n_dofs = dof_handler.n_dofs();
-  for (int line = 0; line < 100; ++line)
+  for (int line = 0; line < 100; ++line)    
   {
     solution[line].reinit(n_dofs);
     for (int column = 0; column < n_dofs; ++column)
@@ -113,7 +113,7 @@ void Heart<dim,spacedim>::run_side()
   std::vector<unsigned int> subdivisions(2);
   subdivisions[0] = 48/fe.degree;
   subdivisions[1] = 24/fe.degree;
-  const Point<dim> p1 (0,-3.5);
+  const Point<dim> p1 (0,-4.3196);
   const Point<dim> p2 (2*numbers::PI,1.6838);
 
   GridGenerator::subdivided_hyper_rectangle(triangulation, 
