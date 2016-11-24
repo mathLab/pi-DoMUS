@@ -78,7 +78,7 @@ end
 subsection Forcing terms
   set IDs and component masks = 0=u
   set IDs and expressions     = 0=\
-  2*k*cos(x)*cos(y)-sin(x)*sin(y)^2*cos(x)-sin(x)*cos(x)*cos(y)^2+cos(x)*cos(y);  \
+  2*k*cos(x)*cos(y)-sin(x)*sin(y)*sin(y)*cos(x)-sin(x)*cos(x)*cos(y)^2+cos(x)*cos(y);  \
 2*k*sin(x)*sin(y)+sin(x)^2*sin(y)*cos(y)-sin(x)*sin(y)+ sin(y)*cos(x)^2*cos(y); 0
   set Known component names   = u,u,p
   set Used constants          = k=1.0

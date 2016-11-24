@@ -247,6 +247,7 @@ public:
                                         LinearOperator<LATrilinos::VectorType> &prec_op,
                                         LinearOperator<LATrilinos::VectorType> &prec_op_finer) const;
 
+
   /**
    * Compute linear operators needed by the problem. When using
    * deal.II vector and matrix types, this function is empty, since a

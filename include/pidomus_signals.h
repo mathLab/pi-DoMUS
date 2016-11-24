@@ -99,6 +99,8 @@ struct Signals
   boost::signals2::signal<void ()> begin_refine_and_transfer_solutions;
   boost::signals2::signal<void ()> begin_assemble_matrices;
   boost::signals2::signal<void ()> begin_solver_should_restart;
+  boost::signals2::signal<void ()> begin_cycle;
+  boost::signals2::signal<void ()> begin_run;
 
   boost::signals2::signal<void ()> end_make_grid_fe;
   boost::signals2::signal<void ()> end_setup_dofs;
@@ -109,6 +111,8 @@ struct Signals
   boost::signals2::signal<void ()> end_refine_and_transfer_solutions;
   boost::signals2::signal<void ()> end_assemble_matrices;
   boost::signals2::signal<void ()> end_solver_should_restart;
+  boost::signals2::signal<void ()> end_cycle;
+  boost::signals2::signal<void ()> end_run;
 
 };
 

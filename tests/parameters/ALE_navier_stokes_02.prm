@@ -1,0 +1,106 @@
+# Problem
+################################################################################
+subsection Exact solution
+  set Function constants  = 
+  set Function expression = 0;0;cos(x); y*sin(x); x*sin(y);0;0
+  set Variable names      = x,y,t
+end
+
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0=u;p;d
+  set IDs and expressions     = 0=sin(x*t);0;cos(x); y*sin(x); x*sin(y);0;0
+  set Known component names   = d,d,u,u,p,v,v
+  set Used constants          = 
+end
+subsection Forcing terms
+  set IDs and component masks = 0=u
+  set IDs and expressions     = 0=0;0;\
+                                -sin(x)*cos(x) + sin(y) + 0.1*cos(x);\
+                                x*cos(y) + y*sin(x)*sin(x) + y*cos(x)*cos(x);\
+                                0;0;0
+  set Known component names   = d,d,u,u,p,v,v
+  set Used constants          = k=0.0
+end
+
+# Solver
+################################################################################
+subsection ALE Navier Stokes Interface
+  set AMG d - use inverse operator     = false
+  set AMG u - use inverse operator     = false
+  set AMG v - use inverse operator     = false
+  set Invert Mp using inverse operator = true
+  set nu [Pa s]                        = 10
+  set rho [Kg m^-d]                    = 1.0
+end
+subsection AMG for Ap
+  set Aggregation threshold              = 5
+end
+subsection AMG for d
+  set Aggregation threshold              = 10
+end
+subsection AMG for u
+  set Aggregation threshold              = 10
+end
+subsection AMG for v
+  set Aggregation threshold              = 10
+end
+subsection Jacobi for M
+  set Omega            = 1.4
+end
+subsection Domain
+  set Colorize                      = false
+  set Grid to generate              = rectangle
+  set Optional Point<spacedim> 1    = 0,0
+  set Optional Point<spacedim> 2    = 1,1
+end
+subsection Error Tables
+  set Compute error            = true
+  set Error file format        = tex
+  set Error precision          = 3
+  set Output error tables      = true
+  set Solution names           = d,d,u,u,p,v,v
+  set Solution names for latex = d,d,u,u,p,v,v
+  set Table names              = error
+  set Write error files        = false
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = L2; AddUp; L2, Linfty, H1; AddUp; L2; L2, Linfty, H1; AddUp;
+    set Rate key                       = 
+  end
+end
+subsection IMEX Parameters
+  set Absolute error tolerance                     = 1.0e-8
+  set Final time                                   = 0.4
+  set Initial time                                 = 0.0
+  set Print useful informations                    = false
+  set Relative error tolerance                     = 1.0e-6
+  set Step size                                    = 1.0e-3
+  set Use the KINSOL solver                        = false
+end
+subsection KINSOL for IMEX
+  set Level of verbosity of the KINSOL solver            = 0
+  set Maximum number of iteration before Jacobian update = 20
+  set Maximum number of iterations                       = 200
+  set Strategy                                           = global_newton
+  set Use internal KINSOL direct solver                  = false
+end
+subsection piDoMUS<2, 2, LATrilinos>
+  set Adaptive refinement                            = false
+  set Initial global refinement                      = 6
+  set Jacobian solver tolerance                      = 1e-4
+  set Number of cycles                               = 1
+  set Time stepper                                   = euler
+  set Use direct solver if available                 = true
+end
+
+subsection Output Parameters
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = false
+  set Problem base name              = solution
+  set Solution names                 = u
+  set Subdivisions                   = 1
+end

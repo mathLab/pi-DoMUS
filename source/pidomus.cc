@@ -200,12 +200,14 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
 {
+  signals.begin_run();
   interface.set_stepper(time_stepper);
 
   interface.connect_to_signals();
 
   for (current_cycle = 0; current_cycle < n_cycles; ++current_cycle)
     {
+      signals.begin_cycle();
       if (current_cycle == 0)
         {
           make_grid_fe();
@@ -242,10 +244,11 @@ void piDoMUS<dim, spacedim, LAC>::run ()
           imex.solve_dae(solution, solution_dot);
         }
       eh.error_from_exact(interface.get_error_mapping(), *dof_handler, locally_relevant_solution, exact_solution);
+      signals.end_cycle();
     }
 
   eh.output_table(pcout);
-
+  signals.end_run();
 }
 
 

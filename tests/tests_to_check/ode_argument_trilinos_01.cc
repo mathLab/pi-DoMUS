@@ -18,7 +18,7 @@
 
 #include <mpi.h>
 
-#include <deal2lkit/sundials_interface.h>
+
 #include <deal2lkit/ida_interface.h>
 #include <deal2lkit/parameter_acceptor.h>
 
