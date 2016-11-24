@@ -42,7 +42,7 @@ private:
   int color;
   double timestep;
   double dt;
-  double heartinterval = 0.005;
+  double heartinterval = 0.001;
   int heartstep;// = timestep / heartinterval;
   bool derivative;
   Heart<2,3> heart; 

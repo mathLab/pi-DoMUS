@@ -29,7 +29,7 @@ Heart<dim,spacedim>::Heart(bool s, const int degree)
   :
   fe (FE_Q<dim>(degree), spacedim),
   dof_handler (triangulation),
-  solution(100),
+  solution(496),
   side(s)
 {
   if (side)
@@ -69,7 +69,7 @@ void Heart<dim,spacedim>::reinit_data()
   }
   std::fstream in (filename);
   int n_dofs = dof_handler.n_dofs();
-  for (int line = 0; line < 100; ++line)    
+  for (int line = 0; line < 496; ++line)    
   {
     solution[line].reinit(n_dofs);
     for (int column = 0; column < n_dofs; ++column)
