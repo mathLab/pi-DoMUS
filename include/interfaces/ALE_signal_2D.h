@@ -146,7 +146,7 @@ public:
       //                                            velocity_mask);
       //}
       
-      if(timestep < 0.001)  // 0.005 is the time of one heart interval
+      if(timestep < 0.005)  // 0.005 is the time of one heart interval
       {
         // time derivatives of dirichlet BC for d
         // left hull

@@ -155,8 +155,8 @@ BoundaryValues<dim>::get_values (const Point<dim> &p,
     double substep = (fmod (timestep, heartinterval)/dt + 1)
                      / (heartinterval / dt);
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 495 : heartstep-1);
-    BoundaryValues<dim>::get_heartdelta(p, u, heartstep);
+    BoundaryValues<dim>::get_heartdelta(p, u_, 0);
+    BoundaryValues<dim>::get_heartdelta(p, u, 1);
 
     // calc delta_u = (u - u_)
     delta_u = u;
@@ -184,8 +184,8 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     //double substep = (fmod (timestep, heartinterval)/dt + 1)
     //                 / (heartinterval / dt);
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, (heartstep-1 < 0) ? 495 : heartstep-1);
-    BoundaryValues<dim>::get_heartdelta(p, u, heartstep);
+    BoundaryValues<dim>::get_heartdelta(p, u_, 0);
+    BoundaryValues<dim>::get_heartdelta(p, u, 1);
 
     // (u_t - u_t-1) / h
     delta_u = u;

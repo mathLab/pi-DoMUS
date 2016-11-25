@@ -31,7 +31,7 @@ public:
     dt(dt),
     heartstep(timestep/heartinterval),
     derivative(derivative),
-    heart(side, degree)
+    heart(side, degree, heartstep)
   {}
 
   virtual double value (const Point<dim>   &p,
@@ -42,7 +42,7 @@ private:
   int color;
   double timestep;
   double dt;
-  double heartinterval = 0.001;
+  double heartinterval = 0.005;
   int heartstep;// = timestep / heartinterval;
   bool derivative;
   Heart<2,3> heart; 

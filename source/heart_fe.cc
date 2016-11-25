@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <boost/algorithm/string.hpp>
+#include <string>
 
 #include "../include/heart_fe.h"
 
@@ -25,12 +27,13 @@ Heart<dim,spacedim>::Heart()
 {}
 
 template <int dim, int spacedim>
-Heart<dim,spacedim>::Heart(bool s, const int degree)
+Heart<dim,spacedim>::Heart(bool s, const int degree, const int h)
   :
   fe (FE_Q<dim>(degree), spacedim),
   dof_handler (triangulation),
-  solution(496),
-  side(s)
+  solution(2),
+  side(s),
+  heartstep(h)
 {
   if (side)
   {
@@ -68,15 +71,50 @@ void Heart<dim,spacedim>::reinit_data()
     filename =  "../source/bottom_boundary.txt";
   }
   std::fstream in (filename);
+  std::string first;
+  std::string second;
   int n_dofs = dof_handler.n_dofs();
-  for (int line = 0; line < 496; ++line)    
+  // TODO: 
+  // -jump in line heartstep-1
+  // -read line heartstep-1 and heartstep
+  if (heartstep==0)
+  {
+    in >> second;
+    //std::getline(in,second);
+    for (int i = 1; i < 99; ++i)
+    {
+      std::getline(in,first);
+    }
+    in >> first;
+  }
+  else
+  {
+    for (int i = 0; i < heartstep-1; ++i)
+    {
+      std::getline(in,first);
+    }
+    in >> first;
+    in >> second;
+    //std::getline(in,second);
+  }
+  // -split into 3675 or 363 pieces
+  std::vector<std::vector<std::string> > splitted (2);
+  
+  boost::split(splitted[0], first, boost::is_any_of(";") );
+  boost::split(splitted[1], second, boost::is_any_of(";") );
+  //std::cout << "size = " << splitted[0].size() << std::endl;
+  for (int line = 0; line < 2; ++line)    
   {
     solution[line].reinit(n_dofs);
+
+    // -write into solution[0] and solution[1]
     for (int column = 0; column < n_dofs; ++column)
     {
-      in >> solution[line][column];
+      solution[line][column] = std::stod(splitted[line][column]);
+      //std::cout << "solution[" << line << "][" << column << "] = value " << solution[line][column] << std::endl;
     }
   }
+
 }
 
 template <int dim, int spacedim>

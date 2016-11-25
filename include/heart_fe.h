@@ -13,7 +13,7 @@ class Heart
 {
 public:
   Heart ();
-  Heart (bool, const int);
+  Heart (bool, const int, const int);
   Point<spacedim> push_forward (const Point<dim>, const int) const;
 
 private:
@@ -28,6 +28,7 @@ private:
   std::vector<Vector<double> >      solution;
 
   bool side;
+  int heartstep;
 };
 
 #endif
