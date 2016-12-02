@@ -72,12 +72,12 @@ public:
       auto &fe =this->get_fe();
 
       FEValuesExtractors::Vector displacements (0);
-      FEValuesExtractors::Vector velocities (dim);
+      FEValuesExtractors::Vector velocities (2);
       ComponentMask displacement_mask = fe.component_mask (displacements);
       ComponentMask velocity_mask = fe.component_mask (velocities);
-
-      // displacement_mask = [1 1 1 0 0 0 0]
-      // velocity_mask     = [0 0 0 1 1 1 0]
+      //std::cout << "mask: [ " << velocity_mask[0] << " " << velocity_mask[1] << " " << velocity_mask[2] << " " << velocity_mask[3] << " " << velocity_mask[4] << " ]" << std::endl; 
+      // displacement_mask = [1 1 0 0 0]
+      // velocity_mask     = [0 0 1 1 0]
       
       double timestep = this->get_current_time();
       double dt = this->get_timestep();
@@ -121,31 +121,7 @@ public:
                                                 BoundaryValues<dim>(3),
                                                 *constraints[0],
                                                 displacement_mask);
-      //if(step == 0)
-      //{
-      //  // setting velocities to zero when deforming the cylinder 
-      //  // to start the computation with the heart geometry
-      //  // hull
-      //  VectorTools::interpolate_boundary_values (dof,
-      //                                            0,
-      //                                            ZeroFunction<dim>(7),
-      //                                            constraints,
-      //                                            velocity_mask);
-      //  
-      //  // top face
-      //  VectorTools::interpolate_boundary_values (dof,
-      //                                            2,
-      //                                            ZeroFunction<dim>(7),
-      //                                            constraints,
-      //                                            velocity_mask);
-      //  // bottom face
-      //  VectorTools::interpolate_boundary_values (dof,
-      //                                            1,
-      //                                            ZeroFunction<dim>(7),
-      //                                            constraints,
-      //                                            velocity_mask);
-      //}
-      
+
       if(timestep < 0.005)  // 0.005 is the time of one heart interval
       {
         // time derivatives of dirichlet BC for d
@@ -189,6 +165,25 @@ public:
                                                   BoundaryValues<dim>(2, timestep, dt, false, 2, true),
                                                   constraints_dot,
                                                   displacement_mask);
+        // BC for u
+        // left hull
+        VectorTools::interpolate_boundary_values (dof,
+                                                  0,
+                                                  BoundaryValues<dim>(0, timestep, dt, true, 4, true),
+                                                  *constraints[0],
+                                                  velocity_mask);
+        // right hull
+        VectorTools::interpolate_boundary_values (dof,
+                                                  1,
+                                                  BoundaryValues<dim>(1, timestep, dt, true, 4, true),
+                                                  *constraints[0],
+                                                  velocity_mask);
+        // bottom face
+        VectorTools::interpolate_boundary_values (dof,
+                                                  2,
+                                                  BoundaryValues<dim>(2, timestep, dt, false, 2, true),
+                                                  *constraints[0],
+                                                  velocity_mask);
       }
       
     }
@@ -286,8 +281,8 @@ template <int dim, int spacedim, typename LAC>
 void ALENavierStokes<dim,spacedim,LAC>::
 set_matrix_couplings(std::vector<std::string> &couplings) const
 {
-  couplings[0] = "1,1,1; 1,1,1; 1,1,0"; // TODO: Select only not null entries
-  couplings[1] = "0,0,0; 0,0,0; 0,0,1";
+  //couplings[0] = "1,1,1; 1,1,1; 1,1,0"; // TODO: Select only not null entries
+  //couplings[1] = "0,0,0; 0,0,0; 0,0,1";
 }
 
 template <int dim, int spacedim, typename LAC>

@@ -31,7 +31,7 @@ Heart<dim,spacedim>::Heart(bool s, const int degree, const int h)
   :
   fe (FE_Q<dim>(degree), spacedim),
   dof_handler (triangulation),
-  solution(2),
+  solution(3),
   side(s),
   heartstep(h)
 {
@@ -73,6 +73,7 @@ void Heart<dim,spacedim>::reinit_data()
   std::fstream in (filename);
   std::string first;
   std::string second;
+  std::string third;
   int n_dofs = dof_handler.n_dofs();
   // TODO: 
   // -jump in line heartstep-1
@@ -80,12 +81,23 @@ void Heart<dim,spacedim>::reinit_data()
   if (heartstep==0)
   {
     in >> second;
+    in >> third;
     //std::getline(in,second);
-    for (int i = 1; i < 99; ++i)
+    for (int i = 1; i < 98; ++i)
     {
       std::getline(in,first);
     }
     in >> first;
+  }
+  else if (heartstep == 99)
+  {
+    in >> third;
+    for (int i = 1; i < 98; ++i)
+    {
+      std::getline(in,first);
+    }
+    in >> first;
+    in >> second;
   }
   else
   {
@@ -95,15 +107,17 @@ void Heart<dim,spacedim>::reinit_data()
     }
     in >> first;
     in >> second;
+    in >> third;
     //std::getline(in,second);
   }
   // -split into 3675 or 363 pieces
-  std::vector<std::vector<std::string> > splitted (2);
+  std::vector<std::vector<std::string> > splitted (3);
   
   boost::split(splitted[0], first, boost::is_any_of(";") );
   boost::split(splitted[1], second, boost::is_any_of(";") );
+  boost::split(splitted[2], third, boost::is_any_of(";") );
   //std::cout << "size = " << splitted[0].size() << std::endl;
-  for (int line = 0; line < 2; ++line)    
+  for (int line = 0; line < 3; ++line)    
   {
     solution[line].reinit(n_dofs);
 

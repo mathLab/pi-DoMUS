@@ -1,4 +1,7 @@
 #include "boundary_values_2D.h"
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/dofs/dof_renumbering.h>
+#include <deal.II/grid/grid_tools.h>
 #define PI 3.14159265358979323846
 
 using namespace dealii;
@@ -12,13 +15,9 @@ BoundaryValues<dim>::value (const Point<dim>  &p,
   Assert (component < this->n_components,
           ExcIndexRange (component, 0, this->n_components));
 
-  Vector<double> values(2);
+  Vector<double> values(4);
   BoundaryValues<dim>::vector_value (p, values);
 
-  if (component == 0)
-      return values(0);
-  if (component == 1)
-      return values(1);
   return 0;
 }
 
@@ -75,6 +74,23 @@ BoundaryValues<dim>::swap_coord (Point<3> &p) const
   //std::cout << "Hallo error1" << std::endl;
   p(0) = p(2);
   p(2) = tmp;
+}
+
+template <int dim>
+void
+BoundaryValues<dim>::setup_system()
+{
+  std::vector<unsigned int> subdivisions(1);
+  subdivisions[0] = 1;
+  const Point<1> p1 (-1);
+  const Point<1> p2 (1);
+
+  GridGenerator::subdivided_hyper_rectangle(triangulation, 
+                                            subdivisions, 
+                                            p1, p2, false);
+  dof_handler.distribute_dofs(fe);
+  Point<1> direction (1e5);
+  DoFRenumbering::downstream (dof_handler, direction, true);
 }
 
 template <int dim>
@@ -149,25 +165,46 @@ void
 BoundaryValues<dim>::get_values (const Point<dim> &p,
                                  Vector<double>   &values) const
 {
-    Vector<double> u_(dim);                                 // u_t-1
-    Vector<double> u(dim);                                  // u_t
-    Vector<double> delta_u(dim);                            // u_t - u_t-1
-    double substep = (fmod (timestep, heartinterval)/dt + 1)
-                     / (heartinterval / dt);
+    int n_dofs = dof_handler.n_dofs();
+    Vector<double> solution(n_dofs);
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, 0);
-    BoundaryValues<dim>::get_heartdelta(p, u, 1);
+    std::vector<Vector<double> > u(3);
+    u[0].reinit(dim);
+    u[1].reinit(dim);
+    u[2].reinit(dim);
 
-    // calc delta_u = (u - u_)
-    delta_u = u;
-    delta_u -= u_;
-    // scale delta_u
-    delta_u *= substep;
+    //Vector<double> u_(dim);                                // u_t-1
+    //Vector<double> u(dim);                                 // u_t
+    //Vector<double> delta_u(dim);                             // u_t - u_t-1
+    Point<1> substep (fmod (timestep, heartinterval)/heartinterval);
 
-    u_ += delta_u;
+    BoundaryValues<dim>::get_heartdelta(p, u[0], 0);
+    BoundaryValues<dim>::get_heartdelta(p, u[1], 1);
+    BoundaryValues<dim>::get_heartdelta(p, u[2], 2);
+    
+    int counter = 0;
+    for (int line = 0; line < 3; ++line)
+    {
+      for (int column = 0; column < dim; ++column)
+      {
+        solution(counter) = u[line](column);
+        ++counter;
+      }
+    }
+    auto cell = GridTools::find_active_cell_around_point (dof_handler,
+                                                          substep);
+    Point<1> scaled_point ( (substep(0) - cell->vertex(0)[0]) / (cell->vertex(1)[0]-cell->vertex(0)[0]) );
+    
+    Quadrature<1> quad(scaled_point);
 
-    values(0) = u_(0);
-    values(1) = u_(1);
+    FEValues<1> fe_values(fe, quad, update_values);
+    fe_values.reinit (cell);
+    std::vector<Vector<double> > wert (quad.size(),
+                                       Vector<double>(dim));
+    fe_values.get_function_values(solution, wert);
+
+    values(0) = wert[0](0);
+    values(1) = wert[0](1);
     //values(2) = u_(2);
 }
 
@@ -178,24 +215,40 @@ void
 BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
                                     Vector<double>   &values) const
 {
-    Vector<double> u_(dim);       // u_t-1
-    Vector<double> u(dim);        // u_t
-    Vector<double> delta_u(dim);  // u_t - u_t-1
-    //double substep = (fmod (timestep, heartinterval)/dt + 1)
-    //                 / (heartinterval / dt);
+    Vector<double> u_minus(dim);       // u_t-1
+    Vector<double> u(dim);             // u_t
+    Vector<double> u_plus(dim);        // u_t+1
+    Vector<double> v0(dim);            // u_t - u_t-1
+    Vector<double> v1(dim);            // u_t+1 - u_t
+    Vector<double> delta_v(dim);       // v1 - v0
+    double substep = fmod (timestep, heartinterval)/heartinterval;
 
-    BoundaryValues<dim>::get_heartdelta(p, u_, 0);
+    BoundaryValues<dim>::get_heartdelta(p, u_minus, 0);
     BoundaryValues<dim>::get_heartdelta(p, u, 1);
+    BoundaryValues<dim>::get_heartdelta(p, u_plus, 2);
 
     // (u_t - u_t-1) / h
-    delta_u = u;
-    delta_u -= u_;
-    delta_u /= heartinterval;
-    // scale u_
-    //delta_u /= (heartinterval/dt);
+    v0 = u;
+    v0 -= u_minus;
+    v0 /= heartinterval;
+    // (u_t+1 - u_t) / h
+    v1 = u_plus;
+    v1 -= u;
+    v1 /= heartinterval;
+    // calculate & scale delta_v
+    delta_v = v1;
+    delta_v -= v0;
+    delta_v *= substep;
 
-    values(0) = delta_u(0);
-    values(1) = delta_u(1);
+    v0 += delta_v; // delta_u = delta_u*substep
+
+    // scaling to achieve convergence
+    v0 *= 0.1;
+    
+    values(0) = v0(0);
+    values(1) = v0(1);
+    values(2) = v0(0);
+    values(3) = v0(1);
     //values(2) = u_(2);
 }
 
