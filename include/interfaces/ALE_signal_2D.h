@@ -191,8 +191,8 @@ public:
   } 
   
 
-  void
-  set_matrix_couplings(std::vector<std::string> &couplings) const;
+  //void
+  //set_matrix_couplings(std::vector<std::string> &couplings) const;
 
 private:
 
@@ -277,13 +277,13 @@ void ALENavierStokes<dim,spacedim,LAC>::
 parse_parameters_call_back ()
 {}
 
-template <int dim, int spacedim, typename LAC>
-void ALENavierStokes<dim,spacedim,LAC>::
-set_matrix_couplings(std::vector<std::string> &couplings) const
-{
+//template <int dim, int spacedim, typename LAC>
+//void ALENavierStokes<dim,spacedim,LAC>::
+//set_matrix_couplings(std::vector<std::string> &couplings) const
+//{
   //couplings[0] = "1,1,1; 1,1,1; 1,1,0"; // TODO: Select only not null entries
   //couplings[1] = "0,0,0; 0,0,0; 0,0,1";
-}
+//}
 
 template <int dim, int spacedim, typename LAC>
 template <typename EnergyType, typename ResidualType>
