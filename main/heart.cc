@@ -62,8 +62,8 @@ int main (int argc, char *argv[])
   // int spacedim = 2;
   // My_CLP.setOption("spacedim", &spacedim, "dimensione of the whole space");
 
-  int dim = 3;
-  //My_CLP.setOption("dim", &dim, "dimension of the problem");
+  int dim = 2;
+  My_CLP.setOption("dim", &dim, "dimension of the problem");
 
   int n_threads = 0;
   My_CLP.setOption("n_threads", &n_threads, "number of threads");
@@ -115,15 +115,28 @@ int main (int argc, char *argv[])
                       n_threads,
                       comm,
                       check_prm);
-
-      if (trilinos)
-        {
-          problem_ALE(3,3,LATrilinos);
-        }
+      if (dim == 2)
+      {
+        if (trilinos)
+          {
+            problem_ALE(2,2,LATrilinos);
+          }
+        else
+          {
+            problem_ALE(2,2,LADealII);
+          }
+      }
       else
-        {
-          problem_ALE(3,3,LADealII);
-        }
+      {
+        if (trilinos)
+          {
+            problem_ALE(3,3,LATrilinos);
+          }
+        else
+          {
+            problem_ALE(3,3,LADealII);
+          }  
+      }
      
       out << std::endl;
     }

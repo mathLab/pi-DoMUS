@@ -11,7 +11,7 @@
 #define _pidomus_ALE_navier_stokes_h_
 
 #include "pde_system_interface.h"
-#include "../boundary_values_2D.h"
+#include "../boundary_values.h"
 
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
@@ -97,6 +97,12 @@ public:
 
 
       // dirichlet BC for d 
+      // bottom face
+      VectorTools::interpolate_boundary_values (dof,
+                                                2,
+                                                BoundaryValues<dim>(2, timestep, dt, false, 2),
+                                                *constraints[0],
+                                                displacement_mask);
       // left hull
       VectorTools::interpolate_boundary_values (dof,
                                                 0,
@@ -109,19 +115,13 @@ public:
                                                 BoundaryValues<dim>(1, timestep, dt, true, 4),
                                                 *constraints[0],
                                                 displacement_mask);
-      // bottom face
-      VectorTools::interpolate_boundary_values (dof,
-                                                2,
-                                                BoundaryValues<dim>(2, timestep, dt, false, 2),
-                                                *constraints[0],
-                                                displacement_mask);
       // top face
       VectorTools::interpolate_boundary_values (dof,
                                                 3,
                                                 BoundaryValues<dim>(3),
                                                 *constraints[0],
                                                 displacement_mask);
-
+/*
       if(timestep < 0.005)  // 0.005 is the time of one heart interval
       {
         // time derivatives of dirichlet BC for d
@@ -185,7 +185,7 @@ public:
                                                   *constraints[0],
                                                   velocity_mask);
       }
-      
+      */
     }
     );
   } 

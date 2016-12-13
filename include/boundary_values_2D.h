@@ -1,5 +1,5 @@
-#ifndef __boundary_values_h
-#define __boundary_values_h
+#ifndef __boundary_values_2D_h
+#define __boundary_values_2D_h
 
 #include <deal.II/base/function.h>
 #include <deal.II/lac/vector.h>
@@ -57,13 +57,13 @@ private:
   Triangulation<1> triangulation;
   FESystem<1>      fe;
   DoFHandler<1>    dof_handler;
-  void transform_to_polar_coord(const Point<3> &p, 
-                                double rot, 
-                                double &angle, 
-                                double &height) const;
+  Point<3> rotate (const Point<3> &p, 
+                   double rot, 
+                   double &angle, 
+                   double &height) const;
   void swap_coord(Point<3> &p) const;
   void setup_system();
-  void get_heartdelta (const Point<dim> &p, Vector<double> &value, int heartstep) const;
+  void get_heartdelta (Point<dim> p, Vector<double> &value, int heartstep) const;
   void get_values (const Point<dim> &p, Vector<double> &value) const;
   void get_values_dt (const Point<dim> &p, Vector<double> &value) const;
 };

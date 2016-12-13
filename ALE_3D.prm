@@ -2,10 +2,10 @@
 subsection ALE Navier Stokes Interface
   set AMG d - use inverse operator     = false
   set AMG u - use inverse operator     = false
-  set Block of differential components = 1,1,0
-  set Blocking of the finite element   = d,d,u,u,p
-  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set Invert Mp using inverse operator = false
+  set Block of differential components = 1,1,0
+  set Blocking of the finite element   = d,d,d,u,u,u,p
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set nu [Pa s]                        = 3.5e-3
   set rho [Kg m^-d]                    = 1.0
 end
@@ -38,73 +38,24 @@ end
 subsection Dirichlet boundary conditions
   set IDs and component masks = 
   set IDs and expressions     = 
-  set Known component names   = d,d,u,u,p
+  set Known component names   = d,d,d,u,u,u,p
   set Used constants          = 
 end
 subsection Domain
   set Colorize                      = true
-  set Copy boundary to manifold ids = false
-  set Copy material to manifold ids = false
-  set Create default manifolds      = true
-  set Grid to generate              = rectangle
-  set Input grid file name          = 
-  set Manifold descriptors          = 
-  set Mesh smoothing alogrithm      = none
-  set Optional Point<spacedim> 1    = -1.3858,-3.0016
-  set Optional Point<spacedim> 2    = 1.3858,3.0016
-  set Optional double 1             = 1.0
-  set Optional double 2             = 0.5
-  set Optional double 3             = 1.5
-  set Optional int 1                = 1
-  set Optional int 2                = 2
-  set Optional vector of dim int    = 1,3
-  set Output grid file name         = 
+  set Grid to generate              = cylinder
+  set Optional double 1             = 1.3858
+  set Optional double 2             = 3.0016
+  set Optional int 1                = 0
 end
 subsection Error Tables
   set Compute error            = false
-  set Error file format        = tex
-  set Error precision          = 3
-  set Output error tables      = true
-  set Solution names           = d,d,u,u,p
-  set Solution names for latex = d,d,u,u,p
-  set Table names              = error
-  set Write error files        = false
-  subsection Table 0
-    set Add convergence rates          = true
-    set Extra terms                    = cells,dofs
-    set Latex table caption            = error
-    set List of error norms to compute = L2,H1;L2,H1;L2,H1;L2,H1;L2,H1
-    set Rate key                       = 
-  end
 end
-subsection Exact solution
-  set Function constants  = 
-  set Function expression = 0; 0; 0; 0; 0
-  set Variable names      = x,y,t
-end
-subsection Forcing terms
+subsection Time derivative of Dirichlet boundary conditions
   set IDs and component masks = 
   set IDs and expressions     = 
-  set Known component names   = d,d,u,u,p
+  set Known component names   = d,d,d,u,u,u,p
   set Used constants          = 
-end
-subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
-  set Ignore algebraic terms for error computations = false
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_diff
-  set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
-  set Initial time                                  = 0
-  set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
-  set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-2
-  set Seconds between each output                   = 1e-1
-  set Show output of time steps                     = true
-  set Use local tolerances                          = false
 end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 1e-1
@@ -122,16 +73,6 @@ subsection IMEX Parameters
   set Update continuously Jacobian                 = true
   set Use the KINSOL solver                        = true
 end
-subsection Initial solution
-  set Function constants  = 
-  set Function expression = 0; 0; 0; 0; 0
-  set Variable names      = x,y,t
-end
-subsection Initial solution_dot
-  set Function constants  = 
-  set Function expression = 0; 0; 0; 0; 0
-  set Variable names      = x,y,t
-end
 subsection Jacobi for M
   set Min Diagonal     = 0.000000
   set Number of sweeps = 1
@@ -140,21 +81,15 @@ end
 subsection KINSOL for IMEX
   set Level of verbosity of the KINSOL solver            = 0
   set Maximum number of iteration before Jacobian update = 50
-  set Maximum number of iterations                       = 1000
+  set Maximum number of iterations                       = 100
   set Step tolerance                                     = 1e-2
-  set Strategy                                           = newton
   set Tolerance for residuals                            = 1e-2
+  set Strategy                                           = newton
   set Use internal KINSOL direct solver                  = false
 end
-subsection Neumann boundary conditions
-  set IDs and component masks = 
-  set IDs and expressions     = 
-  set Known component names   = d,d,u,u,p
-  set Used constants          = 
-end
 subsection Output Parameters
-  set Files to save in run directory = 
-  set Incremental run prefix         = 
+  set Files to save in run directory =
+  set Incremental run prefix         =
   set Output format                  = vtu
   set Output partitioning            = false
   set Problem base name              = solution
@@ -168,21 +103,15 @@ subsection Refinement
   set Refinement strategy                    = fraction
   set Top fraction                           = 0.3
 end
-subsection Time derivative of Dirichlet boundary conditions
-  set IDs and component masks = 
-  set IDs and expressions     = 
-  set Known component names   = d,d,u,u,p
-  set Used constants          = 
-end
 subsection Zero average constraints
-  set Known component names        = d,d,u,u,p
-  set Zero average on boundary     = 
-  set Zero average on whole domain = 
+  set Known component names        = d,d,d,u,u,u,p
+  set Zero average on boundary     =
+  set Zero average on whole domain =
 end
 subsection piDoMUS
-  set Adaptive refinement                            = true
+  set Adaptive refinement                            = false
   set Enable finer preconditioner                    = false
-  set Initial global refinement                      = 2
+  set Initial global refinement                      = 1
   set Jacobian solver tolerance                      = 1e-2
   set Max iterations                                 = 100000
   set Max iterations finer prec.                     = 0

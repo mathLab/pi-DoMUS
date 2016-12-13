@@ -1,4 +1,4 @@
-#include "boundary_values_2D.h"
+#include "boundary_values.h"
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/grid/grid_tools.h>
@@ -15,7 +15,7 @@ BoundaryValues<dim>::value (const Point<dim>  &p,
   Assert (component < this->n_components,
           ExcIndexRange (component, 0, this->n_components));
 
-  Vector<double> values(4);
+  Vector<double> values(2*dim);
   BoundaryValues<dim>::vector_value (p, values);
 
   return 0;
@@ -30,7 +30,7 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
         BoundaryValues<dim>::get_values_dt(p, values);
     else
     {
-        if (color == 3) 
+        if (color == 2) 
         {
             get_heartdelta(p, values, heartstep);
         }
@@ -70,7 +70,7 @@ BoundaryValues<dim>::rotate (const Point<3> &p,
   z = r * cos(phi);
   y = r * sin(phi);
 
-  return Point<3> (x, y, z);
+  return Point<3> (x, y, z);  
 }
 
 template <int dim>
@@ -102,64 +102,98 @@ BoundaryValues<dim>::setup_system()
 
 template <int dim>
 void
-BoundaryValues<dim>::get_heartdelta (Point<dim> p,
+BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
                                      Vector<double>   &values,
                                      int heartstep) const
 {
-  double rotate_slice = PI/4; // rotate the 2 slice by this angle
-  Point<3> artificial_p (p(1), 0, p(0));
   Point<3> rotated_p;
+  Point<3> p;
+  for (int i = 0; i < dim; ++i) p(i) = point(i);
+    
+  Point<3> artificial_p (point(1), 0, point(0));
+  double rotation_offset = 0;
+  double rotate_slice = 0; 
 
-if (color == 2)    //////////////////////////////// bottom face
+  if (dim == 2)
   {
-      double phi, h, rot = rotate_slice-PI/4;
-      
-      rotated_p = rotate (artificial_p, rot, phi, h);
+    rotation_offset = -PI/4;
+    // rotate the 2D slice by this angle
+    rotate_slice = 0;
+    p = artificial_p;
+  }
 
-      Point<2> two_dim_pnt (rotated_p(2), rotated_p(1));
+  if (color == 2 && dim == 3)         //////////////////////////////// top face 
+  {
+      // convert to polar coordinates and rotate 45 degrees
+      double phi, h, rot = PI/4;
+      rotated_p = rotate (p, rot, phi, h);
 
+      // calc delta
+      values(0) = 0;
+      values(1) = rotated_p(1) - p(1);
+      values(2) = rotated_p(2) - p(2);
+  }
+  else if (color == 2 && dim == 2)
+  {
+    values(0) = 0;
+    values(1) = 0;
+  }
+  else if (color == 1)    //////////////////////////////// bottom face
+  {
+      double phi, h, rot = rotate_slice + rotation_offset;
+
+      Point<2> two_dim_pnt (p(2), p(1));
+
+      if (dim==2)
+      {
+        rotated_p = rotate (p, rot, phi, h);
+        two_dim_pnt(0) = rotated_p(2);
+        two_dim_pnt(1) = rotated_p(1);
+      }
+      //std::cout << "point: (" << two_dim_pnt(0) << ", " << two_dim_pnt(1) << ") heartstep: " << heartstep << std::endl;
       //get heart boundary point
       Point<3> heart_p = heart.push_forward (two_dim_pnt, heartstep);
       swap_coord(heart_p);
 
-      rotated_p = rotate (heart_p, -rotate_slice, phi, h);
+      if (dim==2)
+      {
+        rotated_p = rotate (heart_p, -rotate_slice, phi, h);
+        heart_p = rotated_p;
+      }
 
-      int offset = (dim == 2)? 2 : 0;
-
+      //calculate delta
+      int offset = (dim ==2)? 2:0;
       for (int i = 0; i < dim; ++i)
       {
         int index = (i+offset)%3;
-        values(i) = rotated_p(index) - artificial_p(index);
+        values(i) = heart_p(index) - p(index);
       }
-
-      //values(0) = rotated_p(2) - artificial_p(2);
-      //values(1) = rotated_p(0) - artificial_p(0);
   }
-  else if (color <= 1)    //////////////////////////////// hull
+  else if (color <= 0)    //////////////////////////////// hull
   {
       // convert to polar coordinates and rotate -45 degrees
-      double phi, h, rot = rotate_slice-PI/2;
-      
-      rotated_p = rotate (artificial_p, rot, phi, h);
+      double phi, h, rot = -PI/4 + rotate_slice + rotation_offset;
+      rotated_p = rotate (p, rot, phi, h);
 
       Point<2> polar_pnt (phi, h);
-      
+      //std::cout << "point: (" << polar_pnt(0) << ", " << polar_pnt(1) << ") heartstep: " << heartstep << std::endl;
       //get heart boundary point
       Point<3> heart_p = heart.push_forward (polar_pnt, heartstep);
       swap_coord(heart_p);
 
-      rotated_p = rotate (heart_p, -rotate_slice, phi, h);
+      if (dim==2)
+      {
+        rotated_p = rotate (heart_p, -rotate_slice, phi, h);
+        heart_p = rotated_p;
+      }
       
-      int offset = (dim == 2)? 2 : 0;
-
+      //calculate delta
+      int offset = (dim ==2)? 2 : 0;
       for (int i = 0; i < dim; ++i)
       {
         int index = (i+offset)%3;
-        values(i) = rotated_p(index) - artificial_p(index);
+        values(i) = heart_p(index) - p(index);
       }
-      
-      //values(0) = rotated_p(2) - artificial_p(2);
-      //values(1) = rotated_p(0) - artificial_p(0);
   }
 }
 
@@ -212,8 +246,6 @@ BoundaryValues<dim>::get_values (const Point<dim> &p,
     }
 }
 
-
-
 template <int dim>
 void
 BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
@@ -257,3 +289,4 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
 
 // Explicit instantiations
 template class BoundaryValues<2>;
+template class BoundaryValues<3>;
