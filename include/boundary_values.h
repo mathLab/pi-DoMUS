@@ -41,9 +41,7 @@ public:
   {
     setup_system();
   }
-
-  virtual double value (const Point<dim>   &p,
-                        const unsigned int  component = 0) const;
+  
   virtual void vector_value (const Point<dim> &p,
                              Vector<double>   &value) const;
 private:

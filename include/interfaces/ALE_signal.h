@@ -146,27 +146,45 @@ public:
                                                   *constraints[0],
                                                   displacement_mask);
       }
-      /*
+
+      int n_faces = (dim==2)? 3 : 2;
+      Point<3> degrees (2, 4, 4); 
+      Point<3> bools (false, true, true);
+
       if(timestep < 0.005)  // 0.005 is the time of one heart interval
       {
         // time derivatives of dirichlet BC for d
-        // hull
-        VectorTools::interpolate_boundary_values (dof,
-                                                  0,
-                                                  ZeroFunction<dim>(7),
-                                                  constraints_dot,
-                                                  displacement_mask);
-
-        // bottom face
-        VectorTools::interpolate_boundary_values (dof,
-                                                  1,
-                                                  ZeroFunction<dim>(7),
-                                                  constraints_dot,
-                                                  displacement_mask);
+        for (int i = 0; i < n_faces; ++i)
+        { 
+          VectorTools::interpolate_boundary_values (dof,
+                                                    i,
+                                                    ZeroFunction<dim>(2*dim+1),
+                                                    constraints_dot,
+                                                    displacement_mask);
+        }
       }
       else
       {
         // time derivatives of dirichlet BC for d
+        for (int j = 0; j < n_faces; ++j)
+        {
+          VectorTools::interpolate_boundary_values (dof,
+                                                    j,
+                                                    BoundaryValues<dim>(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true),
+                                                    constraints_dot,
+                                                    displacement_mask);
+        }
+        // BC for u
+        for (int j = 0; j < n_faces; ++j)
+        {
+          VectorTools::interpolate_boundary_values (dof,
+                                                    j,
+                                                    BoundaryValues<dim>(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true),
+                                                    *constraints[0],
+                                                    velocity_mask);
+        }
+        
+        /*
         // hull
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
@@ -192,8 +210,8 @@ public:
                                                   BoundaryValues<dim>(1, timestep, dt, false, 2, true),
                                                   *constraints[0],
                                                   velocity_mask);
+        */
       }
-      */
     }
     );
   } 

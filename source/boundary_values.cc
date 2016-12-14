@@ -7,19 +7,6 @@
 using namespace dealii;
 
 // - - - - -  public functions - - - - -
-template <int dim>
-double
-BoundaryValues<dim>::value (const Point<dim>  &p,
-                            const unsigned int component) const
-{
-  Assert (component < this->n_components,
-          ExcIndexRange (component, 0, this->n_components));
-
-  Vector<double> values(2*dim);
-  BoundaryValues<dim>::vector_value (p, values);
-
-  return 0;
-}
 
 template <int dim>
 void
@@ -38,8 +25,6 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
             BoundaryValues<dim>::get_values(p, values);
     }
 }
-
-
 
 // - - - - -  private functions - - - - -
 
@@ -111,8 +96,9 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
   for (int i = 0; i < dim; ++i) p(i) = point(i);
     
   Point<3> artificial_p (point(1), 0, point(0));
-  double rotation_offset = 0;
-  double rotate_slice = 0; 
+  double rotation_offset = 0,
+         rotate_slice = 0,
+         phi, h;
 
   if (dim == 2)
   {
@@ -122,35 +108,33 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
     p = artificial_p;
   }
 
+  Vector<double> rot (4);
+  rot (0) = -PI/4;
+  rot (1) = -PI/4;
+  rot (2) =  0.0;
+  rot (3) =  PI/4;
+
+  rot.add(rotate_slice + rotation_offset);
+
   if (color == 2 && dim == 3)         //////////////////////////////// top face 
   {
-      // convert to polar coordinates and rotate 45 degrees
-      double phi, h, rot = PI/4;
-      rotated_p = rotate (p, rot, phi, h);
+      rotated_p = rotate (p, rot(color+1), phi, h);
 
       // calc delta
       values(0) = 0;
       values(1) = rotated_p(1) - p(1);
       values(2) = rotated_p(2) - p(2);
   }
-  else if (color == 2 && dim == 2)
-  {
-    values(0) = 0;
-    values(1) = 0;
-  }
   else if (color == 1)    //////////////////////////////// bottom face
   {
-      double phi, h, rot = rotate_slice + rotation_offset;
-
       Point<2> two_dim_pnt (p(2), p(1));
 
       if (dim==2)
       {
-        rotated_p = rotate (p, rot, phi, h);
+        rotated_p = rotate (p, rot(color+1), phi, h);
         two_dim_pnt(0) = rotated_p(2);
         two_dim_pnt(1) = rotated_p(1);
       }
-      //std::cout << "point: (" << two_dim_pnt(0) << ", " << two_dim_pnt(1) << ") heartstep: " << heartstep << std::endl;
       //get heart boundary point
       Point<3> heart_p = heart.push_forward (two_dim_pnt, heartstep);
       swap_coord(heart_p);
@@ -171,12 +155,10 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
   }
   else if (color <= 0)    //////////////////////////////// hull
   {
-      // convert to polar coordinates and rotate -45 degrees
-      double phi, h, rot = -PI/4 + rotate_slice + rotation_offset;
-      rotated_p = rotate (p, rot, phi, h);
+      rotated_p = rotate (p, rot(color+1), phi, h);
 
       Point<2> polar_pnt (phi, h);
-      //std::cout << "point: (" << polar_pnt(0) << ", " << polar_pnt(1) << ") heartstep: " << heartstep << std::endl;
+
       //get heart boundary point
       Point<3> heart_p = heart.push_forward (polar_pnt, heartstep);
       swap_coord(heart_p);
@@ -210,9 +192,6 @@ BoundaryValues<dim>::get_values (const Point<dim> &p,
     u[1].reinit(dim);
     u[2].reinit(dim);
 
-    //Vector<double> u_(dim);                                // u_t-1
-    //Vector<double> u(dim);                                 // u_t
-    //Vector<double> delta_u(dim);                             // u_t - u_t-1
     Point<1> substep ( fmod(timestep, heartinterval)/heartinterval );
 
     BoundaryValues<dim>::get_heartdelta(p, u[0], 0);
@@ -279,11 +258,11 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     v0 += delta_v; // delta_u = delta_u*substep
 
     // scaling to achieve convergence
-    v0 *= 0.1;
+    //v0 *= 0.1;
     
     for (int i = 0; i < 2*dim; ++i)
     {
-      values(i) = v0(i%3);
+      values(i) = v0(i%dim);
     }
 }
 
