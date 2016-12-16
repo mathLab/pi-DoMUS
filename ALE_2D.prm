@@ -101,13 +101,13 @@ subsection IDA Solver Parameters
   set Maximum number of nonlinear iterations        = 10
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-2
+  set Relative error tolerance                      = 1e-3
   set Seconds between each output                   = 1e-1
   set Show output of time steps                     = true
   set Use local tolerances                          = false
 end
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1e-1
+  set Absolute error tolerance                     = 1e-6
   set Final time                                   = 0.495
   set Initial time                                 = 0.0
   set Intervals between outputs                    = 1
@@ -117,8 +117,8 @@ subsection IMEX Parameters
   set Newton relaxation parameter                  = 1.0
   set Number of elements in backtracking sequence  = 5
   set Print useful informations                    = false
-  set Relative error tolerance                     = 1e-1
-  set Step size                                    = 1e-3
+  set Relative error tolerance                     = 1e-5
+  set Step size                                    = 5e-4
   set Update continuously Jacobian                 = true
   set Use the KINSOL solver                        = true
 end
@@ -140,10 +140,10 @@ end
 subsection KINSOL for IMEX
   set Level of verbosity of the KINSOL solver            = 0
   set Maximum number of iteration before Jacobian update = 50
-  set Maximum number of iterations                       = 1000
-  set Step tolerance                                     = 1e-2
+  set Maximum number of iterations                       = 10000
+  set Step tolerance                                     = 1e-11
   set Strategy                                           = newton
-  set Tolerance for residuals                            = 1e-2
+  set Tolerance for residuals                            = 1e-9
   set Use internal KINSOL direct solver                  = false
 end
 subsection Neumann boundary conditions
@@ -183,8 +183,8 @@ subsection piDoMUS
   set Adaptive refinement                            = true
   set Enable finer preconditioner                    = false
   set Initial global refinement                      = 2
-  set Jacobian solver tolerance                      = 1e-2
-  set Max iterations                                 = 100000
+  set Jacobian solver tolerance                      = 1e-8
+  set Max iterations                                 = 1000000
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50
