@@ -307,7 +307,7 @@ parse_parameters_call_back ()
 //void ALENavierStokes<dim,spacedim,LAC>::
 //set_matrix_couplings(std::vector<std::string> &couplings) const
 //{
-//  couplings[0] = "1,1,1; 1,1,1; 1,1,0"; // TODO: Select only not null entries
+//  couplings[0] = "1,0,0; 0,1,1; 0,1,0"; // TODO: Select only not null entries
 //  couplings[1] = "0,0,0; 0,0,0; 0,0,1";
 //}
 
@@ -331,85 +331,66 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   double h = cell->diameter();
 
   for (unsigned int face=0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+  {
+    if (cell->face(face)->at_boundary())
     {
-      //unsigned int face_id = cell->face(face)->boundary_id();
-      if (cell->face(face)->at_boundary())
+      this->reinit(et, cell, face, fe_cache);
+      
+      // Displacement:
+      auto &d_dot_ = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
+
+      // Velocity:
+      auto &u_ = fe_cache.get_values("solution", "grad_u", velocity, et);
+
+      // Pressure:
+      // auto &grad_p_ = fe_cache.get_gradients("solution", "p", pressure, et);
+
+      auto &fev = fe_cache.get_current_fe_values();
+      auto &q_points = fe_cache.get_quadrature_points();
+      auto &JxW = fe_cache.get_JxW_values();
+
+      for (unsigned int q=0; q<q_points.size(); ++q)
+      {
+        // Displacement:
+        const Tensor<1, dim, ResidualType> &d_dot = d_dot_[q];
+
+        // Velocity:
+        const Tensor<1, dim, ResidualType> &u = u_[q];
+
+        for (unsigned int i=0; i<residual[0].size(); ++i)
         {
-          //auto nitsche = this->get_dirichlet_bcs();
-          //if (nitsche.acts_on_id(face_id))
-          //  {
-          //    bool check = false;
-          //    for (unsigned int i = 0; i<spacedim; i++)
-          //      check |= nitsche.get_mapped_mask(face_id)[i];
-          //    if (check)
-          //      {
-                  this->reinit(et, cell, face, fe_cache);
-// Displacement:
-                  //auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
-                  auto &d_dot_ = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
+          // Test functions:
+          // auto d_test = fev[displacement].value(i,q);
+          auto u_test = fev[velocity].value(i,q);
 
-// Velocity:
-//          auto &grad_u_ = fe_cache.get_gradients("solution", "u", velocity, et);
-                  auto &u_ = fe_cache.get_values("solution", "grad_u", velocity, et);
-
-// Pressure:
-//          auto &grad_p_ = fe_cache.get_gradients("solution", "p", pressure, et);
-
-                  auto &fev = fe_cache.get_current_fe_values();
-                  auto &q_points = fe_cache.get_quadrature_points();
-                  auto &JxW = fe_cache.get_JxW_values();
-
-                  for (unsigned int q=0; q<q_points.size(); ++q)
-                    {
-// Displacement:
-                      // const Tensor<1, dim, ResidualType> &d = d_[q];
-                      const Tensor<1, dim, ResidualType> &d_dot = d_dot_[q];
-
-// Velocity:
-                      const Tensor<1, dim, ResidualType> &u = u_[q];
-
-                      for (unsigned int i=0; i<residual[0].size(); ++i)
-                        {
-// Test functions:
-                          // auto d_test = fev[displacement].value(i,q);
-                          auto u_test = fev[velocity].value(i,q);
-
-                          residual[0][i] += (1./h)*(
-                                              (u - d_dot) * u_test
-                                            )*JxW[q];
-                        }
-                    } // end loop over quadrature points
-                  break;
-                //} // endif face->at_boundary
-            //}
+          residual[0][i] += (1./h)*( (u - d_dot) * u_test )*JxW[q];
         }
-    } // end loop over faces
+      } // end loop over quadrature points
+      break;
+    }
+  } // end loop over faces
 
   this->reinit (et, cell, fe_cache);
 
-// displacement:
-//  auto &ds = fe_cache.get_values( "solution", "d", displacement, et);
+  // displacement:
   auto &grad_ds = fe_cache.get_gradients( "solution", "grad_d", displacement, et);
-//  auto &div_ds = fe_cache.get_divergences( "solution", "div_d", displacement, et);
   auto &Fs = fe_cache.get_deformation_gradients( "solution", "Fd", displacement, et);
   auto &ds_dot = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
-// velocity:
+  // velocity:
   auto &us = fe_cache.get_values( "solution", "u", velocity, et);
   auto &grad_us = fe_cache.get_gradients( "solution", "grad_u", velocity, et);
   auto &div_us = fe_cache.get_divergences( "solution", "div_u", velocity, et);
   auto &sym_grad_us = fe_cache.get_symmetric_gradients( "solution", "u", velocity, et);
   auto &us_dot = fe_cache.get_values( "solution_dot", "u_dot", velocity, et);
 
-// Previous time step solution:
-  auto &u_olds = fe_cache.get_values("explicit_solution","u",velocity,dummy);
-  //  auto &ds_dot_old = fe_cache.get_values("explicit_solution","d_dot",displacement,dummy);
+  // Previous time step solution:
+  auto &u_olds = fe_cache.get_values("explicit_solution","u",velocity,dummy);  
 
-
-// pressure:
+  // pressure:
   auto &ps = fe_cache.get_values( "solution", "p", pressure, et);
 
-// Jacobian:
+  // Jacobian:
   auto &JxW = fe_cache.get_JxW_values();
 
   const unsigned int n_quad_points = us.size();
@@ -417,75 +398,73 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &fev = fe_cache.get_current_fe_values();
 
   for (unsigned int quad=0; quad<n_quad_points; ++quad)
+  {
+    // velocity:
+    const ResidualType &div_u = div_us[quad];
+    const Tensor<1, dim, ResidualType> &u_dot = us_dot[quad];
+    const Tensor<2, dim, ResidualType> &grad_u = grad_us[quad];
+    const Tensor <2, dim, ResidualType> &sym_grad_u = sym_grad_us[quad];
+    
+    // displacement
+    const Tensor<1, dim, ResidualType> &d_dot = ds_dot[quad];
+    const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
+
+    // deformation gradient
+    const Tensor <2, dim, ResidualType> &F = Fs[quad];
+    ResidualType J = determinant(F);
+    const Tensor <2, dim, ResidualType> &F_inv = invert(F);
+    const Tensor <2, dim, ResidualType> &Ft_inv = transpose(F_inv);
+
+    // Previous time step solution:
+    const Tensor<1, dim, ResidualType> &u_old = u_olds[quad];
+
+    // pressure:
+    const ResidualType &p = ps[quad];
+
+    // jacobian of ALE transformation
+    auto J_ale = J; 
+    // auto div_u_ale = (J_ale * (F_inv * u) );
+    
+    // pressure * identity matrix
+    Tensor <2, dim, ResidualType> Id;
+    for (unsigned int i = 0; i<dim; ++i)
+      Id[i][i] = p;
+
+    ResidualType my_rho = rho;
+    const Tensor <2, dim, ResidualType> sigma = -Id + my_rho*( nu*sym_grad_u*F_inv + (Ft_inv * transpose(sym_grad_u) ) );
+
+    for (unsigned int i=0; i<residual[0].size(); ++i)
     {
-// variables:
-// velocity:
-      const ResidualType &div_u = div_us[quad];
-      const Tensor<1, dim, ResidualType> &u_dot = us_dot[quad];
-      const Tensor<2, dim, ResidualType> &grad_u = grad_us[quad];
-      const Tensor <2, dim, ResidualType> &sym_grad_u = sym_grad_us[quad];
-// displacement
-      const Tensor<1, dim, ResidualType> &d_dot = ds_dot[quad];
-      const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
+      // test functions:
 
-      const Tensor <2, dim, ResidualType> &F = Fs[quad];
-      ResidualType J = determinant(F);
-      const Tensor <2, dim, ResidualType> &F_inv = invert(F);
-      const Tensor <2, dim, ResidualType> &Ft_inv = transpose(F_inv);
+      // velocity:
+      auto u_test = fev[velocity].value(i,quad);
+      auto grad_u_test = fev[velocity].gradient(i,quad);
+      auto div_u_test = fev[velocity].divergence(i,quad);
 
-// Previous time step solution:
-      const Tensor<1, dim, ResidualType> &u_old = u_olds[quad];
+      // displacement:
+      auto grad_d_test = fev[displacement].gradient(i,quad);
 
-// pressure:
-      const ResidualType &p = ps[quad];
+      // pressure:
+      auto p_test = fev[pressure].value(i,quad);
 
-// others:
-      auto J_ale = J; // jacobian of ALE transformation
-// auto div_u_ale = (J_ale * (F_inv * u) );
-      Tensor <2, dim, ResidualType> Id;
-      for (unsigned int i = 0; i<dim; ++i)
-        Id[i][i] = p;
+      residual[1][i] += ( (1./nu)*p*p_test )*JxW[quad];
 
-      ResidualType my_rho = rho;
-      const Tensor <2, dim, ResidualType> sigma =
-        - Id + my_rho * ( nu* sym_grad_u * F_inv + ( Ft_inv * transpose(sym_grad_u) ) ) ;
+      residual[0][i] +=
+        (
+          // time derivative term
+          rho*scalar_product( u_dot * J_ale , u_test )
 
-      for (unsigned int i=0; i<residual[0].size(); ++i)
-        {
-// test functions:
+          + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
 
-// velocity:
-          auto u_test = fev[velocity].value(i,quad);
-          auto grad_u_test = fev[velocity].gradient(i,quad);
-          auto div_u_test = fev[velocity].divergence(i,quad);
-
-// displacement:
-          auto grad_d_test = fev[displacement].gradient(i,quad);
-
-// pressure:
-          auto p_test = fev[pressure].value(i,quad);
-//          auto q = fev[pressure].value(i,quad);
-
-          residual[1][i] +=
-            (
-              (1./nu)*p*p_test
-            )*JxW[quad];
-
-          residual[0][i] +=
-            (
-              // time derivative term
-              rho*scalar_product( u_dot * J_ale , u_test )
-//
-              + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
-//
-              + scalar_product( J_ale * sigma * Ft_inv, grad_u_test )
-// divergence free constriant
-              - div_u * p_test
-// pressure term
-              - p * div_u_test
-// Impose armonicity of d and v=d_dot
-              + scalar_product( grad_d , grad_d_test )
-            )*JxW[quad];
+          + scalar_product( J_ale * sigma * Ft_inv, grad_u_test )
+          // divergence free constriant
+          - div_u * p_test
+          // pressure term
+          - p * div_u_test
+          // Impose harmony of d and u=d_dot
+          + scalar_product( grad_d , grad_d_test )
+        )*JxW[quad];
 
         }
     }
