@@ -1,5 +1,6 @@
 #include "pidomus.h"
 #include "pidomus_macros.h"
+#include "pidomus_signals.h"
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/conditional_ostream.h>

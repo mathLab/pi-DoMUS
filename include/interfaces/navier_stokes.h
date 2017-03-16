@@ -74,15 +74,15 @@ namespace NSUtilities
   struct CopyForce
   {
     CopyForce ()
-    {};
+    {}
 
     ~CopyForce ()
-    {};
+    {}
 
     CopyForce (const CopyForce &data)
       :
       local_force(data.local_force)
-    {};
+    {}
 
     Tensor<1, dim, double> local_force;
   };
@@ -99,7 +99,7 @@ class NavierStokes
 {
 
 public:
-  ~NavierStokes () {};
+  virtual ~NavierStokes () {}
   NavierStokes (bool dynamic);
 
   void declare_parameters (ParameterHandler &prm);
@@ -611,7 +611,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           else if (non_linear_term=="RHS")
             nl_u = gradoldu * oldu;
 
-          ResidualType non_linear_term = 0;
+          //    ResidualType non_linear_term = 0;
 
           if (use_skew_symmetric_advection)
             res += 0.5 * ( scalar_product( nl_u, v) + scalar_product(grad_v * oldu, u) );
@@ -749,15 +749,19 @@ NavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   // Preconditioner
   //////////////////////////////
+
+
+  typedef LinearOperator<TrilinosWrappers::MPI::Vector,TrilinosWrappers::MPI::Vector> Op_MPI;
+
   BlockLinearOperator<VEC> diag_inv
-  = block_diagonal_operator<2, VEC>({{ A_inv, -1 * Schur_inv }});
+  = block_diagonal_operator<2, VEC>(std::array<Op_MPI,2>({{ A_inv, -1 * Schur_inv }}));
   prec_op = block_back_substitution(M, diag_inv);
 
 
   // Finer preconditioner
   //////////////////////////////
   BlockLinearOperator<VEC> diag_inv_finer
-  = block_diagonal_operator<2, VEC>({{ A_inv_finer, -1 * Schur_inv }});
+  = block_diagonal_operator<2, VEC>(std::array<Op_MPI,2>({{ A_inv_finer, -1 * Schur_inv }}));
   prec_op_finer = block_back_substitution(M, diag_inv_finer);
 }
 
