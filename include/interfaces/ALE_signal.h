@@ -487,21 +487,10 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 // Preconditioners:
   const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
   const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
-
-  static int counter = 0;
-
-  if (counter == 0)
-  {
-    AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
-    AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
-    jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
-  }
   
-  counter++;
-  if (counter == 5)
-  {
-    counter = 0;
-  }
+  AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
+  AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
+  jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
 
 ////////////////////////////////////////////////////////////////////////////
 // SYSTEM MATRIX:
