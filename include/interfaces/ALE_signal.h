@@ -278,7 +278,7 @@ declare_parameters (ParameterHandler &prm)
                       "Viscosity");
 
   this->add_parameter(prm, &rho,
-                      "rho [Kg m^-d]", "1.0",
+                      "rho [Kg cm^-d]", "1.0",
                       Patterns::Double(0.0),
                       "Density");
 
