@@ -197,6 +197,13 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 }
 #endif
 
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::~piDoMUS ()
+{
+#ifdef DEAL_II_WITH_MPI
+  MPI_Comm_free(&comm);
+#endif
+}
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
