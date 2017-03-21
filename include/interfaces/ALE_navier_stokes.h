@@ -282,7 +282,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
       ResidualType my_rho = rho;
       const Tensor <2, dim, ResidualType> sigma =
-        - Id + my_rho * ( nu* sym_grad_u * F_inv + ( Ft_inv * transpose(sym_grad_u) ) ) ;
+        - Id + my_rho * ( nu* sym_grad_u * F_inv + ( Ft_inv * transpose(nu* sym_grad_u) ) ) ;
 
       for (unsigned int i=0; i<residual[0].size(); ++i)
         {
@@ -310,7 +310,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
               // time derivative term
               rho*scalar_product( u_dot * J_ale , u_test )
 //
-              + scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
+              + rho*scalar_product( grad_u * ( F_inv * ( u_old - d_dot ) ) * J_ale , u_test )
 //
               + scalar_product( J_ale * sigma * Ft_inv, grad_u_test )
 // divergence free constriant
