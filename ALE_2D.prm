@@ -7,7 +7,7 @@ subsection ALE Navier Stokes Interface
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set Invert Mp using inverse operator = false
   set nu [Pa s]                        = 3.5e-3
-  set rho [Kg m^-d]                    = 1.0
+  set rho [g cm^-d]                    = 1.0
 end
 subsection AMG for d
   set Aggregation threshold              = 10
@@ -90,7 +90,7 @@ subsection Forcing terms
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 0.495
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -118,7 +118,7 @@ subsection IMEX Parameters
   set Number of elements in backtracking sequence  = 5
   set Print useful informations                    = false
   set Relative error tolerance                     = 1e-5
-  set Step size                                    = 5e-4
+  set Step size                                    = 1e-3
   set Update continuously Jacobian                 = true
   set Use the KINSOL solver                        = true
 end
@@ -140,10 +140,10 @@ end
 subsection KINSOL for IMEX
   set Level of verbosity of the KINSOL solver            = 0
   set Maximum number of iteration before Jacobian update = 50
-  set Maximum number of iterations                       = 10000
-  set Step tolerance                                     = 1e-11
+  set Maximum number of iterations                       = 100000
+  set Step tolerance                                     = 1e-4
   set Strategy                                           = newton
-  set Tolerance for residuals                            = 1e-9
+  set Tolerance for residuals                            = 1e-4
   set Use internal KINSOL direct solver                  = false
 end
 subsection Neumann boundary conditions
@@ -180,11 +180,11 @@ subsection Zero average constraints
   set Zero average on whole domain = 
 end
 subsection piDoMUS
-  set Adaptive refinement                            = true
+  set Adaptive refinement                            = false
   set Enable finer preconditioner                    = false
-  set Initial global refinement                      = 2
-  set Jacobian solver tolerance                      = 1e-8
-  set Max iterations                                 = 1000000
+  set Initial global refinement                      = 4
+  set Jacobian solver tolerance                      = 1e-2
+  set Max iterations                                 = 400000
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50

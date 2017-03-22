@@ -7,7 +7,7 @@ subsection ALE Navier Stokes Interface
   set Blocking of the finite element   = d,d,d,u,u,u,p
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set nu [Pa s]                        = 3.5e-3
-  set rho [Kg m^-d]                    = 1.0
+  set rho [g cm^-d]                   = 1.0e-3
 end
 subsection AMG for d
   set Aggregation threshold              = 10
@@ -111,7 +111,7 @@ end
 subsection piDoMUS
   set Adaptive refinement                            = false
   set Enable finer preconditioner                    = false
-  set Initial global refinement                      = 1
+  set Initial global refinement                      = 2
   set Jacobian solver tolerance                      = 1e-2
   set Max iterations                                 = 100000
   set Max iterations finer prec.                     = 0

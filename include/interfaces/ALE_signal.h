@@ -67,13 +67,6 @@ public:
     }
     );
 
-    //signals.begin_refine_mesh.connect(
-    //  [&,this]()
-    //{
-    //  local_refinement_on = this->adaptive_refinement;
-    //}
-    //);
-
     signals.update_constraint_matrices.connect(
       [&,this](std::vector<std::shared_ptr<dealii::ConstraintMatrix> > &constraints, ConstraintMatrix &constraints_dot) 
     {
@@ -232,7 +225,8 @@ private:
 // Physical parameter
   double nu;
   double rho;
-  bool local_refinement_on;
+  //double last_computing_time;
+  //bool local_refinement_on;
 
   bool Mp_use_inverse_operator;
   bool AMG_u_use_inverse_operator;
