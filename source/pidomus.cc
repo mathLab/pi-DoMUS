@@ -55,7 +55,7 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
          (Utilities::MPI::this_mpi_process(comm)
           == 0)),
 
-  pgg("Domain"),
+  tria_helper(comm),
 
   pgr("Refinement"),
 
@@ -131,8 +131,6 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
   ParameterAcceptor(name),
   interface(interface),
   pcout (std::cout),
-
-  pgg("Domain"),
 
   pgr("Refinement"),
 
@@ -262,9 +260,10 @@ void piDoMUS<dim, spacedim, LAC>::make_grid_fe()
 {
   auto _timer = computing_timer.scoped_timer("Make grid and finite element");
   signals.begin_make_grid_fe();
-  triangulation = SP(pgg.distributed(comm));
+  tria_helper.make_grid();
+  triangulation = tria_helper.get_tria();
   dof_handler = SP(new DoFHandler<dim, spacedim>(*triangulation));
-  signals.postprocess_newly_created_triangulation(*triangulation);
+  signals.postprocess_newly_created_triangulation(triangulation);
   fe = SP(interface.pfe());
   triangulation->refine_global (initial_global_refinement);
   signals.end_make_grid_fe();

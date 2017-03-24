@@ -36,6 +36,7 @@ public:
   typedef BlockVector<double> VectorType;
   typedef BlockSparseMatrix<double> BlockMatrix;
   typedef dealii::BlockSparsityPattern BlockSparsityPattern;
+  static const bool TriaType = true; // serial
 };
 
 
@@ -69,6 +70,8 @@ public:
   typedef PETScWrappers::MPI::BlockSparseMatrix BlockMatrix;
 
   typedef dealii::BlockSparsityPattern BlockSparsityPattern;
+
+  static const bool TriaType = false; // parallel
 };
 
 #endif // DEAL_II_WITH_PETSC
@@ -102,6 +105,9 @@ public:
   typedef TrilinosWrappers::BlockSparseMatrix BlockMatrix;
 
   typedef TrilinosWrappers::BlockSparsityPattern BlockSparsityPattern;
+
+  static const bool TriaType = false; // parallel
+
 };
 
 #endif // DEAL_II_WITH_TRILINOS
