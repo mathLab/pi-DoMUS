@@ -33,23 +33,21 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
+FIND_PACKAGE(deal2lkit 1.0 REQUIRED
+  HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
+  )
 
 # If the CMAKE_BUILD_TYPE is set via command line we keep this one,
-# otherwise it is set equal to the one of deal.II library
-SET(CMAKE_BUILD_TYPE ${DEAL_II_BUILD_TYPE} CACHE STRING
+# otherwise it is set equal to the one of deal2lkit library
+SET(CMAKE_BUILD_TYPE ${D2K_BUILD_TYPE} CACHE STRING
     "Choose the type of build, options are: Debug, Release or DebugRelease"
     )
 
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
-
-
-PROJECT(${TARGET})
-FIND_PACKAGE(deal2lkit 1.0 REQUIRED
-  HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
-  )
 D2K_INITIALIZE_CACHED_VARIABLES()
 
+PROJECT(${TARGET})
 # pidomus requires sundials 
 IF(NOT D2K_WITH_SUNDIALS)
   MESSAGE(FATAL_ERROR "
