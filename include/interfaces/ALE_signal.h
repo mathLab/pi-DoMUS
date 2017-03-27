@@ -67,6 +67,20 @@ public:
     }
     );
 
+    signals.begin_make_grid_fe.connect(
+      [&,this]()
+    {
+      transient_refinement_on = this->get_transient_refinement();
+    }
+    );
+
+    //signals.end_solve_jacobian_system.connect(
+    //  [&,this]()
+    //{
+    //  iterations_last_step = solver_control.last_step()
+    //}
+    //);
+
     signals.update_constraint_matrices.connect(
       [&,this](std::vector<std::shared_ptr<dealii::ConstraintMatrix> > &constraints, ConstraintMatrix &constraints_dot) 
     {
@@ -225,8 +239,8 @@ private:
 // Physical parameter
   double nu;
   double rho;
-  //double last_computing_time;
-  //bool local_refinement_on;
+  unsigned int last_computing_time;
+  mutable bool transient_refinement_on;
 
   bool Mp_use_inverse_operator;
   bool AMG_u_use_inverse_operator;
@@ -492,34 +506,32 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
 
 
-// TODO 1: find a way to check if local refinement is turned off in "compute_system_operators()" 
-
-  //const piDoMUS<dim,spacedim,LAC> &simulator = this->get_simulator();
-
-  //std::string local_refinement_on;
-  //const bool local_refinement_on = this->adaptive_refinement;
-  //std::cout << "adaptive refinement: " << local_refinement_on << std::endl;
+// TODO 1: DONE find a way to check if local refinement is turned off in "compute_system_operators()" 
 
 // TODO 2: check convergence time of last step
-  //bool slow_convergence = (this->get_solution_time()>10)? true : false;
+// get iterations of last step, if iterations > 15: refine
 
   static int counter = 0;
   //if (~local_refinement_on && (counter <=6 || slow_convergence) )
-  if (counter <=6)
+  if (transient_refinement_on == false)
   {
-    AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
-    AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
-    jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
-    counter++;
-  }
+    // only refine at the beginning and if convergence is slow
+    if (counter <=6)
+    {
+      AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
+      AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
+      jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
+      counter++;
+      //std::cout << "gettig reinitialized!" << std::endl;
+    }
+  } 
   else
-  { 
-    //local_refinement_on = simulator.prm.get("Invert Mp using inverse operator");
-    //std::cout << "adaptive refinement: " << local_refinement_on << std::endl;
+  {
+      AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
+      AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
+      jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
+      //std::cout << "gettig reinitialized always!" << std::endl;
   }
-
-
-
 ////////////////////////////////////////////////////////////////////////////
 // SYSTEM MATRIX:
 

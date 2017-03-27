@@ -160,6 +160,13 @@ SimulatorAccess<dim,spacedim,LAC>::get_dirichlet_bcs() const
   return simulator->dirichlet_bcs;
 }
 
+template <int dim, int spacedim, typename LAC>
+const bool &
+SimulatorAccess<dim,spacedim,LAC>::get_transient_refinement() const
+{
+  return simulator->use_space_adaptivity;
+}
+
 
 
 template class SimulatorAccess<2, 2, LATrilinos>;

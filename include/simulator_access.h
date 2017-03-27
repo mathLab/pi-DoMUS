@@ -197,6 +197,13 @@ public:
   const ParsedDirichletBCs<dim,spacedim> &
   get_dirichlet_bcs () const;
 
+  /**
+   * Return a reference to the boolean, which defines if local
+   * refinement is performed or not.
+   */
+  const bool &
+  get_transient_refinement () const;
+
   /** @} */
 
 private:
