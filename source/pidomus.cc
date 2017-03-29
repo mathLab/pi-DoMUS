@@ -27,6 +27,8 @@
 #include <limits>
 #include <numeric>
 
+#include "tria_helper.h"
+
 
 using namespace dealii;
 using namespace deal2lkit;

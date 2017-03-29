@@ -29,7 +29,7 @@ TriaHelper<dim,spacedim,LAC>::TriaHelper()
 template <int dim, int spacedim, typename LAC>
 void TriaHelper<dim,spacedim,LAC>::make_grid()
 {
-  if (LAC::TriaType) //serial
+  if (LAC::triatype == TriaType::serial)
     p_serial = shared_ptr<Triangulation<dim,spacedim> >(pgg.serial());
 #ifdef DEAL_II_WITH_MPI
   else
@@ -41,7 +41,7 @@ template <int dim, int spacedim, typename LAC>
 Triangulation<dim, spacedim> *
 TriaHelper<dim,spacedim,LAC>::get_tria() const
 {
-  if (LAC::TriaType) // serial
+  if (LAC::triatype == TriaType::serial)
     return p_serial.get();
 #ifdef DEAL_II_WITH_MPI
   return p_parallel.get();

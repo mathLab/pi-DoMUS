@@ -61,7 +61,6 @@ using namespace deal2lkit;
 using namespace pidomus;
 
 
-
 template <int dim, int spacedim = dim, typename LAC = LATrilinos>
 class piDoMUS : public ParameterAcceptor
 {
