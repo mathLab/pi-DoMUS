@@ -84,6 +84,8 @@ public:
 
   void run ();
 
+  mutable shared_ptr<SolverControl> solver_control;
+  mutable shared_ptr<SolverControl> solver_control_finer;
 
   /*********************************************************
    * Public interface from SundialsInterface
@@ -173,7 +175,6 @@ public:
    *
    */
   const std::vector<typename LAC::VectorType> &get_eigenvectors();
-
 
 
 private:

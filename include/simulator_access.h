@@ -204,6 +204,13 @@ public:
   const bool &
   get_transient_refinement () const;
 
+  /**
+   * Return a reference to the boolean, which defines if local
+   * refinement is performed or not.
+   */
+  const shared_ptr<SolverControl> &
+  get_solver_control () const;
+
   /** @} */
 
 private:

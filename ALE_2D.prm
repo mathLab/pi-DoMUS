@@ -57,7 +57,7 @@ subsection Domain
   set Optional double 3             = 1.5
   set Optional int 1                = 1
   set Optional int 2                = 2
-  set Optional vector of dim int    = 1,3
+  set Optional vector of dim int    = 1,1
   set Output grid file name         = 
 end
 subsection Error Tables
@@ -140,7 +140,7 @@ end
 subsection KINSOL for IMEX
   set Level of verbosity of the KINSOL solver            = 0
   set Maximum number of iteration before Jacobian update = 50
-  set Maximum number of iterations                       = 100000
+  set Maximum number of iterations                       = 100
   set Step tolerance                                     = 1e-4
   set Strategy                                           = newton
   set Tolerance for residuals                            = 1e-4

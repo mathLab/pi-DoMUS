@@ -74,12 +74,16 @@ public:
     }
     );
 
-    //signals.end_solve_jacobian_system.connect(
-    //  [&,this]()
-    //{
-    //  iterations_last_step = solver_control.last_step()
-    //}
-    //);
+    signals.end_solve_jacobian_system.connect(
+      [&,this]()
+    {
+      double time = this->get_current_time();
+      if (time > 0.005)
+        iterations_last_step = this->get_solver_control()->last_step(); 
+      else 
+        iterations_last_step = 0;     
+    }
+    );
 
     signals.update_constraint_matrices.connect(
       [&,this](std::vector<std::shared_ptr<dealii::ConstraintMatrix> > &constraints, ConstraintMatrix &constraints_dot) 
@@ -239,7 +243,7 @@ private:
 // Physical parameter
   double nu;
   double rho;
-  unsigned int last_computing_time;
+  mutable unsigned int iterations_last_step;
   mutable bool transient_refinement_on;
 
   bool Mp_use_inverse_operator;
@@ -503,26 +507,24 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
   const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
   const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
   
-
-
-
 // TODO 1: DONE find a way to check if local refinement is turned off in "compute_system_operators()" 
 
-// TODO 2: check convergence time of last step
+// TODO 2: DONE check convergence time of last step
 // get iterations of last step, if iterations > 15: refine
 
   static int counter = 0;
-  //if (~local_refinement_on && (counter <=6 || slow_convergence) )
+
   if (transient_refinement_on == false)
   {
+    double time = this->get_current_time();
     // only refine at the beginning and if convergence is slow
-    if (counter <=6)
+    if (time <= 0.006 || iterations_last_step > 14)
     {
       AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
       AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
       jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
       counter++;
-      //std::cout << "gettig reinitialized!" << std::endl;
+      std::cout << "gettig reinitialized!" << std::endl;
     }
   } 
   else

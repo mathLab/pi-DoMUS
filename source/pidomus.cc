@@ -426,17 +426,19 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const typename LAC::VectorTyp
 
           PrimitiveVectorMemory<typename LAC::VectorType> mem;
 
-          SolverControl solver_control (solver_iterations,
-                                        jacobian_solver_tolerance);
+          solver_control = SP( new SolverControl(solver_iterations, jacobian_solver_tolerance) );
+          
+          //SolverControl solver_control (solver_iterations,
+          //                              jacobian_solver_tolerance);
 
           SolverFGMRES<typename LAC::VectorType>
-          solver(solver_control, mem,
+          solver(*solver_control, mem,
                  typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(max_tmp_vector, true));
 
           auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op);
           S_inv.vmult(dst, src);
 
-          tot_iteration += solver_control.last_step();
+          tot_iteration += solver_control->last_step();
         }
       catch (const std::exception &e)
         {
@@ -452,17 +454,20 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const typename LAC::VectorTyp
                       << std::endl;
 
               PrimitiveVectorMemory<typename LAC::VectorType> mem;
-              SolverControl solver_control (solver_iterations,
-                                            jacobian_solver_tolerance);
+
+              solver_control_finer = SP( new SolverControl(solver_iterations, jacobian_solver_tolerance) );
+
+              //SolverControl solver_control (solver_iterations,
+              //                              jacobian_solver_tolerance);
 
               SolverFGMRES<typename LAC::VectorType>
-              solver(solver_control, mem,
+              solver(*solver_control_finer, mem,
                      typename SolverFGMRES<typename LAC::VectorType>::AdditionalData(max_tmp_vector_finer, true));
 
               auto S_inv = inverse_operator(jacobian_op, solver, jacobian_preconditioner_op_finer);
               S_inv.vmult(dst, src);
 
-              tot_iteration += solver_control.last_step();
+              tot_iteration += solver_control_finer->last_step();
             }
           else
             {

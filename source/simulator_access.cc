@@ -167,6 +167,12 @@ SimulatorAccess<dim,spacedim,LAC>::get_transient_refinement() const
   return simulator->use_space_adaptivity;
 }
 
+template <int dim, int spacedim, typename LAC>
+const shared_ptr<SolverControl> &
+SimulatorAccess<dim,spacedim,LAC>::get_solver_control() const
+{
+  return simulator->solver_control;
+}
 
 
 template class SimulatorAccess<2, 2, LATrilinos>;
