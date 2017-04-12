@@ -10,6 +10,8 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_q.h>
 
+#include <deal.II/numerics/fe_field_function.h>
+
 #include <iostream>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
@@ -135,6 +137,12 @@ template <int dim, int spacedim>
 Point<spacedim> Heart<dim,spacedim>::push_forward(const Point<dim> chartpoint, 
                                                   const int timestep) const
 {
+  
+  dealii::Functions::FEFieldFunction<dim, DoFHandler<dim>, Vector<double> > fe_field(dof_handler, solution[timestep]);
+  Vector<double> wert (spacedim);
+  fe_field.vector_value (chartpoint, wert);
+
+/* this is what happens inside the FEFieldFunction :)
   auto cell = GridTools::find_active_cell_around_point (dof_handler,
                                                         chartpoint); 
   // identifying vertex orientation
@@ -155,8 +163,9 @@ Point<spacedim> Heart<dim,spacedim>::push_forward(const Point<dim> chartpoint,
   std::vector<Vector<double> > wert (quad.size(),
                                      Vector<double>(spacedim));
   fe_values.get_function_values(solution[timestep], wert);
+*/
+  return Point<spacedim> (wert[0], wert[1], wert[2]);
 
-  return Point<spacedim> (wert[0][0], wert[0][1], wert[0][2]);;
 }
 
 template <int dim, int spacedim>
