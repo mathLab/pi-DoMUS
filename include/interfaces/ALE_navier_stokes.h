@@ -179,7 +179,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                 {
                   this->reinit(et, cell, face, fe_cache);
 // Displacement:
-                  auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
+//                  auto &d_ = fe_cache.get_values("solution", "d", displacement, et);
                   auto &d_dot_ = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
 // Velocity:
@@ -196,7 +196,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                   for (unsigned int q=0; q<q_points.size(); ++q)
                     {
 // Displacement:
-                      const Tensor<1, dim, ResidualType> &d = d_[q];
+//                      const Tensor<1, dim, ResidualType> &d = d_[q];
                       const Tensor<1, dim, ResidualType> &d_dot = d_dot_[q];
 
 // Velocity:
@@ -205,7 +205,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
                       for (unsigned int i=0; i<residual[0].size(); ++i)
                         {
 // Test functions:
-                          auto d_test = fev[displacement].value(i,q);
+//                          auto d_test = fev[displacement].value(i,q);
                           auto u_test = fev[velocity].value(i,q);
 
                           residual[0][i] += (1./h)*(

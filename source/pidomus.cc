@@ -1,5 +1,6 @@
 #include "pidomus.h"
 #include "pidomus_macros.h"
+#include "pidomus_signals.h"
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/conditional_ostream.h>
@@ -196,6 +197,13 @@ piDoMUS<dim, spacedim, LAC>::piDoMUS (const std::string &name,
 }
 #endif
 
+template <int dim, int spacedim, typename LAC>
+piDoMUS<dim, spacedim, LAC>::~piDoMUS ()
+{
+#ifdef DEAL_II_WITH_MPI
+  MPI_Comm_free(&comm);
+#endif
+}
 
 template <int dim, int spacedim, typename LAC>
 void piDoMUS<dim, spacedim, LAC>::run ()
