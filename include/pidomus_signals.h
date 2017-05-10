@@ -3,6 +3,9 @@
 
 #include "simulator_access.h"
 
+template <int dim, int spacedim>
+class Trianguation;
+
 /**
  * A class that collects the definition of signals that can be triggered
  * at different points in a computation. A signal is in essence an event
@@ -64,7 +67,7 @@ struct Signals
    * The functions that can attach to this signal must take a
    * Triangulation as argument.
    */
-  boost::signals2::signal<void (typename parallel::distributed::Triangulation<dim,spacedim> &)>
+  boost::signals2::signal<void (Triangulation<dim,spacedim> *)>
   postprocess_newly_created_triangulation;
 
 

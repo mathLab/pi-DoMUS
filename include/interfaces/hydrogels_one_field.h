@@ -46,9 +46,9 @@ public:
         auto &pcout = this->get_pcout();
         pcout << "applying random distortion to grid" <<std::endl;
         signals.postprocess_newly_created_triangulation.connect(
-          [&](typename parallel::distributed::Triangulation<dim,spacedim> &tria)
+          [&](Triangulation<dim,spacedim> *tria)
         {
-          GridTools::distort_random(factor,tria,false);
+          GridTools::distort_random(factor,*tria,false);
         });
       }
 

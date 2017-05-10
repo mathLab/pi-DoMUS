@@ -586,8 +586,15 @@ KOmega<dim,spacedim,LAC>::compute_system_operators(
   auto K_inv = linear_operator<BVEC >(matrices[0]->block(2,2), amg_k);
   auto W_inv = linear_operator<BVEC >(matrices[0]->block(3,3), amg_w);
 
-  auto D1 = block_diagonal_operator<4, VEC>({{ A_inv, I[1], I[2], I[3]}});
-  auto D2 = block_diagonal_operator<4, VEC>({{ I[0], Schur_inv, K_inv, W_inv}});
+  typedef LinearOperator<TrilinosWrappers::MPI::Vector,TrilinosWrappers::MPI::Vector> Op_MPI;
+
+
+
+  BlockLinearOperator<VEC> D1
+  = block_diagonal_operator<4, VEC>(std::array<Op_MPI,4>({{A_inv, I[1], I[2], I[3]}}));
+
+  BlockLinearOperator<VEC> D2 = block_diagonal_operator<4, VEC>(std::array<Op_MPI,4>({{I[0], Schur_inv, K_inv, W_inv}}));
+
 
   prec_op = D1 * BBt * D2;
 
@@ -600,8 +607,12 @@ KOmega<dim,spacedim,LAC>::compute_system_operators(
   auto K_inv_finer = inverse_operator(K, solver_GMRES, amg_k);
   auto W_inv_finer = inverse_operator(W, solver_GMRES, amg_w);
 
-  auto D1_finer = block_diagonal_operator<4, VEC>({{A_inv_finer, I[1], I[2], I[3]}});
-  auto D2_finer = block_diagonal_operator<4, VEC>({{I[0], Schur_inv_finer, K_inv_finer, W_inv_finer}});
+
+
+  BlockLinearOperator<VEC> D1_finer
+  = block_diagonal_operator<4, VEC>(std::array<Op_MPI,4>({{A_inv_finer, I[1], I[2], I[3]}}));
+
+  BlockLinearOperator<VEC> D2_finer = block_diagonal_operator<4, VEC>(std::array<Op_MPI,4>({{I[0], Schur_inv_finer, K_inv_finer, W_inv_finer}}));
 
   prec_op_finer = D1_finer * BBt * D2_finer;
 }

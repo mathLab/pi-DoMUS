@@ -116,7 +116,7 @@ public:
    * Return a reference to the triangulation in use by the simulator
    * object.
    */
-  const parallel::distributed::Triangulation<dim,spacedim> &
+  const Triangulation<dim,spacedim> *
   get_triangulation () const;
   /** @} */
 

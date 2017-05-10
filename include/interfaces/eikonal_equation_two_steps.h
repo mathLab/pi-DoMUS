@@ -334,9 +334,12 @@ EikonalEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<sh
     }
   });
 
+  typedef LinearOperator<TrilinosWrappers::MPI::Vector,TrilinosWrappers::MPI::Vector> Op_MPI;
+
+
   // //////////////////////////////
   BlockLinearOperator<VEC> diag_inv
-  = block_diagonal_operator<2, VEC>({{ A_inv, B_inv }});
+  = block_diagonal_operator<2, VEC>(std::array<Op_MPI,2>({{ A_inv, B_inv }}));
   prec_op = diag_inv;
 
   // // Finer preconditioner
