@@ -456,6 +456,13 @@ private:
   int max_iterations_adaptive;
 
   /**
+   * Enable to use the solutions for the displacement explicitly  
+   * from the last time step.
+   */
+
+  bool use_explicit_solutions;
+
+  /**
    * Solver tolerance for the equation:
    * \f[ \mathcal{J}(F)[u] = R[u] \f]
    */

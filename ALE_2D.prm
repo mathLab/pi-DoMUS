@@ -165,10 +165,11 @@ subsection piDoMUS
   set Adaptive refinement                            = false
   set Enable adaptive preconditioners                = true
   set Max iterations before reinit preconditioners   = 14
+  set Use explicit solutions                         = true
   set Enable finer preconditioner                    = false
   set Initial global refinement                      = 4
   set Jacobian solver tolerance                      = 1e-3
-  set Max iterations                                 = 1000000
+  set Max iterations                                 = 200
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50

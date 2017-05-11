@@ -216,6 +216,9 @@ public:
   const int &
   get_max_iterations_adaptive () const;
 
+  const bool &
+  get_explicit_solution_bool () const;
+
   /** @} */
 
 private:

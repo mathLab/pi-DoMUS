@@ -183,6 +183,12 @@ SimulatorAccess<dim,spacedim,LAC>::get_max_iterations_adaptive() const
   return simulator->max_iterations_adaptive;
 }
 
+template <int dim, int spacedim, typename LAC>
+const bool &
+SimulatorAccess<dim,spacedim,LAC>::get_explicit_solution_bool() const
+{
+  return simulator->use_explicit_solutions;
+}
 
 template class SimulatorAccess<2, 2, LATrilinos>;
 template class SimulatorAccess<2, 3, LATrilinos>;

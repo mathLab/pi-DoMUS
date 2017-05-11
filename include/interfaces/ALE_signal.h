@@ -72,6 +72,7 @@ public:
     {
       adaptive_preconditioners_on = this->get_adaptive_preconditioners();
       max_iterations_adaptive = this->get_max_iterations_adaptive();
+      use_explicit_solutions = this->get_explicit_solution_bool();
     }
     );
 
@@ -219,6 +220,7 @@ private:
   mutable unsigned int iterations_last_step;
   mutable unsigned int max_iterations_adaptive;
   mutable bool adaptive_preconditioners_on;
+  mutable bool use_explicit_solutions;
 
   bool Mp_use_inverse_operator;
   bool AMG_u_use_inverse_operator;
@@ -371,6 +373,9 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &Fs = fe_cache.get_deformation_gradients( "solution", "Fd", displacement, et);
   auto &ds_dot = fe_cache.get_values( "solution_dot", "d_dot", displacement, et);
 
+  // explicit deformation gradients:
+  auto &Fs_old = fe_cache.get_deformation_gradients( "explicit_solution", "Fd", displacement, dummy);
+
   // velocity:
   auto &us = fe_cache.get_values( "solution", "u", velocity, et);
   auto &grad_us = fe_cache.get_gradients( "solution", "grad_u", velocity, et);
@@ -403,8 +408,19 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
     const Tensor<1, dim, ResidualType> &d_dot = ds_dot[quad];
     const Tensor<2, dim, ResidualType> &grad_d = grad_ds[quad];
 
-    // deformation gradient
-    const Tensor <2, dim, ResidualType> &F = Fs[quad];
+    // deformation gradient, assigned differently due to different ResidualTypes
+    Tensor <2, dim, ResidualType> F;
+    if (use_explicit_solutions == true)
+    {
+      for (int d = 0; d < dim; ++d)
+        for (int e = 0; e < dim; ++e)
+          F[d][e] = Fs_old[quad][d][e];
+    }
+    else
+    {
+      F = Fs[quad];
+    }
+
     ResidualType J = determinant(F);
     const Tensor <2, dim, ResidualType> &F_inv = invert(F);
     const Tensor <2, dim, ResidualType> &Ft_inv = transpose(F_inv);
@@ -417,7 +433,6 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
     // jacobian of ALE transformation
     auto J_ale = J; 
-    // auto div_u_ale = (J_ale * (F_inv * u) );
     
     // pressure * identity matrix
     Tensor <2, dim, ResidualType> p_Id;
@@ -425,7 +440,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       p_Id[i][i] = p;
 
     ResidualType my_rho = rho;
-    const Tensor <2, dim, ResidualType> sigma = -p_Id + my_rho*(nu*sym_grad_u*F_inv + (Ft_inv * transpose(nu*sym_grad_u) ) );
+    const Tensor <2, dim, ResidualType> sigma = - p_Id + my_rho * ( nu* sym_grad_u * F_inv + ( Ft_inv * transpose(nu* sym_grad_u) ) ) ;
 
     for (unsigned int i=0; i<residual[0].size(); ++i)
     {
@@ -498,7 +513,7 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
       AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
       jac_M.initialize_preconditioner<>(matrices[1]->block(2,2));
       counter++;
-      std::cout << "gettig reinitialized!" << std::endl;
+      std::cout << "precons reinitialized!" << std::endl;
     }
   } 
   else

@@ -55,6 +55,12 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Bool());
 
   add_parameter(  prm,
+                  &use_explicit_solutions,
+                  "Use explicit solutions",
+                  "true",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
                   &verbose,
                   "Print some useful informations about processes",
                   "true",
