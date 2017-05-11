@@ -7,7 +7,7 @@ subsection ALE Navier Stokes Interface
   set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(2)^d-FE_Q(1)]
   set Invert Mp using inverse operator = false
   set nu [Pa s]                        = 3.5e-3
-  set rho [g cm^-d]                    = 1.0
+  set rho [kg m^-d]                    = 1.06
 end
 subsection AMG for d
   set Aggregation threshold              = 10
@@ -57,7 +57,7 @@ subsection Domain
   set Optional double 3             = 1.5
   set Optional int 1                = 1
   set Optional int 2                = 2
-  set Optional vector of dim int    = 1,1
+  set Optional vector of dim int    = 1,3
   set Output grid file name         = 
 end
 subsection Error Tables
@@ -88,26 +88,8 @@ subsection Forcing terms
   set Known component names   = d,d,u,u,p
   set Used constants          = 
 end
-subsection IDA Solver Parameters
-  set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 0.495
-  set Ignore algebraic terms for error computations = false
-  set Initial condition Newton max iterations       = 5
-  set Initial condition Newton parameter            = 0.33
-  set Initial condition type                        = use_y_diff
-  set Initial condition type after restart          = use_y_dot
-  set Initial step size                             = 1e-4
-  set Initial time                                  = 0
-  set Maximum number of nonlinear iterations        = 10
-  set Maximum order of BDF                          = 5
-  set Min step size                                 = 5e-5
-  set Relative error tolerance                      = 1e-3
-  set Seconds between each output                   = 1e-1
-  set Show output of time steps                     = true
-  set Use local tolerances                          = false
-end
 subsection IMEX Parameters
-  set Absolute error tolerance                     = 1e-6
+  set Absolute error tolerance                     = 1e-4
   set Final time                                   = 0.495
   set Initial time                                 = 0.0
   set Intervals between outputs                    = 1
@@ -117,7 +99,7 @@ subsection IMEX Parameters
   set Newton relaxation parameter                  = 1.0
   set Number of elements in backtracking sequence  = 5
   set Print useful informations                    = false
-  set Relative error tolerance                     = 1e-5
+  set Relative error tolerance                     = 1e-4
   set Step size                                    = 1e-3
   set Update continuously Jacobian                 = true
   set Use the KINSOL solver                        = true
@@ -181,10 +163,12 @@ subsection Zero average constraints
 end
 subsection piDoMUS
   set Adaptive refinement                            = false
+  set Enable adaptive preconditioners                = true
+  set Max iterations before reinit preconditioners   = 14
   set Enable finer preconditioner                    = false
   set Initial global refinement                      = 4
-  set Jacobian solver tolerance                      = 1e-2
-  set Max iterations                                 = 400000
+  set Jacobian solver tolerance                      = 1e-3
+  set Max iterations                                 = 1000000
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50

@@ -160,11 +160,13 @@ SimulatorAccess<dim,spacedim,LAC>::get_dirichlet_bcs() const
   return simulator->dirichlet_bcs;
 }
 
+//// new getter functions
+
 template <int dim, int spacedim, typename LAC>
 const bool &
-SimulatorAccess<dim,spacedim,LAC>::get_transient_refinement() const
+SimulatorAccess<dim,spacedim,LAC>::get_adaptive_preconditioners() const
 {
-  return simulator->use_space_adaptivity;
+  return simulator->enable_adaptive_preconditioners;
 }
 
 template <int dim, int spacedim, typename LAC>
@@ -172,6 +174,13 @@ const shared_ptr<SolverControl> &
 SimulatorAccess<dim,spacedim,LAC>::get_solver_control() const
 {
   return simulator->solver_control;
+}
+
+template <int dim, int spacedim, typename LAC>
+const int &
+SimulatorAccess<dim,spacedim,LAC>::get_max_iterations_adaptive() const
+{
+  return simulator->max_iterations_adaptive;
 }
 
 

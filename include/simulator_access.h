@@ -198,18 +198,23 @@ public:
   get_dirichlet_bcs () const;
 
   /**
-   * Return a reference to the boolean, which defines if local
-   * refinement is performed or not.
+   * Return a reference to the boolean, which defines if preconditioners
+   * are reinitialized adaptively or not.
    */
   const bool &
-  get_transient_refinement () const;
+  get_adaptive_preconditioners () const;
 
   /**
-   * Return a reference to the boolean, which defines if local
-   * refinement is performed or not.
+   * Return a reference to the SolverControl object.
    */
   const shared_ptr<SolverControl> &
   get_solver_control () const;
+
+  /**
+   * Return a reference to max iterations before reinit preconditioners.
+   */
+  const int &
+  get_max_iterations_adaptive () const;
 
   /** @} */
 

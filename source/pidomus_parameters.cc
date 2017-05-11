@@ -37,6 +37,18 @@ declare_parameters (ParameterHandler &prm)
                   Patterns::Bool());
 
   add_parameter(  prm,
+                  &enable_adaptive_preconditioners,
+                  "Enable adaptive preconditioners",
+                  "true",
+                  Patterns::Bool());
+
+  add_parameter(  prm,
+                  &max_iterations_adaptive,
+                  "Max iterations before reinit preconditioners",
+                  "14",
+                  Patterns::Integer (0));
+
+  add_parameter(  prm,
                   &adaptive_refinement,
                   "Adaptive refinement",
                   "true",

@@ -70,7 +70,8 @@ public:
     signals.begin_make_grid_fe.connect(
       [&,this]()
     {
-      transient_refinement_on = this->get_transient_refinement();
+      adaptive_preconditioners_on = this->get_adaptive_preconditioners();
+      max_iterations_adaptive = this->get_max_iterations_adaptive();
     }
     );
 
@@ -201,34 +202,6 @@ public:
                                                     *constraints[0],
                                                     velocity_mask);
         }
-        
-        /*
-        // hull
-        VectorTools::interpolate_boundary_values (dof,
-                                                  0,
-                                                  BoundaryValues<dim>(0, timestep, dt, true, 4, true),
-                                                  constraints_dot,
-                                                  displacement_mask);
-        // bottom face
-        VectorTools::interpolate_boundary_values (dof,
-                                                  1,
-                                                  BoundaryValues<dim>(1, timestep, dt, false, 2, true),
-                                                  constraints_dot,
-                                                  displacement_mask);
-        // BC for u
-        // hull
-        VectorTools::interpolate_boundary_values (dof,
-                                                  0,
-                                                  BoundaryValues<dim>(0, timestep, dt, true, 4, true),
-                                                  *constraints[0],
-                                                  velocity_mask);
-        // bottom face
-        VectorTools::interpolate_boundary_values (dof,
-                                                  1,
-                                                  BoundaryValues<dim>(1, timestep, dt, false, 2, true),
-                                                  *constraints[0],
-                                                  velocity_mask);
-        */
       }
     }
     );
@@ -244,7 +217,8 @@ private:
   double nu;
   double rho;
   mutable unsigned int iterations_last_step;
-  mutable bool transient_refinement_on;
+  mutable unsigned int max_iterations_adaptive;
+  mutable bool adaptive_preconditioners_on;
 
   bool Mp_use_inverse_operator;
   bool AMG_u_use_inverse_operator;
@@ -298,7 +272,7 @@ declare_parameters (ParameterHandler &prm)
                       "Viscosity");
 
   this->add_parameter(prm, &rho,
-                      "rho [g cm^-d]", "1.0",
+                      "rho [kg m^-d]", "1.0",
                       Patterns::Double(0.0),
                       "Density");
 
@@ -514,11 +488,11 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
   static int counter = 0;
 
-  if (transient_refinement_on == false)
+  if (adaptive_preconditioners_on == true)
   {
     double time = this->get_current_time();
     // only refine at the beginning and if convergence is slow
-    if (time <= 0.006 || iterations_last_step > 14)
+    if (time <= 0.006 || iterations_last_step > max_iterations_adaptive)
     {
       AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
       AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);

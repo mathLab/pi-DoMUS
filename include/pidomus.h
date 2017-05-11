@@ -449,6 +449,13 @@ private:
   bool use_direct_solver;
 
   /**
+   * Enable to reinitialize only at the beginning and when the number of last 
+   * iterations is larger than max_iterations.
+   */
+  bool enable_adaptive_preconditioners;
+  int max_iterations_adaptive;
+
+  /**
    * Solver tolerance for the equation:
    * \f[ \mathcal{J}(F)[u] = R[u] \f]
    */
