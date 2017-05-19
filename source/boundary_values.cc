@@ -245,11 +245,11 @@ BoundaryValues<dim>::get_values_dt (const Point<dim> &p,
     // (u_t - u_t-1) / h
     v0 = u;
     v0 -= u_minus;
-    v0 /= heartinterval;
+    v0 /= heartinterval*100;
     // (u_t+1 - u_t) / h
     v1 = u_plus;
     v1 -= u;
-    v1 /= heartinterval;
+    v1 /= heartinterval*100;
     // calculate & scale delta_v
     delta_v = v1;
     delta_v -= v0;
