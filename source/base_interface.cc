@@ -230,6 +230,7 @@ assemble_local_matrices (const typename DoFHandler<dim,spacedim>::active_cell_it
                                   residuals,
                                   false);
 
+
   for (unsigned n=0; n<n_matrices; ++n)
     for (unsigned int i=0; i<dofs_per_cell; ++i)
       {
@@ -258,6 +259,9 @@ assemble_local_system_residual (const typename DoFHandler<dim,spacedim>::active_
                                   energies,
                                   residuals,
                                   true);
+
+    std::cout << "Energy = " << SacadoTools::to_double(energies[0]) << std::endl;
+
 
   for (unsigned int i=0; i<dofs_per_cell; ++i)
     residuals[0][i] += energies[0].dx(i);
