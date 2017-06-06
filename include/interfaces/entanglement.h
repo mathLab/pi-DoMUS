@@ -18,12 +18,13 @@ public:
   /* void parse_parameters_call_back (); */
 
 
-  virtual UpdateFlags get_face_update_flags() const
+  virtual UpdateFlags get_update_flags() const
   {
     return (update_values             |
             update_gradients          |
             update_quadrature_points  |
-            /* update_normal_vectors     | */
+            // update_normal_vectors     |
+            update_jacobians          |
             update_JxW_values);
   }
 
@@ -126,6 +127,19 @@ EntanglementInterface():
       "u,u,u","1")
 {}
 
+namespace d2kinternal {
+    template <int dim, int spacedim, typename Number>
+    inline
+    Number determinant (const DerivativeForm<1,dim,spacedim,Number> &DF) {
+        const DerivativeForm<1,spacedim,dim,Number> DF_t = DF.transpose();
+        Tensor<2,dim,Number> G; //First fundamental form
+        for (unsigned int i=0; i<dim; ++i)
+            for (unsigned int j=0; j<dim; ++j)
+                G[i][j] = DF_t[i] * DF_t[j];
+
+        return ( sqrt(determinant(G)) );
+    }
+}
 
 
 template <int dim, int spacedim, typename LAC>
@@ -145,51 +159,42 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
     this->reinit (et, cell, fe_cache);
     auto &eus = fe_cache.get_values("explicit_solution", "u", u, dut);
     auto &us = fe_cache.get_values("solution", "u", u, et);
-    auto &grad_us = fe_cache.get_deformation_gradients("solution", "grad_u",u, et);
+    auto &grad_us = fe_cache.get_gradients("solution", "grad_u",u, et);
 
     const unsigned int n_q_points = us.size();
     auto &JxW = fe_cache.get_JxW_values();
+    auto &jacs = fe_cache.get_current_fe_values().get_jacobians();
+    auto fev = dynamic_cast<const FEValues<dim,spacedim> *>(&(fe_cache.get_current_fe_values()));
+    Assert(fev != nullptr, ExcInternalError());
+
+    auto &points = fev->get_quadrature_points();
 
     for (unsigned int q=0; q<n_q_points; ++q)
       {
         auto &uz = us[q][spacedim-1];
-        auto &euz = eus[q][spacedim-1];
         auto &gradu = grad_us[q];
+        auto &jac   = jacs[q];
+        auto &p     = points[q];
 
-        EnergyType a=0;
-        EnergyType b=0;
-        EnergyType c=0;
+        DerivativeForm<1,dim,spacedim,EnergyType> X;
+        for(unsigned int a=0; a<dim; ++a)
+            for(unsigned int i=0; i<spacedim; ++i) {
+                X[i][a] = jac[i][a];
+                for(unsigned int j=0; j<spacedim; ++j)
+                    X[i][a] += jac[j][a]*gradu[i][j];
+            }
 
-	/* std::cout << "------------------------------------------------------\n"; */
-	/* std::cout << SacadoTools::to_double(gradu) << std::endl << std::endl; */
-	/* std::cout << "------------------------------------------------------\n"; */
+        EnergyType z = p[spacedim-1]+uz;
+        EnergyType psi = d2kinternal::determinant(X)/(z*z);
 
+        double W = fev->get_quadrature().weight(q);
 
-	/* std::cout << "*****************************************************\n"; */
-	/* for (unsigned int i=0; i<3; ++i) */
-	/*   { */
-	/*     for (unsigned int j=0; j<3; ++j) */
-	/*       std::cout << SacadoTools::to_double(gradu[i][j]) << "  "; */
-	/*     std::cout << ";\n"; */
-	/*   } */
-	/* std::cout << "*****************************************************\n"; */
-	
-        for (unsigned int i=0;i<spacedim; ++i)
-          {
-            a += gradu[i][0]*gradu[i][0];
-            b += gradu[i][1]*gradu[i][1];
-            c += gradu[i][0]*gradu[i][1];
-          }
-
-        EnergyType psi = 1./(uz*uz) *  sqrt(a*b - c*c );
-
-        energies[0] += (
-                         psi
-
-                       )*JxW[q];
+        energies[0] += (psi*W);
 
       
       }
+
+
   }
 
 }
