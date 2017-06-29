@@ -22,6 +22,8 @@ file(GLOB _files source/*cc
   include/lac/*h
   )
 
+file(GLOB _headers include/*h)
+
 file(GLOB _mains main/*cc)
 
 
@@ -44,7 +46,7 @@ SET(CMAKE_BUILD_TYPE ${DEAL_II_BUILD_TYPE} CACHE STRING
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 
-PROJECT(${TARGET})
+PROJECT(${TARGET} CXX)
 FIND_PACKAGE(deal2lkit 1.0 REQUIRED
   HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
   )
@@ -118,7 +120,8 @@ FOREACH(_build_type ${_d2_build_types})
     SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
 
     D2K_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
-
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+    
     SET_TARGET_PROPERTIES(${_lib} PROPERTIES MACOSX_RPATH OFF
 	BUILD_WITH_INSTALL_RPATH OFF
 	INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib
@@ -126,7 +129,9 @@ FOREACH(_build_type ${_d2_build_types})
 	LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 	)
-
+      target_include_directories( ${_lib}
+	INTERFACE "${CMAKE_INSTALL_PREFIX}/include")
+      
       INSTALL(TARGETS ${_lib}
 	COMPONENT LIBRARY_OUTPUT_PATH
 	EXPORT pidomusTargets
@@ -134,6 +139,9 @@ FOREACH(_build_type ${_d2_build_types})
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
 	)
+
+      install(FILES ${_headers}
+	DESTINATION include)
       
   ENDIF()
 ENDFOREACH()
