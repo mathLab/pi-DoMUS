@@ -22,7 +22,10 @@ file(GLOB _files source/*cc
   include/lac/*h
   )
 
-file(GLOB _headers include/*h)
+file(GLOB _headers include/*h
+  )
+
+file(GLOB _lac include/lac/*h)
 
 file(GLOB _mains main/*cc)
 
@@ -30,7 +33,7 @@ file(GLOB _mains main/*cc)
 INCLUDE_DIRECTORIES(include)
 
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
@@ -46,7 +49,9 @@ SET(CMAKE_BUILD_TYPE ${DEAL_II_BUILD_TYPE} CACHE STRING
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 
-PROJECT(${TARGET} CXX)
+PROJECT(${TARGET}
+  VERSION 8.5.0)
+
 FIND_PACKAGE(deal2lkit 1.0 REQUIRED
   HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
   )
@@ -140,11 +145,16 @@ FOREACH(_build_type ${_d2_build_types})
 	ARCHIVE DESTINATION lib
 	)
 
-      install(FILES ${_headers}
-	DESTINATION include)
       
   ENDIF()
 ENDFOREACH()
+
+install(FILES ${_headers}
+  DESTINATION include)
+
+install(FILES ${_lac}
+  DESTINATION include/lac)
+
 
 INSTALL(EXPORT pidomusTargets
   DESTINATION lib/cmake/pidomus
@@ -171,6 +181,16 @@ IF(ENABLE_DOCUMENTATION)
   ENDIF()
 ENDIF()
 
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/pidomusConfig.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/pidomusConfig.cmake"
+@ONLY
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/pidomusConfig.cmake"
+  DESTINATION lib/cmake/pidomus
+)
 
 ADD_CUSTOM_TARGET(indent
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

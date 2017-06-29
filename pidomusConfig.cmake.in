@@ -1,0 +1,4 @@
+
+include("@CMAKE_INSTALL_PREFIX@/lib/cmake/pidomus/pidomusTargets.cmake")
+
+set(PIDOMUS_VERSION "@pidomus_VERSION@")
