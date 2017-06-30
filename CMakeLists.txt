@@ -155,6 +155,10 @@ install(FILES ${_headers}
 install(FILES ${_lac}
   DESTINATION include/lac)
 
+file(GLOB _interfaces include/interfaces/*h)
+
+install(FILES ${_interfaces}
+  DESTINATION include/interfaces)
 
 INSTALL(EXPORT pidomusTargets
   DESTINATION lib/cmake/pidomus
@@ -182,26 +186,32 @@ IF(ENABLE_DOCUMENTATION)
 ENDIF()
 
 configure_file(
-"${CMAKE_CURRENT_SOURCE_DIR}/config/pidomusConfig.cmake.in"
-"${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfig.cmake"
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/pidomusConfig.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfig.cmake"
 @ONLY
 )
 
 configure_file(
-"${CMAKE_CURRENT_SOURCE_DIR}/config/pidomusConfigVersion.cmake.in"
-"${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfigVersion.cmake"
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/pidomusConfigVersion.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfigVersion.cmake"
 @ONLY
 )
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfig.cmake"
   DESTINATION lib/cmake/pidomus
 )
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfigVersion.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfigVersion.cmake"
   DESTINATION lib/cmake/pidomus
 )
+
+install(FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+  DESTINATION lib/cmake/pidomus
+)
+
 
 ADD_CUSTOM_TARGET(indent
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

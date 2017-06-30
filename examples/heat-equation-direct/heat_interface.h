@@ -78,7 +78,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           local_residuals[0][i] += (
                                      ut*v
                                      +
-                                     gradu*gradv
+                                     0.5*gradu*gradv
                                    )*JxW[q];
         }
 

@@ -1,5 +1,5 @@
-#include "pidomus.h"
-#include "poisson_problem.h"
+#include <pidomus.h>
+#include "heat_interface.h"
 
 
 using namespace dealii;
@@ -11,11 +11,11 @@ int main (int argc, char *argv[])
 
 
   const int dim = 2;
-  const int spacedim = 3;
+  const int spacedim = 2;
 
   PoissonProblem<dim,spacedim,LADealII> p;
   piDoMUS<dim,spacedim,LADealII> solver ("pidomus",p);
-  ParameterAcceptor::initialize("poisson_problem_01.prm", "used_parameters.prm");
+  ParameterAcceptor::initialize("heat.prm", "used_parameters.prm");
 
   solver.run ();
 
