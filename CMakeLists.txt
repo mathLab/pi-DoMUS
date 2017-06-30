@@ -182,13 +182,24 @@ IF(ENABLE_DOCUMENTATION)
 ENDIF()
 
 configure_file(
-"${CMAKE_CURRENT_SOURCE_DIR}/pidomusConfig.cmake.in"
-"${CMAKE_CURRENT_BINARY_DIR}/pidomusConfig.cmake"
+"${CMAKE_CURRENT_SOURCE_DIR}/config/pidomusConfig.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfig.cmake"
+@ONLY
+)
+
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/config/pidomusConfigVersion.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfigVersion.cmake"
 @ONLY
 )
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/pidomusConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfig.cmake"
+  DESTINATION lib/cmake/pidomus
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/config/pidomusConfigVersion.cmake"
   DESTINATION lib/cmake/pidomus
 )
 

@@ -2,3 +2,6 @@
 include("@CMAKE_INSTALL_PREFIX@/lib/cmake/pidomus/pidomusTargets.cmake")
 
 set(PIDOMUS_VERSION "@pidomus_VERSION@")
+set(PIDOMUS_BUILD_TYPE "@CMAKE_BUILD_TYPE@")
+
+set(PACKAGE_NAME "pidomus")
