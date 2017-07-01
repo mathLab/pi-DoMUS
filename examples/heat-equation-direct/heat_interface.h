@@ -4,13 +4,13 @@
 #include "pde_system_interface.h"
 
 
-template <int dim, int spacedim, typename LAC=LATrilinos>
-class PoissonProblem : public PDESystemInterface<dim,spacedim, PoissonProblem<dim,spacedim,LAC>, LAC>
+template <int dim, int spacedim, typename LAC=LADealII>
+class HeatEquation : public PDESystemInterface<dim,spacedim, HeatEquation<dim,spacedim,LAC>, LAC>
 {
 
 public:
-  ~PoissonProblem () {};
-  PoissonProblem ();
+  virtual ~HeatEquation () {}
+  HeatEquation ();
 
   // interface with the PDESystemInterface :)
 
@@ -34,9 +34,9 @@ private:
 };
 
 template <int dim, int spacedim, typename LAC>
-PoissonProblem<dim,spacedim, LAC>::
-PoissonProblem():
-  PDESystemInterface<dim,spacedim,PoissonProblem<dim,spacedim,LAC>, LAC >("Poisson problem",
+HeatEquation<dim,spacedim, LAC>::
+HeatEquation():
+  PDESystemInterface<dim,spacedim,HeatEquation<dim,spacedim,LAC>, LAC >("Poisson problem",
       1,1,
       "FESystem[FE_Q(1)]",
       "u","1")
@@ -47,7 +47,7 @@ PoissonProblem():
 template <int dim, int spacedim, typename LAC>
 template <typename EnergyType, typename ResidualType>
 void
-PoissonProblem<dim,spacedim,LAC>::
+HeatEquation<dim,spacedim,LAC>::
 energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iterator &cell,
                        FEValuesCache<dim,spacedim> &fe_cache,
                        std::vector<EnergyType> &,
@@ -91,7 +91,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 template <int dim, int spacedim, typename LAC>
 void
-PoissonProblem<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+HeatEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
                                                            LinearOperator<LATrilinos::VectorType> &system_op,
                                                            LinearOperator<LATrilinos::VectorType> &prec_op,
                                                            LinearOperator<LATrilinos::VectorType> &) const

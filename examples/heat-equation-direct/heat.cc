@@ -13,8 +13,8 @@ int main (int argc, char *argv[])
   const int dim = 2;
   const int spacedim = 2;
 
-  PoissonProblem<dim,spacedim,LADealII> p;
-  piDoMUS<dim,spacedim,LADealII> solver ("pidomus",p);
+  HeatEquation<dim,spacedim,LADealII> problem;
+  piDoMUS<dim,spacedim,LADealII> solver ("pidomus",problem);
   ParameterAcceptor::initialize("heat.prm", "used_parameters.prm");
 
   solver.run ();
