@@ -197,6 +197,12 @@ configure_file(
 @ONLY
 )
 
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+)
+
+
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfig.cmake"
   DESTINATION lib/cmake/pidomus
@@ -218,3 +224,4 @@ ADD_CUSTOM_TARGET(indent
   COMMAND ./scripts/indent
   )
 
+add_subdirectory(examples)

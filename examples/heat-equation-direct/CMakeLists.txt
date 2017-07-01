@@ -3,10 +3,9 @@ SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 
 set(TARGET "heat")
 set(TARGET_SRC heat.cc heat_interface.h)
+set(PARAMETER_FILE "heat.prm")
 
-file(GLOB _vtu ./*.vtu)
-
-set(CLEAN_UP_FILES ${_vtu} used_parameters.prm)
+set(CLEAN_UP_FILES "*.vtu" used_parameters.prm)
 
 FIND_PACKAGE(deal.II 8.5 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} $ENV{DEAL_II_DIR}
