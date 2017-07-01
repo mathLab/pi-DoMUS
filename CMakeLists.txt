@@ -22,13 +22,18 @@ file(GLOB _files source/*cc
   include/lac/*h
   )
 
+file(GLOB _headers include/*h
+  )
+
+file(GLOB _lac include/lac/*h)
+
 file(GLOB _mains main/*cc)
 
 
 INCLUDE_DIRECTORIES(include)
 
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 FIND_PACKAGE(deal.II 8.3 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
@@ -44,9 +49,11 @@ SET(CMAKE_BUILD_TYPE ${DEAL_II_BUILD_TYPE} CACHE STRING
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 
-PROJECT(${TARGET})
+PROJECT(${TARGET}
+  VERSION 8.5.0)
+
 FIND_PACKAGE(deal2lkit 1.0 REQUIRED
-  HINTS ${D2K_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
+  HINTS ${D2K_DIR} ${DEAL2LKIT_DIR} $ENV{D2K_DIR} $ENV{DEAL2LKIT_DIR}
   )
 D2K_INITIALIZE_CACHED_VARIABLES()
 
@@ -118,12 +125,44 @@ FOREACH(_build_type ${_d2_build_types})
     SET(TEST_LIBRARIES_${_BUILD_TYPE} ${_lib})
 
     D2K_SETUP_TARGET(${_lib} ${_BUILD_TYPE})
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+    
     SET_TARGET_PROPERTIES(${_lib} PROPERTIES MACOSX_RPATH OFF
 	BUILD_WITH_INSTALL_RPATH OFF
 	INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib
-    )
+	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+	LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+	)
+      target_include_directories( ${_lib}
+	INTERFACE "${CMAKE_INSTALL_PREFIX}/include")
+      
+      INSTALL(TARGETS ${_lib}
+	COMPONENT LIBRARY_OUTPUT_PATH
+	EXPORT pidomusTargets
+	RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	)
+
+      
   ENDIF()
 ENDFOREACH()
+
+install(FILES ${_headers}
+  DESTINATION include)
+
+install(FILES ${_lac}
+  DESTINATION include/lac)
+
+file(GLOB _interfaces include/interfaces/*h)
+
+install(FILES ${_interfaces}
+  DESTINATION include/interfaces)
+
+INSTALL(EXPORT pidomusTargets
+  DESTINATION lib/cmake/pidomus
+  COMPONENT library)
 
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests AND ${ENABLE_APP_TESTING})
@@ -146,9 +185,43 @@ IF(ENABLE_DOCUMENTATION)
   ENDIF()
 ENDIF()
 
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/pidomusConfig.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfig.cmake"
+@ONLY
+)
+
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/pidomusConfigVersion.cmake.in"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfigVersion.cmake"
+@ONLY
+)
+
+configure_file(
+"${CMAKE_CURRENT_SOURCE_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+"${CMAKE_CURRENT_BINARY_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+)
+
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfig.cmake"
+  DESTINATION lib/cmake/pidomus
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/config/pidomusConfigVersion.cmake"
+  DESTINATION lib/cmake/pidomus
+)
+
+install(FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pidomus_invoke_autopilot.cmake"
+  DESTINATION lib/cmake/pidomus
+)
+
 
 ADD_CUSTOM_TARGET(indent
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND ./scripts/indent
   )
 
+add_subdirectory(examples)
