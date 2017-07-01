@@ -36,6 +36,12 @@
 #                         removed with "make runclean" and "make
 #                         distclean", will be set to default values if
 #                         empty
+
+#### specific for the pidomus library
+
+#       PARAMTER_FILE - the parameter file which has to be sourced. If
+#                       the executable is built and run in a different
+#                       folder (e.g. build) a symlink is done
 #
 macro(PIDOMUS_INVOKE_AUTOPILOT)
 
@@ -64,5 +70,13 @@ FOREACH(_build_type ${_d2_build_types})
     target_link_libraries(${TARGET} ${_lib})
   endif()
 endforeach()
+
+# if we build out of source (e.g. build) we create a link to the
+# parameter file
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/${PARAMETER_FILE}")
+  execute_process(COMMAND
+    ln -s ${CMAKE_SOURCE_DIR}/${PARAMETER_FILE}
+    ${CMAKE_BINARY_DIR}/${PARAMETER_FILE})
+endif()
 
 endmacro()
