@@ -17,4 +17,4 @@ before_install:
 
 script:
 - ./scripts/dr.sh "cd pi-DoMUS/build-travis; cmake -GNinja -DENABLE_DOCUMENTATION=OFF -DENABLE_ALL_EXECUTABLES=OFF -DCMAKE_INSTALL_PREFIX=./pi-domus-install -DCMAKE_BUILD_TYPE=$BUILD_TYPE ../; ninja -j2 install"
-- ./script/dr.sh "cd pi-DoMUS/build-travis; ctest -j2 -V"
+- ./scripts/dr.sh "cd pi-DoMUS/build-travis; ctest -j2 -V"
