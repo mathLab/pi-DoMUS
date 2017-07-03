@@ -1,6 +1,6 @@
 env:
-  - BUILD_TYPE=release
-  - BUILD_TYPE=debug
+  - BUILD_TYPE=Release
+  - BUILD_TYPE=Debug
 
 language: cpp
 
@@ -11,9 +11,10 @@ notifications:
   email: false
 
 before_install:
-- docker pull heltai/deal2lkit:$BUILD_TYPE
-- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "cd pi-DoMUS; ./scripts/check_indentation.sh"
+- docker build -t pidomus docker --build-arg BUILD_TYPE=$BUILD_TYPE
+- test -d build-travis || mkdir build-travis; sudo chown -R 1000:1000 build-travis
+- ./scripts/dr.sh "cd pi-DoMUS; ./scripts/check_indentation.sh"
 
 script:
-- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "mkdir pi-DoMUS/build; cd pi-DoMUS/build; cmake -GNinja -DENABLE_DOCUMENTATION=OFF  -DENABLE_ALL_EXECUTABLES=ON ../; ninja -j2"
-- docker run -P -v `pwd`:/home/dealii/pi-DoMUS:rw heltai/deal2lkit:$BUILD_TYPE /bin/sh -c "cd pi-DoMUS/build; ctest -j2 -V"
+- ./scripts/dr.sh "cd pi-DoMUS/build-travis; cmake -GNinja -DENABLE_DOCUMENTATION=OFF -DENABLE_ALL_EXECUTABLES=OFF -DCMAKE_INSTALL_PREFIX=./pi-domus-install -DCMAKE_BUILD_TYPE=$BUILD_TYPE ../; ninja -j2 install"
+- ./scripts/dr.sh "cd pi-DoMUS/build-travis; ctest -j2 -V"
