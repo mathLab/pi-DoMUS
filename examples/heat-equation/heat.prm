@@ -58,7 +58,7 @@ subsection Forcing terms
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
-  set Final time                                    = 1
+  set Final time                                    = 1.0
   set Ignore algebraic terms for error computations = false
   set Initial condition Newton max iterations       = 5
   set Initial condition Newton parameter            = 0.33
@@ -149,12 +149,13 @@ subsection Zero average constraints
 end
 subsection pidomus
   set Adaptive refinement                            = true
-  set Initial global refinement                      = 1
+  set Initial global refinement                      = 2
   set Number of cycles                               = 1
-  set Overwrite Newton's iterations                  = true
+  set Max iterations                                 = 100
+  set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = true
-  set Threshold for solver's restart                 = 1e-2
+  set Threshold for solver's restart                 = 5e-3
   set Time stepper                                   = ida
   set Use direct solver if available                 = true
 end
