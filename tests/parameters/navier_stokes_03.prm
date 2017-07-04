@@ -35,7 +35,6 @@ end
 subsection Navier Stokes Interface
   set Block of differential components     = 1,0
   set Blocking of the finite element       = u,u,p
-  set Enable convection term ((\nabla u)u) = false
   set Enable dynamic term (\partial_t u)   = false
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
 
