@@ -4,16 +4,18 @@
 
 #ifdef DEAL_II_WITH_MPI
 template <int dim, int spacedim, typename LAC>
-TriaHelper<dim,spacedim,LAC>::TriaHelper(const MPI_Comm &comm):
+TriaHelper<dim,spacedim,LAC>::TriaHelper(const MPI_Comm _comm):
+  comm(Utilities::MPI::duplicate_communicator(_comm)),
   pgg("Domain"),
   p_serial(nullptr),
-  p_parallel(nullptr),
-  comm(Utilities::MPI::duplicate_communicator(comm))
+  p_parallel(nullptr)
 {}
 
 template <int dim, int spacedim, typename LAC>
 TriaHelper<dim,spacedim,LAC>::~TriaHelper()
 {
+  p_serial.reset();
+  p_parallel.reset();
   MPI_Comm_free(&comm);
 }
 
