@@ -18,7 +18,7 @@ subsection Amg preconditioner for velocity
   set w-cycle                            = false
 end
 
-subsection piDoMUS<2, 2, LADealII>
+subsection pi-DoMUS
   set Adaptive refinement                            = false
   set Initial global refinement                      = 4
   set Number of cycles                               = 1
