@@ -97,7 +97,7 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
 
           signals.fix_solutions_after_refinement(solution,solution_dot);
 
-          MPI::COMM_WORLD.Barrier();
+          MPI_Barrier(comm);
           current_time = std::numeric_limits<double>::quiet_NaN();
           signals.end_solver_should_restart();
           return true;

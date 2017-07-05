@@ -44,7 +44,9 @@ set_functions_to_default()
                     const typename LAC::VectorType &y_dot,
                     typename LAC::VectorType &residual) ->int
   {
-    return this->simulator->residual(t,y,y_dot,residual);
+    int ret = this->simulator->residual(t,y,y_dot,residual);
+    this->simulator->set_constrained_dofs_to_zero(residual);
+    return ret;
   };
 
   setup_jacobian = [this](const double t,

@@ -139,6 +139,5 @@ subsection piDoMUS
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Time stepper                                   = ida
-  set Timer output file                              = timer.txt
   set Use direct solver if available                 = true
 end

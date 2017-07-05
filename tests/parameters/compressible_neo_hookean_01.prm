@@ -80,7 +80,6 @@ end
 subsection IMEX Parameters
   set Absolute error tolerance                     = 0.000001
   set Final time                                   = 1.000000
-  set Initial step size                            = 1e-4
   set Initial time                                 = 0.000000
   set Intervals between outputs                    = 1
   set Maximum number of inner nonlinear iterations = 3

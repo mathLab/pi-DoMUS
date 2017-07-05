@@ -146,7 +146,6 @@ subsection Navier Stokes Interface
   set Blocking of the finite element       = u,u,p
   set CG Solver tolerance                  = 1e-15
   set Compute sigma on the obstacle        = false
-  set Enable convection term ((\nabla u)u) = true
   set Enable dynamic term (\partial_t u)   = false
   set Finite element space                 = FESystem[FE_Q(2)^d-FE_Q(1)]
   set GMRES Solver tolerance               = 1e-15

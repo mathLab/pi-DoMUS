@@ -4,7 +4,7 @@
 # DEAL_II_GIT_BRANCH=   master
 # DEAL_II_GIT_SHORTREV= af6f8d1
 
-subsection piDoMUS<2, 2, LATrilinos>
+subsection pi-DoMUS
   set Adaptive refinement                            = false
   set Initial global refinement                      = 1
   set Number of cycles                               = 3
