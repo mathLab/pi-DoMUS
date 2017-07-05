@@ -21,7 +21,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
   #
   # All CMakeLists.txt except the one in examples/
   #
-  PATTERN "heat-equation-direct/CMakeLists.txt"
+  PATTERN "heat-equation/CMakeLists.txt"
   #
   # Special files:
   #
