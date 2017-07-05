@@ -14,7 +14,7 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
                                    Vector<double>   &values) const
 {
     if(derivative)
-        BoundaryValues<dim>::get_values_dt(p, values);
+        get_values_dt(p, values);
     else
     {
         if (color == 2) 
@@ -22,7 +22,7 @@ BoundaryValues<dim>::vector_value (const Point<dim> &p,
             get_heartdelta(p, values, heartstep);
         }
         else
-            BoundaryValues<dim>::get_values(p, values);
+            get_values(p, values);
     }
 }
 
@@ -136,7 +136,7 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
         two_dim_pnt(1) = rotated_p(1);
       }
       //get heart boundary point
-      Point<3> heart_p = heart.push_forward (two_dim_pnt, heartstep);
+      Point<3> heart_p = heart_bottom.push_forward (two_dim_pnt, heartstep);
       swap_coord(heart_p);
 
       if (dim==2)
@@ -160,7 +160,7 @@ BoundaryValues<dim>::get_heartdelta (const Point<dim> point,
       Point<2> polar_pnt (phi, h);
 
       //get heart boundary point
-      Point<3> heart_p = heart.push_forward (polar_pnt, heartstep);
+      Point<3> heart_p = heart_side.push_forward (polar_pnt, heartstep);
       swap_coord(heart_p);
 
       if (dim==2)

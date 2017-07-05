@@ -29,13 +29,12 @@ Heart<dim,spacedim>::Heart()
 {}
 
 template <int dim, int spacedim>
-Heart<dim,spacedim>::Heart(bool s, const int degree, const int h)
+Heart<dim,spacedim>::Heart(bool side, const int degree)
   :
   fe (FE_Q<dim>(degree), spacedim),
   dof_handler (triangulation),
   solution(3),
-  side(s),
-  heartstep(h)
+  side(side)
 {
   if (side)
   {
@@ -49,6 +48,13 @@ Heart<dim,spacedim>::Heart(bool s, const int degree, const int h)
     run_bottom();
   }
 }
+
+template <int dim, int spacedim>
+void Heart<dim,spacedim>::operator ()(unsigned heartstep){
+  // set start vector = ...
+  // make sure that we operate always on start_vector, startvector+3
+}
+
 
 template <int dim, int spacedim>
 void Heart<dim,spacedim>::setup_system()

@@ -13,8 +13,10 @@ class Heart
 {
 public:
   Heart ();
-  Heart (bool, const int, const int);
+  Heart (bool, const int);
   Point<spacedim> push_forward (const Point<dim>, const int) const;
+
+  void operator()(unsigned int);
 
 private:
   void reinit_data ();

@@ -121,48 +121,55 @@ public:
       if (dim==2)
       {
         // bottom face
+        heart_boundary_values(2,timestep,dt,false,2);
         VectorTools::interpolate_boundary_values (dof,
                                                   2,
-                                                  BoundaryValues<dim>(2, timestep, dt, false, 2),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
         // left hull
+        heart_boundary_values(0,timestep,dt,true,4);
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
-                                                  BoundaryValues<dim>(0, timestep, dt, true, 4),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
         // right hull
+        heart_boundary_values(1,timestep,dt,true,4);
         VectorTools::interpolate_boundary_values (dof,
                                                   1,
-                                                  BoundaryValues<dim>(1, timestep, dt, true, 4),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
         // top face
+        heart_boundary_values(3,timestep,dt,true,4);
         VectorTools::interpolate_boundary_values (dof,
                                                   3,
-                                                  BoundaryValues<dim>(3),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
       }
       else
       {
         // bottom face
+        heart_boundary_values(1,timestep,dt,false,2);
         VectorTools::interpolate_boundary_values (dof,
                                                   1,
-                                                  BoundaryValues<dim>(1, timestep, dt, false, 2),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
         // hull
+        heart_boundary_values(0,timestep,dt,true,4);
         VectorTools::interpolate_boundary_values (dof,
                                                   0,
-                                                  BoundaryValues<dim>(0, timestep, dt, true, 4),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
         // top face
+        heart_boundary_values(2),
         VectorTools::interpolate_boundary_values (dof,
                                                   2,
-                                                  BoundaryValues<dim>(2),
+                                                  heart_boundary_values,
                                                   *constraints[0],
                                                   displacement_mask);
       }
@@ -188,18 +195,20 @@ public:
         // time derivatives of dirichlet BC for d
         for (int j = 0; j < n_faces; ++j)
         {
+          heart_boundary_values(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true);
           VectorTools::interpolate_boundary_values (dof,
                                                     j,
-                                                    BoundaryValues<dim>(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true),
+                                                    heart_boundary_values,
                                                     constraints_dot,
                                                     displacement_mask);
         }
         // BC for u
         for (int j = 0; j < n_faces; ++j)
         {
+          heart_boundary_values(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true);
           VectorTools::interpolate_boundary_values (dof,
                                                     j,
-                                                    BoundaryValues<dim>(j, timestep, dt, bools(n_faces-1-j), degrees(n_faces-1-j), true),
+                                                    heart_boundary_values,
                                                     *constraints[0],
                                                     velocity_mask);
         }
@@ -240,6 +249,12 @@ private:
    * Jacobi preconditioner for the pressure mass matrix.
    */
   mutable ParsedJacobiPreconditioner jac_M;
+
+
+  /**
+   * Heart boundary values.
+   */
+  mutable BoundaryValues<dim> heart_boundary_values;
 };
 
 
