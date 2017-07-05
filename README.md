@@ -1,14 +1,14 @@
-#pi-DoMUS [![Build Status](https://travis-ci.org/mathLab/pi-DoMUS.svg)](https://travis-ci.org/mathLab/pi-DoMUS)
+# pi-DoMUS [![Build Status](https://travis-ci.org/mathLab/pi-DoMUS.svg)](https://travis-ci.org/mathLab/pi-DoMUS)
 Parallel-Deal.II MUlti-physics Solver
 
-#Required Packages
+# Required Packages
 - Trilinos  (https://trilinos.org)
 - deal.II   (www.dealii.org)
 - deal2lkit (https://github.com/mathlab/deal2lkit)
 - Sundials  (http://computation.llnl.gov/casc/sundials/main.html)
 
 
-#Installation Instructions
+# Installation Instructions
 
 Compile and install pidomus:
 
@@ -29,4 +29,4 @@ and then start working with one of its examples by e.g. copying it
     cmake -DPIDOMUS_DIR=/some/where/pidomus .
     make run
 
-if you have an environment variable called `PIDOMUS_DIR` it will look into that directory.
+if you have an environment variable called `PIDOMUS_DIR` it will look into that directory and you do not have to specify it as option (`-DPIDOMUS_DIR`).
