@@ -63,21 +63,11 @@ subsection Free Swelling Three Fields
   set G                                = 1e4
   set Omega                            = 1e-5
   set T                                = 298.0
-  set aggregation                      = 0.8
   set chi                              = 0.1
-  set coarse_type                      = Amesos-KLU
-  set elliptic                         = true
-  set high_order_elements              = true
   set iteration c lumped               = 10
   set iteration s                      = 10
   set iteration s approx               = 10
   set l0                               = 1.5
-  set n_cycles                         = 2
-  set output_details                   = true
-  set smoother_overlap                 = 1
-  set smoother_sweeps                  = 2
-  set smoother_type                    = Chebyshev
-  set w_cycle                          = true
 end
 subsection IDA Solver Parameters
   set Absolute error tolerance                      = 1e-4
