@@ -1,4 +1,4 @@
-# pi-DoMUS [![Build Status](https://travis-ci.org/mathLab/pi-DoMUS.svg)](https://travis-ci.org/mathLab/pi-DoMUS)
+# pi-DoMUS [![Build Status](https://travis-ci.org/mathLab/pi-DoMUS.svg?branch=master)](https://travis-ci.org/mathLab/pi-DoMUS)
 Parallel-Deal.II MUlti-physics Solver
 
 # Required Packages
