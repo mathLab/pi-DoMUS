@@ -49,7 +49,7 @@ class PDESystemInterface : public BaseInterface<dim,spacedim,LAC>
 
 public:
 
-  virtual ~PDESystemInterface() {};
+  virtual ~PDESystemInterface() {}
 
   /**
    * Pass initializers to the base class constructor.

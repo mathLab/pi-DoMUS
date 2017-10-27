@@ -29,7 +29,7 @@ class ALENavierStokes
 {
 
 public:
-  ~ALENavierStokes () {};
+  ~ALENavierStokes () {}
   ALENavierStokes ();
 
   void declare_parameters (ParameterHandler &prm);
@@ -46,7 +46,7 @@ public:
 
   void
   compute_system_operators(
-    const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
+    const std::vector<shared_ptr<LATrilinos::BlockMatrix>> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
@@ -169,7 +169,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       unsigned int face_id = cell->face(face)->boundary_id();
       if (cell->face(face)->at_boundary())
         {
-          auto nitsche = this->get_dirichlet_bcs();
+          auto &nitsche = this->get_dirichlet_bcs();
           if (nitsche.acts_on_id(face_id))
             {
               bool check = false;
@@ -331,7 +331,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 template <int dim, int spacedim, typename LAC>
 void
 ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
-  const std::vector<shared_ptr<LATrilinos::BlockMatrix>> matrices,
+  const std::vector<shared_ptr<LATrilinos::BlockMatrix>> &matrices,
   LinearOperator<LATrilinos::VectorType> &system_op,
   LinearOperator<LATrilinos::VectorType> &prec_op,
   LinearOperator<LATrilinos::VectorType> &) const
@@ -341,7 +341,7 @@ ALENavierStokes<dim,spacedim,LAC>::compute_system_operators(
 
 // Preconditioners:
   const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
-  const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
+  const ParsedFiniteElement<dim,spacedim> &fe = this->pfe;
 
   AMG_d.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
   AMG_u.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);

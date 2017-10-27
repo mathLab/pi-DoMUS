@@ -39,7 +39,7 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
@@ -140,7 +140,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 template <int dim, int spacedim, typename LAC>
 void
-EikonalEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+EikonalEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &matrices,
                                                             LinearOperator<LATrilinos::VectorType> &system_op,
                                                             LinearOperator<LATrilinos::VectorType> &prec_op,
                                                             LinearOperator<LATrilinos::VectorType> &) const

@@ -27,7 +27,7 @@ class KOmega
 {
 
 public:
-  ~KOmega () {};
+  ~KOmega () {}
   KOmega ();
 
   void declare_parameters (ParameterHandler &prm);
@@ -44,7 +44,7 @@ public:
 
   void
   compute_system_operators(
-    const std::vector<shared_ptr<LATrilinos::BlockMatrix>>,
+    const std::vector<shared_ptr<LATrilinos::BlockMatrix>> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &,
     LinearOperator<LATrilinos::VectorType> &) const;
@@ -482,11 +482,10 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 template <int dim, int spacedim, typename LAC>
 void
-KOmega<dim,spacedim,LAC>::compute_system_operators(
-  const std::vector<shared_ptr<LATrilinos::BlockMatrix>> matrices,
-  LinearOperator<LATrilinos::VectorType> &system_op,
-  LinearOperator<LATrilinos::VectorType> &prec_op,
-  LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
+KOmega<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &matrices,
+                                                   LinearOperator<LATrilinos::VectorType> &system_op,
+                                                   LinearOperator<LATrilinos::VectorType> &prec_op,
+                                                   LinearOperator<LATrilinos::VectorType> &prec_op_finer) const
 {
   typedef LATrilinos::VectorType::BlockType  BVEC;
   typedef LATrilinos::VectorType             VEC;
@@ -552,7 +551,7 @@ KOmega<dim,spacedim,LAC>::compute_system_operators(
     }
 
   const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
-  const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
+  const ParsedFiniteElement<dim,spacedim> &fe = this->pfe;
 
   amg_A.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
   amg_Ap.initialize_preconditioner<dim, spacedim>( matrices[2]->block(1,1), fe, dh);

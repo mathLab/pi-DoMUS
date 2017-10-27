@@ -23,7 +23,7 @@ public:
 
 
   // this function is needed only for the iterative solver
-  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
@@ -175,7 +175,7 @@ set_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_
 
 template <int dim, int spacedim, typename LAC>
 void
-ProblemTemplate<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+ProblemTemplate<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &matrices,
                                                             LinearOperator<LATrilinos::VectorType> &system_op,
                                                             LinearOperator<LATrilinos::VectorType> &prec_op,
                                                             LinearOperator<LATrilinos::VectorType> &) const
