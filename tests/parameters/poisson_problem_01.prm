@@ -13,7 +13,7 @@ subsection Domain
   set Colorize                   = false
   set Grid to generate           = rectangle
   set Input grid file name       = 
-  set Mesh smoothing alogrithm   = none
+  set Mesh smoothing algorithm   = none
   set Optional Point<spacedim> 1 = 1,2,7
   set Optional Point<spacedim> 2 = 3,4,1
   set Optional double 1          = 1.0

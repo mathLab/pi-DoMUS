@@ -12,7 +12,6 @@ int main (int argc, char *argv[])
   initlog();
 
   deallog.depth_file(1);
-  deallog.threshold_double(1.0e-6);
 
   const int dim = 3;
   const int spacedim = 3;
