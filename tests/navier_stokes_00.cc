@@ -34,7 +34,7 @@ int main (int argc, char *argv[])
   auto& sol = navier_stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
-      deallog << std::setprecision(2) << sol[i] << std::endl ;
+      deallog << std::fixed << std::setprecision(3) << sol[i] << std::endl ;
     }
 
   return 0;
