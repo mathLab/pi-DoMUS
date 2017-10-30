@@ -239,7 +239,6 @@ void piDoMUS<dim, spacedim, LAC>::run ()
       else if (time_stepper == "euler" || time_stepper == "imex")
         {
           current_alpha = imex.get_alpha();
-          (void) current_alpha;
           imex.create_new_vector = lambdas.create_new_vector;
           imex.residual = lambdas.residual;
           imex.setup_jacobian = lambdas.setup_jacobian;
