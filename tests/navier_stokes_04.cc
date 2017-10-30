@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 
   navier_stokes.run ();
 
-  auto sol = navier_stokes.get_solution();
+  auto& sol = navier_stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;
