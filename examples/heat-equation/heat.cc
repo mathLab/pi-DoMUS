@@ -13,13 +13,13 @@ int main (int argc, char *argv[])
 
   // for serial version using a direct solver use uncomment these two
   // lines
-  HeatEquation<dim,spacedim,LADealII> problem;
-  piDoMUS<dim,spacedim,LADealII> solver ("pidomus",problem);
+  // HeatEquation<dim,spacedim,LADealII> problem;
+  // piDoMUS<dim,spacedim,LADealII> solver ("pidomus",problem);
 
   // for parallel version using an iterative solver uncomment these
   // two lines
-  // HeatEquation<dim,spacedim,LATrilinos> problem;
-  // piDoMUS<dim,spacedim,LATrilinos> solver ("pidomus",problem);
+  HeatEquation<dim,spacedim,LATrilinos> problem;
+  piDoMUS<dim,spacedim,LATrilinos> solver ("pidomus",problem);
 
   ParameterAcceptor::initialize("heat.prm", "used_parameters.prm");
 
