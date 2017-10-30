@@ -304,7 +304,7 @@ EikonalEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<sh
   typedef LATrilinos::VectorType             VEC;
 
   const DoFHandler<dim,spacedim> &dh = this->get_dof_handler();
-  const ParsedFiniteElement<dim,spacedim> fe = this->pfe;
+  const ParsedFiniteElement<dim,spacedim> &fe = this->pfe;
 
   AMG_A.initialize_preconditioner<dim, spacedim>( matrices[0]->block(0,0), fe, dh);
   AMG_B.initialize_preconditioner<dim, spacedim>( matrices[0]->block(1,1), fe, dh);
