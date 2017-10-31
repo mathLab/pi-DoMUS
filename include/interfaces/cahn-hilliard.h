@@ -16,7 +16,7 @@ class CahnHilliard : public PDESystemInterface<dim, dim, CahnHilliard<dim,LAC>, 
 {
 public:
 
-  ~CahnHilliard() {};
+  ~CahnHilliard() {}
 
   CahnHilliard();
 

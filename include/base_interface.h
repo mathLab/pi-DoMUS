@@ -6,7 +6,7 @@
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/lac/packaged_operation.h>
 
-#include <deal.II/base/sacado_product_type.h>
+#include <deal.II/differentiation/ad/sacado_product_types.h>
 
 #include <deal.II/numerics/error_estimator.h>
 
@@ -85,7 +85,7 @@ public:
   /**
    * virtual destructor.
    */
-  virtual ~BaseInterface() {};
+  virtual ~BaseInterface() {}
 
   /** @name Function needed in order to construct the interface */
   /** @{ */
@@ -242,7 +242,7 @@ public:
    * To enable the finer preconditioner it is sufficient to set
    * "Enable finer preconditioner" equals to true.
    */
-  virtual void compute_system_operators(const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> >,
+  virtual void compute_system_operators(const std::vector<shared_ptr<typename LATrilinos::BlockMatrix> > &,
                                         LinearOperator<LATrilinos::VectorType> &system_op,
                                         LinearOperator<LATrilinos::VectorType> &prec_op,
                                         LinearOperator<LATrilinos::VectorType> &prec_op_finer) const;
@@ -252,7 +252,7 @@ public:
    * deal.II vector and matrix types, this function is empty, since a
    * direct solver is used by default.
    */
-  void compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> > &,
                                 LinearOperator<typename LADealII::VectorType> &,
                                 LinearOperator<typename LADealII::VectorType> &,
                                 LinearOperator<typename LADealII::VectorType> &) const;

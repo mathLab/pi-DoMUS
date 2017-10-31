@@ -12,7 +12,6 @@ int main (int argc, char *argv[])
   initlog();
 
   deallog.depth_file(1);
-  deallog.threshold_double(1.0e-6);
 
   const int dim = 3;
   const int spacedim = 3;
@@ -23,7 +22,7 @@ int main (int argc, char *argv[])
 
   n_problem.run ();
 
-  auto sol = n_problem.get_solution();
+  auto &sol = n_problem.get_solution();
   for (unsigned int i = 0; i<sol.size(); ++i)
     deallog << sol[i] << std::endl;
 

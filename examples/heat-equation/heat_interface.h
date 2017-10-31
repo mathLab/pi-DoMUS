@@ -23,10 +23,10 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >&,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &,
-                                LinearOperator<LATrilinos::VectorType> &) const;
+                                LinearOperator<LATrilinos::VectorType> &) const override;
 
 private:
   mutable shared_ptr<TrilinosWrappers::PreconditionJacobi> preconditioner;
@@ -91,7 +91,7 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
 
 template <int dim, int spacedim, typename LAC>
 void
-HeatEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+HeatEquation<dim,spacedim,LAC>::compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &matrices,
                                                            LinearOperator<LATrilinos::VectorType> &system_op,
                                                            LinearOperator<LATrilinos::VectorType> &prec_op,
                                                            LinearOperator<LATrilinos::VectorType> &) const

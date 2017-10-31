@@ -22,7 +22,6 @@ int main (int argc, char *argv[])
 
   initlog();
   deallog.depth_file(1);
-  deallog.threshold_double(1.0e-6);
 
   StokesInterface<2,2,LATrilinos> interface;
   piDoMUS<2,2,LATrilinos> stokes ("pi-DoMUS",interface);
@@ -32,7 +31,7 @@ int main (int argc, char *argv[])
 
   stokes.run ();
 
-  auto sol = stokes.get_solution();
+  auto &sol = stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;

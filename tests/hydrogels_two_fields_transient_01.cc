@@ -1,6 +1,7 @@
 #include "pidomus.h"
 #include "interfaces/hydrogels_two_fields_transient.h"
 #include "tests.h"
+#include <iomanip>
 
 using namespace dealii;
 int main (int argc, char *argv[])
@@ -23,9 +24,9 @@ int main (int argc, char *argv[])
 
   solver.run ();
 
-  auto sol = solver.get_solution();
+  auto &sol = solver.get_solution();
   for (unsigned int i = 0; i<sol.size(); ++i)
-    deallog << sol[i] << std::endl;
+    deallog << std::fixed << std::setprecision(3) << sol[i] << std::endl;
 
   return 0;
 }

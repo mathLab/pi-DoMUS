@@ -22,7 +22,6 @@ int main (int argc, char *argv[])
 
   initlog();
   deallog.depth_file(1);
-  deallog.threshold_double(1.0e-3);
 
   NavierStokes<2,2> energy(false);
   piDoMUS<2,2> navier_stokes ("",energy);
@@ -32,7 +31,7 @@ int main (int argc, char *argv[])
 
   navier_stokes.run ();
 
-  auto sol = navier_stokes.get_solution();
+  auto &sol = navier_stokes.get_solution();
   for (unsigned int i = 0 ; i<sol.size(); ++i)
     {
       deallog << sol[i] << std::endl ;

@@ -22,7 +22,7 @@ int main (int argc, char *argv[])
 
   n_problem.run ();
 
-  auto sol = n_problem.get_solution();
+  auto &sol = n_problem.get_solution();
   for (unsigned int i = 0; i<sol.size(); ++i)
     deallog << sol[i] << std::endl;
 

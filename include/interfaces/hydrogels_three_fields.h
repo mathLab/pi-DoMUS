@@ -61,7 +61,7 @@ public:
                               bool compute_only_system_terms) const;
 
 
-  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+  void compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &,
                                 LinearOperator<LATrilinos::VectorType> &) const;
@@ -352,7 +352,7 @@ void HydroGelThreeFields<dim,spacedim,LAC>::parse_parameters_call_back ()
 template <int dim, int spacedim, typename LAC>
 void
 HydroGelThreeFields<dim,spacedim,LAC>::
-compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > matrices,
+compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &matrices,
                          LinearOperator<LATrilinos::VectorType> &system_op,
                          LinearOperator<LATrilinos::VectorType> &prec_op,
                          LinearOperator<LATrilinos::VectorType> &) const

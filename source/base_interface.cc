@@ -5,13 +5,11 @@
 #include "pidomus_macros.h"
 
 #include <deal.II/fe/fe_values.h>
-#include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 //#include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/linear_operator.h>
 #include <deal.II/lac/block_linear_operator.h>
 #include <deal.II/numerics/vector_tools.h>
-#include <deal.II/base/sacado_product_type.h>
 
 #include <deal2lkit/dof_utilities.h>
 #include <deal2lkit/parsed_finite_element.h>
@@ -191,7 +189,7 @@ assemble_energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_
 template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
-compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> >,
+compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMatrix> > &,
                          LinearOperator<typename LADealII::VectorType> &,
                          LinearOperator<typename LADealII::VectorType> &,
                          LinearOperator<typename LADealII::VectorType> &) const
@@ -201,7 +199,7 @@ compute_system_operators(const std::vector<shared_ptr<typename LADealII::BlockMa
 template <int dim, int spacedim, typename LAC>
 void
 BaseInterface<dim,spacedim,LAC>::
-compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> >,
+compute_system_operators(const std::vector<shared_ptr<LATrilinos::BlockMatrix> > &,
                          LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &,
                          LinearOperator<LATrilinos::VectorType> &) const

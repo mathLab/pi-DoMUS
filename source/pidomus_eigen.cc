@@ -7,7 +7,6 @@
 
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/solver_gmres.h>
 //
