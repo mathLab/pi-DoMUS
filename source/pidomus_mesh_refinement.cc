@@ -190,13 +190,18 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   old_sols[1] = y_dot;
   old_sols[2] = y_expl;
 
-  triangulation->prepare_coarsening_and_refinement();
-  sol_tr.prepare_for_coarsening_and_refinement (old_sols);
-
   if (adaptive_refinement)
-    triangulation->execute_coarsening_and_refinement ();
+    {
+      triangulation->prepare_coarsening_and_refinement();
+      sol_tr.prepare_for_coarsening_and_refinement (old_sols);
+
+      triangulation->execute_coarsening_and_refinement ();
+    }
   else
-    triangulation->refine_global (1);
+    {
+      sol_tr.prepare_for_pure_refinement();
+      triangulation->refine_global (1);
+    }
 
   setup_dofs(false);
 
@@ -206,7 +211,14 @@ refine_and_transfer_solutions(LADealII::VectorType &y,
   new_sols[1].reinit(y_dot);
   new_sols[2].reinit(y_expl);
 
-  sol_tr.interpolate (old_sols, new_sols);
+  if (adaptive_refinement)
+    sol_tr.interpolate (old_sols, new_sols);
+  else
+    {
+      sol_tr.refine_interpolate(old_sols[0],new_sols[0]);
+      sol_tr.refine_interpolate(old_sols[1],new_sols[1]);
+      sol_tr.refine_interpolate(old_sols[2],new_sols[2]);
+    }
 
   y      = new_sols[0];
   y_dot  = new_sols[1];
