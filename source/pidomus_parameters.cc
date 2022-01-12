@@ -42,6 +42,12 @@ declare_parameters (ParameterHandler &prm)
                   "true",
                   Patterns::Bool());
 
+  add_parameter( prm,
+                 &max_cells,
+                 "Max number of cells",
+                 "0",
+                 Patterns::Integer (0));
+
   add_parameter(  prm,
                   &verbose,
                   "Print some useful informations about processes",

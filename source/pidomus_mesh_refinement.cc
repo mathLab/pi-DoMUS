@@ -77,6 +77,13 @@ piDoMUS<dim, spacedim, LAC>::solver_should_restart(const double t,
       if (max_kelly > kelly_threshold)
 
         {
+          unsigned int n_active_cells=triangulation->n_active_cells();
+          unsigned int max_cells=this->max_cells;
+          if ((max_cells > 0) & (n_active_cells > max_cells))
+            {
+              signals.end_solver_should_restart();
+              return false;
+            }
           pcout << "  ################ restart ######### \n"
                 << "max_kelly > threshold\n"
                 << max_kelly  << " >  " << kelly_threshold
