@@ -1,0 +1,86 @@
+# Listing of Parameters
+# ---------------------
+subsection Exact solution
+  set Function expression = t*cos(x); t*y*sin(x); -1*y*sin(x);\
+                            t*cos(x); t*y*sin(x)
+  set Variable names      = x,y,t
+end
+
+subsection Forcing terms
+  set IDs and component masks = 0=v
+  set IDs and expressions     = 0 = \
+    -t^2*sin(2*x)/2 + 0.1*t*cos(x) + sin(y) + cos(x);\
+    t^2*y + x*cos(y) + y*sin(x);\
+    0; 0; 0
+  set Known component names   = v,v,p,u,u
+  set Used constants          = d=0.01
+end
+
+subsection Dirichlet boundary conditions
+  set IDs and component masks = 0 = v;p
+  set IDs and expressions     = 0 = t*cos(x); t*y*sin(x); -1*y*sin(x);\
+                                    t*cos(x); t*y*sin(x)
+  set Known component names   = v,v,p,u,u
+  set Used constants          = k=0.01
+end
+
+subsection Domain
+  set Colorize                   = false
+  set Grid to generate           = rectangle
+  set Optional Point<spacedim> 1 = 0,0
+  set Optional Point<spacedim> 2 = 1,1
+end
+
+subsection IMEX Parameters
+  set Final time                                   = 1e0
+  set Initial time                                 = 0.0
+  set Step size                                    = 1e-1
+end
+
+
+subsection Navier Stokes Interface
+  set Block of differential components = 1,0,1
+  set Blocking of the finite element   = v,v,p,u,u
+  set CG Solver tolerance              = 1e-12
+  set GMRES Solver tolerance           = 1e-12
+  set Finite element space             = FESystem[FE_Q(2)^d-FE_Q(1)-FE_Q(2)^d]
+  set nu [Pa s]                        = 0.1
+  set rho [kg m^3]                     = 1.0
+  set initial delta t                  = 1e-3
+end
+
+subsection Output Parameters
+  set Files to save in run directory = 
+  set Incremental run prefix         = 
+  set Output format                  = vtu
+  set Output partitioning            = true
+  set Problem base name              = Navier_Stokes_chorin-temam
+end
+
+
+subsection piDoMUS<2, 2, LADealII>
+  set Adaptive refinement                            = false
+  set Enable finer preconditioner                    = false
+  set Initial global refinement                      = 3
+  set Number of cycles                               = 1
+  set Jacobian solver tolerance                      = 1e-12
+  set Use direct solver if available                 = true
+end
+
+subsection Error Tables
+  set Compute error            = true
+  set Error file format        = tex
+  set Error precision          = 3
+  set Output error tables      = true
+  set Solution names           = v,v,p,u,u
+  set Solution names for latex = v,v,p,u,u
+  set Table names              = error
+  set Write error files        = false
+  subsection Table 0
+    set Add convergence rates          = true
+    set Extra terms                    = cells,dofs
+    set Latex table caption            = error
+    set List of error norms to compute = Linfty; AddUp;L2; L2, Linfty, H1; AddUp
+    set Rate key                       =
+  end
+end

@@ -414,7 +414,7 @@ piDoMUS<dim, spacedim, LAC>::solve_jacobian_system(const typename LAC::VectorTyp
   if (we_are_parallel == false &&
       use_direct_solver == true)
     {
-
+      std::cout << "DIRETTO!" << std::endl;
       SparseDirectUMFPACK inverse;
       inverse.factorize((sMAT &) *matrices[0]);
       inverse.vmult((sVEC &)dst, (sVEC &)src);

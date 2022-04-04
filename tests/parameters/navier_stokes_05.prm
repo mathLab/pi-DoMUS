@@ -195,11 +195,11 @@ end
 subsection piDoMUS<2, 2, LATrilinos>
   set Adaptive refinement                            = false
   set Enable finer preconditioner                    = false
-  set Initial global refinement                      = 4
+  set Initial global refinement                      = 5
   set Jacobian solver tolerance                      = 1e-6
   set Max iterations                                 = 50
   set Max iterations finer prec.                     = 0
-  set Number of cycles                               = 3
+  set Number of cycles                               = 1
   set Overwrite Newton's iterations                  = true
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = false
